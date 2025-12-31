@@ -1,0 +1,196 @@
+
+
+:root:has(.fibo-theme-web),
+.fibo-theme-web {
+  
+  --fibo-primary: #3B82F6;
+  --fibo-on-primary: #FFFFFF;
+  --fibo-primary-container: #DBEAFE;
+  --fibo-on-primary-container: #1E40AF;
+  
+  --fibo-secondary: #64748B;
+  --fibo-on-secondary: #FFFFFF;
+  
+  --fibo-background: #F8FAFC;
+  --fibo-on-background: #0F172A;
+  
+  --fibo-surface: #FFFFFF;
+  --fibo-on-surface: #0F172A;
+  
+  --fibo-outline: #E2E8F0;
+  
+  
+  --fibo-font-family: 'Inter', system-ui, sans-serif;
+  
+  
+  --fibo-radius-xs: 2px;
+  --fibo-radius-sm: 4px;
+  --fibo-radius-md: 6px;
+  --fibo-radius-lg: 8px;
+  --fibo-radius-xl: 12px;
+  --fibo-radius-full: 9999px;
+  
+  
+  --fibo-elevation-1: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --fibo-elevation-2: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --fibo-elevation-3: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+}
+
+
+
+.fibo-theme-web .fibo-button {
+  font-family: var(--fibo-font-family);
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--fibo-radius-md);
+  transition: all 150ms ease;
+}
+
+.fibo-theme-web .fibo-button-filled {
+  background-color: var(--fibo-primary);
+  color: var(--fibo-on-primary);
+}
+.fibo-theme-web .fibo-button-filled:hover {
+  background-color: #2563EB; 
+  box-shadow: var(--fibo-elevation-2);
+}
+
+.fibo-theme-web .fibo-card {
+  background-color: var(--fibo-surface);
+  border: 1px solid var(--fibo-outline);
+  border-radius: var(--fibo-radius-lg);
+  box-shadow: var(--fibo-elevation-1);
+  padding: 1.5rem;
+}
+
+
+.fibo-theme-web .fibo-textfield-container {
+  display: flex;
+  flex-direction: column-reverse;
+  margin-bottom: 1rem;
+}
+
+.fibo-theme-web .fibo-textfield-input {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.875rem;
+  border: 1px solid var(--fibo-outline);
+  background-color: var(--fibo-surface);
+  transition: all 150ms ease;
+  outline: none;
+  border-radius: var(--fibo-radius-md);
+  padding: 0.625rem 1rem;
+}
+
+.fibo-theme-web .fibo-textfield-input:focus {
+  border-color: var(--fibo-primary);
+  box-shadow: 0 0 0 2px var(--fibo-primary-container);
+
+
+  font-weight: 500;
+  color: var(--fibo-on-surface);
+}
+
+
+.fibo-theme-web .fibo-textarea-container {
+  display: flex;
+  flex-direction: column-reverse; 
+  margin-bottom: 1rem;
+}
+
+.fibo-theme-web .fibo-textarea-input {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.875rem;
+  border: 1px solid var(--fibo-outline);
+  background-color: var(--fibo-surface);
+  transition: all 150ms ease;
+  outline: none;
+  border-radius: var(--fibo-radius-md);
+  padding: 0.625rem 1rem;
+  min-height: 80px;
+}
+
+.fibo-theme-web .fibo-textarea-input:focus {
+  border-color: var(--fibo-primary);
+  box-shadow: 0 0 0 2px var(--fibo-primary-container);
+}
+
+.fibo-theme-web .fibo-textarea-label {
+  margin-bottom: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--fibo-on-surface);
+}
+
+
+  background-color: var(--fibo-primary-container);
+  color: var(--fibo-on-primary-container);
+
+
+
+.fibo-theme-web .fibo-banner {
+  border-radius: var(--fibo-radius-md);
+  border-left: 4px solid;
+  padding: 1rem;
+  background-color: var(--fibo-surface);
+  box-shadow: var(--fibo-elevation-1);
+}
+.fibo-theme-web .fibo-banner-success { border-color: #10B981; background-color: #ECFDF5; color: #065F46; }
+.fibo-theme-web .fibo-banner-warning { border-color: #F59E0B; background-color: #FFFBEB; color: #92400E; }
+.fibo-theme-web .fibo-banner-error { border-color: #EF4444; background-color: #FEF2F2; color: #991B1B; }
+.fibo-theme-web .fibo-banner-info { border-color: #3B82F6; background-color: #EFF6FF; color: #1E40AF; }
+
+
+.fibo-theme-web .fibo-list {
+  background-color: var(--fibo-surface);
+  border: 1px solid var(--fibo-outline);
+  border-radius: var(--fibo-radius-md);
+  overflow: hidden;
+}
+.fibo-theme-web .fibo-list-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--fibo-outline);
+}
+.fibo-theme-web .fibo-list-item:hover {
+  background-color: #F8FAFC;
+}
+.fibo-theme-web .fibo-list-item:last-child {
+  border-bottom: none;
+}
+
+
+.fibo-theme-web .fibo-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.fibo-theme-web .fibo-table th {
+  padding: 0.75rem 1.5rem;
+  background-color: #F8FAFC;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: var(--fibo-on-surface-variant);
+  border-bottom: 1px solid var(--fibo-outline);
+}
+.fibo-theme-web .fibo-table td {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--fibo-outline);
+  color: var(--fibo-on-surface);
+}
+
+
+.fibo-theme-web .fibo-text-h1 { font-size: 2.25rem; font-weight: 800; letter-spacing: -0.025em; }
+.fibo-theme-web .fibo-text-h2 { font-size: 1.875rem; font-weight: 700; letter-spacing: -0.025em; }
+.fibo-theme-web .fibo-text-h3 { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.025em; }
+.fibo-theme-web .fibo-text-h4 { font-size: 1.25rem; font-weight: 600; }
+.fibo-theme-web .fibo-text-h5 { font-size: 1.125rem; font-weight: 600; }
+.fibo-theme-web .fibo-text-h6 { font-size: 1rem; font-weight: 600; }
+.fibo-theme-web .fibo-text-body { font-size: 1rem; color: #374151; }
+.fibo-theme-web .fibo-text-caption { font-size: 0.875rem; color: #6B7280; }

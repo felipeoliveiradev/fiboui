@@ -1,0 +1,322 @@
+
+
+:root:has(.fibo-theme-material),
+.fibo-theme-material {
+  
+  --fibo-primary: #6750A4;
+  --fibo-on-primary: #FFFFFF;
+  --fibo-primary-container: #EADDFF;
+  --fibo-on-primary-container: #21005D;
+  
+  --fibo-secondary: #625B71;
+  --fibo-on-secondary: #FFFFFF;
+  --fibo-secondary-container: #E8DEF8;
+  --fibo-on-secondary-container: #1D192B;
+  
+  --fibo-tertiary: #7D5260;
+  --fibo-on-tertiary: #FFFFFF;
+  --fibo-tertiary-container: #FFD8E4;
+  --fibo-on-tertiary-container: #31111D;
+  
+  --fibo-error: #B3261E;
+  --fibo-on-error: #FFFFFF;
+  
+  --fibo-background: #FFFBFE;
+  --fibo-on-background: #1C1B1F;
+  
+  --fibo-surface: #FFFBFE;
+  --fibo-on-surface: #1C1B1F;
+  --fibo-surface-variant: #E7E0EC;
+  --fibo-on-surface-variant: #49454F;
+  
+  --fibo-outline: #79747E;
+  
+  
+  --fibo-font-family: 'Roboto', sans-serif;
+  
+  
+  --fibo-radius-xs: 4px;
+  --fibo-radius-sm: 8px;
+  --fibo-radius-md: 12px;
+  --fibo-radius-lg: 16px;
+  --fibo-radius-xl: 28px;
+  --fibo-radius-full: 9999px;
+  
+  
+  --fibo-elevation-1: 0px 1px 2px rgba(0,0,0,0.3), 0px 1px 3px 1px rgba(0,0,0,0.15);
+  --fibo-elevation-2: 0px 1px 2px rgba(0,0,0,0.3), 0px 2px 6px 2px rgba(0,0,0,0.15);
+  --fibo-elevation-3: 0px 4px 8px 3px rgba(0,0,0,0.15), 0px 1px 3px rgba(0,0,0,0.3);
+  
+  
+  --fibo-hover-opacity: 0.08;
+  --fibo-focus-opacity: 0.12;
+  --fibo-press-opacity: 0.12;
+  
+  
+  --fibo-transition-duration: 250ms;
+  --fibo-transition-easing: cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+
+
+
+.fibo-theme-material .fibo-button {
+  font-family: var(--fibo-font-family);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+  font-size: 0.875rem;
+  height: 40px;
+  border-radius: 20px; 
+  border-radius: 9999px; 
+  padding: 0 24px;
+}
+
+
+.fibo-theme-material .fibo-button-filled,
+.fibo-theme-material .fibo-button-elevated {
+  background-color: var(--fibo-primary);
+  color: var(--fibo-on-primary);
+  box-shadow: var(--fibo-elevation-1);
+}
+.fibo-theme-material .fibo-button-filled:hover {
+  box-shadow: var(--fibo-elevation-2);
+}
+.fibo-theme-material .fibo-button-filled::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: var(--fibo-on-primary);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.fibo-theme-material .fibo-button-filled:hover::after {
+  opacity: var(--fibo-hover-opacity);
+}
+
+
+.fibo-theme-material .fibo-card {
+  background-color: var(--fibo-surface);
+  border-radius: var(--fibo-radius-md); 
+  border: 1px solid var(--fibo-outline); 
+  
+  border: none;
+  background-color: var(--fibo-surface-container-low, #F7F2FA); 
+  box-shadow: var(--fibo-elevation-1);
+  padding: 16px;
+}
+
+
+.fibo-theme-material .fibo-textfield-container {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.fibo-theme-material .fibo-textfield-input {
+  width: 100%;
+  font-family: inherit;
+  font-size: 1rem;
+  border: 1px solid var(--fibo-outline);
+  background-color: transparent;
+  transition: all var(--fibo-transition-duration);
+  outline: none;
+  border-radius: var(--fibo-radius-xs);
+  padding: 1rem 1rem;
+}
+
+.fibo-theme-material .fibo-textfield-label {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  font-size: 1rem;
+  color: var(--fibo-on-surface-variant);
+  pointer-events: none;
+  transition: all var(--fibo-transition-duration);
+  background-color: transparent;
+  background-color: transparent;
+  padding: 0 4px;
+}
+
+.fibo-theme-material .fibo-textfield-input::placeholder {
+  opacity: 0;
+  transition: opacity var(--fibo-transition-duration);
+}
+
+.fibo-theme-material .fibo-textfield-input:focus::placeholder {
+  opacity: 1;
+}
+
+.fibo-theme-material .fibo-textfield-input:focus {
+  border-color: var(--fibo-primary);
+  border-width: 2px;
+  padding: calc(1rem - 1px);
+}
+
+.fibo-theme-material .fibo-textfield-input:focus ~ .fibo-textfield-label,
+.fibo-theme-material .fibo-textfield-input:not(:placeholder-shown) ~ .fibo-textfield-label {
+  top: -0.5rem;
+  left: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--fibo-primary);
+  background-color: var(--fibo-surface);
+}
+
+
+.fibo-theme-material .fibo-textarea-container {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  margin-bottom: 1rem;
+  margin-top: 0.5rem; 
+}
+
+.fibo-theme-material .fibo-textarea-input {
+  width: 100%;
+  font-family: inherit;
+  font-size: 1rem;
+  border: 1px solid var(--fibo-outline);
+  background-color: transparent;
+  transition: all var(--fibo-transition-duration);
+  outline: none;
+  border-radius: var(--fibo-radius-xs);
+  padding: 1rem 1rem;
+}
+
+.fibo-theme-material .fibo-textarea-label {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  font-size: 1rem;
+  color: var(--fibo-on-surface-variant);
+  pointer-events: none;
+  transition: all var(--fibo-transition-duration);
+  background-color: transparent;
+  padding: 0 4px;
+}
+
+.fibo-theme-material .fibo-textarea-input::placeholder {
+  opacity: 0;
+  transition: opacity var(--fibo-transition-duration);
+}
+.fibo-theme-material .fibo-textarea-input:focus::placeholder {
+  opacity: 1;
+}
+
+.fibo-theme-material .fibo-textarea-input:focus {
+  border-color: var(--fibo-primary);
+  border-width: 2px;
+  padding: calc(1rem - 1px);
+}
+
+.fibo-theme-material .fibo-textarea-input:focus ~ .fibo-textarea-label,
+.fibo-theme-material .fibo-textarea-input:not(:placeholder-shown) ~ .fibo-textarea-label {
+  top: -0.5rem;
+  left: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--fibo-primary);
+  background-color: var(--fibo-surface);
+}
+
+
+.fibo-theme-material .fibo-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  white-space: nowrap;
+  height: 32px;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 0.875rem;
+  background-color: var(--fibo-surface-variant);
+  color: var(--fibo-on-surface-variant);
+  border: 1px solid transparent;
+}
+
+
+.fibo-theme-material .fibo-banner {
+  border-radius: var(--fibo-radius-sm);
+  border-left: 4px solid;
+  padding: 16px;
+  background-color: var(--fibo-surface-variant); 
+}
+.fibo-theme-material .fibo-banner-success {
+  background-color: #E8F5E9; 
+  border-color: #2E7D32; 
+  color: #1B5E20;
+}
+.fibo-theme-material .fibo-banner-warning {
+  background-color: #FFF3E0; 
+  border-color: #EF6C00; 
+  color: #E65100;
+}
+.fibo-theme-material .fibo-banner-error {
+  background-color: #FFEBEE; 
+  border-color: #C62828; 
+  color: #B71C1C;
+}
+.fibo-theme-material .fibo-banner-info {
+  background-color: #E3F2FD; 
+  border-color: #1565C0; 
+  color: #0D47A1;
+}
+
+
+.fibo-theme-material .fibo-list {
+  background-color: var(--fibo-surface);
+  border-radius: var(--fibo-radius-sm);
+  overflow: hidden;
+}
+.fibo-theme-material .fibo-list-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--fibo-outline);
+  cursor: pointer;
+  transition: background-color var(--fibo-transition-duration);
+}
+.fibo-theme-material .fibo-list-item:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+.fibo-theme-material .fibo-list-item:last-child {
+  border-bottom: none;
+}
+
+
+.fibo-theme-material .fibo-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--fibo-surface);
+  box-shadow: var(--fibo-elevation-1);
+  border-radius: var(--fibo-radius-sm);
+  overflow: hidden;
+}
+.fibo-theme-material .fibo-table th {
+  text-align: left;
+  padding: 16px;
+  background-color: var(--fibo-surface);
+  border-bottom: 1px solid var(--fibo-outline);
+  font-weight: 500;
+  color: var(--fibo-on-surface-variant);
+}
+.fibo-theme-material .fibo-table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--fibo-outline);
+  color: var(--fibo-on-surface);
+}
+.fibo-theme-material .fibo-table tr:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+
+.fibo-theme-material .fibo-text-h1 { font-size: 96px; letter-spacing: -1.5px; font-weight: 300; }
+.fibo-theme-material .fibo-text-h2 { font-size: 60px; letter-spacing: -0.5px; font-weight: 300; }
+.fibo-theme-material .fibo-text-h3 { font-size: 48px; letter-spacing: 0px; font-weight: 400; }
+.fibo-theme-material .fibo-text-h4 { font-size: 34px; letter-spacing: 0.25px; font-weight: 400; }
+.fibo-theme-material .fibo-text-h5 { font-size: 24px; letter-spacing: 0px; font-weight: 400; }
+.fibo-theme-material .fibo-text-h6 { font-size: 20px; letter-spacing: 0.15px; font-weight: 500; }
+.fibo-theme-material .fibo-text-body { font-size: 16px; letter-spacing: 0.5px; font-weight: 400; }
+.fibo-theme-material .fibo-text-caption { font-size: 12px; letter-spacing: 0.4px; font-weight: 400; color: var(--fibo-on-surface-variant); }
