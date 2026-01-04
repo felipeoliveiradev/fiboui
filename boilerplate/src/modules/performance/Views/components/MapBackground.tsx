@@ -1,7 +1,7 @@
-import { Box, Signal, createFiboComponent } from 'fiboui';
+import { Box, createFiboComponent, SignalType } from 'fiboui';
 
 interface MapBackgroundProps {
-  isOnline: Signal<boolean>;
+  isOnline: SignalType<boolean>;
 }
 
 export const MapBackground = createFiboComponent<MapBackgroundProps>(({ isOnline }: MapBackgroundProps) => {
@@ -11,6 +11,8 @@ export const MapBackground = createFiboComponent<MapBackgroundProps>(({ isOnline
     .observer('map-bg')
     .width('100%')
     .height('100%')
+    .className('absolute inset-0')
+    .style({ zIndex: 0 })
     .children(() => [
       Box()
         .width('100%')

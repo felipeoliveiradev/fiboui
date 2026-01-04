@@ -1,26 +1,16 @@
-import { Scaffold, ZStack, signal } from 'fiboui';
+import { Scaffold, ZStack, signal, Component, useStore, useNavigate, Button, Row, Text } from 'fiboui';
 import { PerformanceViewModel } from '../ViewModels/PerformanceViewModel';
-import { PerformanceService } from '../Services/PerformanceService';
 import { MapBackground } from './components/MapBackground';
 import { FloatingHeader } from './components/FloatingHeader';
 import { GoButton } from './components/GoButton';
 import { BottomSheet } from './components/BottomSheet';
 import { BottomNavBar } from './components/BottomNavBar';
 
-// Singleton ViewModel
-let _vm: PerformanceViewModel | null = null;
-function getViewModel() {
-  if (!_vm) {
-    _vm = new PerformanceViewModel(new PerformanceService());
-  }
-  return _vm;
-}
-
-// Additional signals
 const tripsCount = signal(0);
 
-export const PerformancePage = () => {
-  const vm = getViewModel();
+const PerformancePageComponent = () => {
+  const vm = useStore(PerformanceViewModel);
+  const navigate = useNavigate();
   const surfaceWhite = '#FFFFFF';
 
   const handleUpdate = () => {
@@ -33,29 +23,21 @@ export const PerformancePage = () => {
   };
 
   return Scaffold()
-    .bg(surfaceWhite)
+    .headerBar({
+      fixed: true,
+      children: [
+        FloatingHeader({
+          earnings: vm.earnings,
+          tripsCount
+        }),
+      ]
+    })
     .children([
-      ZStack()
-        .width('100%')
-        .height('100%')
-        .alignment('center')
-        .children([
-          MapBackground({ isOnline: vm.isOnline }),
-          FloatingHeader({
-            earnings: vm.earnings,
-            tripsCount
-          }),
-          GoButton({
-            isOnline: vm.isOnline,
-            sheetY: vm.sheetY,
-            onPress: handleToggle
-          }),
-          BottomSheet({
-            sheetY: vm.sheetY,
-            earnings: vm.earnings
-          })
-        ])
-        .build()
+
+      BottomSheet({
+        sheetY: vm.sheetY,
+        earnings: vm.earnings
+      })
     ])
     .footerBar({
       fixed: true,
@@ -63,3 +45,5 @@ export const PerformancePage = () => {
     })
     .build();
 };
+
+export const PerformancePage = Component()(PerformancePageComponent);

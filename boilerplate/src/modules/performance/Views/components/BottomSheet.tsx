@@ -1,9 +1,9 @@
-import { Box, Button, Column, Row, Text, Icon, Signal, DragGesture, createFiboComponent, ScrollView } from 'fiboui';
+import { Box, Button, Column, Row, Text, Icon, SignalType, DragGesture, createFiboComponent, ScrollView } from 'fiboui';
 import { ShieldCheck, Zap, Navigation, ChevronUp } from 'lucide-react';
 
 interface BottomSheetProps {
-  sheetY: Signal<number>;
-  earnings: Signal<number>;
+  sheetY: SignalType<number>;
+  earnings: SignalType<number>;
 }
 
 export const BottomSheet = createFiboComponent<BottomSheetProps>(({ sheetY, earnings }: BottomSheetProps) => {
@@ -16,6 +16,7 @@ export const BottomSheet = createFiboComponent<BottomSheetProps>(({ sheetY, earn
   const surfaceGray = '#F3F4F6';
 
   return Column()
+    .bg('white')
     .className('absolute bottom-0 left-0 w-full z-10')
     .width('100%')
     .gesture(
@@ -34,7 +35,6 @@ export const BottomSheet = createFiboComponent<BottomSheetProps>(({ sheetY, earn
       Box()
         .width('100%')
         .height(24)
-        .bg('transparent')
         .center()
         .children(
           Box().width(36).height(5).rounded('full').bg('#D1D5DB').build()

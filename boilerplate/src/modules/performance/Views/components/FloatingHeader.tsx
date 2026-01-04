@@ -1,9 +1,9 @@
-import { Box, Button, Column, Row, Text, Icon, Signal, createFiboComponent, TextField, signal } from 'fiboui';
+import { Box, Button, Column, Row, Text, Icon, SignalType, createFiboComponent, TextField, signal } from 'fiboui';
 import { Menu, Bell, Search } from 'lucide-react';
 
 interface FloatingHeaderProps {
-  earnings: Signal<number>;
-  tripsCount: Signal<number>;
+  earnings: SignalType<number>;
+  tripsCount: SignalType<number>;
 }
 
 const searchValue = signal('');

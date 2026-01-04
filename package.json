@@ -50,6 +50,7 @@
   "dependencies": {
     "@metagptx/css-to-tailwind": "^0.0.4",
     "clsx": "^2.1.0",
+    "reflect-metadata": "^0.2.2",
     "tailwind-merge": "^3.4.0"
   }
 }

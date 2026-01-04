@@ -1,8 +1,8 @@
-import { Box, Button, Column, Text, Signal, createFiboComponent } from 'fiboui';
+import { Box, Button, Column, Text, SignalType, createFiboComponent } from 'fiboui';
 
 interface GoButtonProps {
-  isOnline: Signal<boolean>;
-  sheetY: Signal<number>;
+  isOnline: SignalType<boolean>;
+  sheetY: SignalType<number>;
   onPress: () => void;
 }
 

@@ -1,55 +1,60 @@
-import { createStore, computed, Store } from 'fiboui';
+import { Store, container, Signal, SignalType } from 'fiboui';
 import { ITodoRepository } from '../Services/ITodoRepository';
+import { InMemoryTodoRepository } from '../Services/InMemoryTodoRepository';
 import { Todo } from '../Models/Todo';
 
-interface TodoState {
-    todos: Todo[];
-    filter: 'all' | 'active' | 'completed';
-    isLoading: boolean;
-    error: string | null;
-}
-
+@Store()
 export class TodoViewModel {
-    private _store: Store<TodoState> = createStore<TodoState>({
-        todos: [],
-        filter: 'all',
-        isLoading: false,
-        error: null
-    });
+    // Signal properties
+    @Signal([])
+    todos!: SignalType<Todo[]>;
 
-    constructor(private readonly repo: ITodoRepository) { }
+    @Signal<'all' | 'active' | 'completed'>('all')
+    filter!: SignalType<'all' | 'active' | 'completed'>;
 
-    
+    @Signal(false)
+    isLoading!: SignalType<boolean>;
 
-    readonly vm = computed(() => {
-        const { todos, filter, isLoading, error } = this._store.getState();
+    @Signal<string | null>(null)
+    error!: SignalType<string | null>;
 
-        let visibleTodos = todos;
-        if (filter === 'completed') visibleTodos = todos.filter(t => t.isCompleted);
-        else if (filter === 'active') visibleTodos = todos.filter(t => !t.isCompleted);
+    private repo: ITodoRepository;
 
+    constructor() {
+        this.repo = container.resolve(InMemoryTodoRepository);
+    }
+
+    // Computed properties
+    get visibleTodos(): Todo[] {
+        const todos = this.todos.value;
+        const filter = this.filter.value;
+
+        if (filter === 'completed') return todos.filter(t => t.isCompleted);
+        if (filter === 'active') return todos.filter(t => !t.isCompleted);
+        return todos;
+    }
+
+    get stats() {
+        const todos = this.todos.value;
         return {
-            visibleTodos,
-            filter,
-            isLoading,
-            error,
-            stats: {
-                total: todos.length,
-                completed: todos.filter(t => t.isCompleted).length,
-                active: todos.filter(t => !t.isCompleted).length
-            }
+            total: todos.length,
+            completed: todos.filter(t => t.isCompleted).length,
+            active: todos.filter(t => !t.isCompleted).length
         };
-    });
+    }
 
-    
-
+    // Actions
     async loadTodos() {
-        this._store.setState({ isLoading: true, error: null });
+        this.isLoading.value = true;
+        this.error.value = null;
+
         try {
             const data = await this.repo.getAll();
-            this._store.setState({ todos: data, isLoading: false });
+            this.todos.value = data;
+            this.isLoading.value = false;
         } catch (e: any) {
-            this._store.setState({ isLoading: false, error: e.message || 'Failed to load' });
+            this.isLoading.value = false;
+            this.error.value = e.message || 'Failed to load';
         }
     }
 
@@ -63,33 +68,33 @@ export class TodoViewModel {
             createdAt: new Date()
         };
 
-        
-        const previousState = this._store.getState().todos;
-        this._store.setState(state => ({ todos: [...state.todos, newTodo] }));
+        // Optimistic update
+        const previousTodos = this.todos.value;
+        this.todos.value = [...this.todos.value, newTodo];
 
         try {
             await this.repo.add(newTodo);
         } catch (e) {
-            
-            this._store.setState({ todos: previousState });
+            // Rollback on error
+            this.todos.value = previousTodos;
             alert('Failed to add todo');
         }
     }
 
     async toggleTodo(id: string) {
-        const todo = this._store.getState().todos.find(t => t.id === id);
+        const todo = this.todos.value.find(t => t.id === id);
         if (!todo) return;
 
         const updated = { ...todo, isCompleted: !todo.isCompleted };
 
-        this._store.setState(state => ({
-            todos: state.todos.map(t => t.id === id ? updated : t)
-        }));
+        this.todos.value = this.todos.value.map(t =>
+            t.id === id ? updated : t
+        );
 
         await this.repo.update(updated);
     }
 
-    setFilter(filter: TodoState['filter']) {
-        this._store.setState({ filter });
+    setFilter(filter: 'all' | 'active' | 'completed') {
+        this.filter.value = filter;
     }
 }

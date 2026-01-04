@@ -1,13 +1,48 @@
-import { ValueBuilder } from '../../../src/core/builder';
-import { PerformancePage } from '../modules/performance/Views/PerformancePage';
+import { Router, registerRoute } from 'fiboui';
+import { Box, Text } from 'fiboui';
 import { TodoPage } from '../modules/todo/Views/TodoPage';
-import { currentRoute } from './router';
+import { PerformancePage } from '../modules/performance/Views/PerformancePage';
+
+// Register routes
+registerRoute('/', TodoPage);
+registerRoute('/todo', TodoPage);
+registerRoute('/performance', PerformancePage);
+
+// 404 Page
+const NotFoundPage = () => {
+    return Box()
+        .width('100%')
+        .height('100vh')
+        .center()
+        .children(
+            Text('404 - Page Not Found')
+                .fontSize(24)
+                .build()
+        )
+        .build();
+};
+
+// Define routes
+const routes = [
+    {
+        path: '/',
+        component: TodoPage
+    },
+    {
+        path: '/todo',
+        component: TodoPage
+    },
+    {
+        path: '/performance',
+        component: PerformancePage
+    }
+];
 
 export const App = () => {
-    return ValueBuilder(currentRoute)
-        .children((route) => {
-            if (route === 'performance') return PerformancePage();
-            return PerformancePage();
-        })
-        .build();
-}
+    return (
+        <Router
+            routes={routes}
+            fallback={NotFoundPage}
+        />
+    );
+};

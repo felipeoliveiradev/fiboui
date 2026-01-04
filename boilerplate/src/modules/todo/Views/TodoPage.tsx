@@ -8,26 +8,24 @@ import {
     Row,
     Column,
     List,
-    signal
+    signal,
+    Component,
+    useStore,
+    useNavigate
 } from 'fiboui';
-import { ValueBuilder } from '../../../../../src/core/builder';
 import { TodoViewModel } from '../ViewModels/TodoViewModel';
-import { InMemoryTodoRepository } from '../Services/InMemoryTodoRepository';
 import { TodoItem } from './components/TodoItem';
-import { navigate } from '../../../main/router';
-
-let _vm: TodoViewModel | null = null;
-function getViewModel() {
-    if (!_vm) {
-        _vm = new TodoViewModel(new InMemoryTodoRepository());
-    }
-    return _vm;
-}
+import { useEffect } from 'react';
 
 const inputText = signal('');
 
-export const TodoPage = () => {
-    const vm = getViewModel();
+const TodoPageComponent = () => {
+    const vm = useStore(TodoViewModel);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        vm.loadTodos();
+    }, []);
 
     const handleAdd = () => {
         if (inputText.value.trim()) {
@@ -56,7 +54,7 @@ export const TodoPage = () => {
                             Button()
                                 .text("Perf Test")
                                 .variant("text")
-                                .onPress(() => navigate('performance'))
+                                .onPress(() => navigate('/performance'))
                                 .className('text-white')
                                 .build()
                         ])
@@ -94,7 +92,6 @@ export const TodoPage = () => {
                         ])
                         .build(),
 
-
                     Box()
                         .observer()
                         .children(() => [
@@ -103,7 +100,7 @@ export const TodoPage = () => {
                                 .alignItems('center')
                                 .className("mb-4")
                                 .children([
-                                    Text(`${vm.vm.value.stats.active} items left`)
+                                    Text(`${vm.stats.active} items left`)
                                         .text(Colors.Outline)
                                         .build(),
 
@@ -125,34 +122,39 @@ export const TodoPage = () => {
 
                     Box()
                         .className('flex-1 overflow-y-auto')
-                        .children([
-                            ValueBuilder(vm.vm)
-                                .error((err: any) => Text(`Error: ${err} `).text(Colors.Error).build())
-                                .children((state: any) => {
-                                    return List()
-                                        .className('flex-1 h-full')
-                                        .items(state.visibleTodos)
-                                        .loading(state.isLoading)
-                                        .variant('default')
-                                        .renderItem((todo) =>
-                                            TodoItem({
-                                                todo,
-                                                onToggle: () => vm.toggleTodo(todo.id)
-                                            })
-                                        )
-                                        .build()
-                                })
-                                .build()
-                        ])
+                        .observer()
+                        .children(() => {
+                            if (vm.isLoading.value) {
+                                return [Text('Loading...').build()];
+                            }
+
+                            if (vm.error.value) {
+                                return [Text(`Error: ${vm.error.value}`).text(Colors.Error).build()];
+                            }
+
+                            return [
+                                List()
+                                    .className('flex-1 h-full')
+                                    .items(vm.visibleTodos)
+                                    .variant('default')
+                                    .renderItem((todo) =>
+                                        TodoItem({
+                                            todo,
+                                            onToggle: () => vm.toggleTodo(todo.id)
+                                        })
+                                    )
+                                    .build()
+                            ];
+                        })
                         .build()
                 ])
                 .build()
         ])
         .build();
-}
+};
 
 const FilterButton = (vm: TodoViewModel, filterKey: 'all' | 'active' | 'completed', label: string) => {
-    const isActive = vm.vm.value.filter === filterKey;
+    const isActive = vm.filter.value === filterKey;
     return Button()
         .text(label)
         .size('sm')
@@ -160,4 +162,6 @@ const FilterButton = (vm: TodoViewModel, filterKey: 'all' | 'active' | 'complete
         .shape('pill')
         .onPress(() => vm.setFilter(filterKey))
         .build();
-}
+};
+
+export const TodoPage = Component()(TodoPageComponent);
