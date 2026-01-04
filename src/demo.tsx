@@ -56,7 +56,7 @@ const Gallery = () => {
   return (
       Box().classNames(['bg-gray-50', 'min-h-screen', 'p-12']).gap(14).children([
         
-        // --- CLEAN ARCHITECTURE DEMO ---
+        
 
         
         
@@ -193,9 +193,9 @@ const Gallery = () => {
                     ]).build()
                ]).build(),
 
-               /* ========================================================================================= */
-               /*                                     ADVANCED LAYOUTS DEMO                               */
-               /* ========================================================================================= */
+               
+               
+               
                Box().classNames(['mt-12']).children([
                    Text("Advanced Layouts & Interactions").variant("h2").className("mb-6").build(),
         
@@ -280,9 +280,9 @@ const Gallery = () => {
 
                ]).build(),
 
-               /* ========================================================================================= */
-               /*                                     FORM ELEMENTS DEMO                                  */
-               /* ========================================================================================= */
+               
+               
+               
                Box().classNames(['mt-12']).children([
                    Text("Form Elements").variant("h2").className("mb-6").build(),
 
@@ -308,7 +308,7 @@ const Gallery = () => {
                                 })
                             ]).build(),
 
-                            /* EXTENDED INPUTS DEMO */
+                            
                             
                             
                             
@@ -331,7 +331,7 @@ const Gallery = () => {
                                  return TextField().label("Email Address").type("email").placeholder("user@example.com").value(email).onChange(setEmail).build();
                             }),
 
-                            /* SELECTOR COMPONENTS DEMO */
+                            
                             
                             
                             
@@ -453,9 +453,9 @@ const Gallery = () => {
                ]).build(),
 
 
-               /* ========================================================================================= */
-               /*                                     FEEDBACK ELEMENTS DEMO                              */
-               /* ========================================================================================= */
+               
+               
+               
                Box().classNames(['mt-12']).children([
                    Text("Feedback Elements").variant("h2").className("mb-6").build(),
 

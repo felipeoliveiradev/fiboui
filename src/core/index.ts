@@ -4,3 +4,6 @@ export * from './component';
 export * from './state';
 export * from './StateWrapper';
 export * from './hooks';
+export * from './shadowTypes';
+export * from './gestures/GestureBuilders';
+export * from './animations';

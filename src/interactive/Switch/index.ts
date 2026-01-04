@@ -1,6 +1,7 @@
 import React, { ReactElement } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps } from '../../core/types';
+import { twMerge } from 'tailwind-merge';
 
 const SwitchInner = React.memo((props: any) => {
     const { 
@@ -13,41 +14,29 @@ const SwitchInner = React.memo((props: any) => {
     } = props;
 
     
-    const trackBaseStyle: React.CSSProperties = {
-        width: '44px',
-        height: '24px',
-        borderRadius: '9999px',
-        position: 'relative',
-        transition: 'background-color 0.2s ease-in-out',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.5 : 1,
-        backgroundColor: checked ? 'var(--fibo-primary, #3B82F6)' : '#E5E7EB',
-        ...style
-    };
+    const trackClasses = twMerge(
+        'fibo-switch-track w-[44px] h-[24px] rounded-full relative transition-colors duration-200 ease-in-out',
+        disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
+        checked ? 'bg-[var(--fibo-primary,#3B82F6)]' : 'bg-gray-200'
+    );
 
-    const thumbStyle: React.CSSProperties = {
-        width: '20px',
-        height: '20px',
-        borderRadius: '50%',
-        backgroundColor: 'white',
-        position: 'absolute',
-        top: '2px',
-        left: '2px',
-        transition: 'transform 0.2s ease-in-out',
-        transform: checked ? 'translateX(20px)' : 'translateX(0)',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-    };
+    
+    
+    const thumbClasses = twMerge(
+        'absolute w-5 h-5 rounded-full bg-white top-[2px] left-[2px] transition-transform duration-200 ease-in-out shadow-sm',
+        checked ? 'translate-x-[20px]' : 'translate-x-0'
+    );
 
     return React.createElement(
         'label',
         { 
-            className: `fibo-switch flex items-center gap-3 ${className}`
+            className: twMerge('fibo-switch flex items-center gap-3', className)
         },
         React.createElement(
             'div',
             {
-                className: 'fibo-switch-track',
-                style: trackBaseStyle,
+                className: trackClasses,
+                style: style, 
                 onClick: (e: React.MouseEvent) => {
                     e.preventDefault();
                     if (!disabled && onChange) {
@@ -55,7 +44,7 @@ const SwitchInner = React.memo((props: any) => {
                     }
                 }
             },
-            React.createElement('div', { style: thumbStyle })
+            React.createElement('div', { className: thumbClasses })
         ),
         label && React.createElement(
             'span',

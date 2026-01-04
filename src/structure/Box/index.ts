@@ -26,8 +26,8 @@ class BoxBuilder extends FiboBuilder {
     const className = classes.filter(Boolean).join(' ');
     const style = this.getStyle();
     
-    // Universal builder handles observer logic now.
-    // processChildren handles function execution if present.
+    
+    
     const children = this.processChildren();
     
     const props = {

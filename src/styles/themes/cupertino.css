@@ -50,10 +50,10 @@
 
 .fibo-theme-cupertino .fibo-button {
   font-family: var(--fibo-font-family);
-  font-size: 17px;
+  
   letter-spacing: -0.4px;
   font-weight: 500; 
-  height: 44px; 
+  
   border-radius: 12px;
 }
 
@@ -62,8 +62,7 @@
   background-color: var(--fibo-primary);
   color: var(--fibo-on-primary);
   border-radius: var(--fibo-radius-full);
-  padding: 14px 24px;
-  font-weight: 600;
+  
 }
 .fibo-theme-cupertino .fibo-button-filled:active {
   opacity: 0.7; 

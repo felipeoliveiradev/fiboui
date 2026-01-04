@@ -3,42 +3,45 @@ import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps, TextType } from '../../core/types';
 
 const TextInner = React.memo((props: any) => {
-    const { text, type, className, style, ...rest } = props;
-    
-    const elementMap: Record<TextType, string> = {
-      h1: 'h1',
-      h2: 'h2',
-      h3: 'h3',
-      h4: 'h4',
-      h5: 'h5',
-      h6: 'h6',
-      body: 'p',
-      caption: 'span',
-      label: 'label',
-    };
+  const { text, type, className, style, ...rest } = props;
 
-    return React.createElement(
-      elementMap[type as TextType],
-      {
-        className: `fibo-text fibo-text-${type} ${className}`,
-        style,
-        ...rest,
-      },
-      text
-    );
+  const elementMap: Record<TextType, string> = {
+    h1: 'h1',
+    h2: 'h2',
+    h3: 'h3',
+    h4: 'h4',
+    h5: 'h5',
+    h6: 'h6',
+    body: 'p',
+    caption: 'span',
+    label: 'label',
+  };
+
+  return React.createElement(
+    elementMap[type as TextType],
+    {
+      className: `fibo-text fibo-text-${type} ${className}`,
+      style,
+      ...rest,
+    },
+    text
+  );
 });
 
 class TextBuilder extends FiboBuilder {
-  private _text: string = '';
+  private _text: string | (() => string) = '';
   private _type: TextType = 'body';
 
-  constructor(text: string = '') {
+  constructor(text: string | (() => string) = '') {
     super();
-    this._text = text;
+    this.text(text);
   }
 
-  text(value: string): this {
+  text(value: string | (() => string)): this {
     this._text = value;
+    if (typeof value === 'function') {
+      this.observer();
+    }
     return this;
   }
 
@@ -53,14 +56,16 @@ class TextBuilder extends FiboBuilder {
   }
 
   build(): ReactElement {
-     const props = {
-         text: this._text,
-         type: this._type,
-         className: this.getClassName(),
-         style: this.getStyle(),
-         ...this._props
-     };
-     return React.createElement(TextInner, props);
+    const finalText = typeof this._text === 'function' ? this._text() : this._text;
+
+    const props = {
+      text: finalText,
+      type: this._type,
+      className: this.getClassName(),
+      style: this.getStyle(),
+      ...this._props
+    };
+    return React.createElement(TextInner, props);
   }
 }
 

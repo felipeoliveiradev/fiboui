@@ -55,6 +55,7 @@ class ColumnBuilder extends FiboBuilder {
       'fibo-column',
       'flex',
       'flex-col',
+      'w-full', // Default to full width per user request
       alignmentMap[this._mainAxisAlignment],
       crossAlignmentMap[this._crossAxisAlignment],
       this._size ? sizeMap[this._size] : '',
@@ -68,9 +69,9 @@ class ColumnBuilder extends FiboBuilder {
         style.gap = `${this._spacing}px`;
       } else {
         if (!isNaN(Number(this._spacing))) {
-             style.gap = `${Number(this._spacing) * 4}px`;
+          style.gap = `${Number(this._spacing) * 4}px`;
         } else {
-             style.gap = this._spacing;
+          style.gap = this._spacing;
         }
       }
     }

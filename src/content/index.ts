@@ -7,3 +7,5 @@ export * from './Spinner';
 export * from './Skeleton';
 export * from './Alert';
 export * from './Progress';
+export * from './Icon';
+export * from './Integration';

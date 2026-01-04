@@ -1,6 +1,7 @@
 import React, { ReactElement } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps } from '../../core/types';
+import { twMerge } from 'tailwind-merge';
 
 interface RadioOption {
     label: string;
@@ -22,12 +23,18 @@ const RadioGroupInner = React.memo((props: any) => {
     return React.createElement(
         'div',
         {
-            className: `fibo-radio-group flex ${direction === 'vertical' ? 'flex-col gap-2' : 'flex-row gap-4'} ${className}`,
+            className: twMerge(`fibo-radio-group flex ${direction === 'vertical' ? 'flex-col gap-2' : 'flex-row gap-4'}`, className),
             style: style
         },
         options.map((option: any) => {
             const isSelected = value === option.value;
             const isDisabled = option.disabled;
+
+            
+            const circleClasses = twMerge(
+                'relative flex items-center justify-center w-[18px] h-[18px] rounded-full transition-all duration-200',
+                 isSelected ? 'border-[5px] border-[var(--fibo-primary,#3B82F6)]' : 'border-2 border-gray-300'
+            );
 
             return React.createElement(
                 'label',
@@ -38,14 +45,7 @@ const RadioGroupInner = React.memo((props: any) => {
                 React.createElement(
                     'div',
                     {
-                        className: 'relative flex items-center justify-center',
-                        style: {
-                            width: '18px',
-                            height: '18px',
-                            borderRadius: '50%',
-                            border: isSelected ? '5px solid var(--fibo-primary, #3B82F6)' : '2px solid #D1D5DB',
-                            transition: 'all 0.2s',
-                        }
+                        className: circleClasses
                     },
                     React.createElement('input', {
                         type: 'radio',

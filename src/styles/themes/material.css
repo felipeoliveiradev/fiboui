@@ -65,11 +65,11 @@
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-weight: 500;
-  font-size: 0.875rem;
-  height: 40px;
-  border-radius: 20px; 
+  
+  
+  
   border-radius: 9999px; 
-  padding: 0 24px;
+  
 }
 
 
@@ -112,31 +112,42 @@
   flex-direction: column;
   position: relative;
   margin-bottom: 1rem;
+  
+  border: 1px solid var(--fibo-outline);
+  border-radius: var(--fibo-radius-xs);
+  background-color: transparent;
+  transition: all var(--fibo-transition-duration);
+}
+
+.fibo-theme-material .fibo-textfield-container:focus-within {
+  border-color: var(--fibo-primary);
+  border-width: 2px;
 }
 
 .fibo-theme-material .fibo-textfield-input {
-  width: 100%;
+  
   font-family: inherit;
-  font-size: 1rem;
-  border: 1px solid var(--fibo-outline);
+  
+  border: none;
   background-color: transparent;
   transition: all var(--fibo-transition-duration);
   outline: none;
-  border-radius: var(--fibo-radius-xs);
-  padding: 1rem 1rem;
+  border-radius: 0;
+  
+  width: 100%;
+  height: 100%;
 }
 
 .fibo-theme-material .fibo-textfield-label {
   position: absolute;
   left: 1rem;
   top: 1rem;
-  font-size: 1rem;
+  
   color: var(--fibo-on-surface-variant);
   pointer-events: none;
   transition: all var(--fibo-transition-duration);
   background-color: transparent;
-  background-color: transparent;
-  padding: 0 4px;
+  padding: 0 4px; 
 }
 
 .fibo-theme-material .fibo-textfield-input::placeholder {
@@ -149,12 +160,11 @@
 }
 
 .fibo-theme-material .fibo-textfield-input:focus {
-  border-color: var(--fibo-primary);
-  border-width: 2px;
-  padding: calc(1rem - 1px);
+  
+  outline: none;
 }
 
-.fibo-theme-material .fibo-textfield-input:focus ~ .fibo-textfield-label,
+.fibo-theme-material .fibo-textfield-container:focus-within .fibo-textfield-label,
 .fibo-theme-material .fibo-textfield-input:not(:placeholder-shown) ~ .fibo-textfield-label {
   top: -0.5rem;
   left: 0.75rem;
@@ -170,25 +180,36 @@
   position: relative;
   margin-bottom: 1rem;
   margin-top: 0.5rem; 
+  
+  border: 1px solid var(--fibo-outline);
+  background-color: transparent;
+  border-radius: var(--fibo-radius-xs);
+  transition: all var(--fibo-transition-duration);
+}
+
+.fibo-theme-material .fibo-textarea-container:focus-within {
+  border-color: var(--fibo-primary);
+  border-width: 2px;
 }
 
 .fibo-theme-material .fibo-textarea-input {
   width: 100%;
   font-family: inherit;
-  font-size: 1rem;
-  border: 1px solid var(--fibo-outline);
+  
+  border: none;
   background-color: transparent;
   transition: all var(--fibo-transition-duration);
   outline: none;
-  border-radius: var(--fibo-radius-xs);
-  padding: 1rem 1rem;
+  border-radius: 0;
+  
+  resize: vertical; 
 }
 
 .fibo-theme-material .fibo-textarea-label {
   position: absolute;
   left: 1rem;
   top: 1rem;
-  font-size: 1rem;
+  
   color: var(--fibo-on-surface-variant);
   pointer-events: none;
   transition: all var(--fibo-transition-duration);
@@ -196,21 +217,8 @@
   padding: 0 4px;
 }
 
-.fibo-theme-material .fibo-textarea-input::placeholder {
-  opacity: 0;
-  transition: opacity var(--fibo-transition-duration);
-}
-.fibo-theme-material .fibo-textarea-input:focus::placeholder {
-  opacity: 1;
-}
 
-.fibo-theme-material .fibo-textarea-input:focus {
-  border-color: var(--fibo-primary);
-  border-width: 2px;
-  padding: calc(1rem - 1px);
-}
-
-.fibo-theme-material .fibo-textarea-input:focus ~ .fibo-textarea-label,
+.fibo-theme-material .fibo-textarea-container:focus-within .fibo-textarea-label,
 .fibo-theme-material .fibo-textarea-input:not(:placeholder-shown) ~ .fibo-textarea-label {
   top: -0.5rem;
   left: 0.75rem;

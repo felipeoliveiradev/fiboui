@@ -94,4 +94,13 @@ export default {
     },
   },
   plugins: [],
+  safelist: [
+    {
+      pattern: /(border|ring|text|bg)-(red|blue|green|yellow|purple|pink|indigo|gray|orange|teal|cyan|emerald|lime|amber|fuchsia|rose|violet|sky|slate|zinc|neutral|stone)-(50|100|200|300|400|500|600|700|800|900|950)/,
+      variants: ['hover', 'focus', 'active', 'focus-within', 'group-hover'],
+    },
+    {
+      pattern: /(w|h)-(full|screen|min|max|fit|\d+)/,
+    }
+  ],
 }

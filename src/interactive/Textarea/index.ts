@@ -1,5 +1,6 @@
 import React, { ReactElement, ChangeEvent } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
+import { twMerge } from 'tailwind-merge';
 import { BaseProps } from '../../core/types';
 
 
@@ -23,7 +24,7 @@ const TextareaInner = React.memo((props: any) => {
       { className: containerClass, style: containerStyle },
       React.createElement('textarea', {
           id: inputId,
-          className: 'fibo-textarea-input',
+          className: 'fibo-textarea-input w-full p-4 text-base bg-transparent outline-none relative z-10',
           ...inputRest
       }),
       label && React.createElement(
@@ -93,13 +94,11 @@ class TextareaBuilder extends FiboBuilder {
   }
 
   build(): ReactElement {
-    const containerClass = ['fibo-textarea-container', ...this._classNames]
-      .filter(Boolean)
-      .join(' ');
+    const containerClass = twMerge('fibo-textarea-container w-full', ...this._classNames);
 
     const props = {
         containerClass,
-        containerStyle: { width: '100%', ...this.getStyle() },
+        containerStyle: this.getStyle(),
         label: this._label,
         error: this._error,
         rows: this._rows,

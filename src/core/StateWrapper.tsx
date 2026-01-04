@@ -2,30 +2,30 @@ import { useState, useEffect, createContext, useContext, ReactNode, useRef } fro
 import { Observable, Signal, Tracker } from './state';
 
 export function Observer({ children }: { children: () => ReactNode }) {
-    const [, forceUpdate] = useState({});
-    const tracker = useRef<Tracker | null>(null);
+  const [, forceUpdate] = useState({});
+  const tracker = useRef<Tracker | null>(null);
 
-    if (!tracker.current) {
-        tracker.current = new Tracker(() => {
-             forceUpdate({});
-        });
+  if (!tracker.current) {
+    tracker.current = new Tracker(() => {
+      forceUpdate({});
+    });
+  }
+
+  useEffect(() => {
+    return () => {
+      tracker.current?.dispose();
     }
+  }, []);
 
-    useEffect(() => {
-        return () => {
-            tracker.current?.dispose();
-        }
-    }, []);
-
-    let result;
-    try {
-        result = tracker.current.execute(children);
-    } catch (e) {
-        console.error("Observer render error", e);
-        result = null;
-    }
-    return <>{result}</>;
-} 
+  let result;
+  try {
+    result = tracker.current.execute(children);
+  } catch (e) {
+    console.error("Observer render error", e);
+    result = null;
+  }
+  return <>{result}</>;
+}
 
 
 
@@ -74,7 +74,7 @@ export function ObserverWrapper({ observables, children }: ObserverWrapperProps)
     const unsubscribers = Array.from(observables).map(obs =>
       obs.subscribe(() => forceUpdate({}))
     );
-    
+
     return () => unsubscribers.forEach(unsub => unsub());
   }, [observables]);
 
@@ -98,7 +98,7 @@ export function SignalWrapper({ signals, children }: SignalWrapperProps) {
     const unsubscribers = Array.from(signals).map(sig =>
       sig.subscribe(() => forceUpdate({}))
     );
-    
+
     return () => unsubscribers.forEach(unsub => unsub());
   }, [signals]);
 
@@ -129,3 +129,4 @@ export function ProviderWrapper({ providers, children }: ProviderWrapperProps) {
     </ProviderContext.Provider>
   );
 }
+

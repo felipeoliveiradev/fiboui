@@ -3,7 +3,7 @@ import { ResponsiveStyles } from './types';
 
 export function processChildren(children: ReactNode | ReactNode[]): ReactNode[] {
   const childArray = Array.isArray(children) ? children : [children];
-  
+
   return childArray.map((child) => {
     if (child && typeof child === 'object' && 'build' in child) {
       return (child as any).build();
@@ -31,7 +31,7 @@ export function applyResponsiveStyles(
 
   if (typeof window !== 'undefined') {
     const width = window.innerWidth;
-    
+
     if (width < 768 && responsive.mobile) {
       finalStyle = { ...finalStyle, ...responsive.mobile };
     } else if (width >= 768 && width < 1024 && responsive.tablet) {
@@ -46,4 +46,17 @@ export function applyResponsiveStyles(
 
 export function normalizeValue(value: string | number, unit = 'px'): string {
   return typeof value === 'number' ? `${value}${unit}` : value;
+}
+
+import React, { memo } from 'react';
+
+
+export function createFiboComponent<P extends object>(
+  component: (props: P) => React.ReactNode,
+  propsAreEqual?: (prev: P, next: P) => boolean
+) {
+  const Memoized = memo(component, propsAreEqual);
+  
+  
+  return (props: P) => React.createElement(Memoized, props as any);
 }

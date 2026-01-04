@@ -41,13 +41,13 @@
 .fibo-theme-web .fibo-button {
   font-family: var(--fibo-font-family);
   font-weight: 500;
-  font-size: 0.875rem;
-  padding: 0.5rem 1rem;
+  
   border-radius: var(--fibo-radius-md);
   transition: all 150ms ease;
 }
 
 .fibo-theme-web .fibo-button-filled {
+  
   background-color: var(--fibo-primary);
   color: var(--fibo-on-primary);
 }
@@ -72,22 +72,20 @@
 }
 
 .fibo-theme-web .fibo-textfield-input {
-  width: 100%;
+  
   font-family: inherit;
-  font-size: 0.875rem;
+  
   border: 1px solid var(--fibo-outline);
   background-color: var(--fibo-surface);
   transition: all 150ms ease;
   outline: none;
   border-radius: var(--fibo-radius-md);
-  padding: 0.625rem 1rem;
+  
 }
 
 .fibo-theme-web .fibo-textfield-input:focus {
   border-color: var(--fibo-primary);
   box-shadow: 0 0 0 2px var(--fibo-primary-container);
-
-
   font-weight: 500;
   color: var(--fibo-on-surface);
 }
@@ -100,15 +98,15 @@
 }
 
 .fibo-theme-web .fibo-textarea-input {
-  width: 100%;
+  
   font-family: inherit;
-  font-size: 0.875rem;
+  
   border: 1px solid var(--fibo-outline);
   background-color: var(--fibo-surface);
   transition: all 150ms ease;
   outline: none;
   border-radius: var(--fibo-radius-md);
-  padding: 0.625rem 1rem;
+  
   min-height: 80px;
 }
 
@@ -119,7 +117,7 @@
 
 .fibo-theme-web .fibo-textarea-label {
   margin-bottom: 0.375rem;
-  font-size: 0.875rem;
+  font-size: 0.875rem; 
   font-weight: 500;
   color: var(--fibo-on-surface);
 }

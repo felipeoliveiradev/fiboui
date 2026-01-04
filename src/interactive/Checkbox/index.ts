@@ -1,6 +1,7 @@
 import React, { ReactElement } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps } from '../../core/types';
+import { twMerge } from 'tailwind-merge';
 
 const CheckboxInner = React.memo((props: any) => {
     const { 
@@ -15,28 +16,10 @@ const CheckboxInner = React.memo((props: any) => {
     
     const isCheckedOrIndeterminate = checked || indeterminate;
     
-    const baseStyle: React.CSSProperties = {
-        width: '20px',
-        height: '20px',
-        borderRadius: '6px',
-        border: isCheckedOrIndeterminate ? 'none' : '2px solid #D1D5DB',
-        backgroundColor: isCheckedOrIndeterminate ? 'var(--fibo-primary, #3B82F6)' : 'transparent',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        transition: 'all 0.2s',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.5 : 1,
-        ...style
-    };
-
-    
     let icon = null;
     if (indeterminate) {
-        
-        icon = React.createElement('div', { style: { width: '10px', height: '2px', backgroundColor: 'white', borderRadius: '1px' } });
+        icon = React.createElement('div', { className: 'w-[10px] h-[2px] bg-white rounded-[1px]' });
     } else if (checked) {
-        
         icon = React.createElement('svg', { 
             width: '12', 
             height: '12', 
@@ -56,13 +39,105 @@ const CheckboxInner = React.memo((props: any) => {
     return React.createElement(
         'label',
         { 
-            className: `fibo-checkbox flex items-center gap-2 ${className}`
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            className: twMerge('fibo-checkbox flex items-center gap-2', className)
         },
         React.createElement(
             'div',
             {
-                className: 'fibo-checkbox-box',
-                style: baseStyle,
+                className: twMerge(
+                    'fibo-checkbox-box w-5 h-5 rounded-[6px] border-2 flex items-center justify-center transition-all duration-200',
+                     disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
+                     isCheckedOrIndeterminate 
+                        ? 'border-transparent bg-[var(--fibo-primary,#3B82F6)]' 
+                        : 'border-gray-300 bg-transparent',
+                     
+                     
+                ),
+                style: style, 
                 onClick: (e: React.MouseEvent) => {
                     e.preventDefault();
                     if (!disabled && onChange) {

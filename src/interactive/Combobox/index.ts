@@ -1,5 +1,6 @@
 import React, { ReactElement, useState, useRef, useEffect, ChangeEvent } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
+import { twMerge } from 'tailwind-merge';
 import { BaseProps } from '../../core/types';
 
 interface Option {
@@ -103,7 +104,7 @@ const ComboboxInner = React.memo((props: any) => {
           className: containerClass,
           style: containerStyle 
       },
-      React.createElement('div', { className: 'relative w-full' }, [
+      React.createElement('div', { className: 'relative w-full h-full' }, [
           React.createElement('div', {
               className: `fibo-textfield-input flex flex-wrap items-center gap-1 ${isOpen ? 'ring-2 ring-[var(--fibo-primary-container)] border-[var(--fibo-primary)]' : ''}`,
               style: { minHeight: '42px', padding: '4px 8px' }
@@ -241,9 +242,7 @@ class ComboboxBuilder extends FiboBuilder {
   }
 
   build(): ReactElement {
-    const containerClass = ['fibo-textfield-container relative', ...this._classNames]
-      .filter(Boolean)
-      .join(' ');
+    const containerClass = twMerge('fibo-textfield-container relative', ...this._classNames);
 
     const props = {
         containerClass,
