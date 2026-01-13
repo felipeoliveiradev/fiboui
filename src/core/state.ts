@@ -1,8 +1,6 @@
 export type Listener<T> = (value: T) => void;
 export type Unsubscribe = () => void;
 
-
-
 let activeEffect: Effect | null = null;
 
 export interface Subscribable<T> {
@@ -57,7 +55,7 @@ export class Tracker {
 
   execute<T>(fn: () => T): T {
     const prevEffect = activeEffect;
-    activeEffect = this as any; 
+    activeEffect = this as any;
 
     try {
       this.cleanup();
@@ -67,13 +65,11 @@ export class Tracker {
     }
   }
 
-  
   track(dep: Subscribable<any>) {
     this.dependencies.add(dep);
     dep.subscribeEffect(this as any);
   }
 
-  
   trigger() {
     this._onInvalidate();
   }
@@ -87,8 +83,6 @@ export class Tracker {
     this.cleanup();
   }
 }
-
-
 
 export class Signal<T> implements Subscribable<T> {
   private listeners = new Set<Listener<T>>();
@@ -135,8 +129,6 @@ export class Signal<T> implements Subscribable<T> {
 export function signal<T>(initialValue: T): Signal<T> {
   return new Signal(initialValue);
 }
-
-
 
 export class ComputedSignal<T> implements Subscribable<T> {
   private listeners = new Set<Listener<T>>();
@@ -198,8 +190,6 @@ export function computed<T>(fn: () => T): ComputedSignal<T> {
   return new ComputedSignal(fn);
 }
 
-
-
 export class Observable<T> implements Subscribable<T> {
   private listeners = new Set<Listener<T>>();
   private effects = new Set<Effect>();
@@ -242,8 +232,6 @@ export class Observable<T> implements Subscribable<T> {
 export function observable<T>(initialValue: T): Observable<T> {
   return new Observable(initialValue);
 }
-
-
 
 export interface Store<T> extends Subscribable<T> {
   getState(): T;

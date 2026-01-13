@@ -18,20 +18,17 @@ export class StyleManager {
     return StyleManager.instance;
   }
 
-  
   public register(property: string, value: string): string {
     const key = `${property}:${value}`;
     if (this.cache.has(key)) {
       return this.cache.get(key)!;
     }
 
-    
     const safeValue = value.replace(/[^a-zA-Z0-9-]/g, '_');
     const className = `fibo-${property}-${safeValue}`;
-    
-    
+
     const rule = `.${className} { ${property}: ${value} !important; }`;
-    
+
     if (this.sheet && this.sheet.sheet) {
       try {
         this.sheet.sheet.insertRule(rule, this.sheet.sheet.cssRules.length);
@@ -42,6 +39,56 @@ export class StyleManager {
 
     this.cache.set(key, className);
     return className;
+  }
+
+  public registerPseudo(
+    baseClassName: string,
+    pseudoState: string,
+    property: string,
+    value: string
+  ): string {
+    const key = `${baseClassName}:${pseudoState}:${property}:${value}`;
+    if (this.cache.has(key)) {
+      return baseClassName;
+    }
+
+    const rule = `.${baseClassName}:${pseudoState} { ${property}: ${value} !important; }`;
+
+    if (this.sheet && this.sheet.sheet) {
+      try {
+        this.sheet.sheet.insertRule(rule, this.sheet.sheet.cssRules.length);
+      } catch (e) {
+        console.error('FiboUI: Failed to inject pseudo-state style', e);
+      }
+    }
+
+    this.cache.set(key, baseClassName);
+    return baseClassName;
+  }
+
+  public registerGroupPseudo(
+    baseClassName: string,
+    pseudoState: string,
+    property: string,
+    value: string
+  ): string {
+    const key = `group:${baseClassName}:${pseudoState}:${property}:${value}`;
+    if (this.cache.has(key)) {
+      return baseClassName;
+    }
+
+    const rule = `.group:${pseudoState} .${baseClassName} { ${property}: ${value} !important; }`;
+
+    if (this.sheet && this.sheet.sheet) {
+      try {
+        this.sheet.sheet.insertRule(rule, this.sheet.sheet.cssRules.length);
+      } catch (e) {
+        console.error('FiboUI: Failed to inject group pseudo-state style', e);
+      }
+    }
+
+    this.cache.set(key, baseClassName);
+    return baseClassName;
   }
 }
 

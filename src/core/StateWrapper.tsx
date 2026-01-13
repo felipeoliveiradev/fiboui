@@ -27,25 +27,16 @@ export function Observer({ children }: { children: () => ReactNode }) {
   return <>{result}</>;
 }
 
-
-
-
-
 export const StateContext = createContext<Map<string, any>>(new Map());
 
 export function useStateContext() {
   return useContext(StateContext);
 }
 
-
-
-
-
 interface StateWrapperProps {
   stateMap: Map<string, any>;
   children: ReactNode;
 }
-
 
 export function StateWrapper({ stateMap, children }: StateWrapperProps) {
   const [state] = useState(() => new Map(stateMap));
@@ -57,15 +48,10 @@ export function StateWrapper({ stateMap, children }: StateWrapperProps) {
   );
 }
 
-
-
-
-
 interface ObserverWrapperProps {
   observables: Set<Observable<any>>;
   children: ReactNode;
 }
-
 
 export function ObserverWrapper({ observables, children }: ObserverWrapperProps) {
   const [, forceUpdate] = useState({});
@@ -81,15 +67,10 @@ export function ObserverWrapper({ observables, children }: ObserverWrapperProps)
   return <>{children}</>;
 }
 
-
-
-
-
 interface SignalWrapperProps {
   signals: Set<Signal<any>>;
   children: ReactNode;
 }
-
 
 export function SignalWrapper({ signals, children }: SignalWrapperProps) {
   const [, forceUpdate] = useState({});
@@ -105,10 +86,6 @@ export function SignalWrapper({ signals, children }: SignalWrapperProps) {
   return <>{children}</>;
 }
 
-
-
-
-
 interface ProviderWrapperProps {
   providers: Map<string, any>;
   children: ReactNode;
@@ -121,7 +98,6 @@ export function useProvider<T>(key: string): T | undefined {
   return providers.get(key);
 }
 
-
 export function ProviderWrapper({ providers, children }: ProviderWrapperProps) {
   return (
     <ProviderContext.Provider value={providers}>
@@ -129,4 +105,3 @@ export function ProviderWrapper({ providers, children }: ProviderWrapperProps) {
     </ProviderContext.Provider>
   );
 }
-

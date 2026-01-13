@@ -1,5 +1,3 @@
-
-
 export enum ShadowSize {
   Sm = 'sm',
   Md = 'md',
@@ -27,7 +25,6 @@ export enum ShadowDirection {
   Horizontal = 'horizontal',
   All = 'all',
 }
-
 
 export type ShadowConfig =
   | ShadowSize

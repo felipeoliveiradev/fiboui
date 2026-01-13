@@ -5,14 +5,13 @@ export function useSignal<T>(signal: Signal<T> | ComputedSignal<T>): T {
   const [value, setValue] = useState(signal.value);
 
   useEffect(() => {
-    
-    setValue(signal.value); 
-    
-    
+
+    setValue(signal.value);
+
     const unsubscribe = signal.subscribe((newVal) => {
       setValue(newVal);
     });
-    
+
     return unsubscribe;
   }, [signal]);
 

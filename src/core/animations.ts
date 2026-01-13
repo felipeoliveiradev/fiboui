@@ -9,14 +9,13 @@ export interface AnimationOptions {
   onComplete?: () => void;
 }
 
-// Easing functions
 const easingCurves = {
   linear: (t: number) => t,
   easeIn: (t: number) => t * t,
   easeOut: (t: number) => t * (2 - t),
   easeInOut: (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t,
   spring: (t: number) => {
-    // Simple spring approximation
+
     return 1 - Math.cos(t * Math.PI * 2.5) * Math.exp(-t * 5);
   }
 };
@@ -25,7 +24,6 @@ function interpolate(start: number, end: number, progress: number): number {
   return start + (end - start) * progress;
 }
 
-// Extend Signal prototype
 declare module './state' {
   interface Signal<T> {
     spring(target: T, options?: Partial<AnimationOptions>): void;

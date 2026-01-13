@@ -2,46 +2,32 @@ import 'reflect-metadata';
 import { container } from '../core/di';
 import { Token } from '../core/di/types';
 
-/**
- * useInject hook
- * Resolve a dependency from the DI container
- */
 export function useInject<T>(token: Token<T>): T {
   return container.resolve(token);
 }
 
-/**
- * @Inject decorator for function components
- * Injects dependencies as function parameters
- */
 export function Inject<T>(...tokens: Token<T>[]): any {
   return function (target: Function): any {
     return function (...args: any[]) {
-      // Resolve all tokens
+
       const dependencies = tokens.map(token => container.resolve(token));
 
-      // Call original function with resolved dependencies
       return target(...dependencies, ...args);
     };
   };
 }
 
-/**
- * Lifecycle decorators for function components
- */
-
-// Metadata key for lifecycle hooks
 const LIFECYCLE_HOOKS = Symbol('lifecycleHooks');
 
 interface LifecycleHooks {
+  beforeMount?: Function[];
   onMount?: Function[];
+  onUpdate?: Function[];
+  beforeUnmount?: Function[];
   onUnmount?: Function[];
+  onError?: Function[];
 }
 
-/**
- * @OnMount decorator
- * Runs a method when component mounts
- */
 export function OnMount(): MethodDecorator {
   return function (target: any, _propertyKey: string | symbol, descriptor: PropertyDescriptor) {
     const hooks: LifecycleHooks = Reflect.getMetadata(LIFECYCLE_HOOKS, target) || {};
@@ -52,10 +38,6 @@ export function OnMount(): MethodDecorator {
   };
 }
 
-/**
- * @OnUnmount decorator
- * Runs a method when component unmounts
- */
 export function OnUnmount(): MethodDecorator {
   return function (target: any, _propertyKey: string | symbol, descriptor: PropertyDescriptor) {
     const hooks: LifecycleHooks = Reflect.getMetadata(LIFECYCLE_HOOKS, target) || {};
@@ -66,9 +48,46 @@ export function OnUnmount(): MethodDecorator {
   };
 }
 
-/**
- * Get lifecycle hooks for a component
- */
+export function BeforeMount(): MethodDecorator {
+  return function (target: any, _propertyKey: string | symbol, descriptor: PropertyDescriptor) {
+    const hooks: LifecycleHooks = Reflect.getMetadata(LIFECYCLE_HOOKS, target) || {};
+    hooks.beforeMount = hooks.beforeMount || [];
+    hooks.beforeMount.push(descriptor.value);
+    Reflect.defineMetadata(LIFECYCLE_HOOKS, hooks, target);
+    return descriptor;
+  };
+}
+
+export function OnUpdate(): MethodDecorator {
+  return function (target: any, _propertyKey: string | symbol, descriptor: PropertyDescriptor) {
+    const hooks: LifecycleHooks = Reflect.getMetadata(LIFECYCLE_HOOKS, target) || {};
+    hooks.onUpdate = hooks.onUpdate || [];
+    hooks.onUpdate.push(descriptor.value);
+    Reflect.defineMetadata(LIFECYCLE_HOOKS, hooks, target);
+    return descriptor;
+  };
+}
+
+export function BeforeUnmount(): MethodDecorator {
+  return function (target: any, _propertyKey: string | symbol, descriptor: PropertyDescriptor) {
+    const hooks: LifecycleHooks = Reflect.getMetadata(LIFECYCLE_HOOKS, target) || {};
+    hooks.beforeUnmount = hooks.beforeUnmount || [];
+    hooks.beforeUnmount.push(descriptor.value);
+    Reflect.defineMetadata(LIFECYCLE_HOOKS, hooks, target);
+    return descriptor;
+  };
+}
+
+export function OnError(): MethodDecorator {
+  return function (target: any, _propertyKey: string | symbol, descriptor: PropertyDescriptor) {
+    const hooks: LifecycleHooks = Reflect.getMetadata(LIFECYCLE_HOOKS, target) || {};
+    hooks.onError = hooks.onError || [];
+    hooks.onError.push(descriptor.value);
+    Reflect.defineMetadata(LIFECYCLE_HOOKS, hooks, target);
+    return descriptor;
+  };
+}
+
 export function getLifecycleHooks(target: any): LifecycleHooks {
   return Reflect.getMetadata(LIFECYCLE_HOOKS, target) || {};
 }

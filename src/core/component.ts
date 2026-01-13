@@ -50,13 +50,11 @@ export function normalizeValue(value: string | number, unit = 'px'): string {
 
 import React, { memo } from 'react';
 
-
 export function createFiboComponent<P extends object>(
   component: (props: P) => React.ReactNode,
   propsAreEqual?: (prev: P, next: P) => boolean
 ) {
   const Memoized = memo(component, propsAreEqual);
-  
-  
+
   return (props: P) => React.createElement(Memoized, props as any);
 }
