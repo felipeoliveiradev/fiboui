@@ -1,6 +1,5 @@
 import { MaterialColor, Shade } from './colorEnums';
 
-
 export const MaterialColorPalette: Record<string, Record<number | string, string>> = {
   red: {
     50: '#FFEBEE', 100: '#FFCDD2', 200: '#EF9A9A', 300: '#E57373',
@@ -133,13 +132,11 @@ export const MaterialColorPalette: Record<string, Record<number | string, string
   },
 };
 
-
 export function color(materialColor: MaterialColor, shade: Shade = Shade.S500): string {
   const colorName = materialColor.toString();
   const shadeValue = typeof shade === 'number' ? shade : shade.toString();
   return MaterialColorPalette[colorName]?.[shadeValue] || '#000000';
 }
-
 
 export function getCSSVar(colorName: string): string {
   return `var(--fibo-${colorName})`;

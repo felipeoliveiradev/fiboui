@@ -4,13 +4,11 @@ import { ShapeBuilder, createShapeBuilder } from '../ShapeBuilder';
 class PathBuilder extends ShapeBuilder {
   private _d: string = '';
 
-  // Path data
   d(pathData: string): this {
     this._d = pathData;
     return this;
   }
 
-  // Path commands (specific to Path)
   moveTo(x: number, y: number): this {
     this._d += `M ${x} ${y} `;
     return this;
@@ -61,11 +59,9 @@ class PathBuilder extends ShapeBuilder {
     return this;
   }
 
-  // Natural Language & Fluent API State
   private _pullX?: number;
   private _pullY?: number;
 
-  // Human-readable aliases
   startAt(x: number, y: number): this {
     return this.moveTo(x, y);
   }
@@ -78,7 +74,6 @@ class PathBuilder extends ShapeBuilder {
     return this.quadraticCurveTo(pullX, pullY, endX, endY);
   }
 
-  // Stateful Fluent API: .pull(x, y).to(x, y)
   pull(x: number, y: number): this {
     this._pullX = x;
     this._pullY = y;
@@ -87,13 +82,13 @@ class PathBuilder extends ShapeBuilder {
 
   to(x: number, y: number): this {
     if (this._pullX !== undefined && this._pullY !== undefined) {
-      // If we have a pull point, draw a curve
+
       this.quadraticCurveTo(this._pullX, this._pullY, x, y);
-      // Reset pull state
+
       this._pullX = undefined;
       this._pullY = undefined;
     } else {
-      // Otherwise, draw a straight line
+
       this.lineTo(x, y);
     }
     return this;

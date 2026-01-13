@@ -61,7 +61,6 @@ class LinearGradientBuilder extends FiboBuilder {
       )
     );
 
-    // Return wrapper object with gradient element and id
     return { element: gradientElement, id: this._id };
   }
 }

@@ -13,7 +13,6 @@ class RectBuilder extends ShapeBuilder {
   private _radiusBottomLeft?: number;
   private _radiusBottomRight?: number;
 
-  // Position methods (specific to Rect)
   position(x: number, y: number): this {
     this._x = x;
     this._y = y;
@@ -66,7 +65,6 @@ class RectBuilder extends ShapeBuilder {
     return this;
   }
 
-  // Size methods (specific to Rect)
   size(width: number, height: number): this {
     this._width = width;
     this._height = height;
@@ -83,7 +81,6 @@ class RectBuilder extends ShapeBuilder {
     return this;
   }
 
-  // Corner radius methods (specific to Rect)
   cornerRadius(radius: number): this {
     this._rx = radius;
     this._ry = radius;
@@ -144,7 +141,6 @@ class RectBuilder extends ShapeBuilder {
     return this;
   }
 
-  // Rect-specific rotation
   rotateSelf(degrees: number): this {
     const cx = this._x + this._width / 2;
     const cy = this._y + this._height / 2;

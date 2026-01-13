@@ -1,14 +1,12 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { ThemeData } from './themeTypes';
 
-
 const ThemeContext = createContext<ThemeData | null>(null);
-
 
 export function useTheme(): ThemeData {
   const theme = useContext(ThemeContext);
   if (!theme) {
-    
+
     return {
       type: 'material' as any,
       colorScheme: {},
@@ -17,7 +15,6 @@ export function useTheme(): ThemeData {
   }
   return theme;
 }
-
 
 export interface ThemeProviderProps {
   theme: ThemeData;

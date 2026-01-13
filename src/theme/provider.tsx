@@ -24,9 +24,9 @@ interface FiboThemeProviderProps {
   children: ReactNode;
 }
 
-export function FiboThemeProvider({ 
-  theme: initialTheme = 'material', 
-  children 
+export function FiboThemeProvider({
+  theme: initialTheme = 'material',
+  children
 }: FiboThemeProviderProps) {
   const [themeName, setThemeName] = useState<FiboThemeName>(initialTheme);
   const [theme, setThemeObject] = useState<FiboTheme>(themes[initialTheme]);
@@ -34,17 +34,14 @@ export function FiboThemeProvider({
   useEffect(() => {
     const newTheme = themes[themeName];
     setThemeObject(newTheme);
-    
+
     if (typeof document !== 'undefined') {
       const root = document.documentElement;
-      
-      
+
       root.classList.remove('fibo-theme-material', 'fibo-theme-cupertino', 'fibo-theme-web');
-      
-      
+
       root.classList.add(`fibo-theme-${themeName}`);
-      
-      
+
       root.style.setProperty('--fibo-primary', newTheme.colors.primary);
       root.style.setProperty('--fibo-secondary', newTheme.colors.secondary);
       root.style.setProperty('--fibo-background', newTheme.colors.background);

@@ -6,7 +6,6 @@ class CircleBuilder extends ShapeBuilder {
   private _cy: number = 0;
   private _r: number = 10;
 
-  // Position methods (specific to Circle)
   center(cx: number, cy: number): this {
     this._cx = cx;
     this._cy = cy;
@@ -53,7 +52,6 @@ class CircleBuilder extends ShapeBuilder {
     return this;
   }
 
-  // Convenience methods for API consistency with Rect
   position(x: number, y: number): this {
     this._cx = x + this._r;
     this._cy = y + this._r;
@@ -66,7 +64,6 @@ class CircleBuilder extends ShapeBuilder {
     return this;
   }
 
-  // Size methods (specific to Circle)
   radius(r: number): this {
     this._r = r;
     return this;
@@ -92,7 +89,6 @@ class CircleBuilder extends ShapeBuilder {
     return this;
   }
 
-  // Circle-specific rotation methods
   rotateSelf(degrees: number): this {
     this._transform = `rotate(${degrees} ${this._cx} ${this._cy})`;
     return this;

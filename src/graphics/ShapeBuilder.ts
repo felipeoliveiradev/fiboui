@@ -29,7 +29,6 @@ export class ShapeBuilder {
     return this;
   }
 
-  // Fill - granular methods
   fill(color: string | any): this {
     if (typeof color === 'string') {
       this._fill = color;
@@ -64,7 +63,6 @@ export class ShapeBuilder {
     return this;
   }
 
-  // Stroke - granular methods
   stroke(color: string): this {
     this._stroke = color;
     return this;
@@ -131,7 +129,6 @@ export class ShapeBuilder {
     return this;
   }
 
-  // Opacity - granular methods
   opacity(value: number): this {
     this._opacity = value;
     return this;
@@ -152,7 +149,6 @@ export class ShapeBuilder {
     return this;
   }
 
-  // Transform - granular methods
   transform(value: string): this {
     this._transform = value;
     return this;
@@ -210,7 +206,6 @@ export class ShapeBuilder {
     return this;
   }
 
-  // 3D Rotation
   rotateX(degrees: number): this {
     this._transform = `rotateX(${degrees}deg)`;
     return this;
@@ -236,7 +231,6 @@ export class ShapeBuilder {
     return this;
   }
 
-  // Filters - granular methods
   filter(value: string): this {
     this._filter = value;
     return this;
@@ -302,13 +296,11 @@ export class ShapeBuilder {
     return this;
   }
 
-  // Clip path
   clipPath(value: string): this {
     this._clipPath = value;
     return this;
   }
 
-  // Layering and composition
   children(elements: React.ReactNode[]): this {
     this._children = elements;
     return this;

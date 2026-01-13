@@ -5,4 +5,3 @@ export * from './shapes/Path';
 export * from './gradients/LinearGradient';
 export * from './icons/BurgerIcon';
 export * from './components/Card';
-

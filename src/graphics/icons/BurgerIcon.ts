@@ -21,7 +21,7 @@ class BurgerIconBuilder extends FiboBuilder {
       .height(s)
       .viewBox('0 0 100 100')
       .children([
-        // 1. Shadow Base (Soft oval shadow under the burger)
+
         Circle()
           .center(50, 92)
           .radius(35)
@@ -31,42 +31,39 @@ class BurgerIconBuilder extends FiboBuilder {
           .scale(1, 0.2)
           .build(),
 
-        // 2. Bottom Bun (Heel)
         Path()
-          // Custom shape for bottom bun with rounded bottom corners
+
           .startAt(15, 80)
-          .pull(15, 92).to(30, 92) // Bends towards (15,92)
-          .to(70, 92)              // Straight line
-          .pull(85, 92).to(85, 80) // Bends towards (85,92)
+          .pull(15, 92).to(30, 92)
+          .to(70, 92)
+          .pull(85, 92).to(85, 80)
           .to(85, 75)
           .to(15, 75)
           .done()
-          .fillHex('#E6A15C') // Golden brown
-          .strokeHex('#CC8E51') // Slightly darker border
+          .fillHex('#E6A15C')
+          .strokeHex('#CC8E51')
           .strokeWidth(0.5)
           .shadow(0, 2, 3, 'rgba(0,0,0,0.1)')
           .build(),
 
-        // Bottom Bun Highlight
         Path()
           .startAt(25, 88)
-          .pull(50, 90).to(75, 88) // Bends towards (50,90)
+          .pull(50, 90).to(75, 88)
           .strokeHex('#F5CBA7')
           .strokeWidth(2)
           .opacity(0.4)
           .fill('none')
           .build(),
 
-        // 3. Meat Patty (Thick and textured)
         Rect()
           .position(12, 65)
           .size(76, 12)
           .cornerRadius(4)
-          .fillHex('#5D4037') // Dark brown cooked meat
+          .fillHex('#5D4037')
           .strokeHex('#3E2723')
           .strokeWidth(0.5)
           .children([
-            // Grill marks / Texture
+
             Path().startAt(20, 65).to(20, 77).strokeHex('#3E2723').strokeWidth(1).opacity(0.3).build(),
             Path().startAt(35, 65).to(35, 77).strokeHex('#3E2723').strokeWidth(1).opacity(0.3).build(),
             Path().startAt(50, 65).to(50, 77).strokeHex('#3E2723').strokeWidth(1).opacity(0.3).build(),
@@ -75,9 +72,8 @@ class BurgerIconBuilder extends FiboBuilder {
           .shadow(0, 2, 2, 'rgba(0,0,0,0.2)')
           .build(),
 
-        // 4. Melted Cheese (Dripping over the patty)
         Path()
-          // Shape traversing top of patty and dripping down
+
           .startAt(12, 66)
           .to(88, 66)
           .to(88, 70)
@@ -90,36 +86,34 @@ class BurgerIconBuilder extends FiboBuilder {
           .pull(25, 70).to(20, 74)
           .to(12, 70)
           .done()
-          .fillHex('#FFC107') // Amber/Gold cheese
+          .fillHex('#FFC107')
           .strokeHex('#FFA000')
           .strokeWidth(0.5)
           .opacity(0.95)
           .shadow(0, 1, 1, 'rgba(0,0,0,0.1)')
           .build(),
 
-        // 5. Tomato Slice (Shiny and Red)
         Rect()
           .position(14, 58)
           .size(72, 8)
           .cornerRadius(3)
-          .fillHex('#F44336') // Vibrant red
+          .fillHex('#F44336')
           .strokeHex('#D32F2F')
           .strokeWidth(0.5)
           .children([
-            // Glossy reflection
+
             Path()
               .startAt(18, 60)
               .to(84, 60)
-              .strokeHex('#FFCDD2') // Pale pink/white highlight
+              .strokeHex('#FFCDD2')
               .strokeWidth(2)
               .opacity(0.6)
               .build()
           ])
           .build(),
 
-        // 6. Lettuce (Ruffled edges)
         Path()
-          // Wavy green layer
+
           .startAt(10, 52)
           .pull(17.5, 58).to(25, 52)
           .pull(32.5, 58).to(40, 52)
@@ -130,15 +124,14 @@ class BurgerIconBuilder extends FiboBuilder {
           .to(12, 58)
           .pull(8, 55).to(10, 52)
           .done()
-          .fillHex('#7CB342') // Fresh green
+          .fillHex('#7CB342')
           .strokeHex('#558B2F')
           .strokeWidth(0.5)
           .shadow(0, 1, 2, 'rgba(0,0,0,0.15)')
           .build(),
 
-        // 7. Top Bun (Crown) - Large dome
         Path()
-          // Dome shape
+
           .startAt(10, 50)
           .pull(10, 20).to(50, 20)
           .pull(90, 20).to(90, 50)
@@ -147,11 +140,11 @@ class BurgerIconBuilder extends FiboBuilder {
           .to(15, 56)
           .pull(10, 55).to(10, 52)
           .done()
-          .fillHex('#E6A15C') // Golden brown matches bottom
+          .fillHex('#E6A15C')
           .strokeHex('#CC8E51')
           .strokeWidth(0.5)
           .children([
-            // Shine/Highlight on top
+
             Circle()
               .center(30, 35)
               .radius(10)
@@ -161,10 +154,9 @@ class BurgerIconBuilder extends FiboBuilder {
               .scale(1.5, 0.8)
               .build()
           ])
-          .shadow(0, -2, 4, 'rgba(0,0,0,0.05) inset') // Inner shadow for volume
+          .shadow(0, -2, 4, 'rgba(0,0,0,0.05) inset')
           .build(),
 
-        // 8. Sesame Seeds (Scattered on top)
         Circle().center(30, 32).radius(1.5).fillHex('#FFE0B2').build(),
         Circle().center(45, 28).radius(1.5).fillHex('#FFE0B2').build(),
         Circle().center(60, 30).radius(1.5).fillHex('#FFE0B2').build(),
@@ -173,7 +165,6 @@ class BurgerIconBuilder extends FiboBuilder {
         Circle().center(55, 40).radius(1.5).fillHex('#FFE0B2').build(),
         Circle().center(20, 40).radius(1.5).fillHex('#FFE0B2').build(),
 
-        // Rotated seeds using Path for oval shape
         Path()
           .startAt(68, 24)
           .pull(70, 24).to(70, 26)
