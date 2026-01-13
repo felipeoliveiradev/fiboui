@@ -1,9 +1,5 @@
 import { Route } from './RouterContext';
 
-/**
- * Match a path against a route pattern
- * Supports dynamic segments like /users/:id
- */
 export function matchPath(
   pathname: string,
   pattern: string
@@ -11,7 +7,6 @@ export function matchPath(
   const patternParts = pattern.split('/').filter(Boolean);
   const pathParts = pathname.split('/').filter(Boolean);
 
-  // Different number of parts = no match (unless pattern has wildcards)
   if (patternParts.length !== pathParts.length) {
     return { match: false, params: {} };
   }
@@ -22,14 +17,12 @@ export function matchPath(
     const patternPart = patternParts[i];
     const pathPart = pathParts[i];
 
-    // Dynamic segment (starts with :)
     if (patternPart.startsWith(':')) {
       const paramName = patternPart.slice(1);
       params[paramName] = pathPart;
       continue;
     }
 
-    // Static segment must match exactly
     if (patternPart !== pathPart) {
       return { match: false, params: {} };
     }
@@ -38,9 +31,6 @@ export function matchPath(
   return { match: true, params };
 }
 
-/**
- * Find the best matching route for a given pathname
- */
 export function findMatchingRoute(
   routes: Route[],
   pathname: string
@@ -52,7 +42,6 @@ export function findMatchingRoute(
       return { route, params };
     }
 
-    // Check nested routes
     if (route.children) {
       const childResult = findMatchingRoute(route.children, pathname);
       if (childResult.route) {
@@ -64,9 +53,6 @@ export function findMatchingRoute(
   return { route: null, params: {} };
 }
 
-/**
- * Build a path from a pattern and params
- */
 export function buildPath(pattern: string, params: Record<string, string> = {}): string {
   let path = pattern;
 

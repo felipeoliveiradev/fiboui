@@ -1,13 +1,12 @@
-export { Router, CurrentRouteContext, useCurrentRoute } from './Router';
+export { Router, useCurrentRoute, CurrentRouteContext } from './Router';
 export { Link, NavLink } from './Link';
 export { Outlet } from './Outlet';
-export {
-  RouterContext,
-  useRouter,
-  useNavigate,
-  useParams,
-  useQuery,
-  useLocation,
-} from './RouterContext';
+export { RouteErrorBoundary } from './ErrorBoundary';
+export { DefaultErrorPage } from './DefaultErrorPage';
+export { lazyRoute, preloadRoute } from './lazy.tsx';
+export { DefaultLoader } from './DefaultLoader';
+export * from './guards';
+export * from './metadata';
+export * from './RouterContext';
 export { matchPath, findMatchingRoute, buildPath } from './routeMatching';
 export type { Route, RouterContextValue, NavigateOptions } from './RouterContext';

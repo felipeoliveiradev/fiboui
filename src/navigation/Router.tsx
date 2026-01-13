@@ -1,30 +1,31 @@
-import React, { useState, useEffect, useCallback, ReactNode, Suspense, createContext, useContext } from 'react';
+import React, { useState, useEffect, useCallback, ReactNode, Suspense, createContext, useContext, ErrorInfo } from 'react';
 import { RouterContext, Route, NavigateOptions, RouterContextValue } from './RouterContext';
 import { findMatchingRoute } from './routeMatching';
+import { RouteErrorBoundary } from './ErrorBoundary';
+import { DefaultErrorPage } from './DefaultErrorPage';
 
 interface RouterProps {
   routes: Route[];
   fallback?: React.ComponentType;
   loading?: ReactNode;
   basename?: string;
+  errorBoundary?: ReactNode | ((error: Error, errorInfo: ErrorInfo) => ReactNode);
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
-// Context for current route (used by Outlet)
 export const CurrentRouteContext = createContext<Route | null>(null);
 
 export function useCurrentRoute(): Route | null {
   return useContext(CurrentRouteContext);
 }
 
-/**
- * Router Component
- * Provides routing context and handles navigation
- */
 export const Router: React.FC<RouterProps> = ({
   routes,
   fallback: FallbackComponent,
   loading,
-  basename = ''
+  basename = '',
+  errorBoundary,
+  onError
 }) => {
   const [currentPath, setCurrentPath] = useState(() => {
     return window.location.pathname.replace(basename, '') || '/';
@@ -33,16 +34,41 @@ export const Router: React.FC<RouterProps> = ({
   const [params, setParams] = useState<Record<string, string>>({});
   const [query, setQuery] = useState(() => new URLSearchParams(window.location.search));
 
-  // Find matching route
   const { route, params: matchedParams } = findMatchingRoute(routes, currentPath);
 
-  // Update params when route changes
   useEffect(() => {
     setParams(matchedParams);
   }, [currentPath]);
 
-  // Navigate to a new path
-  const navigate = useCallback((path: string, options: NavigateOptions = {}) => {
+  const navigate = useCallback(async (path: string, options: NavigateOptions = {}) => {
+    const { route: nextRoute } = findMatchingRoute(routes, path);
+
+    if (route?.beforeLeave && nextRoute) {
+      const leaveResult = await route.beforeLeave(nextRoute, route);
+
+      if (leaveResult === false) {
+        return;
+      }
+
+      if (typeof leaveResult === 'string') {
+
+        return navigate(leaveResult, options);
+      }
+    }
+
+    if (nextRoute?.beforeEnter) {
+      const enterResult = await nextRoute.beforeEnter(nextRoute, route);
+
+      if (enterResult === false) {
+        return;
+      }
+
+      if (typeof enterResult === 'string') {
+
+        path = enterResult;
+      }
+    }
+
     const fullPath = basename + path;
 
     if (options.replace) {
@@ -53,19 +79,16 @@ export const Router: React.FC<RouterProps> = ({
 
     setCurrentPath(path);
     setQuery(new URLSearchParams(window.location.search));
-  }, [basename]);
+  }, [basename, route, routes]);
 
-  // Go back in history
   const goBack = useCallback(() => {
     window.history.back();
   }, []);
 
-  // Replace current path
   const replace = useCallback((path: string) => {
     navigate(path, { replace: true });
   }, [navigate]);
 
-  // Handle browser back/forward buttons
   useEffect(() => {
     const handlePopState = () => {
       const newPath = window.location.pathname.replace(basename, '') || '/';
@@ -86,7 +109,6 @@ export const Router: React.FC<RouterProps> = ({
     query,
   };
 
-  // Render matched route or fallback
   const renderContent = () => {
     if (!route) {
       return FallbackComponent ? <FallbackComponent /> : <div>404 - Page Not Found</div>;
@@ -94,11 +116,19 @@ export const Router: React.FC<RouterProps> = ({
 
     const Component = route.component;
 
-    // Provide current route to Outlet components
-    return (
+    const content = (
       <CurrentRouteContext.Provider value={route}>
         <Component />
       </CurrentRouteContext.Provider>
+    );
+
+    return (
+      <RouteErrorBoundary
+        fallback={errorBoundary || <DefaultErrorPage />}
+        onError={onError}
+      >
+        {content}
+      </RouteErrorBoundary>
     );
   };
 

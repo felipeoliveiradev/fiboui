@@ -11,10 +11,6 @@ interface LinkProps {
   onClick?: (e: MouseEvent<HTMLAnchorElement>) => void;
 }
 
-/**
- * Link Component
- * Navigates to a route without page reload
- */
 export const Link: React.FC<LinkProps> = ({
   to,
   children,
@@ -27,7 +23,7 @@ export const Link: React.FC<LinkProps> = ({
   const navigate = useNavigate();
 
   const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
-    // Allow default behavior for modified clicks
+
     if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) {
       return;
     }
@@ -59,10 +55,6 @@ interface NavLinkProps extends LinkProps {
   exact?: boolean;
 }
 
-/**
- * NavLink Component
- * Link with active state styling
- */
 export const NavLink: React.FC<NavLinkProps> = ({
   to,
   children,

@@ -1,11 +1,18 @@
 import React, { createContext, useContext } from 'react';
 
+export type RouteGuard = (
+  to: Route,
+  from: Route | null
+) => boolean | string | Promise<boolean | string>;
+
 export interface Route {
   path: string;
   component: React.ComponentType<any>;
   children?: Route[];
   exact?: boolean;
   meta?: Record<string, any>;
+  beforeEnter?: RouteGuard;
+  beforeLeave?: RouteGuard;
 }
 
 export interface RouterContextValue {
