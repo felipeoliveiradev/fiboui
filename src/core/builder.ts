@@ -8,6 +8,26 @@ import { cssToTailwind } from '@metagptx/css-to-tailwind';
 import { GestureBuilder } from './gestures/GestureBuilders';
 import { AnimationOptions } from './animations';
 import { AnimatedWrapper } from './AnimatedWrapper';
+import { PseudoStateBuilder } from './PseudoStateBuilder';
+
+interface ThemeColors {
+  primary?: string;
+  onPrimary?: string;
+  secondary?: string;
+  onSecondary?: string;
+  background?: string;
+  onBackground?: string;
+  surface?: string;
+  onSurface?: string;
+  error?: string;
+  [key: string]: string | undefined;
+}
+
+interface ThemeConfig {
+  colors?: ThemeColors;
+  colorScheme?: ThemeColors;
+  [key: string]: unknown;
+}
 
 export abstract class FiboBuilder {
   protected _props: Record<string, any> = {};
@@ -17,20 +37,19 @@ export abstract class FiboBuilder {
   protected _children: ReactNode[] = [];
   protected _responsive?: ResponsiveStyles;
 
-
+  protected _theme?: ThemeConfig;
   protected _state: Map<string, any> = new Map();
   protected _providers: Map<string, any> = new Map();
   protected _observers: Set<Observable<any>> = new Set();
   protected _signals: Set<Signal<any>> = new Set();
   protected _isObserver: boolean = false;
 
-  // Animation & Gesture
   protected _gesture?: GestureBuilder;
   protected _animationConfig?: Partial<AnimationOptions>;
   protected _animatedProps = new Map<string, Signal<any>>();
   protected _transforms: string[] = [];
 
-
+  protected _pseudoStateClassName?: string;
 
   id(value: string): this {
     this._props.id = value;
@@ -45,7 +64,6 @@ export abstract class FiboBuilder {
   paddingHorizontal(value: string | number): this {
     const finalValue = typeof value === 'number' ? `${value}px` : value;
 
-
     const clsLeft = _styleManager.register('padding-left', finalValue);
     const clsRight = _styleManager.register('padding-right', finalValue);
     this._classNames.push(clsLeft, clsRight);
@@ -59,8 +77,6 @@ export abstract class FiboBuilder {
     this._classNames.push(clsTop, clsBottom);
     return this;
   }
-
-
 
   marginHorizontal(value: string | number): this {
     const finalValue = typeof value === 'number' ? `${value}px` : value;
@@ -78,21 +94,6 @@ export abstract class FiboBuilder {
     return this;
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   flexDirection(direction: 'row' | 'column'): this {
     this._classNames.push(`flex-${direction}`);
     return this;
@@ -107,7 +108,6 @@ export abstract class FiboBuilder {
     this._classNames.push(`justify-${justify}`);
     return this;
   }
-
 
   flex(value?: number | string): this {
     this._classNames.push('flex');
@@ -152,11 +152,6 @@ export abstract class FiboBuilder {
     return this;
   }
 
-
-
-
-
-
   center(): this {
     this._classNames.push('flex', 'items-center', 'justify-center');
     return this;
@@ -187,7 +182,6 @@ export abstract class FiboBuilder {
     return this;
   }
 
-
   fill(): this {
     this._classNames.push('w-full', 'h-full');
     return this;
@@ -211,7 +205,6 @@ export abstract class FiboBuilder {
     return this;
   }
 
-
   circle(): this {
     this._classNames.push('rounded-full');
     return this;
@@ -222,7 +215,6 @@ export abstract class FiboBuilder {
     this._classNames.push(cls);
     return this;
   }
-
 
   p(value: number | string): this {
     const finalValue = typeof value === 'number' ? `${value}px` : value;
@@ -236,6 +228,14 @@ export abstract class FiboBuilder {
   }
 
   py(value: number | string): this {
+    return this.paddingVertical(value);
+  }
+
+  paddingX(value: number | string): this {
+    return this.paddingHorizontal(value);
+  }
+
+  paddingY(value: number | string): this {
     return this.paddingVertical(value);
   }
 
@@ -254,6 +254,13 @@ export abstract class FiboBuilder {
     return this.marginVertical(value);
   }
 
+  marginX(value: number | string): this {
+    return this.marginHorizontal(value);
+  }
+
+  marginY(value: number | string): this {
+    return this.marginVertical(value);
+  }
 
   bg(color: string | import('../theme/colorEnums').Colors): this {
 
@@ -277,6 +284,16 @@ export abstract class FiboBuilder {
     return this;
   }
 
+  color(value: string | import('../theme/colorEnums').Colors): this {
+
+    const colorValue = typeof value === 'string' && !value.startsWith('#') && !value.startsWith('rgb')
+      ? this.resolveSemanticColor(value)
+      : value;
+
+    const cls = _styleManager.register('color', colorValue as string);
+    this._classNames.push(cls);
+    return this;
+  }
 
   private resolveSemanticColor(colorName: string): string {
 
@@ -294,10 +311,8 @@ export abstract class FiboBuilder {
       return `var(--fibo-${colorName})`;
     }
 
-
     return colorName;
   }
-
 
   shadow(config?: import('./shadowTypes').ShadowConfig): this {
     if (config === null || config === 'none') {
@@ -305,7 +320,6 @@ export abstract class FiboBuilder {
       this._classNames.push(cls);
       return this;
     }
-
 
     const SHADOW_VALUES: Record<string, string> = {
 
@@ -322,17 +336,14 @@ export abstract class FiboBuilder {
       inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',
     };
 
-
     const isColor = (str: string): boolean => {
       return str.startsWith('#') || str.startsWith('rgb') || str.startsWith('hsl') ||
         ['red', 'blue', 'green', 'yellow', 'purple', 'pink', 'orange', 'white', 'black', 'gray'].some(c => str.includes(c));
     };
 
-
     const getDirectionalShadow = (direction: string, size: string, color?: string, opacity?: number): string => {
       const baseOpacity = opacity ?? 0.1;
       const shadowColor = color ? color : 'rgba(0, 0, 0, ' + baseOpacity + ')';
-
 
       let finalColor = shadowColor;
       if (color && color.startsWith('#') && opacity !== undefined) {
@@ -373,13 +384,11 @@ export abstract class FiboBuilder {
       }
     };
 
-
     if (!config) {
       const cls = _styleManager.register('box-shadow', SHADOW_VALUES.md);
       this._classNames.push(cls);
       return this;
     }
-
 
     if (typeof config === 'string') {
 
@@ -390,17 +399,14 @@ export abstract class FiboBuilder {
         return this;
       }
 
-
       const shadowValue = SHADOW_VALUES[config] || SHADOW_VALUES.md;
       const cls = _styleManager.register('box-shadow', shadowValue);
       this._classNames.push(cls);
       return this;
     }
 
-
     if (Array.isArray(config)) {
       const [first, second, third, fourth] = config;
-
 
       if (typeof first === 'string' && isColor(first)) {
         const shadow = getDirectionalShadow('all', 'md', first, second as number);
@@ -409,9 +415,7 @@ export abstract class FiboBuilder {
         return this;
       }
 
-
       const direction = first as string;
-
 
       const isSecondParamColor = typeof second === 'string' && isColor(second);
 
@@ -434,16 +438,10 @@ export abstract class FiboBuilder {
     return this;
   }
 
-
   responsive(styles: ResponsiveStyles): this {
     this._responsive = styles;
     return this;
   }
-
-
-
-
-
 
   rounded(value: string | number): this {
     if (typeof value === 'number') {
@@ -487,7 +485,7 @@ export abstract class FiboBuilder {
 
   width(value: string | number): this {
     if (typeof value === 'number') {
-      // Use pixels for direct number access - standardizes API to be like Flutter/cleaner
+
       const cls = _styleManager.register('width', `${value}px`);
       this._classNames.push(cls);
     }
@@ -504,7 +502,7 @@ export abstract class FiboBuilder {
 
   height(value: string | number): this {
     if (typeof value === 'number') {
-      // Use pixels for direct number access
+
       const cls = _styleManager.register('height', `${value}px`);
       this._classNames.push(cls);
     }
@@ -537,7 +535,6 @@ export abstract class FiboBuilder {
   clean(): this {
     this._classNames.push(
 
-
       '[&_input]:outline-none', '[&_input]:ring-0', '[&_input]:border-none', '[&_input]:!shadow-none',
       '[&_input]:bg-transparent', '[&_input]:h-full', '[&_input]:w-full', '[&_input]:p-0',
 
@@ -546,7 +543,6 @@ export abstract class FiboBuilder {
 
       '[&_select]:outline-none', '[&_select]:ring-0', '[&_select]:border-none', '[&_select]:!shadow-none',
       '[&_select]:bg-transparent', '[&_select]:h-full', '[&_select]:w-full', '[&_select]:p-0',
-
 
       '[&_.fibo-textfield-input]:outline-none',
       '[&_.fibo-textfield-input]:ring-0',
@@ -557,7 +553,6 @@ export abstract class FiboBuilder {
       '[&_.fibo-textfield-input]:w-full',
       '[&_.fibo-textfield-input]:p-0',
 
-
       '[&_.fibo-textarea-input]:outline-none',
       '[&_.fibo-textarea-input]:ring-0',
       '[&_.fibo-textarea-input]:border-none',
@@ -566,7 +561,6 @@ export abstract class FiboBuilder {
       '[&_.fibo-textarea-input]:h-full',
       '[&_.fibo-textarea-input]:w-full',
       '[&_.fibo-textarea-input]:p-0',
-
 
       '[&>div]:h-full'
     );
@@ -596,33 +590,59 @@ export abstract class FiboBuilder {
     return this.clean();
   }
 
+  weight(value: string | number): this {
+    if (typeof value === 'number') {
+      const cls = _styleManager.register('font-weight', String(value));
+      this._classNames.push(cls);
+    } else {
+      const map: Record<string, string> = {
+        thin: 'font-thin',
+        extralight: 'font-extralight',
+        light: 'font-light',
+        normal: 'font-normal',
+        medium: 'font-medium',
+        semibold: 'font-semibold',
+        bold: 'font-bold',
+        extrabold: 'font-extrabold',
+        black: 'font-black',
+      };
+      if (map[value]) {
+        this._classNames.push(map[value]);
+      } else {
+        const cls = _styleManager.register('font-weight', value);
+        this._classNames.push(cls);
+      }
+    }
+    return this;
+  }
+
+  onClick(handler: (event: React.MouseEvent<any>) => void): this {
+    this._props.onClick = handler;
+    return this;
+  }
+
   state<T>(key: string, initialValue: T): this {
     this._state.set(key, initialValue);
     return this;
   }
 
-
   getState<T>(key: string): T | undefined {
     return this._state.get(key);
   }
-
 
   setState<T>(key: string, value: T): this {
     this._state.set(key, value);
     return this;
   }
 
-
   provide<T>(key: string, value: T): this {
     this._providers.set(key, value);
     return this;
   }
 
-
   consume<T>(key: string): T | undefined {
     return this._providers.get(key);
   }
-
 
   observer(options?: string | number | { key?: string | number }): this {
     this._isObserver = true;
@@ -636,19 +656,16 @@ export abstract class FiboBuilder {
     return this;
   }
 
-
   observe<T>(observable: Observable<T>): this {
     this._observers.add(observable);
     return this;
   }
-
 
   bindSignal<T>(signal: Signal<T>): this {
     this._signals.add(signal);
     return this;
   }
 
-  // Transform modifiers
   translateX(value: Signal<number> | number): this {
     if (value instanceof Signal) {
       this._animatedProps.set('translateX', value);
@@ -685,13 +702,11 @@ export abstract class FiboBuilder {
     return this;
   }
 
-  // Gesture modifier
   gesture(gesture: GestureBuilder): this {
     this._gesture = gesture;
     return this;
   }
 
-  // Animation modifier
   animation(config: Partial<AnimationOptions>): this {
     this._animationConfig = config;
     return this;
@@ -733,6 +748,286 @@ export abstract class FiboBuilder {
     return this;
   }
 
+  // Transition properties
+  protected _transitionDuration: number = 200; // ms
+  protected _transitionEasing: string = 'ease-in-out';
+  protected _transitionDelay: number = 0; // ms
+  protected _transitionProperties: string[] = ['all'];
+
+  /**
+   * Apply CSS transition
+   * 
+   * Overload 1: String syntax
+   * Example: .transition('all 0.2s ease-in-out')
+   * 
+   * Overload 2: Shorthand with parameters
+   * Example: .transition('all', 200, 'ease-out')
+   * Example: .transition('all', 200, 'ease-out', 50)
+   */
+  transition(value: string): this;
+  transition(properties: string | string[], duration: number, easing?: string, delay?: number): this;
+  transition(
+    valueOrProperties: string | string[],
+    duration?: number,
+    easing?: string,
+    delay?: number
+  ): this {
+    // If only one argument and it's a string with spaces, treat as CSS string
+    if (typeof valueOrProperties === 'string' && duration === undefined) {
+      const cls = _styleManager.register('transition', valueOrProperties);
+      this._classNames.push(cls);
+      return this;
+    }
+
+    // Otherwise, build transition from parameters
+    const props = Array.isArray(valueOrProperties) ? valueOrProperties.join(', ') : valueOrProperties;
+    const dur = `${duration || this._transitionDuration}ms`;
+    const ease = easing || this._transitionEasing;
+    const del = delay ? `${delay}ms` : '0ms';
+
+    const transitionValue = `${props} ${dur} ${ease} ${del}`;
+    const cls = _styleManager.register('transition', transitionValue);
+    this._classNames.push(cls);
+
+    return this;
+  }
+
+  /**
+   * Set transition duration in milliseconds
+   * Example: .duration(200) → 200ms
+   */
+  duration(ms: number): this {
+    this._transitionDuration = ms;
+    this._applyTransition();
+    return this;
+  }
+
+  /**
+   * Set transition easing function
+   * Example: .easing('ease-in-out')
+   */
+  easing(value: 'linear' | 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out' | string): this {
+    this._transitionEasing = value;
+    this._applyTransition();
+    return this;
+  }
+
+  /**
+   * Set transition delay in milliseconds
+   * Example: .delay(100) → 100ms delay
+   */
+  delay(ms: number): this {
+    this._transitionDelay = ms;
+    this._applyTransition();
+    return this;
+  }
+
+  /**
+   * Set which properties to transition
+   * Example: .properties(['color', 'transform'])
+   */
+  properties(props: string[]): this {
+    this._transitionProperties = props;
+    this._applyTransition();
+    return this;
+  }
+
+  /**
+   * Apply the built transition to the element
+   */
+  protected _applyTransition(): void {
+    const props = this._transitionProperties.join(', ');
+    const duration = `${this._transitionDuration}ms`;
+    const easing = this._transitionEasing;
+    const delay = this._transitionDelay > 0 ? `${this._transitionDelay}ms` : '0ms';
+
+    const transitionValue = `${props} ${duration} ${easing} ${delay}`;
+    const cls = _styleManager.register('transition', transitionValue);
+    this._classNames.push(cls);
+  }
+
+  theme(themeConfig: ThemeConfig): this {
+    this._theme = themeConfig;
+    return this;
+  }
+
+  private getPseudoStateClassName(): string {
+    if (!this._pseudoStateClassName) {
+
+      const uniqueId = Math.random().toString(36).substring(2, 11);
+      this._pseudoStateClassName = `fibo-pseudo-${uniqueId}`;
+      this._classNames.push(this._pseudoStateClassName);
+    }
+    return this._pseudoStateClassName;
+  }
+
+  hover(callback: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this;
+  hover(): PseudoStateBuilder;
+  hover(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+    const className = this.getPseudoStateClassName();
+    const builder = new PseudoStateBuilder(className, 'hover', this);
+
+    if (callback) {
+      callback(builder);
+      return this;
+    }
+
+    return builder;
+  }
+
+  focus(callback: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this;
+  focus(): PseudoStateBuilder;
+  focus(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+    const className = this.getPseudoStateClassName();
+    const builder = new PseudoStateBuilder(className, 'focus', this);
+
+    if (callback) {
+      callback(builder);
+      return this;
+    }
+
+    return builder;
+  }
+
+  active(callback: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this;
+  active(): PseudoStateBuilder;
+  active(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+    const className = this.getPseudoStateClassName();
+    const builder = new PseudoStateBuilder(className, 'active', this);
+
+    if (callback) {
+      callback(builder);
+      return this;
+    }
+
+    return builder;
+  }
+
+  visited(callback: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this;
+  visited(): PseudoStateBuilder;
+  visited(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+    const className = this.getPseudoStateClassName();
+    const builder = new PseudoStateBuilder(className, 'visited', this);
+
+    if (callback) {
+      callback(builder);
+      return this;
+    }
+
+    return builder;
+  }
+
+  disabledState(callback: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this;
+  disabledState(): PseudoStateBuilder;
+  disabledState(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+    const className = this.getPseudoStateClassName();
+    const builder = new PseudoStateBuilder(className, 'disabled', this);
+
+    if (callback) {
+      callback(builder);
+      return this;
+    }
+
+    return builder;
+  }
+
+  focusWithin(callback: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this;
+  focusWithin(): PseudoStateBuilder;
+  focusWithin(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+    const className = this.getPseudoStateClassName();
+    const builder = new PseudoStateBuilder(className, 'focus-within', this);
+
+    if (callback) {
+      callback(builder);
+      return this;
+    }
+
+    return builder;
+  }
+
+  firstChild(callback: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this;
+  firstChild(): PseudoStateBuilder;
+  firstChild(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+    const className = this.getPseudoStateClassName();
+    const builder = new PseudoStateBuilder(className, 'first-child', this);
+
+    if (callback) {
+      callback(builder);
+      return this;
+    }
+
+    return builder;
+  }
+
+  lastChild(callback: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this;
+  lastChild(): PseudoStateBuilder;
+  lastChild(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+    const className = this.getPseudoStateClassName();
+    const builder = new PseudoStateBuilder(className, 'last-child', this);
+
+    if (callback) {
+      callback(builder);
+      return this;
+    }
+
+    return builder;
+  }
+
+  groupHover(callback: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this;
+  groupHover(): PseudoStateBuilder;
+  groupHover(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+    const className = this.getPseudoStateClassName();
+    const builder = new PseudoStateBuilder(className, 'hover', this, true);
+
+    if (callback) {
+      callback(builder);
+      return this;
+    }
+
+    return builder;
+  }
+
+  groupFocus(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+    const className = this.getPseudoStateClassName();
+    const builder = new PseudoStateBuilder(className, 'focus', this, true);
+
+    if (callback) {
+      callback(builder);
+      return this;
+    }
+
+    return builder;
+  }
+
+  groupActive(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+    const className = this.getPseudoStateClassName();
+    const builder = new PseudoStateBuilder(className, 'active', this, true);
+
+    if (callback) {
+      callback(builder);
+      return this;
+    }
+
+    return builder;
+  }
+
+  groupFocusWithin(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+    const className = this.getPseudoStateClassName();
+    const builder = new PseudoStateBuilder(className, 'focus-within', this, true);
+
+    if (callback) {
+      callback(builder);
+      return this;
+    }
+
+    return builder;
+  }
+
+  group(): this {
+    this._classNames.push('group');
+    return this;
+  }
+
   protected _childFunction?: () => ReactNode;
 
   children(children: ReactNode | ReactNode[] | (() => ReactNode)): this {
@@ -766,13 +1061,38 @@ export abstract class FiboBuilder {
   protected getStyle(): CSSProperties {
     let finalStyle = { ...this._style, ...this._cssStyles };
 
+    if (this._theme) {
+
+      const themeColors = this._theme.colors || this._theme.colorScheme;
+
+      if (themeColors) {
+
+        const styleAny = finalStyle as any;
+
+        if (themeColors.primary) styleAny['--fibo-primary'] = themeColors.primary;
+        if (themeColors.onPrimary) styleAny['--fibo-on-primary'] = themeColors.onPrimary;
+
+        if (themeColors.secondary) styleAny['--fibo-secondary'] = themeColors.secondary;
+        if (themeColors.onSecondary) styleAny['--fibo-on-secondary'] = themeColors.onSecondary;
+
+        if (themeColors.background) {
+          styleAny['--fibo-background'] = themeColors.background;
+        }
+        if (themeColors.onBackground) styleAny['--fibo-on-background'] = themeColors.onBackground;
+
+        if (themeColors.surface) styleAny['--fibo-surface'] = themeColors.surface;
+        if (themeColors.onSurface) styleAny['--fibo-on-surface'] = themeColors.onSurface;
+
+        if (themeColors.error) styleAny['--fibo-error'] = themeColors.error;
+      }
+    }
+
     if (this._responsive) {
       if (this._responsive.mobile) {
         finalStyle = { ...finalStyle, ...this._responsive.mobile };
       }
     }
 
-    // Apply static transforms
     if (this._transforms.length > 0) {
       const existingTransform = finalStyle.transform || '';
       finalStyle.transform = existingTransform
@@ -780,7 +1100,6 @@ export abstract class FiboBuilder {
         : this._transforms.join(' ');
     }
 
-    // Apply animation transition if configured
     if (this._animationConfig && this._animatedProps.size === 0) {
       const { duration = 300, curve = 'easeOut' } = this._animationConfig;
       const timingFunction = curve === 'spring'
@@ -832,7 +1151,6 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
             const state = (target as any)._state;
             const providers = (target as any)._providers;
 
-
             if (isObserver) {
               return React.createElement(Observer, {
                 key: (target as any)._props.key,
@@ -840,10 +1158,8 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
               });
             }
 
-
             let element = target.build();
 
-            // Wrap with AnimatedWrapper if there are animated props
             const animatedProps = (target as any)._animatedProps;
             const animationConfig = (target as any)._animationConfig;
             if (animatedProps && animatedProps.size > 0) {
@@ -882,7 +1198,6 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
               });
             }
 
-            // Wrap with gesture if configured
             const gesture = (target as any)._gesture;
             if (gesture) {
               element = gesture.wrap(element);
@@ -913,7 +1228,6 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
   };
 }
 
-
 interface SignalLike<T> {
   value: T;
   subscribe?(listener: (val: T) => void): () => void;
@@ -928,7 +1242,7 @@ const ValueBinderInner = <T>({
   signal: SignalLike<T>,
   builder?: (val: T) => ReactNode,
   loading?: () => ReactNode,
-  error?: (err: any) => ReactNode
+  error?: (err: Error | unknown) => ReactNode
 }) => {
   const value = React.useSyncExternalStore(
     React.useCallback((callback) => {
@@ -940,18 +1254,15 @@ const ValueBinderInner = <T>({
     () => signal.value
   );
 
-
   const err = (value as any)?.error;
   if (err && error) {
     return error(err);
   }
 
-
   const isLoading = (value as any)?.isLoading || (value as any)?.loading;
   if (isLoading === true && loading) {
     return loading();
   }
-
 
   if (builder) {
     return builder(value);
@@ -964,7 +1275,7 @@ const ValueBinder = React.memo(ValueBinderInner) as typeof ValueBinderInner;
 
 export class FluentValueBuilder<T> {
   private _loading?: () => ReactNode;
-  private _error?: (error: any) => ReactNode;
+  private _error?: (error: Error | unknown) => ReactNode;
   private _builder?: (value: T) => ReactNode;
 
   constructor(private _signal: SignalLike<T>) { }
@@ -974,17 +1285,15 @@ export class FluentValueBuilder<T> {
     return this;
   }
 
-  error(component: (error: any) => ReactNode): this {
+  error(component: (error: Error | unknown) => ReactNode): this {
     this._error = component;
     return this;
   }
-
 
   builder(fn: (value: T) => ReactNode): this {
     this._builder = fn;
     return this;
   }
-
 
   children(fn: (value: T) => ReactNode): this {
     this._builder = fn;

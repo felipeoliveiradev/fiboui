@@ -22,10 +22,8 @@ export function AnimatedWrapper({ animatedProps, animationConfig, children }: An
         }));
       };
 
-      // Subscribe to signal changes
       unsubscribers.push(signal.subscribe(update));
 
-      // Set initial value
       update(signal.value);
     });
 
@@ -34,7 +32,6 @@ export function AnimatedWrapper({ animatedProps, animationConfig, children }: An
     };
   }, [animatedProps]);
 
-  // Build transform string
   const transformParts: string[] = [];
   if (transforms.translateX !== undefined) {
     transformParts.push(`translateX(${transforms.translateX}px)`);
@@ -55,7 +52,6 @@ export function AnimatedWrapper({ animatedProps, animationConfig, children }: An
     animatedStyle.transform = transformParts.join(' ');
   }
 
-  // Apply transition if animation config is provided
   if (animationConfig) {
     const { duration = 300, curve = 'easeOut' } = animationConfig;
     const timingFunction = curve === 'spring'
@@ -64,7 +60,6 @@ export function AnimatedWrapper({ animatedProps, animationConfig, children }: An
     animatedStyle.transition = `transform ${duration}ms ${timingFunction}`;
   }
 
-  // Merge with existing styles
   const mergedStyle = {
     ...children.props.style,
     ...animatedStyle

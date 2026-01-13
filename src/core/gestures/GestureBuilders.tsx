@@ -1,12 +1,10 @@
 import React, { ReactNode } from 'react';
 import { PanRecognizer, PanCallback } from './Pan';
 
-// Base Gesture Builder
 export abstract class GestureBuilder {
   abstract wrap(children: ReactNode): ReactNode;
 }
 
-// Drag Gesture Builder
 export class DragGestureBuilder extends GestureBuilder {
   private _onStart?: PanCallback;
   private _onUpdate?: PanCallback;
@@ -37,7 +35,6 @@ export class DragGestureBuilder extends GestureBuilder {
   }
 }
 
-// Tap Gesture Builder
 export class TapGestureBuilder extends GestureBuilder {
   private _onStart?: () => void;
   private _onEnd?: () => void;
@@ -61,7 +58,6 @@ export class TapGestureBuilder extends GestureBuilder {
   }
 }
 
-// LongPress Gesture Builder
 export class LongPressGestureBuilder extends GestureBuilder {
   private _duration: number = 500;
   private _onStart?: () => void;
@@ -92,7 +88,6 @@ export class LongPressGestureBuilder extends GestureBuilder {
   }
 }
 
-// Factory functions
 export function DragGesture(): DragGestureBuilder {
   return new DragGestureBuilder();
 }
@@ -109,7 +104,6 @@ export function LongPressGesture(options?: { duration?: number }): LongPressGest
   return builder;
 }
 
-// Wrapper Components
 interface DragGestureWrapperProps {
   onStart?: PanCallback;
   onUpdate?: PanCallback;

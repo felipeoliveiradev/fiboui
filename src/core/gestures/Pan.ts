@@ -59,7 +59,6 @@ export class PanRecognizer extends GestureRecognizer {
       y: location.y - this.lastLocation.y
     };
 
-    // Simple velocity calculation
     const timeDelta = (Date.now() - this.startTime) / 1000;
     const velocity = {
       x: translation.x / (timeDelta || 1),
