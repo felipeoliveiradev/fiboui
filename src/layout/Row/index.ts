@@ -48,7 +48,7 @@ class RowBuilder extends FiboBuilder {
       'fibo-row',
       'flex',
       'flex-row',
-      'w-full', // Default to full width per user request
+      'w-full',
       alignmentMap[this._mainAxisAlignment],
       crossAlignmentMap[this._crossAxisAlignment],
       ...this._classNames,
@@ -83,7 +83,6 @@ class RowBuilder extends FiboBuilder {
     );
   }
 }
-
 
 export const Row = createBuilder(RowBuilder);
 

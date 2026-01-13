@@ -28,7 +28,6 @@ class CenterBuilder extends FiboBuilder {
   }
 }
 
-
 export const Center = createBuilder(CenterBuilder);
 
 export interface CenterProps extends ChildrenProps {}

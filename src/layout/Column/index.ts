@@ -55,7 +55,7 @@ class ColumnBuilder extends FiboBuilder {
       'fibo-column',
       'flex',
       'flex-col',
-      'w-full', // Default to full width per user request
+      'w-full',
       alignmentMap[this._mainAxisAlignment],
       crossAlignmentMap[this._crossAxisAlignment],
       this._size ? sizeMap[this._size] : '',
@@ -90,7 +90,6 @@ class ColumnBuilder extends FiboBuilder {
     );
   }
 }
-
 
 export const Column = createBuilder(ColumnBuilder);
 

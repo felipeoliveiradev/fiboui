@@ -5,6 +5,7 @@ import { BaseProps } from '../../core/types';
 class SpacerBuilder extends FiboBuilder {
   private _height?: string | number;
   private _width?: string | number;
+  private _direction?: 'vertical' | 'horizontal';
 
   height(value: string | number): this {
     this._height = value;
@@ -16,15 +17,34 @@ class SpacerBuilder extends FiboBuilder {
     return this;
   }
 
+  vertical(): this {
+    this._direction = 'vertical';
+    return this;
+  }
+
+  horizontal(): this {
+    this._direction = 'horizontal';
+    return this;
+  }
+
   build(): ReactElement {
     const style = this.getStyle();
-    
-    if (this._height) {
-      style.height = typeof this._height === 'number' ? `${this._height}px` : this._height;
-    }
-    
-    if (this._width) {
-      style.width = typeof this._width === 'number' ? `${this._width}px` : this._width;
+
+    if (this._direction === 'vertical') {
+      style.flex = '1';
+      style.height = this._height ? (typeof this._height === 'number' ? `${this._height}px` : this._height) : 'auto';
+    } else if (this._direction === 'horizontal') {
+      style.flex = '1';
+      style.width = this._width ? (typeof this._width === 'number' ? `${this._width}px` : this._width) : 'auto';
+    } else {
+
+      if (this._height) {
+        style.height = typeof this._height === 'number' ? `${this._height}px` : this._height;
+      }
+
+      if (this._width) {
+        style.width = typeof this._width === 'number' ? `${this._width}px` : this._width;
+      }
     }
 
     const className = this.getClassName();
@@ -36,7 +56,6 @@ class SpacerBuilder extends FiboBuilder {
     });
   }
 }
-
 
 export const Spacer = createBuilder(SpacerBuilder);
 

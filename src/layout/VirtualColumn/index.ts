@@ -166,7 +166,6 @@ const VirtualColumnInner = React.memo((props: VirtualColumnInnerProps) => {
       visibleItems.map((child, i) => {
         const actualIndex = startIndex + i;
 
-        // Clone child with key and ref instead of wrapping in div
         return React.cloneElement(
           child as React.ReactElement,
           {

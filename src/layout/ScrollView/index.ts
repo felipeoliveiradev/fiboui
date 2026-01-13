@@ -2,7 +2,6 @@ import React, { ReactElement } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps } from '../../core/types';
 
-
 type ScrollDirection = 'vertical' | 'horizontal' | 'both';
 type ScrollbarVisibility = 'hidden' | 'visible' | 'auto';
 
@@ -34,20 +33,20 @@ class ScrollViewBuilder extends FiboBuilder {
     const scrollStyles: React.CSSProperties = {
         overflowX: this._direction === 'horizontal' || this._direction === 'both' ? 'auto' : 'hidden',
         overflowY: this._direction === 'vertical' || this._direction === 'both' ? 'auto' : 'hidden',
-        WebkitOverflowScrolling: 'touch', 
+        WebkitOverflowScrolling: 'touch',
         display: 'flex',
         flexDirection: this._direction === 'horizontal' ? 'row' : 'column',
         ...this.getStyle()
     };
 
     const classNames = [...this.getClassName().split(' ')];
-    
+
     if (this._scrollbar === 'hidden') {
-        classNames.push('scrollbar-hide'); 
-        
-        scrollStyles.scrollbarWidth = 'none'; 
-        
-        scrollStyles['msOverflowStyle'] = 'none'; 
+        classNames.push('scrollbar-hide');
+
+        scrollStyles.scrollbarWidth = 'none';
+
+        scrollStyles['msOverflowStyle'] = 'none';
     }
 
     return React.createElement('div', {
@@ -57,7 +56,6 @@ class ScrollViewBuilder extends FiboBuilder {
     }, ...this._children);
   }
 }
-
 
 export const ScrollView = createBuilder(ScrollViewBuilder);
 

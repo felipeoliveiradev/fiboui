@@ -20,7 +20,6 @@ class ContainerBuilder extends FiboBuilder {
   }
 }
 
-
 export const Container = createBuilder(ContainerBuilder);
 
 export interface ContainerProps extends ChildrenProps {

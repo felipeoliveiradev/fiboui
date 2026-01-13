@@ -9,7 +9,7 @@ export const StakentCard = ({ className = "", style = {} }: any): any => {
 
 export const StakentButton = ({ text, icon, variant = 'primary', className = "", onClick }: any): React.ReactElement => {
     let baseClass = "rounded-xl font-bold transition-all duration-200 flex items-center justify-center gap-2";
-    
+
     if (variant === 'primary') {
         baseClass += " bg-[#6366f1] text-white shadow-[0_0_20px_rgba(99,102,241,0.4)] hover:shadow-[0_0_25px_rgba(99,102,241,0.6)] hover:-translate-y-0.5";
     } else if (variant === 'secondary') {
@@ -26,7 +26,7 @@ export const StakentButton = ({ text, icon, variant = 'primary', className = "",
         .icon(icon)
         .className(`${baseClass} ${className}`)
         .onPress(onClick)
-        .variant("text") 
+        .variant("text")
         .build();
 };
 

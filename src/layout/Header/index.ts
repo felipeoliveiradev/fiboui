@@ -1,10 +1,6 @@
 import React, { ReactElement } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 
-
-
-
-
 const HeaderInner = React.memo((props: any) => {
     const { height = 64, sticky, className, style, children, ...rest } = props;
 
@@ -45,6 +41,5 @@ class HeaderBuilder extends FiboBuilder {
         return React.createElement(HeaderInner, props);
     }
 }
-
 
 export const Header = createBuilder(HeaderBuilder);

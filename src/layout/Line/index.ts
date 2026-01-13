@@ -14,7 +14,7 @@ class LineBuilder extends FiboBuilder {
     const classes = ['fibo-line', 'flex', 'flex-row', ...this._classNames];
     const className = classes.filter(Boolean).join(' ');
     const style = this.getStyle();
-    
+
     if (this._sizeHeight) {
       style.height = this._sizeHeight;
     }
@@ -32,7 +32,6 @@ class LineBuilder extends FiboBuilder {
     );
   }
 }
-
 
 export const Line = createBuilder(LineBuilder);
 
