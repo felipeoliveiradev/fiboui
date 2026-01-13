@@ -6,18 +6,23 @@ export * from './interactive';
 export * from './structure';
 export * from './navigation';
 
-// Re-export decorators (Inject from decorators takes precedence)
 export { Component, Page, getRegisteredRoutes, clearRoutes, registerRoute } from './decorators';
-export { Inject, useInject, OnMount, OnUnmount } from './decorators';
+export { Inject, useInject, OnMount, OnUnmount, BeforeMount, OnUpdate, BeforeUnmount, OnError } from './decorators';
+export { getSignals, initializeSignals } from './decorators';
 export { Store, useStore, getStore, clearStores, isStore } from './state';
-export { Signal, getSignals, initializeSignals } from './decorators';
+export { persist, clearPersistedState, getPersistedState, storageAdapters } from './state';
+export type { PersistOptions, StorageAdapter } from './state';
 
-// Re-export DI
 export { DIContainer, container, Injectable } from './core/di';
 export { Inject as InjectDI } from './core/di';
 export type { Token, Provider, Constructor, Factory, DIOptions } from './core/di';
 
-// Export SignalType (type only, to avoid conflict with Signal decorator)
-export { Signal as SignalType } from './core/state';
+export { Signal, computed, ComputedSignal } from './core/state';
+
+export { PseudoStateBuilder } from './core/PseudoStateBuilder';
+
+export { FiboApp, FiboAppBuilder } from './core/FiboApp';
+export { PluginManager } from './core/plugin/PluginManager';
+export type { FiboPlugin, FiboContext, RouteDefinition, SidebarConfig } from './core/plugin/types';
 
 import './styles/base.css';
