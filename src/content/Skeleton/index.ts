@@ -6,13 +6,13 @@ const SkeletonInner = React.memo((props: any) => {
     const { width, height, shape, className, style, ...rest } = props;
 
     const baseClasses = ['animate-pulse', 'bg-gray-200', 'loading-skeleton'];
-    
+
     if (shape === 'circle') baseClasses.push('rounded-full');
     else if (shape === 'rounded-sm') baseClasses.push('rounded-sm');
     else if (shape === 'rounded-md') baseClasses.push('rounded-md');
     else if (shape === 'rounded-lg') baseClasses.push('rounded-lg');
     else if (shape === 'square') baseClasses.push('rounded-none');
-    else baseClasses.push('rounded'); 
+    else baseClasses.push('rounded');
 
     return React.createElement('div', {
         className: [...baseClasses, className].filter(Boolean).join(' '),
@@ -56,11 +56,10 @@ class SkeletonBuilder extends FiboBuilder {
         style: this.getStyle(),
         ...this._props
     };
-    
+
     return React.createElement(SkeletonInner, props);
   }
 }
-
 
 export const Skeleton = createBuilder(SkeletonBuilder);
 

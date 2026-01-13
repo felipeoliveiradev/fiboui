@@ -11,17 +11,17 @@ interface ProgressItem {
 }
 
 const ProgressInner = React.memo((props: any) => {
-    const { 
-        value, max, color, height, variant = 'default', 
+    const {
+        value, max, color, height, variant = 'default',
         label, subLabel, items = [],
-        className, style, ...rest 
+        className, style, ...rest
     } = props;
 
     const percentage = Math.min(100, Math.max(0, (value / max) * 100));
     const mainColor = color || '#3B82F6';
 
     if (variant === 'circular') {
-        const size = typeof height === 'number' ? height : 64; 
+        const size = typeof height === 'number' ? height : 64;
         const strokeWidth = 8;
         const radius = (size - strokeWidth) / 2;
         const circumference = radius * 2 * Math.PI;
@@ -71,8 +71,8 @@ const ProgressInner = React.memo((props: any) => {
 
     if (variant === 'pagination') {
         const count = 5;
-        const activeIndex = Math.floor((percentage / 100) * count); 
-        
+        const activeIndex = Math.floor((percentage / 100) * count);
+
         return React.createElement('div', {
             className: `flex items-center gap-2 ${className}`,
             style,
@@ -103,7 +103,7 @@ const ProgressInner = React.memo((props: any) => {
             const isCompleted = i < activeIndex;
             const isCurrent = i === activeIndex;
             const isLast = i === timelineItems.length - 1;
-            
+
             const statusColor = isCompleted || isCurrent ? mainColor : '#E5E7EB';
             const iconContent = isCompleted ? React.createElement('span', {}, '✓') : (i + 1);
 
@@ -116,17 +116,17 @@ const ProgressInner = React.memo((props: any) => {
                     className: 'absolute left-[19px] top-10 bottom-0 w-0.5 transition-colors duration-500',
                     style: { backgroundColor: isCompleted ? mainColor : '#E5E7EB' }
                 }),
-                
+
                 React.createElement('div', {
                     key: 'dot',
                     className: `relative z-10 w-10 h-10 rounded-full flex items-center justify-center border-2 bg-white transition-all duration-300 shrink-0 text-sm font-bold shadow-sm`,
-                    style: { 
+                    style: {
                         borderColor: statusColor,
                         color: isCompleted ? '#fff' : (isCurrent ? statusColor : '#9CA3AF'),
                         backgroundColor: isCompleted ? statusColor : '#fff'
                     }
                 }, iconContent),
-                
+
                 React.createElement('div', { key: 'content', className: 'pt-2' }, [
                     React.createElement('div', { className: 'text-sm font-bold text-gray-900 leading-none' }, item.title),
                     item.description && React.createElement('div', { className: 'text-xs text-gray-500 mt-1.5' }, item.description),
@@ -143,7 +143,7 @@ const ProgressInner = React.memo((props: any) => {
             ...rest
         }, [
             React.createElement('div', { key: 'info', className: 'flex justify-between items-center mb-3 px-1' }, [
-                React.createElement('span', { key: 'l', className: 'text-sm font-semibold text-gray-700' }, 
+                React.createElement('span', { key: 'l', className: 'text-sm font-semibold text-gray-700' },
                     label ? React.createElement('span', { className: 'text-blue-600 mr-2' }, `${Math.round(percentage)}%`) : null,
                     label || 'Update in progress...'
                 ),
@@ -160,8 +160,8 @@ const ProgressInner = React.memo((props: any) => {
     }
 
     if (variant === 'chevron') {
-        const steps = 3; 
-        const activeIndex = Math.floor((percentage / 100) * steps); 
+        const steps = 3;
+        const activeIndex = Math.floor((percentage / 100) * steps);
 
         return React.createElement('div', {
             className: `flex w-full rounded-lg overflow-hidden ${className}`,
@@ -169,14 +169,14 @@ const ProgressInner = React.memo((props: any) => {
             ...rest
         }, Array.from({ length: steps }).map((_, i) => {
              const isActive = i <= activeIndex;
-             
+
              return React.createElement('div', {
                  key: i,
                  className: `flex-1 h-10 flex items-center justify-center text-sm font-bold text-white transition-colors duration-300`,
-                 style: { 
+                 style: {
                      backgroundColor: isActive ? (i === activeIndex ? mainColor : '#60A5FA') : '#E5E7EB',
-                     clipPath: i === 0 
-                        ? 'polygon(0% 0%, 85% 0%, 100% 50%, 85% 100%, 0% 100%)' 
+                     clipPath: i === 0
+                        ? 'polygon(0% 0%, 85% 0%, 100% 50%, 85% 100%, 0% 100%)'
                         : i === steps - 1
                             ? 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%, 15% 50%)'
                             : 'polygon(0% 0%, 85% 0%, 100% 50%, 85% 100%, 0% 100%, 15% 50%)',
@@ -194,9 +194,9 @@ const ProgressInner = React.memo((props: any) => {
 
         return React.createElement('div', {
             className: `w-full flex items-center justify-between relative ${className}`,
-            style: { 
-                marginTop: '1rem', 
-                ...style 
+            style: {
+                marginTop: '1rem',
+                ...style
             },
             ...rest
         }, [
@@ -213,7 +213,7 @@ const ProgressInner = React.memo((props: any) => {
                 const stepNum = i + 1;
                 const isActive = stepNum <= activeStep;
                 const isCompleted = stepNum < activeStep;
-                
+
                 return React.createElement('div', {
                     key: i,
                     className: `relative z-10 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 border-4 ${isActive ? 'text-white border-white shadow-md' : 'bg-gray-100 text-gray-400 border-gray-50'}`,
@@ -224,32 +224,32 @@ const ProgressInner = React.memo((props: any) => {
     }
 
     const heightVal = height || ((variant === 'labeled' || variant === 'knob') ? 12 : 12);
-    
+
     if (variant === 'segments') {
         const segCount = 10;
         const activeSegs = Math.round((percentage / 100) * segCount);
-        
+
         return React.createElement('div', {
             className: `flex gap-1.5 w-full ${className}`,
             style,
             ...rest
-        }, 
+        },
             Array.from({ length: segCount }).map((_, i) => React.createElement('div', {
                 key: i,
                 className: `h-3 flex-1 rounded-sm transition-all duration-300 first:rounded-l-full last:rounded-r-full`,
-                style: { 
+                style: {
                     height: height || 12,
-                    backgroundColor: i < activeSegs ? mainColor : '#E5E7EB' 
+                    backgroundColor: i < activeSegs ? mainColor : '#E5E7EB'
                 }
             }))
         );
     }
 
     let innerContent: ReactElement | null = null;
-    
+
     if (variant === 'striped') {
         innerContent = React.createElement('div', {
-            className: 'w-full h-full opacity-30 animate-[stripes_1s_linear_infinite]', 
+            className: 'w-full h-full opacity-30 animate-[stripes_1s_linear_infinite]',
             style: {
                 backgroundImage: 'linear-gradient(45deg,rgba(255,255,255,.25) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.25) 50%,rgba(255,255,255,.25) 75%,transparent 75%,transparent)',
                 backgroundSize: '20px 20px'
@@ -271,19 +271,19 @@ const ProgressInner = React.memo((props: any) => {
     }, React.createElement('div', { className: 'w-1.5 h-1.5 rounded-full', style: { backgroundColor: mainColor } })) : null;
 
     return React.createElement('div', {
-        className: `relative w-full ${variant === 'labeled' ? 'mt-8' : ''}`, 
+        className: `relative w-full ${variant === 'labeled' ? 'mt-8' : ''}`,
         ...rest
     }, [
         labelElement,
         React.createElement('div', {
             key: 'track',
-            className: `w-full bg-slate-100 rounded-full ${className}`, 
+            className: `w-full bg-slate-100 rounded-full ${className}`,
             style: {
                 width: '100%',
                 height: heightVal,
                 ...style
             }
-        }, 
+        },
             React.createElement('div', {
                 className: `h-full transition-all duration-1000 ease-out rounded-full flex items-center justify-center relative`,
                 style: {
@@ -359,11 +359,10 @@ class ProgressBuilder extends FiboBuilder {
         style: this.getStyle(),
         ...this._props
     };
-    
+
     return React.createElement(ProgressInner, props);
   }
 }
-
 
 export const Progress = createBuilder(ProgressBuilder);
 

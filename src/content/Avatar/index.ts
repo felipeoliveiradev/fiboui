@@ -13,15 +13,15 @@ const AvatarInner = React.memo((props: any) => {
 
     const borderRadiusMap: Record<AvatarShape, string> = {
         circle: '50%',
-        rounded: '24%', 
+        rounded: '24%',
         square: '0'
     };
 
     const statusColors: Record<AvatarStatus, string> = {
         none: 'transparent',
-        online: '#10B981', 
-        offline: '#9CA3AF', 
-        busy: '#EF4444'     
+        online: '#10B981',
+        offline: '#9CA3AF',
+        busy: '#EF4444'
     };
 
     return Box()
@@ -35,23 +35,23 @@ const AvatarInner = React.memo((props: any) => {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         border: border,
-        boxShadow: border !== 'none' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none', 
+        boxShadow: border !== 'none' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
         ...style
       })
       .children(
-          status !== 'none' ? 
+          status !== 'none' ?
             Box().style({
                 position: 'absolute',
-                bottom: '-2%', 
+                bottom: '-2%',
                 right: '-2%',
-                width: '28%', 
+                width: '28%',
                 height: '28%',
                 minWidth: '10px',
                 minHeight: '10px',
                 backgroundColor: statusColors[status as AvatarStatus],
                 borderRadius: '50%',
-                border: '3px solid #ffffff', 
-                boxSizing: 'content-box' 
+                border: '3px solid #ffffff',
+                boxSizing: 'content-box'
             }).build()
             : null
       )
@@ -103,7 +103,6 @@ class AvatarBuilder extends FiboBuilder {
     return React.createElement(AvatarInner, props);
   }
 }
-
 
 export const Avatar = createBuilder(AvatarBuilder);
 

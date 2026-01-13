@@ -7,18 +7,17 @@ type SpinnerSize = 'sm' | 'md' | 'lg' | 'xl' | number;
 
 const SpinnerInner = React.memo((props: any) => {
     const { size, color, variant = 'circle', className, style, ...rest } = props;
-    
+
     const sizeMap: Record<string, number> = {
         sm: 16,
         md: 24,
         lg: 32,
         xl: 48
     };
-    
+
     const pixelSize = typeof size === 'number' ? size : (sizeMap[size] || 24);
     const mainColor = color || "currentColor";
 
-    
     const containerProps = {
         className: `fibo-spinner ${className}`,
         style: { width: pixelSize, height: pixelSize, ...style },
@@ -30,7 +29,7 @@ const SpinnerInner = React.memo((props: any) => {
             [0, 1, 2].map(i => React.createElement('div', {
                 key: i,
                 className: 'w-[25%] h-[25%] rounded-full animate-bounce',
-                style: { 
+                style: {
                     backgroundColor: mainColor,
                     animationDelay: `${i * 0.1}s`
                 }
@@ -41,12 +40,12 @@ const SpinnerInner = React.memo((props: any) => {
     if (variant === 'pulse') {
         return React.createElement('div', { ...containerProps, className: `${containerProps.className} relative flex items-center justify-center` },
             [
-                React.createElement('div', { 
+                React.createElement('div', {
                     key: 'ring',
                     className: 'absolute inset-0 rounded-full opacity-75 animate-ping',
                     style: { backgroundColor: mainColor }
                 }),
-                React.createElement('div', { 
+                React.createElement('div', {
                     key: 'dot',
                     className: 'relative rounded-full h-[75%] w-[75%]',
                     style: { backgroundColor: mainColor }
@@ -60,7 +59,7 @@ const SpinnerInner = React.memo((props: any) => {
             [0, 1, 2, 3].map(i => React.createElement('div', {
                 key: i,
                 className: 'w-full h-full bg-current animate-pulse',
-                style: { 
+                style: {
                     backgroundColor: mainColor,
                     animationDelay: `${i * 0.15}s`,
                     opacity: 0.6
@@ -69,7 +68,6 @@ const SpinnerInner = React.memo((props: any) => {
         );
     }
 
-    
     return React.createElement(
         'div',
         { ...containerProps, className: `${containerProps.className} animate-spin` },
@@ -78,7 +76,7 @@ const SpinnerInner = React.memo((props: any) => {
             fill: "none",
             viewBox: "0 0 24 24",
             style: { width: '100%', height: '100%' }
-        }, 
+        },
         React.createElement("circle", {
             className: "opacity-20",
             cx: "12",
@@ -124,11 +122,10 @@ class SpinnerBuilder extends FiboBuilder {
         style: this.getStyle(),
         ...this._props
     };
-    
+
     return React.createElement(SpinnerInner, props);
   }
 }
-
 
 export const Spinner = createBuilder(SpinnerBuilder);
 

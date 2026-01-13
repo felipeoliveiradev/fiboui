@@ -4,7 +4,7 @@ import { BaseProps } from '../../core/types';
 
 const LabelInner = React.memo((props: any) => {
     const { text, htmlFor, required, className, style, ...rest } = props;
-    
+
     return React.createElement(
       'label',
       {
@@ -55,7 +55,6 @@ class LabelBuilder extends FiboBuilder {
     return React.createElement(LabelInner, props);
   }
 }
-
 
 export const Label = createBuilder(LabelBuilder);
 

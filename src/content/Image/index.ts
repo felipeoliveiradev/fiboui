@@ -6,19 +6,19 @@ type ImageFit = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
 type ClipShape = 'circle' | 'rounded' | 'square';
 
 const ImageInner = React.memo((props: any) => {
-    const { 
-        src, 
-        alt, 
-        fit, 
-        resizable, 
-        clipShape, 
-        frameWidth, 
-        frameHeight, 
+    const {
+        src,
+        alt,
+        fit,
+        resizable,
+        clipShape,
+        frameWidth,
+        frameHeight,
         className,
         style,
         ...rest
     } = props;
-    
+
     const finalStyle = { ...style };
 
     finalStyle.objectFit = fit;
@@ -35,7 +35,7 @@ const ImageInner = React.memo((props: any) => {
       finalStyle.maxWidth = '100%';
       finalStyle.height = 'auto';
     }
-    
+
     return React.createElement('img', {
       src: src,
       alt: alt,
@@ -109,7 +109,7 @@ class ImageBuilder extends FiboBuilder {
     }
 
     const className = classes.filter(Boolean).join(' ');
-    
+
     const props = {
         src: this._src,
         alt: this._alt,
@@ -126,7 +126,6 @@ class ImageBuilder extends FiboBuilder {
     return React.createElement(ImageInner, props);
   }
 }
-
 
 export const Image = createBuilder(ImageBuilder);
 

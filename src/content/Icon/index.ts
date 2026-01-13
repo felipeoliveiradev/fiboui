@@ -2,7 +2,24 @@ import React, { ReactElement } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps } from '../../core/types';
 
-const IconInner = React.memo((props: any) => {
+type IconSource = string | SVGAElement | any | React.ComponentType<{
+  size?: number | string;
+  color?: string;
+  className?: string;
+  style?: React.CSSProperties;
+  [key: string]: unknown;
+}>;
+
+interface IconInnerProps {
+  source: IconSource;
+  color: string;
+  size: number;
+  className: string;
+  style: React.CSSProperties;
+  [key: string]: unknown;
+}
+
+const IconInner = React.memo((props: IconInnerProps) => {
   const {
     source: Source,
     color,
@@ -14,8 +31,18 @@ const IconInner = React.memo((props: any) => {
 
   if (!Source) return null;
 
-  // If Source is a function/component, we render it
-  // Lucide icons are components that accept size and color
+  if (typeof Source === 'string') {
+    return React.createElement('img', {
+      src: Source,
+      alt: 'icon',
+      width: size,
+      height: size,
+      className,
+      style: { ...style, color },
+      ...rest,
+    });
+  }
+
   return React.createElement(Source, {
     color: color,
     size: size,
@@ -26,16 +53,16 @@ const IconInner = React.memo((props: any) => {
 });
 
 class IconBuilder extends FiboBuilder {
-  private _source: any;
+  private _source?: IconSource;
   private _color: string = 'currentColor';
   private _size: number = 24;
 
-  constructor(source?: any) {
+  constructor(source?: IconSource) {
     super();
     this._source = source;
   }
 
-  source(value: any): this {
+  source(value: IconSource): this {
     this._source = value;
     return this;
   }
@@ -54,8 +81,8 @@ class IconBuilder extends FiboBuilder {
     const classes = ['fibo-icon', ...this._classNames];
     const className = classes.filter(Boolean).join(' ');
 
-    const props = {
-      source: this._source,
+    const props: IconInnerProps = {
+      source: this._source!,
       color: this._color,
       size: this._size,
       className: className,
@@ -70,7 +97,7 @@ class IconBuilder extends FiboBuilder {
 export const Icon = createBuilder(IconBuilder);
 
 export interface IconProps extends BaseProps {
-  source: any;
+  source: IconSource;
   color?: string;
   size?: number;
 }

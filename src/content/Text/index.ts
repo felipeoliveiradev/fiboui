@@ -69,7 +69,6 @@ class TextBuilder extends FiboBuilder {
   }
 }
 
-
 export const Text = createBuilder(TextBuilder);
 
 export interface TextProps extends BaseProps {

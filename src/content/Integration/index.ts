@@ -12,8 +12,6 @@ const IntegrationInner = React.memo((props: any) => {
 
   if (!Source) return null;
 
-  // We pass down style and className which the builder generates,
-  // plus any other props passed via .props()
   return React.createElement(Source, {
     className,
     style,
@@ -29,17 +27,11 @@ class IntegrationBuilder extends FiboBuilder {
     this._source = source;
   }
 
-  /**
-   * Sets the external component to integrate.
-   */
   source(value: any): this {
     this._source = value;
     return this;
   }
 
-  /**
-   * Passes direct props to the integrated component.
-   */
   props(value: any): this {
     this._props = { ...this._props, ...value };
     return this;
