@@ -48,34 +48,26 @@ import {
   Progress
 } from './index';
 
-
-
 const Gallery = () => {
   const { setTheme } = useFiboTheme();
 
   return (
       Box().classNames(['bg-gray-50', 'min-h-screen', 'p-12']).gap(14).children([
-        
-        
 
-        
-        
         Row().alignItems("center").justifyContent("between").classNames(['mb-12']).children([
              Column().gap(8).children([
                  Text("Latest Drops").fontSize(32).fontWeight(800).color("#111827").build(),
                  Text("Explore the new premium component system").fontSize(16).color("#6B7280").build(),
              ]).build(),
-             
+
              Row().gap(8).children([
                  Button("Web").onPress(() => setTheme('web')).variant("outline").classNames(['bg-white']).build(),
                  Button("iOS").onPress(() => setTheme('cupertino')).variant("outline").classNames(['bg-white']).build(),
              ]).build()
         ]).build(),
 
-        
         Box().classNames(['grid', 'grid-cols-12', 'gap-8']).children([
-            
-            
+
             Box().classNames(['col-span-3']).children([
                 ProfileCard()
                     .name("Felipe O.")
@@ -83,9 +75,9 @@ const Gallery = () => {
                     .avatar("https://ui-avatars.com/api/?name=Felipe+Oliveira&background=random")
                     .stats({ items: "12K", owners: "450", floor: "0.2" })
                     .build(),
-                
+
                 Spacer().height(24).build(),
-                
+
                 Text("Design System Elements").variant("h6").className("mb-4 text-gray-500 uppercase tracking-widest text-xs font-bold").build(),
 
                 Column().gap(12).children([
@@ -95,7 +87,7 @@ const Gallery = () => {
                         Button("Soft").variant("soft").build(),
                         Button("Ghost").variant("ghost").build(),
                     ]).build(),
-                    
+
                     Text("Badges").variant("body").className("text-gray-400 font-medium mt-4").build(),
                     Row().gap(8).children([
                         Badge().text("Success").intent("success").variant("glass").build(),
@@ -121,24 +113,22 @@ const Gallery = () => {
 
             ]).build(),
 
-            
             Box().classNames(['col-span-9']).children([
                 Text("Trending Assets").variant("h2").className("mb-6").build(),
-                
-                
-                Box().classNames(['grid', 'grid-cols-3', 'gap-6']).children([ 
+
+                Box().classNames(['grid', 'grid-cols-3', 'gap-6']).children([
                     AssetCard()
                         .title("Cosmic Cube #01")
                         .price("2.5 ETH")
                         .image("https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=800&q=80")
                         .build(),
-                        
+
                     AssetCard()
                         .title("Neon Genesis")
                         .price("1.8 ETH")
                         .image("https://images.unsplash.com/photo-1633101585226-8eb59b3924e0?auto=format&fit=crop&w=800&q=80")
                         .build(),
-                        
+
                     CollectionCard()
                         .title("Future Scapes")
                         .items("10k Items")
@@ -146,15 +136,14 @@ const Gallery = () => {
                         .build()
                 ]).build(),
 
-                
                 Box().classNames(['grid', 'grid-cols-2', 'gap-8', 'mt-12']).children([
-                    
+
                     Column().children([
                         Text("Recent Transactions").variant("h3").className("mb-4 text-gray-400").build(),
                         List()
                           .items(['Purchase #8292', 'Sale #1292', 'Transfer #9921', 'Mint #0001'])
                           .variant('floating')
-                          .renderItem((item) => 
+                          .renderItem((item) =>
                               Row().justifyContent("between").alignItems("center").className("w-full").children([
                                   Row().gap(12).alignItems("center").children([
                                       Box().classNames(['bg-indigo-50', 'p-2', 'rounded-lg']).children(
@@ -166,18 +155,17 @@ const Gallery = () => {
                               ]).build()
                           ).build()
                     ]).build(),
-                    
-                    
+
                     Column().children([
                        Text("Top Creators").variant("h3").className("mb-4 text-gray-400").build(),
                        Table()
                             .variant('clean')
                             .columns([
-                                { header: "User", accessor: "user", render: (item: any) => 
+                                { header: "User", accessor: "user", render: (item: any) =>
                                     Row().gap(10).alignItems("center").children([
                                         Avatar().image(item.img).size(28).build(),
                                         Text(item.user).fontWeight(600).fontSize(14).build()
-                                    ]).build() 
+                                    ]).build()
                                 },
                                 { header: "Role", accessor: "role", render: (item: any) =>
                                      Badge().text(item.role).intent(item.role === 'Admin' ? 'info' : 'warning').variant('dot').build()
@@ -193,21 +181,17 @@ const Gallery = () => {
                     ]).build()
                ]).build(),
 
-               
-               
-               
                Box().classNames(['mt-12']).children([
                    Text("Advanced Layouts & Interactions").variant("h2").className("mb-6").build(),
-        
-                   
+
                    Text("Horizontal ScrollView (Carousel)").variant("body").className("mb-4 text-gray-500").build(),
                    ScrollView()
                      .horizontal()
                      .scrollbar('hidden')
                      .style({ gap: '16px', paddingBottom: '16px' })
                      .children([
-                         
-                         ...[1,2,3,4,5].map(i => 
+
+                         ...[1,2,3,4,5].map(i =>
                             Box().style({ minWidth: '280px' }).children(
                                 AssetCard()
                                     .title(`NFT #${i}42`)
@@ -218,10 +202,9 @@ const Gallery = () => {
                          )
                      ])
                      .build(),
-        
+
                    Spacer().height(32).build(),
-        
-                   
+
                    Box().classNames(['grid', 'grid-cols-2', 'gap-8']).children([
                        Column().gap(12).children([
                            Text("Interactive Collapse").variant("h3").className("mb-4 text-gray-400").build(),
@@ -239,15 +222,14 @@ const Gallery = () => {
                              .content("Yes! We prioritize accessibility standards in all our core interactive elements.")
                              .build()
                        ]).build(),
-                       
-                       
+
                        Column().children([
                            Text("Lazy Loading List").variant("h3").className("mb-4 text-gray-400").build(),
                            Box().style({ width: '100%', height: '300px', overflowY: 'hidden', border: '1px solid #E5E7EB', borderRadius: '16px', backgroundColor: '#fff' }).children(
                              React.createElement(() => {
                                  const [items, setItems] = React.useState(Array.from({ length: 10 }).map((_, i) => `Initial Item ${i}`));
                                  const [loading, setLoading] = React.useState(false);
-                
+
                                  const loadMore = () => {
                                      setLoading(true);
                                      setTimeout(() => {
@@ -256,14 +238,14 @@ const Gallery = () => {
                                          setLoading(false);
                                      }, 1000);
                                  };
-                
+
                                  return ScrollView().vertical().style({ height: '100%' }).children(
                                      List()
                                         .width('100%')
                                         .items(items)
                                         .variant('default')
                                         .separator(true)
-                                        .renderItem((item) => 
+                                        .renderItem((item) =>
                                             Row().alignItems("center").justifyContent("between").className("w-full").children([
                                                 Text(item as string).fontSize(14).build(),
                                                 Badge().text("New").variant("dot").intent("success").build()
@@ -276,65 +258,47 @@ const Gallery = () => {
                              })
                            ).build()
                        ]).build()
-                   ]).build() 
+                   ]).build()
 
                ]).build(),
 
-               
-               
-               
                Box().classNames(['mt-12']).children([
                    Text("Form Elements").variant("h2").className("mb-6").build(),
 
                    Box().classNames(['grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-12']).children([
-                        
+
                         Column().gap(20).children([
-                            
-                            
+
                             React.createElement(() => {
                                  const [name, setName] = React.useState("");
-                                 
+
                                  return TextField().label("Full Name").placeholder("John Doe").value(name).onChange(setName).build();
                             }),
 
-                            
                             Column().gap(4).children([
                                 Label().text("Biography").required().htmlFor("bio-input").build(),
-                                
-                                
+
                                 React.createElement(() => {
                                      const [bio, setBio] = React.useState("");
                                      return Textarea().id("bio-input").placeholder("Tell us about yourself...").rows(4).value(bio).onChange(setBio).build();
                                 })
                             ]).build(),
 
-                            
-                            
-                            
-                            
                             React.createElement(() => {
                                  const [pass, setPass] = React.useState("");
                                  return TextField().label("Password").type("password").value(pass).onChange(setPass).build();
                             }),
 
-                            
-                            
                             React.createElement(() => {
                                  const [cpf, setCpf] = React.useState("");
                                  return TextField().label("CPF (Masked)").placeholder("999.999.999-99").mask("999.999.999-99").value(cpf).onChange(setCpf).build();
                             }),
 
-                             
-                            
                             React.createElement(() => {
                                  const [email, setEmail] = React.useState("");
                                  return TextField().label("Email Address").type("email").placeholder("user@example.com").value(email).onChange(setEmail).build();
                             }),
 
-                            
-                            
-                            
-                            
                             React.createElement(() => {
                                  const [role, setRole] = React.useState("dev");
                                  const roles = [
@@ -346,8 +310,6 @@ const Gallery = () => {
                                  return Select().label("Role").options(roles).value(role).onChange((val: string | string[]) => setRole(val as string)).build();
                             }),
 
-                            
-                            
                             React.createElement(() => {
                                  const [skills, setSkills] = React.useState(["css", "js"]);
                                  const skillOptions = [
@@ -360,8 +322,6 @@ const Gallery = () => {
                                  return Select().label("Skills (Multi)").options(skillOptions).value(skills).onChange((val: string | string[]) => setSkills(val as string[])).multiple(true).build();
                             }),
 
-                            
-                            
                             React.createElement(() => {
                                  const [tech, setTech] = React.useState("react");
                                  const [options, setOptions] = React.useState([
@@ -369,7 +329,7 @@ const Gallery = () => {
                                      { label: "Vue", value: "vue" },
                                      { label: "Angular", value: "ng" }
                                  ]);
-                                 
+
                                  const handleAdd = (newLabel: string) => {
                                      const newVal = newLabel.toLowerCase().replace(/\s+/g, '-');
                                      setOptions([...options, { label: newLabel, value: newVal }]);
@@ -379,8 +339,6 @@ const Gallery = () => {
                                  return Combobox().label("Favorite Tech").options(options).value(tech).onChange((val) => setTech(val as string)).onAdd(handleAdd).placeholder("Search or add...").build();
                             }),
 
-                            
-                            
                             React.createElement(() => {
                                  const [tags, setTags] = React.useState(["ux", "ui"]);
                                  const [options, setOptions] = React.useState([
@@ -388,11 +346,11 @@ const Gallery = () => {
                                      { label: "User Interface", value: "ui" },
                                      { label: "Accessibility", value: "a11y" }
                                  ]);
-                                 
+
                                  const handleAdd = (newLabel: string) => {
                                      const newVal = newLabel.toLowerCase().replace(/\s+/g, '-');
                                      setOptions([...options, { label: newLabel, value: newVal }]);
-                                     
+
                                      setTags([...tags, newVal]);
                                  };
 
@@ -401,9 +359,8 @@ const Gallery = () => {
 
                         ]).build(),
 
-                        
                         Column().gap(24).children([
-                            
+
                             Column().gap(12).children([
                                 Text("Notifications").variant("h6").className("text-gray-500 uppercase text-xs font-bold").build(),
                                 React.createElement(() => {
@@ -416,7 +373,6 @@ const Gallery = () => {
                                 })
                             ]).build(),
 
-                            
                             Column().gap(12).children([
                                 Text("Interests").variant("h6").className("text-gray-500 uppercase text-xs font-bold").build(),
                                 React.createElement(() => {
@@ -429,7 +385,6 @@ const Gallery = () => {
                                 })
                             ]).build(),
 
-                            
                             Column().gap(12).children([
                                 Text("Experience Level").variant("h6").className("text-gray-500 uppercase text-xs font-bold").build(),
                                 React.createElement(() => {
@@ -452,24 +407,20 @@ const Gallery = () => {
 
                ]).build(),
 
-
-               
-               
-               
                Box().classNames(['mt-12']).children([
                    Text("Feedback Elements").variant("h2").className("mb-6").build(),
 
                    Box().classNames(['grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-12']).children([
-                       
+
                        Column().gap(20).children([
                             Text("Alerts").variant("h6").className("text-gray-500 uppercase text-xs font-bold").build(),
                             Alert().title("Update Available").description("A new version of FiboUI is ready to install.").intent("info").build(),
                             Alert().title("Success!").description("Your changes have been saved successfully.").intent("success").build(),
                             Alert().title("Warning").description("Your storage is almost full.").intent("warning").build(),
                             Alert().title("Error").description("Failed to connect to server.").intent("error").build(),
-                            
+
                             Spacer().height(12).build(),
-                            
+
                             Text("Spinners").variant("h6").className("text-gray-500 uppercase text-xs font-bold").build(),
                             Row().gap(16).alignItems("center").children([
                                 Spinner().variant("circle").size("lg").color("#3B82F6").build(),
@@ -479,7 +430,6 @@ const Gallery = () => {
                             ]).build()
                        ]).build(),
 
-                       
                        Column().gap(20).children([
                             Text("Skeletons").variant("h6").className("text-gray-500 uppercase text-xs font-bold").build(),
                             Row().gap(12).children([
@@ -520,13 +470,8 @@ const Gallery = () => {
                        ]).build()
                    ]).build(),
 
-
-                   
-                   
-                   
                    Text("Grid System").variant("h4").className("mb-4 mt-12 px-4").build(),
-                   
-                   
+
                    Text("Standard Grid (Social Media)").variant("h6").className("mb-4 px-4 text-gray-500").build(),
                    Grid().columns({ sm: 1, md: 2, lg: 4 }).gap("lg").className("px-4").children([
                         ContentCard()
@@ -555,47 +500,43 @@ const Gallery = () => {
                             .build(),
                    ]).build(),
 
-                   
                    Text("Bento Grid (Dashboard)").variant("h6").className("mb-4 mt-8 px-4 text-gray-500").build(),
                    Grid().variant("bento").columns({ sm: 1, md: 4 }).gap("md").className("px-4").children([
-                       
+
                        GridItem().colSpan(2).rowSpan(2).children([
                            Card()
                                .className("h-full text-white border-none relative overflow-hidden flex flex-col justify-center items-center p-8 text-center")
-                               .style({ backgroundColor: '#4C1D95' }) 
+                               .style({ backgroundColor: '#4C1D95' })
                                .children([
                                    Text("PromptPal").className("uppercase tracking-widest text-sm opacity-70 mb-2").build(),
                                    Text("Your AI Prompt Companion").variant("h3").className("font-extrabold mb-6 relative z-10").build(),
                                    Box().className("w-32 h-32 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 blur-xl opacity-50 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2").build(),
                                ]).build()
                        ]).build(),
-                       
-                       
+
                        GridItem().colSpan(1).children([
                            Card()
                                .className("h-full text-white border-none flex items-center justify-center p-6")
-                               .style({ backgroundColor: '#111827' }) 
+                               .style({ backgroundColor: '#111827' })
                                .children([
                                    Text("✨").className("text-3xl").build()
                                ]).build()
                        ]).build(),
-                       
-                        
+
                        GridItem().colSpan(1).children([
                            Card()
                                 .className("h-full text-white border-none flex flex-col items-center justify-center p-6")
-                                .style({ backgroundColor: '#111827' }) 
+                                .style({ backgroundColor: '#111827' })
                                 .children([
                                     Text("25M").variant("h3").className("font-bold text-purple-400").build(),
                                     Text("created prompts").className("text-sm opacity-70").build()
                                 ]).build()
                        ]).build(),
-                       
-                       
+
                         GridItem().colSpan(2).children([
                            Card()
                                 .className("h-full text-white border-none p-6 flex flex-col justify-between")
-                                .style({ backgroundColor: '#111827' }) 
+                                .style({ backgroundColor: '#111827' })
                                 .children([
                                     Text("12K").variant("h3").className("font-bold text-orange-400").build(),
                                     Text("Happy Users").className("text-sm opacity-70").build(),
@@ -608,41 +549,38 @@ const Gallery = () => {
                        ]).build(),
                    ]).build(),
 
-                   
                    Text("Masonry Layout (Pinterest)").variant("h6").className("mb-4 mt-8 px-4 text-gray-500").build(),
                    Grid().variant("masonry").columns({ sm: 2, md: 3, lg: 4 }).gap("md").className("px-4").children([
                         Image().src("https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=500&q=80").className("w-full rounded-xl").build(),
                         Image().src("https://images.unsplash.com/photo-1484723091739-30a097e8f929?w=500&q=80").className("w-full rounded-xl").build(),
                         Card()
                             .className("text-white p-8 rounded-xl")
-                            .style({ backgroundColor: '#EF4444' }) 
+                            .style({ backgroundColor: '#EF4444' })
                             .children([Text("Quote of the day: Design is intelligence made visible.").className("font-bold text-xl").build()]).build(),
                         Image().src("https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=500&q=80").className("w-full rounded-xl").build(),
                         Image().src("https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&q=80").className("w-full rounded-xl").build(),
                         Card()
                             .className("text-white p-12 rounded-xl flex items-center justify-center")
-                            .style({ backgroundColor: '#10B981' }) 
+                            .style({ backgroundColor: '#10B981' })
                             .children([Text("🥑").className("text-6xl").build()]).build(),
                         Image().src("https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=500&q=80").className("w-full rounded-xl").build(),
                         Image().src("https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500&q=80").className("w-full rounded-xl").build(),
                    ]).build(),
 
-                   
                    Text("Card Variations (Component System)").variant("h4").className("mb-4 mt-12 px-4").build(),
                    Grid().columns({ sm: 1, md: 2, lg: 4 }).gap("md").className("px-4").children([
-                        
+
                         InfoCard()
                             .title("Getting Started")
                             .description("Learn the basics of FiboUI in less than 5 minutes.")
-                            .icon(Box().className("i-heroicons-book-open text-2xl").build()) 
+                            .icon(Box().className("i-heroicons-book-open text-2xl").build())
                             .build(),
                         InfoCard()
                             .title("Documentation")
                             .description("Explore the full API reference and examples.")
                             .footer(Button("View Docs").variant("ghost").size("sm").build())
                             .build(),
-                        
-                        
+
                         ActionCard()
                            .title("Notifications")
                            .description("Enable push notifications")
@@ -653,8 +591,7 @@ const Gallery = () => {
                            .description("Your account is currently active")
                            .withButton("Deactivate")
                            .build(),
-                        
-                        
+
                         MetricCard()
                             .title("Total Revenue")
                             .value("$45,231.89")
@@ -666,7 +603,6 @@ const Gallery = () => {
                             .trend("2.1%", "down")
                             .build(),
 
-                        
                         InputCard()
                             .title("Email Address")
                             .description("We'll never share your email.")
@@ -678,29 +614,22 @@ const Gallery = () => {
                             .build(),
                    ]).build(),
 
-
-                   
                    Box().height(100).build(),
 
-                   
-                   
-                   
                    Text("Layout System (Premium Dark Dashboard)").variant("h4").className("mb-4 px-4").build(),
                    Text("A high-fidelity implementation of the requested dark structural layout using custom Stakent components.").className("mb-8 px-4 text-gray-500").build(),
 
-                   
                    Box().className("border border-gray-800 rounded-3xl overflow-hidden shadow-2xl mx-4 relative font-sans").style({ height: '850px', backgroundColor: '#0B0C15' }).children([
                        DashboardLayout()
                            .className("h-full text-white selection:bg-indigo-500/30")
                            .style({ backgroundColor: '#0B0C15' })
-                           
-                           
+
                            .sidebar(
                                Sidebar()
                                    .width(260)
-                                   .className("border-r border-white/5 bg-[#0B0C15] flex flex-col pt-6") 
+                                   .className("border-r border-white/5 bg-[#0B0C15] flex flex-col pt-6")
                                    .children([
-                                       
+
                                        Box().className("px-6 mb-8 flex items-center gap-3").children([
                                             Box().className("w-9 h-9 rounded-xl bg-white flex items-center justify-center text-black font-extrabold text-lg shadow-lg shadow-white/10").children("S").build(),
                                             Column().gap(2).children([
@@ -709,30 +638,27 @@ const Gallery = () => {
                                             ]).build()
                                        ]).build(),
 
-                                       
                                        Box().className("px-6 mb-8").children([
                                             Box().className("flex p-1 bg-[#151621] rounded-xl border border-white/5").children([
                                                 StakentButton({ text: "Staking", variant: "primary", className: "flex-1 text-xs py-2 shadow-none" }),
                                                 StakentButton({ text: "Stablecoin", variant: "ghost", className: "flex-1 text-xs py-2" }),
                                             ]).build()
                                        ]).build(),
-                                       
-                                       
+
                                        Column().gap(4).className("px-4 flex-1").children([
                                            StakentSidebarItem({ label: "Dashboard", active: true, icon: "i-heroicons-squares-2x2" }),
                                            StakentSidebarItem({ label: "Assets", icon: "i-heroicons-banknotes" }),
                                            StakentSidebarItem({ label: "Staking Providers", icon: "i-heroicons-server" }),
                                            StakentSidebarItem({ label: "Calculator", icon: "i-heroicons-calculator" }),
                                            StakentSidebarItem({ label: "Data API", icon: "i-heroicons-code-bracket" }),
-                                           
+
                                            Box().height(40).build(),
-                                           
-                                           
+
                                            Row().className("justify-between items-center px-4 mb-3").children([
                                                 Text("ACTIVE STAKING").className("text-[10px] font-bold text-gray-500 uppercase tracking-[0.1em]").build(),
                                                 Box().className("w-5 h-5 rounded-full bg-[#1A1B23] border border-white/10 text-white text-[10px] flex items-center justify-center font-bold").children("1").build()
                                            ]).build(),
-                                           
+
                                            Box().className("mx-2 p-3 bg-[#13141C] border border-white/5 rounded-2xl relative group cursor-pointer hover:border-[#6366f1]/30 transition-colors").children([
                                                Row().className("items-center justify-between").children([
                                                    Row().gap(3).className("items-center").children([
@@ -749,7 +675,6 @@ const Gallery = () => {
                                            ]).build()
                                        ]).build(),
 
-                                       
                                        Box().className("p-6 border-t border-white/5").children([
                                             Row().gap(3).className("items-center").children([
                                                 Avatar().image("https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?fit=crop&w=100&h=100").size(40).className("border-2 border-[#1A1B23] shadow-lg").build(),
@@ -763,8 +688,7 @@ const Gallery = () => {
                                    ])
                                    .build()
                            )
-                           
-                           
+
                            .header(
                                Header()
                                    .height(100)
@@ -780,38 +704,34 @@ const Gallery = () => {
                                             ]).build(),
                                             Text("Top Staking Assets").variant("h2").className("font-bold text-white tracking-tight text-3xl").build(),
                                        ]).build(),
-                                       
+
                                        Row().gap(4).alignItems("center").children([
                                            Box().className("flex items-center bg-[#0F1014] border border-white/10 rounded-full px-5 py-3 gap-3 text-sm text-gray-400 w-80 focus-within:border-white/20 transition-all shadow-inner").children([
                                                Box().className("i-heroicons-magnifying-glass w-4 h-4 text-gray-500").build(),
                                                Text("Search assets...").className("opacity-40 font-medium text-xs flex-1").build(),
                                            ]).build(),
-                                           
-                                           
+
                                            Box().className("relative").children([
                                                 Box().className("w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/5 cursor-pointer transition-colors").children(
                                                     Box().className("i-heroicons-bell w-5 h-5").build()
                                                 ).build(),
                                                 Box().className("absolute top-0 right-0 w-4 h-4 bg-[#6366f1] rounded-full border-2 border-[#0B0C15] flex items-center justify-center text-[9px] font-bold text-white").children("2").build()
                                            ]).build(),
-                                           
+
                                            StakentButton({ text: "Settings", variant: "outline", className: "rounded-full h-12 px-6 text-xs text-gray-400 border-white/10" })
                                        ]).build()
                                    ])
                                    .build()
                            )
-                           
-                           
+
                            .children([
                                Box().className("p-10 overflow-y-auto h-full scrollbar-hide pb-32").children([
-                                   
-                                   
+
                                    Grid().columns({ sm: 1, md: 3 }).gap("xl").className("mb-10").children([
-                                       
+
                                        StakentCard({ className: "h-[380px] p-8 hover:border-[#6366f1]/40 transition-all duration-500 group" }).children([
                                             Box().className("absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(99,102,241,0.15),transparent_60%)] opacity-50").build(),
-                                            
-                                            
+
                                             Row().className("justify-between mb-8 relative z-10").children([
                                                 Row().gap(4).className("items-center").children([
                                                     Box().className("w-12 h-12 rounded-2xl bg-[#1A1B23] border border-white/5 flex items-center justify-center shadow-inner").children(
@@ -824,33 +744,30 @@ const Gallery = () => {
                                                 ]).build(),
                                                 Box().className("w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-gray-500 -rotate-45 group-hover:bg-white group-hover:text-black transition-all duration-300").children("→").build()
                                             ]).build(),
-                                            
-                                            
+
                                             Text("Reward Rate").className("text-xs font-medium text-gray-500 mb-1 relative z-10").build(),
                                             Text("13.62%").className("text-5xl font-bold text-white tracking-tight mb-3 relative z-10").build(),
-                                            
+
                                             Row().gap(2).className("items-center mb-10 relative z-10").children([
                                                 Box().className("w-4 h-4 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 text-[10px]").children("✓").build(),
                                                 Text("6.25%").className("text-xs font-bold text-emerald-500").build(),
                                                 Text("last 24h").className("text-[10px] text-gray-600").build()
                                             ]).build(),
-                                            
-                                            
+
                                             Box().className("absolute bottom-0 left-0 right-0 h-32 opacity-80").children([
-                                                
+
                                                 Box().className("absolute top-0 right-8 bg-[#151621] border border-white/10 px-3 py-1.5 rounded-lg text-[10px] font-bold text-white shadow-xl z-20").children("+$2,956").build(),
-                                                
+
                                                 Box().className("w-full h-full").children(
-                                                    
+
                                                     Box().className("w-full h-full bg-gradient-to-t from-[#6366f1]/10 to-transparent rounded-t-[100%] scale-150 translate-y-10").build()
                                                 ).build()
                                             ]).build()
                                        ]).build(),
 
-                                       
                                        StakentCard({ className: "h-[380px] p-8 hover:border-amber-500/40 transition-all duration-500 group" }).children([
                                             Box().className("absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(245,158,11,0.15),transparent_60%)] opacity-50").build(),
-                                            
+
                                             Row().className("justify-between mb-8 relative z-10").children([
                                                 Row().gap(4).className("items-center").children([
                                                     Box().className("w-12 h-12 rounded-2xl bg-[#1A1B23] border border-white/5 flex items-center justify-center shadow-inner").children(
@@ -863,28 +780,27 @@ const Gallery = () => {
                                                 ]).build(),
                                                 Box().className("w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-gray-500 -rotate-45 group-hover:bg-white group-hover:text-black transition-all duration-300").children("→").build()
                                             ]).build(),
-                                            
+
                                             Text("Reward Rate").className("text-xs font-medium text-gray-500 mb-1 relative z-10").build(),
                                             Text("12.72%").className("text-5xl font-bold text-white tracking-tight mb-3 relative z-10").build(),
-                                            
+
                                             Row().gap(2).className("items-center mb-10 relative z-10").children([
                                                 Box().className("w-4 h-4 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 text-[10px]").children("✓").build(),
                                                 Text("5.67%").className("text-xs font-bold text-emerald-500").build(),
                                                 Text("last 24h").className("text-[10px] text-gray-600").build()
                                             ]).build(),
-                                            
+
                                             Box().className("absolute bottom-0 left-0 right-0 h-32 opacity-80").children([
                                                 Box().className("absolute top-0 right-8 bg-[#151621] border border-white/10 px-3 py-1.5 rounded-lg text-[10px] font-bold text-white shadow-xl z-20").children("+$2,009").build(),
                                                 Box().className("w-full h-full bg-gradient-to-t from-amber-500/10 to-transparent rounded-t-[100%] scale-150 translate-y-10").build()
                                             ]).build()
                                        ]).build(),
 
-                                       
                                        StakentCard({ className: "h-[380px] p-0 text-center flex flex-col items-center justify-center relative overflow-hidden group bg-[#151621]" }).children([
                                             Box().className("absolute inset-0 bg-[#151621]").build(),
                                             Box().className("absolute top-0 right-0 w-[400px] h-[400px] bg-[#6366f1]/20 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2").build(),
                                             Box().className("absolute bottom-0 left-0 w-[300px] h-[300px] bg-purple-500/20 blur-[80px] rounded-full translate-y-1/2 -translate-x-1/2").build(),
-                                            
+
                                             Box().className("absolute top-6 right-6 z-20").children(
                                                 StakentBadge({ text: "New", type: "new" })
                                             ).build(),
@@ -895,12 +811,12 @@ const Gallery = () => {
                                                      Box().className("w-1 h-1 rounded-full bg-white/50").build(),
                                                      Text("Liquid Staking").className("text-xs text-gray-400").build()
                                                 ]).build(),
-                                                
+
                                                 Column().className("items-center mt-2").children([
                                                     Text("Liquid Staking Portfolio").className("font-bold text-white text-3xl mb-4 tracking-tight leading-none").build(),
                                                     Text("An all-in-one portfolio that helps you make smarter investments.").className("text-sm text-gray-400 leading-relaxed font-medium max-w-[260px]").build(),
                                                 ]).build(),
-                                                
+
                                                 Column().gap(3).className("w-full mt-auto").children([
                                                     StakentButton({ text: "Connect with Wallet", variant: "gradient", className: "w-full py-3.5" }),
                                                     StakentButton({ text: "Enter a Wallet Address", variant: "secondary", icon: Box().className("i-heroicons-lock-closed w-3 h-3").build(), className: "w-full py-3 text-xs" })
@@ -909,31 +825,27 @@ const Gallery = () => {
                                        ]).build()
                                    ]).build(),
 
-                                   
                                    GridItem().colSpan(4).children([
                                        StakentCard({ className: "p-8 h-full flex flex-col justify-center relative overflow-hidden" }).children([
                                             Box().className("absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2").build(),
                                             Text("Investment Period").className("text-white font-bold text-lg mb-1 relative z-10").build(),
                                             Text("Contribution Period (Month)").className("text-gray-500 text-xs mb-6 relative z-10").build(),
-                                            
-                                            
+
                                             Box().className("relative h-1 bg-white/10 rounded-full w-full mb-2 z-10").children([
                                                 Box().className("absolute top-0 left-0 h-full w-3/4 bg-indigo-500 rounded-full").build(),
                                                 Box().className("absolute top-1/2 left-3/4 w-4 h-4 bg-white rounded-full border-2 border-indigo-500 transform -translate-x-1/2 -translate-y-1/2 shadow-[0_0_10px_rgba(99,102,241,0.5)]").build(),
                                             ]).build(),
-                                            
+
                                             Row().className("justify-between text-[10px] text-gray-400 mt-2 relative z-10").children([
                                                 Text("Start").build(),
                                                 Text("6 Months").className("text-white font-bold").build()
                                             ]).build()
                                        ]).build()
                                    ]).build()
-                            ]).build(), 
+                            ]).build(),
 
-                            
                             Box().height(40).build(),
 
-                            
                             StakentCard({ className: "p-10 mb-20" }).children([
                                Row().className("justify-between items-start mb-8").children([
                                     Column().children([
@@ -946,12 +858,12 @@ const Gallery = () => {
                                             "Last Update - 45 minutes ago"
                                         ]).build()
                                     ]).build(),
-                                    
+
                                     StakentButton({ text: "View Profile", variant: "outline", icon: Box().className("i-heroicons-arrow-up-right w-3 h-3").build(), className: "text-xs h-9 px-4 rounded-lg" })
                                ]).build(),
-                               
+
                                Grid().columns({ sm: 1, md: 2 }).gap("xl").children([
-                                    
+
                                     Column().className("justify-between").children([
                                         Box().className("mb-10").children([
                                             Text("Current Reward Balance, AVAX").className("text-xs text-gray-500 font-bold uppercase tracking-wider mb-2").build(),
@@ -960,12 +872,12 @@ const Gallery = () => {
                                                 Text("AVAX").className("text-2xl text-gray-600 font-bold").build()
                                             ]).build(),
                                         ]).build(),
-                                        
+
                                         Row().gap(4).children([
                                             StakentButton({ text: "Upgrade", variant: "gradient", className: "px-8 py-3 w-40" }),
                                             StakentButton({ text: "Unstake", variant: "secondary", className: "px-8 py-3 w-40" }),
                                         ]).build(),
-                                        
+
                                         Grid().columns(3).gap("lg").className("mt-12 pt-8 border-t border-white/5").children([
                                             Column().children([
                                                 Text("Momentum").className("text-xs text-white font-bold mb-1").build(),
@@ -982,10 +894,8 @@ const Gallery = () => {
                                         ]).build()
                                     ]).build(),
 
-                                    
-                                    
                                    Box().className("bg-[#1A1B23] border border-white/5 rounded-3xl p-8 relative overflow-hidden").children([
-                                       
+
                                        Row().justifyContent("between").alignItems("center").className("mb-12").children([
                                            Column().children([
                                                 Text("Investment Period").className("text-lg font-bold text-white mb-1").build(),
@@ -993,16 +903,14 @@ const Gallery = () => {
                                            ]).build(),
                                            Box().className("bg-[#2A2B36] px-3 py-1 rounded-lg text-xs font-bold text-gray-400").children("6 Month").build()
                                        ]).build(),
-                                       
-                                       
+
                                        Box().className("relative h-2 bg-[#0B0C15] rounded-full mb-8").children([
                                             Box().className("absolute left-0 top-0 bottom-0 w-[60%] bg-[#6366f1] rounded-full shadow-[0_0_15px_#6366f1]").build(),
                                             Box().className("absolute left-[60%] top-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full border-4 border-[#1A1B23] shadow-lg cursor-pointer").build(),
-                                            
+
                                             Box().className("absolute left-[60%] -top-10 -translate-x-1/2 bg-[#2A2B36] text-white text-[10px] font-bold px-2 py-1 rounded").children("4 Month").build()
                                        ]).build(),
 
-                                        
                                         Row().justifyContent("between").className("border-t border-white/5 pt-6 mt-auto").children([
                                             Column().children([
                                                 Text("Reward").className("text-xs text-gray-400 mb-1").build(),
@@ -1015,25 +923,23 @@ const Gallery = () => {
                                                 ]).build()
                                             ]).build()
                                         ]).build()
-                                   
+
                                    ]).build()
                                ]).build()
-                           ]).build(), 
+                           ]).build(),
 
-                        
                         Box().height(100).build()
 
-                        ]).build() 
-                    ]).build() 
+                        ]).build()
+                    ]).build()
 
-                ]).build() 
-            ]).build(), 
+                ]).build()
+            ]).build(),
 
-            
-        ]).build() 
+        ]).build()
 
-    ]).build() 
-  ); 
+    ]).build()
+  );
 };
 
 const App = () => (
@@ -1044,7 +950,7 @@ const App = () => (
 
 const container = document.getElementById('root');
 if (container) {
-  
+
   const root = window._reactRoot || (window._reactRoot = createRoot(container));
   root.render(<App />);
 }
