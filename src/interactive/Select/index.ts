@@ -13,19 +13,19 @@ const SelectInner = React.memo((props: any) => {
     const inputId = props.id || uniqueId;
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
-    
-    const { 
-        containerClass, 
-        containerStyle, 
-        label, 
-        error, 
+
+    const {
+        containerClass,
+        containerStyle,
+        label,
+        error,
         value,
         options = [],
         placeholder,
         onChange,
         disabled,
         multiple,
-        ...rest 
+        ...rest
     } = props;
 
     useEffect(() => {
@@ -78,10 +78,10 @@ const SelectInner = React.memo((props: any) => {
 
     return React.createElement(
       'div',
-      { 
+      {
           ref: containerRef,
-          className: containerClass, 
-          style: containerStyle 
+          className: containerClass,
+          style: containerStyle
       },
       React.createElement('div', { className: 'relative w-full h-full' }, [
           React.createElement('button', {
@@ -94,25 +94,25 @@ const SelectInner = React.memo((props: any) => {
               ...rest
           }, [
               React.createElement('span', { key: 'text', className: 'truncate' }, displayText || placeholder || ' '),
-              React.createElement('svg', { 
-                  key: 'icon', 
-                  className: `w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`, 
-                  fill: "none", 
-                  stroke: "currentColor", 
-                  viewBox: "0 0 24 24" 
+              React.createElement('svg', {
+                  key: 'icon',
+                  className: `w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`,
+                  fill: "none",
+                  stroke: "currentColor",
+                  viewBox: "0 0 24 24"
               }, React.createElement('path', { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M19 9l-7 7-7-7" }))
           ]),
-          
+
           label && React.createElement(
             'label',
-            { 
+            {
                 key: 'label',
                 htmlFor: inputId,
-                className: 'fibo-textfield-label' 
+                className: 'fibo-textfield-label'
             },
             label
           ),
-          
+
           isOpen && React.createElement('div', {
               key: 'dropdown',
               className: 'absolute z-50 w-full mt-1 bg-[var(--fibo-surface)] border border-[var(--fibo-outline)] rounded-md shadow-lg max-h-60 overflow-auto focus:outline-none'
@@ -124,7 +124,7 @@ const SelectInner = React.memo((props: any) => {
                    onClick: () => handleSelect(opt.value)
                }, [
                    React.createElement('span', { key: 'label' }, opt.label),
-                   selected && React.createElement('svg', { 
+                   selected && React.createElement('svg', {
                        key: 'check',
                        className: "w-4 h-4 text-[var(--fibo-primary)]",
                        viewBox: "0 0 20 20",
@@ -133,7 +133,7 @@ const SelectInner = React.memo((props: any) => {
                ])
           }))
       ]),
-      
+
       error && React.createElement(
         'span',
         { className: 'text-[var(--fibo-error)] text-xs mt-1 ml-1' },
@@ -171,7 +171,7 @@ class SelectBuilder extends FiboBuilder {
       this._options = opts;
       return this;
   }
-  
+
   multiple(val: boolean = true): this {
       this._multiple = val;
       return this;
@@ -212,7 +212,6 @@ class SelectBuilder extends FiboBuilder {
     return React.createElement(SelectInner, props);
   }
 }
-
 
 export const Select = createBuilder(SelectBuilder);
 

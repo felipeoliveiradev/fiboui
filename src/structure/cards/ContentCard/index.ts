@@ -7,40 +7,38 @@ import { Text } from '../../../content/Text';
 import { Box } from '../../Box';
 
 const ContentCardInner = React.memo((props: any) => {
-    const { 
-        image, 
-        title, 
-        description, 
-        date, 
-        source, 
-        className, 
-        style 
+    const {
+        image,
+        title,
+        description,
+        date,
+        source,
+        className,
+        style
     } = props;
 
     return Card()
         .className(`overflow-hidden hover:shadow-lg transition-shadow duration-300 ${className}`)
         .style(style)
         .children([
-            
+
             image ? Image()
                 .src(image)
-                .className("w-full object-cover rounded-[20px] mb-4") 
+                .className("w-full object-cover rounded-[20px] mb-4")
                 .style({ height: '200px' })
                 .build() : null,
 
-            
             Box()
                 .className("flex flex-col gap-2")
                 .children([
-                    
+
                     title ? Text(title)
                         .fontSize(18)
                         .fontWeight(700)
                         .color("#111827")
                         .lineHeight(1.25)
                         .build() : null,
-                    
-                    
+
                     description ? Text(description)
                          .fontSize(14)
                          .color("#4B5563")
@@ -48,7 +46,6 @@ const ContentCardInner = React.memo((props: any) => {
                          .className("line-clamp-2")
                          .build() : null,
 
-                    
                     (source || date) ? Box()
                         .className("flex items-center gap-2 mt-2")
                         .children([
@@ -110,11 +107,10 @@ class ContentCardBuilder extends FiboBuilder {
         style: this.getStyle(),
         ...this._props
     };
-    
+
     return React.createElement(ContentCardInner, props);
   }
 }
-
 
 export const ContentCard = createBuilder(ContentCardBuilder);
 

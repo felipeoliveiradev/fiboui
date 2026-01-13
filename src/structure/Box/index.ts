@@ -25,11 +25,9 @@ class BoxBuilder extends FiboBuilder {
 
     const className = classes.filter(Boolean).join(' ');
     const style = this.getStyle();
-    
-    
-    
+
     const children = this.processChildren();
-    
+
     const props = {
         className,
         style: style,

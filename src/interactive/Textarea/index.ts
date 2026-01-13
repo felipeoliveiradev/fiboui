@@ -3,22 +3,18 @@ import { FiboBuilder, createBuilder } from '../../core/builder';
 import { twMerge } from 'tailwind-merge';
 import { BaseProps } from '../../core/types';
 
-
 const TextareaInner = React.memo((props: any) => {
     const uniqueId = React.useId();
     const inputId = props.id || uniqueId;
-    
-    const { 
-        containerClass, 
-        containerStyle, 
-        label, 
-        error, 
-        ...inputRest 
+
+    const {
+        containerClass,
+        containerStyle,
+        label,
+        error,
+        ...inputRest
     } = props;
 
-    
-    
-    
     return React.createElement(
       'div',
       { className: containerClass, style: containerStyle },
@@ -29,9 +25,9 @@ const TextareaInner = React.memo((props: any) => {
       }),
       label && React.createElement(
         'label',
-        { 
+        {
             htmlFor: inputId,
-            className: 'fibo-textarea-label' 
+            className: 'fibo-textarea-label'
         },
         label
       ),
@@ -103,7 +99,7 @@ class TextareaBuilder extends FiboBuilder {
         error: this._error,
         rows: this._rows,
         value: this._value,
-        placeholder: this._placeholder || ' ', 
+        placeholder: this._placeholder || ' ',
         disabled: this._disabled,
         style: { resize: this._resize },
         onChange: (e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -115,7 +111,6 @@ class TextareaBuilder extends FiboBuilder {
     return React.createElement(TextareaInner, props);
   }
 }
-
 
 export const Textarea = createBuilder(TextareaBuilder);
 

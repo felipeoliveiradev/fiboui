@@ -14,12 +14,12 @@ const ComboboxInner = React.memo((props: any) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const containerRef = useRef<HTMLDivElement>(null);
-    
-    const { 
-        containerClass, 
-        containerStyle, 
-        label, 
-        error, 
+
+    const {
+        containerClass,
+        containerStyle,
+        label,
+        error,
         value,
         options = [],
         placeholder,
@@ -27,7 +27,7 @@ const ComboboxInner = React.memo((props: any) => {
         onAdd,
         disabled,
         multiple,
-        ...rest 
+        ...rest
     } = props;
 
     useEffect(() => {
@@ -39,7 +39,7 @@ const ComboboxInner = React.memo((props: any) => {
         }
     }, [props.value, props.options, isOpen, multiple]);
 
-    const filteredOptions = options.filter((opt: Option) => 
+    const filteredOptions = options.filter((opt: Option) =>
         opt.label.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -66,7 +66,7 @@ const ComboboxInner = React.memo((props: any) => {
                  currentValues.push(opt.value);
                  onChange?.(currentValues);
              }
-             setSearchTerm(''); 
+             setSearchTerm('');
         } else {
             setSearchTerm(opt.label);
             onChange?.(opt.value);
@@ -99,10 +99,10 @@ const ComboboxInner = React.memo((props: any) => {
 
     return React.createElement(
       'div',
-      { 
+      {
           ref: containerRef,
           className: containerClass,
-          style: containerStyle 
+          style: containerStyle
       },
       React.createElement('div', { className: 'relative w-full h-full' }, [
           React.createElement('div', {
@@ -140,32 +140,32 @@ const ComboboxInner = React.memo((props: any) => {
                   ...rest
               })
           ]),
-          
+
            label && React.createElement(
             'label',
-            { 
+            {
                 key: 'label',
                 htmlFor: inputId,
-                className: 'fibo-textfield-label' 
+                className: 'fibo-textfield-label'
             },
             label
           ),
-          
+
           isOpen && React.createElement('div', {
               key: 'dropdown',
               className: 'absolute z-50 w-full mt-1 bg-[var(--fibo-surface)] border border-[var(--fibo-outline)] rounded-md shadow-lg max-h-60 overflow-auto focus:outline-none left-0'
           }, [
-              filteredOptions.length > 0 ? 
+              filteredOptions.length > 0 ?
                 filteredOptions.map((opt: Option) => {
                    const selected = isSelected(opt.value);
                    return React.createElement('div', {
                        key: opt.value,
                        className: `px-4 py-2 cursor-pointer text-sm hover:bg-[var(--fibo-primary-container)] hover:text-[var(--fibo-on-primary-container)] ${selected ? 'bg-[var(--fibo-primary-container)] text-[var(--fibo-on-primary-container)] font-medium opacity-50' : 'text-[var(--fibo-on-surface)]'}`,
-                       onClick: () => !selected && handleSelect(opt) 
+                       onClick: () => !selected && handleSelect(opt)
                    }, opt.label);
                 }) :
                 React.createElement('div', { className: 'px-4 py-2 text-sm text-gray-500' }, 'No results found.'),
-              
+
               searchTerm && !filteredOptions.some((o: Option) => o.label.toLowerCase() === searchTerm.toLowerCase()) && onAdd && React.createElement('div', {
                    key: 'add-new',
                    className: 'border-t border-[var(--fibo-outline)] px-4 py-2 cursor-pointer text-sm text-[var(--fibo-primary)] hover:bg-[var(--fibo-primary-container)] font-medium flex items-center',
@@ -176,7 +176,7 @@ const ComboboxInner = React.memo((props: any) => {
               ])
           ])
       ]),
-      
+
       error && React.createElement(
         'span',
         { className: 'text-[var(--fibo-error)] text-xs mt-1 ml-1' },
@@ -215,7 +215,7 @@ class ComboboxBuilder extends FiboBuilder {
       this._options = opts;
       return this;
   }
-  
+
   multiple(val: boolean = true): this {
        this._multiple = val;
        return this;
@@ -262,7 +262,6 @@ class ComboboxBuilder extends FiboBuilder {
     return React.createElement(ComboboxInner, props);
   }
 }
-
 
 export const Combobox = createBuilder(ComboboxBuilder);
 

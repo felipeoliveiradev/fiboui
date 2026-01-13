@@ -40,10 +40,8 @@ const TextFieldInner = React.memo((props: any) => {
     ...inputRest
   } = props;
 
-
   const isSignal = value instanceof Signal;
   const [localValue, setLocalValue] = useState(isSignal ? value.value : value);
-
 
   useEffect(() => {
     if (isSignal) {
@@ -84,7 +82,6 @@ const TextFieldInner = React.memo((props: any) => {
     }
   };
 
-  // Calculate padding based on icons
   const paddingLeft = leadingIcon ? '2.75rem' : '1rem';
   const paddingRight = (trailingIcon || isPassword) ? '2.75rem' : '1rem';
 
@@ -92,7 +89,7 @@ const TextFieldInner = React.memo((props: any) => {
     'div',
     { className: containerClass, style: containerStyle },
     React.createElement('div', { className: 'relative w-full h-full flex items-center' }, [
-      // Leading icon
+
       leadingIcon && React.createElement(
         'div',
         {
@@ -102,7 +99,6 @@ const TextFieldInner = React.memo((props: any) => {
         leadingIcon
       ),
 
-      // Input
       React.createElement('input', {
         key: 'input',
         id: inputId,
@@ -114,7 +110,6 @@ const TextFieldInner = React.memo((props: any) => {
         ...inputRest
       }),
 
-      // Label
       label && React.createElement(
         'label',
         {
@@ -126,7 +121,6 @@ const TextFieldInner = React.memo((props: any) => {
         label
       ),
 
-      // Trailing icon or password toggle
       (trailingIcon || isPassword) && React.createElement(
         'div',
         {
@@ -238,7 +232,6 @@ class TextFieldBuilder extends FiboBuilder {
   }
 
   build(): ReactElement {
-
 
     let baseClasses = 'fibo-textfield-container w-full h-14 relative';
 

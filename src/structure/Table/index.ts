@@ -15,35 +15,34 @@ export interface TableColumn<T = any> {
 }
 
 const TableInner = React.memo((props: any) => {
-    const { 
-        data, 
-        columns, 
-        variant, 
-        density, 
-        striped, 
-        width, 
-        className, 
-        style 
+    const {
+        data,
+        columns,
+        variant,
+        density,
+        striped,
+        width,
+        className,
+        style
     } = props;
-    
+
     const tableStyles: React.CSSProperties = {
        width: '100%',
        borderCollapse: 'separate',
        borderSpacing: '0',
        ...style
     };
-    
+
     if (width) {
         tableStyles.width = typeof width === 'number' ? `${width}px` : width;
     }
 
-    const containerClass = variant === 'clean' 
-       ? ['bg-white', 'rounded-2xl', 'border', 'border-gray-100', 'overflow-hidden', 'shadow-sm'] 
+    const containerClass = variant === 'clean'
+       ? ['bg-white', 'rounded-2xl', 'border', 'border-gray-100', 'overflow-hidden', 'shadow-sm']
        : [];
 
-    
     const cellPadding: Record<TableDensity, string> = {
-        compact: '10px 16px', 
+        compact: '10px 16px',
         standard: '16px 24px',
         relaxed: '24px 32px'
     };
@@ -54,42 +53,42 @@ const TableInner = React.memo((props: any) => {
        .classNames(containerClass)
        .children(
           React.createElement('table', { style: tableStyles }, [
-             
-             React.createElement('thead', { key: 'thead', className: 'bg-gray-50/50' }, 
-                React.createElement('tr', {}, 
-                   columns.map((col: any, i: number) => 
+
+             React.createElement('thead', { key: 'thead', className: 'bg-gray-50/50' },
+                React.createElement('tr', {},
+                   columns.map((col: any, i: number) =>
                       React.createElement('th', {
                           key: i,
-                          style: { 
-                              textAlign: col.align || 'left', 
+                          style: {
+                              textAlign: col.align || 'left',
                               padding: padding,
                               width: col.width
                           },
-                          className: 'text-xs font-bold text-gray-400 uppercase tracking-widest' 
+                          className: 'text-xs font-bold text-gray-400 uppercase tracking-widest'
                       }, col.header)
                    )
                 )
              ),
-             
-             React.createElement('tbody', { key: 'tbody' }, 
-                 data.map((row: any, i: number) => 
+
+             React.createElement('tbody', { key: 'tbody' },
+                 data.map((row: any, i: number) =>
                      React.createElement('tr', {
                          key: i,
-                         
+
                          className: `group transition-all duration-200 border-b border-gray-50 last:border-b-0 ${
                              striped && i % 2 !== 0 ? 'bg-gray-50/30' : 'bg-transparent'
                          } ${variant === 'clean' ? 'hover:bg-white hover:shadow-md hover:scale-[1.002] hover:z-10 relative' : 'hover:bg-gray-50/50'}`
-                     }, 
-                     columns.map((col: any, j: number) => 
+                     },
+                     columns.map((col: any, j: number) =>
                          React.createElement('td', {
                              key: j,
-                             style: { 
+                             style: {
                                  textAlign: col.align || 'left',
                                  padding: padding,
                                  borderTop: variant === 'default' ? '1px solid #F3F4F6' : 'none'
                              },
                              className: 'text-sm text-gray-900 font-medium'
-                         }, 
+                         },
                           col.render ? col.render(row) : (col.accessor ? row[col.accessor] as ReactNode : null)
                          )
                      )
@@ -152,7 +151,6 @@ class TableBuilder<T = any> extends FiboBuilder {
      return React.createElement(TableInner, props);
   }
 }
-
 
 export const Table = createBuilder(TableBuilder);
 

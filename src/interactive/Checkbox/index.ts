@@ -4,125 +4,42 @@ import { BaseProps } from '../../core/types';
 import { twMerge } from 'tailwind-merge';
 
 const CheckboxInner = React.memo((props: any) => {
-    const { 
-        checked, 
-        onChange, 
-        label, 
-        disabled, 
+    const {
+        checked,
+        onChange,
+        label,
+        disabled,
         indeterminate,
         className,
         style
     } = props;
-    
+
     const isCheckedOrIndeterminate = checked || indeterminate;
-    
+
     let icon = null;
     if (indeterminate) {
         icon = React.createElement('div', { className: 'w-[10px] h-[2px] bg-white rounded-[1px]' });
     } else if (checked) {
-        icon = React.createElement('svg', { 
-            width: '12', 
-            height: '12', 
-            viewBox: '0 0 12 12', 
-            fill: 'none', 
-            xmlns: 'http://www.w3.org/2000/svg' 
-        }, 
-        React.createElement('path', { 
-            d: 'M10 3L4.5 8.5L2 6', 
-            stroke: 'white', 
-            strokeWidth: '2', 
-            strokeLinecap: 'round', 
-            strokeLinejoin: 'round' 
+        icon = React.createElement('svg', {
+            width: '12',
+            height: '12',
+            viewBox: '0 0 12 12',
+            fill: 'none',
+            xmlns: 'http://www.w3.org/2000/svg'
+        },
+        React.createElement('path', {
+            d: 'M10 3L4.5 8.5L2 6',
+            stroke: 'white',
+            strokeWidth: '2',
+            strokeLinecap: 'round',
+            strokeLinejoin: 'round'
         }));
     }
 
     return React.createElement(
         'label',
-        { 
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+        {
+
             className: twMerge('fibo-checkbox flex items-center gap-2', className)
         },
         React.createElement(
@@ -131,13 +48,12 @@ const CheckboxInner = React.memo((props: any) => {
                 className: twMerge(
                     'fibo-checkbox-box w-5 h-5 rounded-[6px] border-2 flex items-center justify-center transition-all duration-200',
                      disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
-                     isCheckedOrIndeterminate 
-                        ? 'border-transparent bg-[var(--fibo-primary,#3B82F6)]' 
+                     isCheckedOrIndeterminate
+                        ? 'border-transparent bg-[var(--fibo-primary,#3B82F6)]'
                         : 'border-gray-300 bg-transparent',
-                     
-                     
+
                 ),
-                style: style, 
+                style: style,
                 onClick: (e: React.MouseEvent) => {
                     e.preventDefault();
                     if (!disabled && onChange) {
@@ -207,7 +123,6 @@ class CheckboxBuilder extends FiboBuilder {
     return React.createElement(CheckboxInner, props);
   }
 }
-
 
 export const Checkbox = createBuilder(CheckboxBuilder);
 

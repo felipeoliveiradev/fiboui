@@ -19,7 +19,7 @@ const RadioGroupInner = React.memo((props: any) => {
         className,
         style
     } = props;
-    
+
     return React.createElement(
         'div',
         {
@@ -30,7 +30,6 @@ const RadioGroupInner = React.memo((props: any) => {
             const isSelected = value === option.value;
             const isDisabled = option.disabled;
 
-            
             const circleClasses = twMerge(
                 'relative flex items-center justify-center w-[18px] h-[18px] rounded-full transition-all duration-200',
                  isSelected ? 'border-[5px] border-[var(--fibo-primary,#3B82F6)]' : 'border-2 border-gray-300'
@@ -112,7 +111,6 @@ class RadioGroupBuilder extends FiboBuilder {
     return React.createElement(RadioGroupInner, props);
   }
 }
-
 
 export const RadioGroup = createBuilder(RadioGroupBuilder);
 

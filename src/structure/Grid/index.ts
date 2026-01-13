@@ -14,19 +14,18 @@ interface ResponsiveCols {
 }
 
 const GridInner = React.memo((props: any) => {
-    const { 
-        children, 
-        variant = 'standard', 
-        columns = 1, 
-        gap = 'md', 
-        className, 
-        style, 
-        ...rest 
+    const {
+        children,
+        variant = 'standard',
+        columns = 1,
+        gap = 'md',
+        className,
+        style,
+        ...rest
     } = props;
 
-    
     const getGapClass = (g: GridGap) => {
-        if (typeof g === 'number') return ''; 
+        if (typeof g === 'number') return '';
         const gaps: Record<string, string> = {
             none: 'gap-0',
             sm: 'gap-2',
@@ -42,22 +41,18 @@ const GridInner = React.memo((props: any) => {
         return undefined;
     };
 
-    
     const getColsClass = (cols: GridCols | ResponsiveCols) => {
         if (typeof cols === 'number') return `grid-cols-${cols}`;
-        
-        
+
         let classes = [];
         if (cols.sm) classes.push(`sm:grid-cols-${cols.sm}`);
         if (cols.md) classes.push(`md:grid-cols-${cols.md}`);
         if (cols.lg) classes.push(`lg:grid-cols-${cols.lg}`);
         if (cols.xl) classes.push(`xl:grid-cols-${cols.xl}`);
-        
-        
+
         return classes.join(' ') || 'grid-cols-1';
     };
 
-    
     if (variant === 'masonry') {
         const getMasonryColsClass = (cols: GridCols | ResponsiveCols) => {
             if (typeof cols === 'number') return `columns-${cols}`;
@@ -71,27 +66,25 @@ const GridInner = React.memo((props: any) => {
 
         return React.createElement('div', {
             className: `${getMasonryColsClass(columns)} ${getGapClass(gap)} space-y-4 ${className}`,
-            style: { 
+            style: {
                 columnGap: getGapStyle(gap),
-                ...style 
+                ...style
             },
             ...rest
-        }, React.Children.map(children, child => 
+        }, React.Children.map(children, child =>
             React.createElement('div', { className: 'break-inside-avoid mb-4' }, child)
         ));
     }
 
-    
     return React.createElement('div', {
         className: `grid ${getColsClass(columns)} ${getGapClass(gap)} ${className}`,
-        style: { 
+        style: {
             gap: getGapStyle(gap),
-            ...style 
+            ...style
         },
         ...rest
     }, children);
 });
-
 
 const GridItemInner = React.memo((props: any) => {
     const { children, colSpan, rowSpan, className, style, ...rest } = props;
@@ -109,7 +102,6 @@ const GridItemInner = React.memo((props: any) => {
         ...rest
     }, children);
 });
-
 
 class GridBuilder extends FiboBuilder {
   private _variant: GridVariant = 'standard';
@@ -147,7 +139,7 @@ class GridBuilder extends FiboBuilder {
         style: this.getStyle(),
         ...this._props
     };
-    
+
     return React.createElement(GridInner, props);
   }
 }
@@ -184,7 +176,6 @@ class GridItemBuilder extends FiboBuilder {
         return React.createElement(GridItemInner, props);
     }
 }
-
 
 export const Grid = createBuilder(GridBuilder);
 

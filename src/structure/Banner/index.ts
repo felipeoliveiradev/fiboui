@@ -4,7 +4,7 @@ import { BaseProps, StatusType } from '../../core/types';
 
 const BannerInner = React.memo((props: any) => {
     const { status, title, subtitle, className, style, ...rest } = props;
-    
+
     return React.createElement(
       'div',
       {
@@ -68,7 +68,7 @@ class BannerBuilder extends FiboBuilder {
     ];
 
     const className = classes.filter(Boolean).join(' ');
-    
+
     const props = {
         status: this._status,
         title: this._title,
@@ -81,7 +81,6 @@ class BannerBuilder extends FiboBuilder {
     return React.createElement(BannerInner, props);
   }
 }
-
 
 export const Banner = createBuilder(BannerBuilder);
 

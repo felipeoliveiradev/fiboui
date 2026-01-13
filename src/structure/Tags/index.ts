@@ -48,7 +48,7 @@ class TagsBuilder extends FiboBuilder {
     const className = ['fibo-tags', 'flex', 'gap-2', 'flex-wrap', ...this._classNames]
       .filter(Boolean)
       .join(' ');
-      
+
     const props = {
         items: this._items,
         className: className,
@@ -58,7 +58,6 @@ class TagsBuilder extends FiboBuilder {
     return React.createElement(TagsInner, props);
   }
 }
-
 
 export const Tags = createBuilder(TagsBuilder);
 

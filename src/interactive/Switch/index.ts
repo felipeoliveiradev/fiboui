@@ -4,24 +4,21 @@ import { BaseProps } from '../../core/types';
 import { twMerge } from 'tailwind-merge';
 
 const SwitchInner = React.memo((props: any) => {
-    const { 
-        checked, 
-        onChange, 
-        label, 
-        disabled, 
-        className, 
-        style 
+    const {
+        checked,
+        onChange,
+        label,
+        disabled,
+        className,
+        style
     } = props;
 
-    
     const trackClasses = twMerge(
         'fibo-switch-track w-[44px] h-[24px] rounded-full relative transition-colors duration-200 ease-in-out',
         disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
         checked ? 'bg-[var(--fibo-primary,#3B82F6)]' : 'bg-gray-200'
     );
 
-    
-    
     const thumbClasses = twMerge(
         'absolute w-5 h-5 rounded-full bg-white top-[2px] left-[2px] transition-transform duration-200 ease-in-out shadow-sm',
         checked ? 'translate-x-[20px]' : 'translate-x-0'
@@ -29,14 +26,14 @@ const SwitchInner = React.memo((props: any) => {
 
     return React.createElement(
         'label',
-        { 
+        {
             className: twMerge('fibo-switch flex items-center gap-3', className)
         },
         React.createElement(
             'div',
             {
                 className: trackClasses,
-                style: style, 
+                style: style,
                 onClick: (e: React.MouseEvent) => {
                     e.preventDefault();
                     if (!disabled && onChange) {
@@ -51,7 +48,7 @@ const SwitchInner = React.memo((props: any) => {
             { className: 'text-sm font-medium text-gray-700 select-none' },
             label
         ),
-        
+
         React.createElement('input', {
             type: 'checkbox',
             checked: checked,
@@ -100,7 +97,6 @@ class SwitchBuilder extends FiboBuilder {
     return React.createElement(SwitchInner, props);
   }
 }
-
 
 export const Switch = createBuilder(SwitchBuilder);
 

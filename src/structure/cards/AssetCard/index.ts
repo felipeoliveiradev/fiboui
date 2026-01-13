@@ -28,14 +28,13 @@ const AssetCardInner = React.memo((props: any) => {
       .className(className)
       .props(rest)
       .children([
-        
+
         Box().classNames(['relative', 'aspect-square', 'overflow-hidden', 'rounded-[20px]']).children([
            Box()
              .classNames(['w-full', 'h-full', 'bg-gray-200', 'bg-cover', 'bg-center'])
              .style({ backgroundImage: `url(${image})` })
              .build(),
-           
-           
+
            Box()
              .classNames(['absolute', 'top-3', 'right-3'])
              .children(
@@ -45,21 +44,19 @@ const AssetCardInner = React.memo((props: any) => {
                 .build()
              ).build()
         ]).build(),
-        
+
         Spacer().height(16).build(),
-        
-        
+
         Row().justifyContent("between").alignItems("start").children([
            Column().gap(4).children([
-              Text(title).fontWeight(700).fontSize(18).color("#111827").build(), 
+              Text(title).fontWeight(700).fontSize(18).color("#111827").build(),
               Badge().variant("neutral").text("Not for sale x1").build()
            ]).build(),
            Box().classNames(['text-gray-300']).children(Icons.More).build()
         ]).build(),
-        
+
         Spacer().height(16).build(),
-        
-        
+
         Row().justifyContent("between").alignItems("center").children([
            Column().gap(4).children([
                Text("Current Bid").fontSize(11).fontWeight(600).color("#6B7280").build(),
@@ -68,7 +65,7 @@ const AssetCardInner = React.memo((props: any) => {
                    Text(`${price} ETH`).fontSize(15).fontWeight(700).color("#111827").build(),
                ]).build()
            ]).build(),
-           
+
            Button("Place a bid")
              .variant("filled")
              .shape("pill")
@@ -82,20 +79,19 @@ const AssetCardInner = React.memo((props: any) => {
              })
              .build()
         ]).build(),
-        
+
          Spacer().height(12).build(),
-         
-         
-         timeLeft ? 
+
+         timeLeft ?
            Badge()
              .variant("accent")
              .shape("rounded")
              .icon(Box().children(Icons.Clock).build())
              .text(timeLeft)
-             .style({ width: '100%' }) 
-             .build() 
+             .style({ width: '100%' })
+             .build()
            : null
-  
+
       ]).build();
 });
 
@@ -145,7 +141,6 @@ class AssetCardBuilder extends FiboBuilder {
     return React.createElement(AssetCardInner, props);
   }
 }
-
 
 export const AssetCard = createBuilder(AssetCardBuilder);
 

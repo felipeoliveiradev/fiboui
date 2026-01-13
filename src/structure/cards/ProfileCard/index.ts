@@ -28,33 +28,30 @@ const ProfileCardInner = React.memo((props: any) => {
         .className(className)
         .props(rest)
         .children([
-            
+
             Box()
               .style({ height: '100px', backgroundImage: `url(${banner})`, backgroundSize: 'cover', backgroundPosition: 'center' })
               .build(),
-              
-            
+
             Column().padding(20).alignItems("center").style({ marginTop: '-50px' }).children([
-                
+
                 Avatar()
                    .image(avatar)
                    .size(80)
                    .border('4px solid #fff')
                    .build(),
-                   
+
                 Spacer().height(12).build(),
-                
-                
+
                 Row().gap(6).alignItems("center").children([
                     Text(name).fontWeight(700).fontSize(18).color("#111827").build(),
                     Icons.Verify
                 ]).build(),
-                
+
                 Text(handle).fontSize(13).color("#6B7280").style({ marginTop: '4px' }).build(),
-                
+
                 Spacer().height(16).build(),
-                
-                
+
                 Button("+ Follow")
                    .variant("filled")
                    .shape("pill")
@@ -67,10 +64,9 @@ const ProfileCardInner = React.memo((props: any) => {
                        fontWeight: 600
                    })
                    .build(),
-    
+
                 Spacer().height(24).build(),
-                
-                
+
                 Row().classNames(['w-full', 'border-t', 'border-gray-100', 'pt-4']).justifyContent("between").children([
                     Column().alignItems("center").gap(4).children([
                         Text(stats.items).fontWeight(700).fontSize(14).build(),
@@ -88,7 +84,7 @@ const ProfileCardInner = React.memo((props: any) => {
                         Text("Floor").fontSize(11).color("#9CA3AF").build()
                     ]).build(),
                 ]).build()
-    
+
             ]).build()
         ]).build();
 });
@@ -139,7 +135,6 @@ class ProfileCardBuilder extends FiboBuilder {
     return React.createElement(ProfileCardInner, props);
   }
 }
-
 
 export const ProfileCard = createBuilder(ProfileCardBuilder);
 

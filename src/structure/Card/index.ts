@@ -4,7 +4,7 @@ import { BaseProps } from '../../core/types';
 
 const CardInner = React.memo((props: any) => {
     const { text, subtitle, number, color, className, style, children, ...rest } = props;
-    
+
     return React.createElement(
       'div',
       {
@@ -101,7 +101,6 @@ class CardBuilder extends FiboBuilder {
     return React.createElement(CardInner, props);
   }
 }
-
 
 export const Card = createBuilder(CardBuilder);
 

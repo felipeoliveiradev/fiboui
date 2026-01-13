@@ -25,14 +25,12 @@ const CollectionCardInner = React.memo((props: any) => {
         .className(className)
         .props(rest)
         .children([
-            
+
             Box().classNames(['absolute', 'inset-0', 'bg-cover', 'bg-center', 'transition-transform', 'duration-500'])
                  .style({ backgroundImage: `url(${image})` }).build(),
-            
-            
+
             Box().classNames(['absolute', 'inset-0', 'bg-gradient-to-t', 'from-black/80', 'via-black/20', 'to-transparent']).build(),
-            
-            
+
              Column().classNames(['absolute', 'bottom-0', 'left-0', 'p-6']).gap(4).children([
                 Text(items).color("white").fontSize(12).classNames(['opacity-90', 'mb-1', 'uppercase', 'tracking-wider']).fontWeight(600).build(),
                 Text(title).color("white").fontSize(22).fontWeight(700).build(),
@@ -84,7 +82,6 @@ class CollectionCardBuilder extends FiboBuilder {
     return React.createElement(CollectionCardInner, props);
   }
 }
-
 
 export const CollectionCard = createBuilder(CollectionCardBuilder);
 

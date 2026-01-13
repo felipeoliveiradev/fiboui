@@ -1,7 +1,8 @@
-import React, { ReactElement, ReactNode, useRef, useState, useLayoutEffect } from 'react';
+import React, { ReactElement, ReactNode, useRef, useState, useLayoutEffect, useEffect } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps } from '../../core/types';
 import { Box } from '../Box';
+import { ListItemPseudoStateBuilder } from './ListItemPseudoStateBuilder';
 
 type ListVariant = 'default' | 'card' | 'floating';
 
@@ -20,7 +21,12 @@ const ListInner = React.memo((props: any) => {
     onEndReached,
     className,
     style,
-    containerHeight = 500
+    containerHeight = 500,
+    resetItemStyles = false,
+    direction = 'vertical',
+    customItemHover,
+    customItemActive,
+    customItemFocus
   } = props;
 
   const [scrollTop, setScrollTop] = useState(0);
@@ -32,7 +38,6 @@ const ListInner = React.memo((props: any) => {
   const itemCount = items.length;
   const shouldVirtualize = itemCount > VIRTUALIZATION_THRESHOLD;
 
-  // Virtualization logic
   const getItemHeight = (index: number): number => {
     return heightCache.current.get(index) ?? DEFAULT_ITEM_HEIGHT;
   };
@@ -115,7 +120,6 @@ const ListInner = React.memo((props: any) => {
     });
   }, [visibleItems, startIndex, shouldVirtualize]);
 
-  // Infinite scroll observer
   useLayoutEffect(() => {
     if (!onEndReached || loading) return;
 
@@ -141,13 +145,50 @@ const ListInner = React.memo((props: any) => {
     }
   };
 
+  useEffect(() => {
+    if (!customItemHover && !customItemActive && !customItemFocus) return;
+
+    const styleId = 'fibo-list-custom-styles';
+    let styleElement = document.getElementById(styleId) as HTMLStyleElement;
+
+    if (!styleElement) {
+      styleElement = document.createElement('style');
+      styleElement.id = styleId;
+      document.head.appendChild(styleElement);
+    }
+
+    let css = '';
+
+    if (customItemHover) {
+      css += `.fibo-list-item-custom-hover:hover { ${customItemHover} }\n`;
+    }
+
+    if (customItemActive) {
+      css += `.fibo-list-item-custom-active:active { ${customItemActive} }\n`;
+    }
+
+    if (customItemFocus) {
+      css += `.fibo-list-item-custom-focus:focus { ${customItemFocus} }\n`;
+    }
+
+    styleElement.textContent = css;
+
+    return () => {
+
+    };
+  }, [customItemHover, customItemActive, customItemFocus]);
+
   const variantStyles: Record<ListVariant, any> = {
     default: { gap: '0px' },
     card: { gap: '12px' },
     floating: { gap: '8px' }
   };
 
-  const itemContainerStyles: Record<ListVariant, any> = {
+  const itemContainerStyles: Record<ListVariant, any> = resetItemStyles ? {
+    default: {},
+    card: {},
+    floating: {}
+  } : {
     default: {
       padding: '12px 16px',
       borderBottom: separator ? '1px solid #F3F4F6' : 'none',
@@ -170,14 +211,23 @@ const ListInner = React.memo((props: any) => {
     }
   };
 
-  const variantClasses: Record<ListVariant, string[]> = {
-    default: ['hover:bg-gray-50', 'first:rounded-t-xl', 'last:rounded-b-xl'],
-    card: ['hover:-translate-y-0.5', 'hover:shadow-md'],
-    floating: ['hover:bg-white', 'hover:shadow-sm']
+  const customItemClasses: string[] = [];
+  if (customItemHover) customItemClasses.push('fibo-list-item-custom-hover');
+  if (customItemActive) customItemClasses.push('fibo-list-item-custom-active');
+  if (customItemFocus) customItemClasses.push('fibo-list-item-custom-focus');
+
+  const variantClasses: Record<ListVariant, string[]> = resetItemStyles ? {
+    default: [...customItemClasses],
+    card: [...customItemClasses],
+    floating: [...customItemClasses]
+  } : {
+    default: ['hover:bg-gray-50', 'first:rounded-t-xl', 'last:rounded-b-xl', ...customItemClasses],
+    card: ['hover:-translate-y-0.5', 'hover:shadow-md', ...customItemClasses],
+    floating: ['hover:bg-white', 'hover:shadow-sm', ...customItemClasses]
   };
 
   if (shouldVirtualize) {
-    // Virtualized rendering
+
     return React.createElement(
       'div',
       {
@@ -188,7 +238,7 @@ const ListInner = React.memo((props: any) => {
           overflowY: 'auto',
           position: 'relative',
           display: 'flex',
-          flexDirection: 'column',
+          flexDirection: direction === 'horizontal' ? 'row' : 'column',
           ...variantStyles[variant as ListVariant],
           ...style
         },
@@ -247,10 +297,9 @@ const ListInner = React.memo((props: any) => {
     );
   }
 
-  // Non-virtualized rendering (original logic)
   return Box()
     .className(className)
-    .classNames(['flex', 'flex-col', 'w-full'])
+    .classNames(['flex', direction === 'horizontal' ? 'flex-row' : 'flex-col', 'w-full'])
     .style({
       ...variantStyles[variant as ListVariant],
       ...style
@@ -294,6 +343,11 @@ class ListBuilder<T = any> extends FiboBuilder {
   private _loading: boolean = false;
   private _threshold: number = 0.5;
   private _containerHeight: number = 500;
+  private _resetItemStyles: boolean = false;
+  private _direction: 'horizontal' | 'vertical' = 'vertical';
+  private _customItemHover?: string;
+  private _customItemActive?: string;
+  private _customItemFocus?: string;
 
   items(items: T[]): this {
     this._items = items;
@@ -335,6 +389,54 @@ class ListBuilder<T = any> extends FiboBuilder {
     return this;
   }
 
+  resetItemStyles(reset: boolean = true): this {
+    this._resetItemStyles = reset;
+    return this;
+  }
+
+  direction(dir: 'horizontal' | 'vertical'): this {
+    this._direction = dir;
+    return this;
+  }
+
+  reset(): this {
+    this._resetItemStyles = true;
+    return this;
+  }
+
+  itemHover(callback: ((builder: ListItemPseudoStateBuilder) => void | ListItemPseudoStateBuilder) | string): this {
+    if (typeof callback === 'function') {
+      const builder = new ListItemPseudoStateBuilder();
+      callback(builder);
+      this._customItemHover = builder.toCSSString();
+    } else {
+      this._customItemHover = callback;
+    }
+    return this;
+  }
+
+  itemActive(callback: ((builder: ListItemPseudoStateBuilder) => void | ListItemPseudoStateBuilder) | string): this {
+    if (typeof callback === 'function') {
+      const builder = new ListItemPseudoStateBuilder();
+      callback(builder);
+      this._customItemActive = builder.toCSSString();
+    } else {
+      this._customItemActive = callback;
+    }
+    return this;
+  }
+
+  itemFocus(callback: ((builder: ListItemPseudoStateBuilder) => void | ListItemPseudoStateBuilder) | string): this {
+    if (typeof callback === 'function') {
+      const builder = new ListItemPseudoStateBuilder();
+      callback(builder);
+      this._customItemFocus = builder.toCSSString();
+    } else {
+      this._customItemFocus = callback;
+    }
+    return this;
+  }
+
   build(): ReactElement {
     const props = {
       items: this._items,
@@ -345,13 +447,17 @@ class ListBuilder<T = any> extends FiboBuilder {
       threshold: this._threshold,
       onEndReached: this._onEndReached,
       containerHeight: this._containerHeight,
+      resetItemStyles: this._resetItemStyles,
+      direction: this._direction,
+      customItemHover: this._customItemHover,
+      customItemActive: this._customItemActive,
+      customItemFocus: this._customItemFocus,
       className: this.getClassName(),
       style: this.getStyle()
     };
     return React.createElement(ListInner, props);
   }
 }
-
 
 export const List = createBuilder(ListBuilder);
 

@@ -8,9 +8,6 @@ import { Switch } from '../../../interactive/Switch';
 import { TextField } from '../../../interactive/TextField';
 import { Badge } from '../../../content/Badge';
 
-
-
-
 const InfoCardInner = React.memo((props: any) => {
     const { title, description, icon, footer, className, style } = props;
 
@@ -69,9 +66,6 @@ class InfoCardBuilder extends FiboBuilder {
   }
 }
 
-
-
-
 const ActionCardInner = React.memo((props: any) => {
     const { title, description, action, actionType, onAction, actionLabel, className, style } = props;
 
@@ -81,7 +75,7 @@ const ActionCardInner = React.memo((props: any) => {
         if (actionType === 'button') {
             ActionElement = Button(actionLabel || 'Action').variant("soft").size("sm").onPress(onAction).build();
         } else if (actionType === 'switch') {
-             
+
             ActionElement = Switch().onChange(onAction).build();
         }
     }
@@ -105,17 +99,17 @@ class ActionCardBuilder extends FiboBuilder {
     private _actionType?: 'button' | 'switch';
     private _actionLabel?: string;
     private _onAction?: (val?: any) => void;
-  
+
     title(text: string): this {
       this._title = text;
       return this;
     }
-  
+
     description(text: string): this {
       this._description = text;
       return this;
     }
-  
+
     action(element: ReactElement): this {
         this._action = element;
         return this;
@@ -133,7 +127,7 @@ class ActionCardBuilder extends FiboBuilder {
         this._onAction = onChange;
         return this;
     }
-  
+
     build(): ReactElement {
       const props = {
           title: this._title,
@@ -150,13 +144,9 @@ class ActionCardBuilder extends FiboBuilder {
     }
 }
 
-
 export const InfoCard = createBuilder(InfoCardBuilder);
 
 export const ActionCard = createBuilder(ActionCardBuilder);
-
-
-
 
 const InputCardInner = React.memo((props: any) => {
     const { title, description, placeholder, value, onChange, type, className, style } = props;
@@ -231,12 +221,7 @@ class InputCardBuilder extends FiboBuilder {
     }
 }
 
-
 export const InputCard = createBuilder(InputCardBuilder);
-
-
-
-
 
 const MetricCardInner = React.memo((props: any) => {
     const { title, value, trend, trendDirection, className, style } = props;
@@ -296,6 +281,4 @@ class MetricCardBuilder extends FiboBuilder {
     }
 }
 
-
 export const MetricCard = createBuilder(MetricCardBuilder);
-

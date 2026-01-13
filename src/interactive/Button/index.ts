@@ -55,7 +55,7 @@ const ButtonInner = React.memo((props: any) => {
     variantClass = 'bg-[var(--fibo-secondary-container)] text-[var(--fibo-on-secondary-container)] shadow-sm border-none';
   }
   else if (variant === 'raw') {
-    // Raw variant: No background, no border, no shadow, no default padding/height
+
     variantClass = 'bg-transparent border-none shadow-none p-0 h-auto gap-0 text-inherit font-inherit hover:bg-transparent';
     shapeClass = '';
   }
