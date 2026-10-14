@@ -195,6 +195,12 @@ a {
   letter-spacing: 0.04em;
 }
 
+.step .fibo-text {
+  color: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+}
+
 .step.is-active {
   color: #fff;
 }
@@ -226,7 +232,7 @@ a {
   line-height: 0.92;
   letter-spacing: -0.055em;
   font-weight: 500;
-  margin: 0 0 28px;
+  margin: 0 0 28px !important;
   max-width: 9ch;
 }
 
@@ -451,7 +457,7 @@ a {
   line-height: 0.96;
   letter-spacing: -0.045em;
   font-weight: 500;
-  margin: 0 0 22px;
+  margin: 0 0 22px !important;
   max-width: 12ch;
 }
 
@@ -489,22 +495,31 @@ a {
 }
 
 .why-card h3,
-.panel h3 {
-  margin: 0 0 10px;
+.why-card .fibo-text-h3,
+.panel h3,
+.panel .fibo-text-h3,
+.start-step h3,
+.start-step .fibo-text-h3 {
+  margin: 0 0 10px !important;
   font-size: 22px;
   letter-spacing: -0.03em;
   font-weight: 500;
 }
 
 .why-card p,
-.panel p {
-  margin: 0;
+.why-card .fibo-text-body,
+.panel p,
+.panel .fibo-text-body,
+.start-step p,
+.start-step .fibo-text-body {
+  margin: 0 !important;
   color: #666;
   line-height: 1.5;
   font-size: 15px;
 }
 
-.why-card.span p {
+.why-card.span p,
+.why-card.span .fibo-text-body {
   color: rgba(255, 255, 255, 0.62);
 }
 
