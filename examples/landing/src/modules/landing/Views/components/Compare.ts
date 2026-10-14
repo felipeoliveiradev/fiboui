@@ -1,5 +1,5 @@
-import { Text } from 'fiboui/content';
-import { Column } from 'fiboui/layout';
+import { Code, Text } from 'fiboui/content';
+import { Column, Section } from 'fiboui/layout';
 import { Box } from 'fiboui/structure';
 
 const fibo = `import { signal } from 'fiboui/core';
@@ -31,9 +31,10 @@ function Counter() {
 }`;
 
 export function Compare() {
-  return Box()
+  return Section()
     .className('section section-paper')
     .id('compare')
+    .labelledBy('compare-title')
     .children([
       Box()
         .className('section-grid')
@@ -42,7 +43,10 @@ export function Compare() {
             .crossAxisAlignment('start')
             .children([
               Text('Assembly').className('eyebrow'),
-              <h2 className="section-title">Same idea. Fewer brackets.</h2>,
+              Text('Same idea. Fewer brackets.')
+                .h2()
+                .className('section-title')
+                .id('compare-title'),
               Text(
                 'Builders in .children() do not need .build(). Text(() => signal.value) patches the text node. mount("#root", App) mounts a root builder without a trailing build() call.'
               ).className('section-copy'),
@@ -50,14 +54,8 @@ export function Compare() {
           Box()
             .className('compare')
             .children([
-              <pre className="code" tabIndex={0}>
-                <span className="code-label">FiboUI 2.0</span>
-                {fibo}
-              </pre>,
-              <pre className="code light" tabIndex={0}>
-                <span className="code-label">Plain React</span>
-                {react}
-              </pre>,
+              Code(fibo).label('FiboUI 2.0').language('ts').className('code'),
+              Code(react).label('Plain React').language('tsx').className('code light'),
             ]),
         ]),
     ]);

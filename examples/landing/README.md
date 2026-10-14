@@ -17,7 +17,10 @@ npm run test:e2e
 Idiomatic 2.0 usage in this app:
 
 - `import 'fiboui/style.css'`
-- subpath imports (`fiboui/core`, `fiboui/layout`, `fiboui/content`, `fiboui/interactive`, `fiboui/structure`)
+- subpath imports (`fiboui/core`, `fiboui/layout`, `fiboui/content`, `fiboui/interactive`, `fiboui/structure`, `fiboui/navigation`)
 - `mount('#root', App)` — no root `.build()`
+- **zero JSX** — `.ts` sources only; `Section` / `Nav` / `Main` / `Footer` / `Anchor` / `Code` / `Svg`
 - builders + `signal` / `computed` / `.bindSignal()`
 - `ListTile`, `Avatar`, `Progress` ring
+
+`npm test` at the repo root includes `tests/landing-no-jsx.test.ts`, which fails if this folder grows a `.tsx` file or any JSX node.

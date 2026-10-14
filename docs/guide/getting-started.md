@@ -52,8 +52,11 @@ FiboUI offers a fluent API:
 ```
 
 **FiboUI Builder:**
-```tsx
-Box().p(4).bg("gray-100").children([
-    Text("Title").variant("h1").weight("bold").build()
-]).build()
+```ts
+Section().children([
+  Text('Title').h1(),
+  Code('npm install fiboui').inline(),
+])
 ```
+
+See [Semantic builders](/components/semantic) for `Nav`, `Main`, `Footer`, `Anchor`, `Code`, and `Svg`.

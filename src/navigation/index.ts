@@ -1,5 +1,6 @@
 export { Router, useCurrentRoute, CurrentRouteContext } from './Router';
 export { Link, NavLink } from './Link';
+export { Anchor } from './Anchor';
 export { Outlet } from './Outlet';
 export { RouteErrorBoundary } from './ErrorBoundary';
 export { DefaultErrorPage } from './DefaultErrorPage';

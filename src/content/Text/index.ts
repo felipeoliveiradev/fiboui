@@ -53,6 +53,40 @@ class TextBuilder extends FiboBuilder {
     return this;
   }
 
+  h1(): this {
+    return this.variant('h1');
+  }
+
+  h2(): this {
+    return this.variant('h2');
+  }
+
+  h3(): this {
+    return this.variant('h3');
+  }
+
+  h4(): this {
+    return this.variant('h4');
+  }
+
+  h5(): this {
+    return this.variant('h5');
+  }
+
+  h6(): this {
+    return this.variant('h6');
+  }
+
+  span(): this {
+    return this.variant('caption');
+  }
+
+  /** Preserve `\\n` as visual line breaks (`white-space: pre-line`). */
+  preLine(): this {
+    this._style = { ...this._style, whiteSpace: 'pre-line' };
+    return this;
+  }
+
   nowrap(): this {
     this._classNames.push('whitespace-nowrap');
     return this;

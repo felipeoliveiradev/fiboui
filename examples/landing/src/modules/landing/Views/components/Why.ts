@@ -1,5 +1,5 @@
-import { Text, Avatar } from 'fiboui/content';
-import { Column, Row } from 'fiboui/layout';
+import { Avatar, Text } from 'fiboui/content';
+import { Column, Row, Section } from 'fiboui/layout';
 import { Box } from 'fiboui/structure';
 
 const reasons = [
@@ -13,7 +13,7 @@ const reasons = [
   },
   {
     title: 'No JSX boilerplate',
-    body: 'Pass builders to .children() and they finalize implicitly. Root trees use mount() or <Fibo>.',
+    body: 'Pass builders to .children() and they finalize implicitly. Root trees use mount() or the Fibo wrapper.',
   },
   {
     title: 'SSR-aware',
@@ -22,9 +22,10 @@ const reasons = [
 ];
 
 export function Why() {
-  return Box()
+  return Section()
     .className('section')
     .id('why')
+    .labelledBy('why-title')
     .children([
       Box()
         .className('section-grid')
@@ -33,7 +34,7 @@ export function Why() {
             .crossAxisAlignment('start')
             .children([
               Text('Why FiboUI').className('eyebrow'),
-              <h2 className="section-title">Write the UI you mean.</h2>,
+              Text('Write the UI you mean.').h2().className('section-title').id('why-title'),
               Text(
                 'FiboUI brings chainable builders to React. Compose screens with Column(), Row(), Button(), and signal() — the same assembly pattern as Flutter and SwiftUI.'
               ).className('section-copy'),
@@ -46,8 +47,8 @@ export function Why() {
                   .className('why-card')
                   .key(reason.title)
                   .children([
-                    <h3>{reason.title}</h3>,
-                    <p>{reason.body}</p>,
+                    Text(reason.title).h3(),
+                    Text(reason.body),
                   ])
               ),
               Box()
@@ -66,7 +67,8 @@ export function Why() {
                           Text('Accessibility, in the kit').weight('bold'),
                           Text(
                             'Progress exposes role="progressbar". Select and Combobox ship a WAI-ARIA listbox. Collapse uses aria-expanded. Spinner and Skeleton use role="status". Tables mark th scope="col".'
-                          ).className('section-copy')
+                          )
+                            .className('section-copy')
                             .style({ margin: 0, color: 'rgba(255,255,255,0.62)' }),
                         ]),
                     ]),

@@ -245,6 +245,11 @@ a {
   gap: 12px;
 }
 
+.fibo-code-inline {
+  font-family: inherit;
+  font-size: inherit;
+}
+
 .install {
   display: inline-flex;
   align-items: center;

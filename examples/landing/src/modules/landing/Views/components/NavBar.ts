@@ -1,6 +1,6 @@
-import { Row } from 'fiboui/layout';
 import { Button } from 'fiboui/interactive';
-import { Box } from 'fiboui/structure';
+import { Nav, Row } from 'fiboui/layout';
+import { Anchor } from 'fiboui/navigation';
 import { LogoMark } from './shapes';
 
 const links = [
@@ -11,7 +11,7 @@ const links = [
 ];
 
 export function NavBar() {
-  return Box()
+  return Nav()
     .className('nav')
     .props({ role: 'banner' })
     .children([
@@ -19,15 +19,11 @@ export function NavBar() {
         .hug()
         .className('nav-links')
         .children(
-          links.map((link) => (
-            <a key={link.href} className="nav-link" href={link.href}>
-              {link.label}
-            </a>
-          ))
+          links.map((link) =>
+            Anchor(link.href).text(link.label).className('nav-link').key(link.href)
+          )
         ),
-      <a href="#top" aria-label="FiboUI home">
-        <LogoMark />
-      </a>,
+      Anchor('#top').label('FiboUI home').children(LogoMark()),
       Row()
         .hug()
         .className('nav-actions')

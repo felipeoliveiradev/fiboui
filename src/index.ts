@@ -59,10 +59,13 @@ export { ZStack } from './layout/Stack';
 export { Line } from './layout/Line';
 export { ScrollView } from './layout/ScrollView';
 export { VirtualColumn } from './layout/VirtualColumn';
+export { Section, Nav, Main, Footer } from './layout/landmarks';
 
 export { Avatar } from './content/Avatar';
 export { Badge } from './content/Badge';
 export { Text } from './content/Text';
+export { Code } from './content/Code';
+export { Break } from './content/Break';
 export { Label } from './content/Label';
 export { Image } from './content/Image';
 export { Spinner } from './content/Spinner';
@@ -101,11 +104,20 @@ export { Rect } from './graphics/shapes/Rect';
 export { Path } from './graphics/shapes/Path';
 export { LinearGradient } from './graphics/gradients/LinearGradient';
 export { BurgerIcon } from './graphics/icons/BurgerIcon';
+export {
+  Svg,
+  Defs,
+  SvgGroup,
+  Ellipse,
+  RadialGradient,
+  SvgFilter,
+} from './graphics/svg';
 
 export {
   Router,
   Link,
   NavLink,
+  Anchor,
   useRouter,
   useNavigate,
   useParams,

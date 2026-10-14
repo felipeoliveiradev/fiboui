@@ -3,6 +3,8 @@
 export { Avatar } from './content/Avatar';
 export { Badge } from './content/Badge';
 export { Text } from './content/Text';
+export { Code } from './content/Code';
+export { Break } from './content/Break';
 export { Label } from './content/Label';
 export { Image } from './content/Image';
 export { Spinner } from './content/Spinner';

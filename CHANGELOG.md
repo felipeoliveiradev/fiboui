@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- **Semantic landmarks:** `Section()`, `Nav()`, `Main()`, `Footer()` with `.label()` / `.labelledBy()`. Test: `tests/semantic-builders.test.tsx`.
+- **`Text.h1()`–`.h6()`**, `.span()`, `.preLine()`; `Break()`. Test: `tests/semantic-builders.test.tsx`.
+- **`Code()`** — labeled `<pre><code>` or `.inline()`. Test: `tests/semantic-builders.test.tsx`.
+- **`Anchor(href)`** — hash and external `<a>` (`.external()`, `.text()`, `.label()`). Router `Link` is unchanged. Test: `tests/semantic-builders.test.tsx`.
+- **SVG primitives:** `Svg()`, `Defs()`, `SvgGroup()`, `Ellipse()`, `RadialGradient()`, `SvgFilter()`. Test: `tests/semantic-builders.test.tsx`.
+- **examples/landing** is builders-only; `tests/landing-no-jsx.test.ts` fails on JSX / `.tsx`.
+
 ## [2.0.0] - 2026-10-14
 
 Breaking release. Nobody was consuming 1.0.x in production; APIs that needed a break were taken now. Migration: [MIGRATION.md](./MIGRATION.md).

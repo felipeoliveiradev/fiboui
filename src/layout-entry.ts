@@ -13,3 +13,4 @@ export { ZStack } from './layout/Stack';
 export { Line } from './layout/Line';
 export { ScrollView } from './layout/ScrollView';
 export { VirtualColumn } from './layout/VirtualColumn';
+export { Section, Nav, Main, Footer } from './layout/landmarks';

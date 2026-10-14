@@ -11,3 +11,4 @@ export * from './Stack';
 export * from './Line';
 export * from './ScrollView';
 export * from './VirtualColumn';
+export * from './landmarks';

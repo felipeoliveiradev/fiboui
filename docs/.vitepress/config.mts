@@ -38,6 +38,7 @@ export default defineConfig({
           { text: 'Select & Textarea', link: '/components/interactive-advanced' },
           { text: 'Combobox', link: '/components/interactive-combobox' },
           { text: 'Text', link: '/components/content-text' },
+          { text: 'Semantic builders', link: '/components/semantic' },
           { text: 'Avatar', link: '/components/content-avatar' },
           { text: 'Badge', link: '/components/content-badge' },
           { text: 'Alert', link: '/components/content-alert' },

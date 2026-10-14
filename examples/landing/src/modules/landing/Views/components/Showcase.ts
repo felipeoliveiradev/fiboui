@@ -1,19 +1,23 @@
 import { Avatar, Progress, Text } from 'fiboui/content';
 import { Button } from 'fiboui/interactive';
-import { Column, Row } from 'fiboui/layout';
+import { Column, Row, Section } from 'fiboui/layout';
 import { Box, ListTile } from 'fiboui/structure';
 import { amount, bump, ring, tile, tiles, cycleTile } from '../../state';
 
 export function Showcase() {
-  return Box()
+  return Section()
     .className('section')
     .id('components')
+    .labelledBy('components-title')
     .children([
       Column()
         .crossAxisAlignment('start')
         .children([
           Text('Components').className('eyebrow'),
-          <h2 className="section-title">The 2.0 surface, live.</h2>,
+          Text('The 2.0 surface, live.')
+            .h2()
+            .className('section-title')
+            .id('components-title'),
           Text(
             'ListTile, Avatar, Progress rings, and pill buttons from the published package. These cards share the same signals as the hero.'
           ).className('section-copy'),
@@ -24,8 +28,8 @@ export function Showcase() {
                 .className('panel')
                 .bindSignal(amount)
                 .children(() => [
-                  <h3>Button + signal</h3>,
-                  <p>Increment the same amount signal used in the hero.</p>,
+                  Text('Button + signal').h3(),
+                  Text('Increment the same amount signal used in the hero.'),
                   Text(() =>
                     new Intl.NumberFormat('en-US', {
                       style: 'currency',
@@ -59,8 +63,8 @@ export function Showcase() {
                 .className('panel panel-ink')
                 .bindSignal(ring)
                 .children(() => [
-                  <h3>Progress ring</h3>,
-                  <p>variant('ring') with segments, size, and strokeWidth.</p>,
+                  Text('Progress ring').h3(),
+                  Text("variant('ring') with segments, size, and strokeWidth."),
                   Row()
                     .mainAxisAlignment('center')
                     .children([
@@ -86,16 +90,12 @@ export function Showcase() {
                 .className('panel')
                 .bindSignal(tile)
                 .children(() => [
-                  <h3>ListTile</h3>,
-                  <p>icon, title, subtitle, chevron, divider. Click to cycle.</p>,
+                  Text('ListTile').h3(),
+                  Text('icon, title, subtitle, chevron, divider. Click to cycle.'),
                   ...tiles.map((item, index) =>
                     ListTile()
                       .key(item.title)
-                      .icon(
-                        Avatar()
-                          .size(28)
-                          .initials(item.title.slice(0, 2))
-                      )
+                      .icon(Avatar().size(28).initials(item.title.slice(0, 2)))
                       .title(item.title)
                       .subtitle(item.subtitle)
                       .chevron(index === tile.value)

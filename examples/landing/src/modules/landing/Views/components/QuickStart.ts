@@ -1,6 +1,6 @@
-import { Text } from 'fiboui/content';
+import { Code, Text } from 'fiboui/content';
 import { Button } from 'fiboui/interactive';
-import { Column } from 'fiboui/layout';
+import { Column, Row, Section } from 'fiboui/layout';
 import { Box } from 'fiboui/structure';
 
 const steps = [
@@ -21,10 +21,17 @@ const steps = [
   },
 ];
 
+const entry = `import 'fiboui/style.css';
+import { mount } from 'fiboui/core';
+import { App } from './main/App';
+
+mount('#root', App);`;
+
 export function QuickStart() {
-  return Box()
+  return Section()
     .className('section section-paper')
     .id('start')
+    .labelledBy('start-title')
     .children([
       Box()
         .className('section-grid')
@@ -33,9 +40,12 @@ export function QuickStart() {
             .crossAxisAlignment('start')
             .children([
               Text('Quick start').className('eyebrow'),
-              <h2 className="section-title">Three steps to a screen.</h2>,
+              Text('Three steps to a screen.')
+                .h2()
+                .className('section-title')
+                .id('start-title'),
               Text(
-                'This landing is a Vite consumer of fiboui@2.0.0 from npm — the same contract as any app. Next.js files that call builders need \'use client\'.'
+                "This landing is a Vite consumer of the local fiboui builders — the same contract as any app. Next.js files that call builders need 'use client'."
               ).className('section-copy'),
               Button('Open the README')
                 .shape('pill')
@@ -53,26 +63,25 @@ export function QuickStart() {
           Box()
             .className('panel')
             .children([
-              <pre className="code" tabIndex={0}>
-                <span className="code-label">entry</span>
-                {`import 'fiboui/style.css';
-import { mount } from 'fiboui/core';
-import { App } from './main/App';
-
-mount('#root', App);`}
-              </pre>,
+              Code(entry).label('entry').language('ts').className('code'),
               Box()
                 .className('start-steps')
                 .children(
-                  steps.map((step) => (
-                    <div className="start-step" key={step.n}>
-                      <span className="start-index">{step.n}</span>
-                      <div>
-                        <h3>{step.title}</h3>
-                        <p>{step.body}</p>
-                      </div>
-                    </div>
-                  ))
+                  steps.map((step) =>
+                    Row()
+                      .className('start-step')
+                      .key(step.n)
+                      .crossAxisAlignment('start')
+                      .children([
+                        Text(step.n).span().className('start-index'),
+                        Column()
+                          .crossAxisAlignment('start')
+                          .children([
+                            Text(step.title).h3(),
+                            Text(step.body),
+                          ]),
+                      ])
+                  )
                 ),
             ]),
         ]),

@@ -1,6 +1,7 @@
-import { Text, Avatar, Progress } from 'fiboui/content';
+import { Avatar, Code, Progress, Text } from 'fiboui/content';
 import { Button } from 'fiboui/interactive';
-import { Row } from 'fiboui/layout';
+import { Column, Nav, Row } from 'fiboui/layout';
+import { Anchor } from 'fiboui/navigation';
 import { Box, ListTile } from 'fiboui/structure';
 import {
   amount,
@@ -25,19 +26,26 @@ const steps = [
 ];
 
 function StepRail() {
-  return (
-    <nav className="steps" aria-label="Page sections">
-      {steps.map((step, index) => (
-        <div key={step.id}>
-          <a className={step.active ? 'step is-active' : 'step'} href={`#${step.id}`}>
-            <span className="step-dot" />
-            {step.label}
-          </a>
-          {index < steps.length - 1 ? <div className="step-rail" /> : null}
-        </div>
-      ))}
-    </nav>
-  );
+  return Nav()
+    .className('steps')
+    .label('Page sections')
+    .children(
+      steps.map((step, index) =>
+        Column()
+          .hug()
+          .crossAxisAlignment('start')
+          .key(step.id)
+          .children([
+            Anchor(`#${step.id}`)
+              .className(step.active ? 'step is-active' : 'step')
+              .children([
+                Box().className('step-dot'),
+                Text(step.label).span(),
+              ]),
+            index < steps.length - 1 ? Box().className('step-rail') : null,
+          ])
+      )
+    );
 }
 
 function CounterCard() {
@@ -134,9 +142,11 @@ function Dots() {
     .bindSignal(tile)
     .props({ 'aria-hidden': true })
     .children(() =>
-      tiles.map((_, index) => (
-        <span key={index} className={index === tile.value ? 'dot is-on' : 'dot'} />
-      ))
+      tiles.map((_, index) =>
+        Box()
+          .key(String(index))
+          .className(index === tile.value ? 'dot is-on' : 'dot')
+      )
     );
 }
 
@@ -151,11 +161,11 @@ export function Hero() {
         .children([
           StepRail(),
           Text('FiboUI 2.0').className('hero-kicker').mono(),
-          <h1 className="hero-title" id="hero-title">
-            Build UIs
-            <br />
-            like you think.
-          </h1>,
+          Text('Build UIs\nlike you think.')
+            .h1()
+            .preLine()
+            .className('hero-title')
+            .id('hero-title'),
           Text(
             'A Flutter and SwiftUI-inspired React framework. Fluent builders, fine-grained signals, and children that finalize themselves.'
           ).className('hero-copy'),
@@ -167,7 +177,7 @@ export function Hero() {
                 .className('install')
                 .bindSignal(copied)
                 .children(() => [
-                  <code key="cmd">npm install fiboui</code>,
+                  Code('npm install fiboui').inline(),
                   Button(() => (copied.value ? 'Copied' : 'Copy'))
                     .variant('raw')
                     .className('pill pill-invert')
@@ -179,16 +189,18 @@ export function Hero() {
                 .variant('raw')
                 .className('pill pill-ghost')
                 .onPress(() => {
-                  window.open('https://github.com/felipeoliveiradev/fiboui', '_blank', 'noreferrer');
+                  window.open(
+                    'https://github.com/felipeoliveiradev/fiboui',
+                    '_blank',
+                    'noreferrer'
+                  );
                 }),
             ]),
         ]),
       Box()
         .className('hero-light')
         .children([
-          <div className="blob-wrap">
-            <Blob />
-          </div>,
+          Box().className('blob-wrap').children(Blob()),
           CounterCard(),
           DeltaCard(),
           RingCard(),

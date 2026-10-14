@@ -1,4 +1,5 @@
-import { Column } from 'fiboui/layout';
+import { Anchor } from 'fiboui/navigation';
+import { Main } from 'fiboui/layout';
 import { Compare } from './components/Compare';
 import { Footer } from './components/Footer';
 import { Hero } from './components/Hero';
@@ -7,14 +8,11 @@ import { Showcase } from './components/Showcase';
 import { Why } from './components/Why';
 
 export function LandingPage() {
-  return Column()
+  return Main()
     .className('landing')
     .id('top')
-    .crossAxisAlignment('stretch')
     .children([
-      <a className="skip-link" href="#hero-title">
-        Skip to content
-      </a>,
+      Anchor('#hero-title').text('Skip to content').className('skip-link'),
       Hero(),
       Why(),
       Compare(),
