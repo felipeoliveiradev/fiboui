@@ -51,10 +51,11 @@ function CounterCard() {
         .id('hero-amount')
         .bindSignal(amountLabel),
       Row()
+        .className('card-foot')
         .mainAxisAlignment('spaceBetween')
         .crossAxisAlignment('center')
         .children([
-          Text('signal + computed').className('card-label'),
+          Text('signal + computed').span().className('card-label'),
           Row()
             .hug()
             .children([

@@ -387,6 +387,18 @@ a {
   margin: 0 !important;
 }
 
+.card-foot {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.fibo-list-tile-body {
+  gap: 3px;
+}
+
 .card-tile .fibo-list-tile,
 .panel .fibo-list-tile {
   padding: 10px 2px !important;
@@ -715,11 +727,32 @@ a {
   }
 
   .hero-light {
-    min-height: 760px;
+    min-height: 680px;
   }
 
   .blob-wrap {
-    inset: 22% 4% 18% 4%;
+    inset: auto 8% 18% auto;
+    width: 56%;
+    height: 46%;
+  }
+
+  .card-counter {
+    top: 8%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(340px, 88%);
+  }
+
+  .card-delta,
+  .card-tile,
+  .card-dots {
+    display: none;
+  }
+
+  .card-ring {
+    top: auto;
+    bottom: 8%;
+    right: 8%;
   }
 
   .section,
@@ -734,14 +767,6 @@ a {
   .why-grid {
     grid-template-columns: 1fr;
     gap: 28px;
-  }
-
-  .card-counter {
-    width: min(300px, 78%);
-  }
-
-  .card-tile {
-    width: min(320px, 84%);
   }
 }
 
