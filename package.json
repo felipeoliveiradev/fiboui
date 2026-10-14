@@ -76,6 +76,14 @@
   ],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/felipeoliveiradev/fiboui"
+  },
+  "bugs": {
+    "url": "https://github.com/felipeoliveiradev/fiboui/issues"
+  },
+  "homepage": "https://github.com/felipeoliveiradev/fiboui#readme",
   "peerDependencies": {
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
