@@ -28,8 +28,13 @@ Column().smoothScroll().scrollSnap('y').children([
   Box().scrollSnapAlign('start').anchor('two').children('2'),
 ])
 
+Header().sticky()
 Box().sticky(0)
+Box().anchor('two')          // scroll-margin-top: var(--fibo-sticky-offset)
+Box().anchor('two').scrollMargin(80) // explicit override
 scrollTo('#two')
 ```
+
+`.sticky()` / `Header().sticky()` set `--fibo-sticky-offset` on `:root` (default **64px** when top is `0`). `html` uses `scroll-padding-top`, and `.anchor()` applies `scroll-margin-top`, so hash / `scrollTo` targets are not hidden under the bar.
 
 Pair with [Animation](./animation.md) for enter presets and reduced motion.

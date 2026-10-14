@@ -65,6 +65,8 @@ export { mount, Fibo, toElement } from './core/mount';
 export { PluginManager } from './core/plugin/PluginManager';
 export type { FiboPlugin, FiboContext, RouteDefinition, SidebarConfig } from './core/plugin/types';
 export { ValueBuilder } from './core/builder';
+export type { PseudoStateFn } from './core/builder';
+export type { PseudoStateBuilder } from './core/PseudoStateBuilder';
 
 export { FiboThemeProvider, useFiboTheme } from './theme/provider';
 export { materialTheme } from './theme/material';

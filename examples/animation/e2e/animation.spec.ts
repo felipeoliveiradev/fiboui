@@ -44,6 +44,13 @@ test.describe('CSS motion (no fiboui/motion)', () => {
     await expect(page.locator('#snap-scroller')).toHaveClass(/fibo-snap-y/);
     await expect(page.locator('[data-fibo-reveal="fadeIn"]')).toHaveCount(1);
     await expect(page.locator('#sticky-bar')).toHaveCSS('position', 'sticky');
+    const titleSize = await page.locator('#title').evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+    expect(titleSize).toBeGreaterThan(28);
+    const stickyOffset = await page.evaluate(() =>
+      getComputedStyle(document.documentElement).getPropertyValue('--fibo-sticky-offset').trim()
+    );
+    expect(stickyOffset).toBe('64px');
+    await expect(page.locator('#footer')).toHaveCSS('scroll-margin-top', '72px');
 
     await page.locator('#hover-btn').hover();
     await expect(page.locator('#hover-btn')).toContainText('1');

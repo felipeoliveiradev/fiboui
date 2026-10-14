@@ -1,7 +1,24 @@
-import React, { ReactElement } from 'react';
+import React, { CSSProperties, ReactElement } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps, TextType } from '../../core/types';
 import { FineGrainText } from '../../core/FineGrain';
+
+/** Default rem scale so `.variant('h1')` is visible without a theme class or Tailwind preflight. */
+export const TEXT_VARIANT_STYLE: Record<TextType, CSSProperties> = {
+  h1: { fontSize: '2.25rem', fontWeight: 700, letterSpacing: '-0.025em', lineHeight: 1.2 },
+  h2: { fontSize: '1.875rem', fontWeight: 700, letterSpacing: '-0.025em', lineHeight: 1.25 },
+  h3: { fontSize: '1.5rem', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.3 },
+  h4: { fontSize: '1.25rem', fontWeight: 600, lineHeight: 1.35 },
+  h5: { fontSize: '1.125rem', fontWeight: 600, lineHeight: 1.4 },
+  h6: { fontSize: '1rem', fontWeight: 600, lineHeight: 1.45 },
+  body: { fontSize: '1rem', fontWeight: 400, lineHeight: 1.5 },
+  caption: { fontSize: '0.875rem', fontWeight: 400, lineHeight: 1.4 },
+  label: { fontSize: '0.875rem', fontWeight: 500, lineHeight: 1.4 },
+};
+
+function textStyle(type: TextType, extra?: CSSProperties): CSSProperties {
+  return { margin: 0, ...TEXT_VARIANT_STYLE[type], ...extra };
+}
 
 const TextInner = React.memo((props: any) => {
   const { text, type, className, style, ...rest } = props;
@@ -22,7 +39,7 @@ const TextInner = React.memo((props: any) => {
     elementMap[type as TextType],
     {
       className: `fibo-text fibo-text-${type} ${className}`,
-      style: { margin: 0, ...style },
+      style: textStyle(type as TextType, style),
       ...rest,
     },
     text
@@ -87,7 +104,7 @@ class TextBuilder extends FiboBuilder {
         compute,
         as: elementMap[this._type],
         className: `fibo-text fibo-text-${this._type} ${this.getClassName()}`,
-        style: { margin: 0, ...this.getStyle() },
+        style: textStyle(this._type, this.getStyle()),
         ...this._props
       });
     }

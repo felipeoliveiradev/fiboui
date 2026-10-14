@@ -66,13 +66,15 @@ Keyframes are compiled once (`FIBO_MOTION_CSS` + `import 'fiboui/style.css'`). `
 
 ## Hover, press, focus
 
-`.hover().scale()` and `.translateY()` **compose** into one `transform`. `.duration()` replaces the previous transition class (no stacking).
+`.hover().scale()` and `.translateY()` **compose** into one `transform`. `.duration()` replaces the previous transition class (no stacking). The callback form infers `PseudoStateBuilder` (exported) even inside `.map()`.
 
 ```tsx
 Box()
   .hover((h) => h.scale(1.04).translateY(-4))
   .press()
   .focusRing()
+
+items.map((item) => Card().key(item.id).hover((h) => h.scale(1.03)).children(item.title))
 ```
 
 <ReactWrapper :component="renderHover" />

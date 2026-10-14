@@ -1,5 +1,6 @@
 export * from './types';
 export * from './builder';
+export type { PseudoStateBuilder } from './PseudoStateBuilder';
 export * from './children';
 export * from './component';
 export * from './state';

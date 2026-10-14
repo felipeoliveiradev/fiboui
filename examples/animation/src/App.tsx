@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  Card,
   Column,
   Presence,
   Text,
@@ -16,7 +17,7 @@ export function App() {
     .className('demo-page')
     .children([
       Box().id('progress').scrollProgress().className('demo-bar').height(6).children(''),
-      Text('FiboUI motion').id('title').fontSize(28).fontWeight(700).marginBottom(16),
+      Text('FiboUI motion').id('title').variant('h1').marginBottom(16),
       Box()
         .id('fade-in')
         .animate('fadeIn')
@@ -41,6 +42,20 @@ export function App() {
         .press()
         .focusRing()
         .children('hover scale + translate'),
+      Box()
+        .id('mapped-hover')
+        .flex()
+        .gap(8)
+        .marginBottom(12)
+        .children(
+          ['A', 'B', 'C'].map((label) =>
+            Card()
+              .key(label)
+              .padding(12)
+              .hover((h) => h.scale(1.03).translateY(-2))
+              .children(`card ${label}`)
+          )
+        ),
       Column()
         .id('stagger-list')
         .stagger(80)
@@ -91,6 +106,6 @@ export function App() {
       Button('Go to footer')
         .id('to-footer')
         .onPress(() => scrollTo('#footer')),
-      Box().anchor('footer').marginTop(48).className('demo-card').children('footer anchor'),
+      Box().anchor('footer').scrollMargin(72).marginTop(48).className('demo-card').children('footer anchor'),
     ]);
 }

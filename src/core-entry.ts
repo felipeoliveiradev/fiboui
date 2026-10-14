@@ -48,3 +48,5 @@ export { MotionStyles, getMotionCss } from './core/styleManager';
 export { FiboApp, FiboAppBuilder } from './core/FiboApp';
 export { mount, Fibo, toElement } from './core/mount';
 export { ValueBuilder } from './core/builder';
+export type { PseudoStateFn } from './core/builder';
+export type { PseudoStateBuilder } from './core/PseudoStateBuilder';

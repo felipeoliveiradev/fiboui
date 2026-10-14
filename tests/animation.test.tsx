@@ -4,11 +4,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   Box,
   Button,
+  Card,
   Column,
+  Header,
   MOTION_PRESETS,
   MotionStyles,
   Presence,
   Reveal,
+  Text,
   getMotionCss,
   normalizePreset,
   resolveCssEase,
@@ -19,6 +22,7 @@ import {
   useStagger,
   useTransition,
 } from '../src';
+import type { PseudoStateBuilder } from '../src';
 
 function injectedCss(): string {
   return Array.from(document.querySelectorAll('style'))
@@ -281,6 +285,71 @@ describe('Presence + Button.onHover + hooks', () => {
     el.scrollIntoView = spy;
     scrollTo('#sec');
     expect(spy).toHaveBeenCalled();
+  });
+
+  it('anchor applies scroll-margin-top from the sticky CSS variable', () => {
+    render(Box().anchor('sec').children('here'));
+    const el = document.getElementById('sec') as HTMLElement;
+    expect(el.className).toMatch(/scroll-margin-top/);
+    expect(injectedCss()).toMatch(/scroll-margin-top:\s*var\(--fibo-sticky-offset/);
+  });
+
+  it('sticky(0) publishes --fibo-sticky-offset and html scroll-padding', () => {
+    render(Box().sticky(0).id('bar').children('nav'));
+    const css = injectedCss();
+    expect(css).toMatch(/--fibo-sticky-offset:\s*64px/);
+    expect(css).toMatch(/scroll-padding-top:\s*var\(--fibo-sticky-offset/);
+  });
+
+  it('scrollMargin overrides the auto anchor margin', () => {
+    render(Box().scrollMargin(80).anchor('x').children('here'));
+    expect(injectedCss()).toMatch(/scroll-margin-top:\s*80px/);
+  });
+
+  it('Header.sticky publishes the header height as the sticky offset', () => {
+    render(Header().sticky().height(72).children('nav'));
+    expect(injectedCss()).toMatch(/--fibo-sticky-offset:\s*72px/);
+  });
+});
+
+describe('Text variant scale', () => {
+  it('variant h1 sets the heading tag and a visible rem scale', () => {
+    render(Text('Hero').variant('h1'));
+    const el = screen.getByText('Hero');
+    expect(el.tagName).toBe('H1');
+    expect(el.className).toMatch(/fibo-text-h1/);
+    expect(el.style.fontSize).toBe('2.25rem');
+    expect(el.style.fontWeight).toBe('700');
+  });
+
+  it('variant caption is smaller than h1 and user style wins', () => {
+    render(
+      Box().children([
+        Text('Hero').variant('h1').id('h'),
+        Text('Note').variant('caption').style({ fontSize: '20px' }).id('c'),
+      ])
+    );
+    expect((document.getElementById('h') as HTMLElement).style.fontSize).toBe('2.25rem');
+    const caption = document.getElementById('c') as HTMLElement;
+    expect(caption.tagName).toBe('SPAN');
+    expect(caption.style.fontSize).toBe('20px');
+  });
+});
+
+describe('hover callback inference', () => {
+  it('types the hover builder inside .map (not implicit any)', () => {
+    const cards = ['alpha', 'beta'].map((label) =>
+      Card()
+        .key(label)
+        .hover((h) => {
+          const typed: PseudoStateBuilder = h;
+          typed.scale(1.04).translateY(-2);
+        })
+        .children(label)
+    );
+    expect(cards).toHaveLength(2);
+    render(Box().children(cards));
+    expect(injectedCss()).toMatch(/scale\(1\.04\)/);
   });
 });
 

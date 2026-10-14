@@ -21,6 +21,7 @@ class HeaderBuilder extends FiboBuilder {
 
     height(height: number | string): this {
         this._height = height;
+        if (this._sticky) this.syncStickyOffset(true);
         return this;
     }
 
@@ -30,10 +31,25 @@ class HeaderBuilder extends FiboBuilder {
             return this;
         }
         this._sticky = true;
-        if (enable !== true) {
-            super.sticky(enable);
-        }
+        const top = enable === true ? 0 : enable;
+        super.sticky(top);
+        this.syncStickyOffset(enable);
         return this;
+    }
+
+    private syncStickyOffset(enable: boolean | number | string): void {
+        const top = enable === true || enable === false ? 0 : enable;
+        if (typeof top === 'number' && typeof this._height === 'number') {
+            this.publishStickyOffset(top + this._height);
+            return;
+        }
+        if (top === 0 || top === '0' || top === '0px') {
+            this.publishStickyOffset(this._height);
+            return;
+        }
+        const topCss = typeof top === 'number' ? `${top}px` : top;
+        const heightCss = typeof this._height === 'number' ? `${this._height}px` : this._height;
+        this.publishStickyOffset(`calc(${topCss} + ${heightCss})`);
     }
 
     build(): ReactElement {

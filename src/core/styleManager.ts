@@ -82,6 +82,22 @@ export class StyleManager {
     }
   }
 
+  /** Set a `:root` custom property (e.g. `--fibo-sticky-offset`). */
+  public registerRoot(property: string, value: string): void {
+    const key = `:root:${property}:${value}`;
+    if (this.cache.has(key)) return;
+    this.insert(`:root { ${property}: ${value}; }`);
+    this.cache.set(key, ':root');
+  }
+
+  /** Once: `html { scroll-padding-top: var(--fibo-sticky-offset, 0px) }`. */
+  public ensureScrollPadding(): void {
+    const key = 'html:scroll-padding-top';
+    if (this.cache.has(key)) return;
+    this.insert('html { scroll-padding-top: var(--fibo-sticky-offset, 0px); }');
+    this.cache.set(key, 'html');
+  }
+
   public register(property: string, value: string): string {
     const key = `${property}:${value}`;
     if (this.cache.has(key)) {

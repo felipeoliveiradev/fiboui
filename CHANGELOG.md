@@ -28,6 +28,9 @@ Planned as **2.2.0**. Easy CSS media queries, CSS motion presets, and a fluent s
 - **Hover `.scale()` + `.translateY()`** overwrote `transform` — PseudoStateBuilder composes via a map.
 - **Missing `@keyframes stripes`** used by `Progress` (`animate-[stripes_1s_linear_infinite]`).
 - **`Button.onHover`** now fires on `mouseenter`. Documented as a callback (visual hover is `.hover()`).
+- **`.hover(h => …)` inside `.map()`** no longer infers `h` as implicit `any` (callback overload is last). `PseudoStateBuilder` is a public type.
+- **`Text().variant('h1')`** applies a rem typographic scale (tag-only was invisible under Tailwind preflight).
+- **`.anchor()` / `scrollTo` under a sticky bar** — `.sticky()` publishes `--fibo-sticky-offset`, `html` gets `scroll-padding-top`, anchors get `scroll-margin-top`. Override with `.scrollMargin()`.
 
 ### Security
 

@@ -45,6 +45,16 @@ interface ThemeConfig {
   [key: string]: unknown;
 }
 
+/** Typical sticky header height used when `.sticky(0)` / `.sticky(true)` has no size. */
+const DEFAULT_STICKY_OFFSET_PX = 64;
+const DEFAULT_STICKY_OFFSET = `${DEFAULT_STICKY_OFFSET_PX}px`;
+
+/**
+ * Callback form of `.hover()` / `.focus()` / … Contextual typing uses the *last*
+ * overload, so this signature must stay last or `h` becomes implicit `any` inside `.map()`.
+ */
+export type PseudoStateFn = (builder: PseudoStateBuilder) => void | PseudoStateBuilder;
+
 export abstract class FiboBuilder {
   /** @internal Extra DOM props forwarded to the host element. */
   protected _props: Record<string, any> = {};
@@ -75,6 +85,7 @@ export abstract class FiboBuilder {
   protected _viewTransition?: string;
   protected _reducedMotion: 'reduce' | 'never' = 'reduce';
   protected _usesCssMotion = false;
+  protected _explicitScrollMargin = false;
 
   /** Shrink-wrap: skip the default `w-full` / `self-stretch` on Row and Column. */
   protected _hug = false;
@@ -93,9 +104,29 @@ export abstract class FiboBuilder {
     return this;
   }
 
-  /** Scroll target. Same as `.id()`; pair with `scrollTo('#name')`. */
+  /**
+   * Scroll target. Same as `.id()`, plus `scroll-margin-top` so the section
+   * is not hidden under a sticky header. Pair with `scrollTo('#name')`.
+   */
   anchor(value: string): this {
-    return this.id(value);
+    this.id(value);
+    if (!this._explicitScrollMargin) {
+      this._classNames.push(
+        _styleManager.register('scroll-margin-top', 'var(--fibo-sticky-offset, 0px)')
+      );
+    }
+    return this;
+  }
+
+  /**
+   * Explicit `scroll-margin-top` on this node (overrides the sticky CSS variable
+   * that `.anchor()` applies).
+   */
+  scrollMargin(value: number | string): this {
+    this._explicitScrollMargin = true;
+    const css = typeof value === 'number' ? `${value}px` : value;
+    this._classNames.push(_styleManager.register('scroll-margin-top', css));
+    return this;
   }
 
   /**
@@ -1054,7 +1085,9 @@ export abstract class FiboBuilder {
     return this;
   }
 
-  focusVisible(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+  focusVisible(): PseudoStateBuilder;
+  focusVisible(callback: PseudoStateFn): this;
+  focusVisible(callback?: PseudoStateFn): this | PseudoStateBuilder {
     const className = this.getPseudoStateClassName();
     const builder = new PseudoStateBuilder(className, 'focus-visible', this);
     if (callback) {
@@ -1124,9 +1157,26 @@ export abstract class FiboBuilder {
   sticky(top: number | string | boolean = 0): this {
     if (top === false) return this;
     this._classNames.push(_styleManager.register('position', 'sticky'));
-    const value = top === true ? '0px' : typeof top === 'number' ? `${top}px` : top;
-    this._classNames.push(_styleManager.register('top', value));
+    const topValue = top === true ? '0px' : typeof top === 'number' ? `${top}px` : top;
+    this._classNames.push(_styleManager.register('top', topValue));
+    const offset =
+      top === true || top === 0
+        ? DEFAULT_STICKY_OFFSET
+        : typeof top === 'number'
+          ? `${Math.max(top, DEFAULT_STICKY_OFFSET_PX)}px`
+          : top;
+    this.publishStickyOffset(offset);
     return this;
+  }
+
+  /**
+   * Publish `--fibo-sticky-offset` on `:root` so `.anchor()` / `html` scroll-padding
+   * clear this bar. Header uses the real bar height.
+   */
+  protected publishStickyOffset(value: number | string): void {
+    const css = typeof value === 'number' ? `${value}px` : value;
+    _styleManager.registerRoot('--fibo-sticky-offset', css);
+    _styleManager.ensureScrollPadding();
   }
 
   viewTransition(name: string): this {
@@ -1168,9 +1218,9 @@ export abstract class FiboBuilder {
     return this._pseudoStateClassName;
   }
 
-  hover(callback: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this;
   hover(): PseudoStateBuilder;
-  hover(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+  hover(callback: PseudoStateFn): this;
+  hover(callback?: PseudoStateFn): this | PseudoStateBuilder {
     this.ensureInteractiveTransition();
     const className = this.getPseudoStateClassName();
     const builder = new PseudoStateBuilder(className, 'hover', this);
@@ -1183,9 +1233,9 @@ export abstract class FiboBuilder {
     return builder;
   }
 
-  focus(callback: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this;
   focus(): PseudoStateBuilder;
-  focus(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+  focus(callback: PseudoStateFn): this;
+  focus(callback?: PseudoStateFn): this | PseudoStateBuilder {
     const className = this.getPseudoStateClassName();
     const builder = new PseudoStateBuilder(className, 'focus', this);
 
@@ -1197,9 +1247,9 @@ export abstract class FiboBuilder {
     return builder;
   }
 
-  active(callback: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this;
   active(): PseudoStateBuilder;
-  active(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+  active(callback: PseudoStateFn): this;
+  active(callback?: PseudoStateFn): this | PseudoStateBuilder {
     const className = this.getPseudoStateClassName();
     const builder = new PseudoStateBuilder(className, 'active', this);
 
@@ -1211,9 +1261,9 @@ export abstract class FiboBuilder {
     return builder;
   }
 
-  visited(callback: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this;
   visited(): PseudoStateBuilder;
-  visited(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+  visited(callback: PseudoStateFn): this;
+  visited(callback?: PseudoStateFn): this | PseudoStateBuilder {
     const className = this.getPseudoStateClassName();
     const builder = new PseudoStateBuilder(className, 'visited', this);
 
@@ -1225,9 +1275,9 @@ export abstract class FiboBuilder {
     return builder;
   }
 
-  disabledState(callback: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this;
   disabledState(): PseudoStateBuilder;
-  disabledState(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+  disabledState(callback: PseudoStateFn): this;
+  disabledState(callback?: PseudoStateFn): this | PseudoStateBuilder {
     const className = this.getPseudoStateClassName();
     const builder = new PseudoStateBuilder(className, 'disabled', this);
 
@@ -1239,9 +1289,9 @@ export abstract class FiboBuilder {
     return builder;
   }
 
-  focusWithin(callback: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this;
   focusWithin(): PseudoStateBuilder;
-  focusWithin(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+  focusWithin(callback: PseudoStateFn): this;
+  focusWithin(callback?: PseudoStateFn): this | PseudoStateBuilder {
     const className = this.getPseudoStateClassName();
     const builder = new PseudoStateBuilder(className, 'focus-within', this);
 
@@ -1253,9 +1303,9 @@ export abstract class FiboBuilder {
     return builder;
   }
 
-  firstChild(callback: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this;
   firstChild(): PseudoStateBuilder;
-  firstChild(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+  firstChild(callback: PseudoStateFn): this;
+  firstChild(callback?: PseudoStateFn): this | PseudoStateBuilder {
     const className = this.getPseudoStateClassName();
     const builder = new PseudoStateBuilder(className, 'first-child', this);
 
@@ -1267,9 +1317,9 @@ export abstract class FiboBuilder {
     return builder;
   }
 
-  lastChild(callback: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this;
   lastChild(): PseudoStateBuilder;
-  lastChild(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+  lastChild(callback: PseudoStateFn): this;
+  lastChild(callback?: PseudoStateFn): this | PseudoStateBuilder {
     const className = this.getPseudoStateClassName();
     const builder = new PseudoStateBuilder(className, 'last-child', this);
 
@@ -1281,9 +1331,9 @@ export abstract class FiboBuilder {
     return builder;
   }
 
-  groupHover(callback: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this;
   groupHover(): PseudoStateBuilder;
-  groupHover(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+  groupHover(callback: PseudoStateFn): this;
+  groupHover(callback?: PseudoStateFn): this | PseudoStateBuilder {
     const className = this.getPseudoStateClassName();
     const builder = new PseudoStateBuilder(className, 'hover', this, true);
 
@@ -1295,7 +1345,9 @@ export abstract class FiboBuilder {
     return builder;
   }
 
-  groupFocus(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+  groupFocus(): PseudoStateBuilder;
+  groupFocus(callback: PseudoStateFn): this;
+  groupFocus(callback?: PseudoStateFn): this | PseudoStateBuilder {
     const className = this.getPseudoStateClassName();
     const builder = new PseudoStateBuilder(className, 'focus', this, true);
 
@@ -1307,7 +1359,9 @@ export abstract class FiboBuilder {
     return builder;
   }
 
-  groupActive(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+  groupActive(): PseudoStateBuilder;
+  groupActive(callback: PseudoStateFn): this;
+  groupActive(callback?: PseudoStateFn): this | PseudoStateBuilder {
     const className = this.getPseudoStateClassName();
     const builder = new PseudoStateBuilder(className, 'active', this, true);
 
@@ -1319,7 +1373,9 @@ export abstract class FiboBuilder {
     return builder;
   }
 
-  groupFocusWithin(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+  groupFocusWithin(): PseudoStateBuilder;
+  groupFocusWithin(callback: PseudoStateFn): this;
+  groupFocusWithin(callback?: PseudoStateFn): this | PseudoStateBuilder {
     const className = this.getPseudoStateClassName();
     const builder = new PseudoStateBuilder(className, 'focus-within', this, true);
 
