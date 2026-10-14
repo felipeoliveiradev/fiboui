@@ -53,7 +53,7 @@ Covered by `tests/production-audit.test.tsx`, `tests/audit-fixes.test.tsx`, `tes
 | CLI under ESM | **Fixed** — CLI emits ESM; `createRequire` for `package.json` |
 | `npm publish` | **Not run** (owner + `main` + `NPM_TOKEN`) |
 
-Real-app pack verification: [VERIFICATION.md](./VERIFICATION.md).
+Real-app pack verification (Vite 18 + Next 14 SSR + Playwright, 2026-10-14): [VERIFICATION.md](./VERIFICATION.md). **Passed.** Screenshots: `verify-vite-initial.png`, `verify-vite-after-clicks.png`, `verify-next-ssr.png`, `verify-next-after-clicks.png`.
 
 ---
 
