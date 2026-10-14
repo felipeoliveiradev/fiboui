@@ -2,28 +2,28 @@
 import { Badge } from '../../src/content/Badge'
 import { Box } from '../../src/structure/Box'
 
-const renderVariants = () => 
+const renderVariants = () =>
   Box().display('flex').gap('8px').flexWrap('wrap').children([
-    Badge().text('Neutral').variant('neutral').build(),
-    Badge().text('Accent').variant('accent').build(),
-    Badge().text('Glass').variant('glass').build(),
-    Badge().text('Solid').variant('solid').build(),
-    Badge().text('Dot').variant('dot').intent('success').build()
-  ]).build()
+    Badge().text('Neutral').variant('neutral'),
+    Badge().text('Accent').variant('accent'),
+    Badge().text('Glass').variant('glass'),
+    Badge().text('Solid').variant('solid'),
+    Badge().text('Dot').variant('dot').intent('success')
+  ])
 
-const renderIntents = () => 
+const renderIntents = () =>
   Box().display('flex').gap('8px').flexWrap('wrap').children([
-    Badge().text('Info').intent('info').build(),
-    Badge().text('Success').intent('success').build(),
-    Badge().text('Warning').intent('warning').build(),
-    Badge().text('Error').intent('error').build()
-  ]).build()
+    Badge().text('Info').intent('info'),
+    Badge().text('Success').intent('success'),
+    Badge().text('Warning').intent('warning'),
+    Badge().text('Error').intent('error')
+  ])
 
-const renderShapes = () => 
+const renderShapes = () =>
   Box().display('flex').gap('8px').alignItems('center').children([
-    Badge().text('Rounded').shape('rounded').build(),
-    Badge().text('Pill').shape('pill').build()
-  ]).build()
+    Badge().text('Rounded').shape('rounded'),
+    Badge().text('Pill').shape('pill')
+  ])
 </script>
 
 # Badge
@@ -41,12 +41,12 @@ Small labels for status, categories, or metadata display.
 ::: details View Source
 ```tsx
 Box().display('flex').gap('8px').flexWrap('wrap').children([
-  Badge().text('Neutral').variant('neutral').build(),
-  Badge().text('Accent').variant('accent').build(),
-  Badge().text('Glass').variant('glass').build(),
-  Badge().text('Solid').variant('solid').build(),
-  Badge().text('Dot').variant('dot').intent('success').build()
-]).build()
+  Badge().text('Neutral').variant('neutral'),
+  Badge().text('Accent').variant('accent'),
+  Badge().text('Glass').variant('glass'),
+  Badge().text('Solid').variant('solid'),
+  Badge().text('Dot').variant('dot').intent('success')
+])
 ```
 :::
 
@@ -57,11 +57,11 @@ Box().display('flex').gap('8px').flexWrap('wrap').children([
 ::: details View Source
 ```tsx
 Box().display('flex').gap('8px').flexWrap('wrap').children([
-  Badge().text('Info').intent('info').build(),
-  Badge().text('Success').intent('success').build(),
-  Badge().text('Warning').intent('warning').build(),
-  Badge().text('Error').intent('error').build()
-]).build()
+  Badge().text('Info').intent('info'),
+  Badge().text('Success').intent('success'),
+  Badge().text('Warning').intent('warning'),
+  Badge().text('Error').intent('error')
+])
 ```
 :::
 
@@ -72,9 +72,9 @@ Box().display('flex').gap('8px').flexWrap('wrap').children([
 ::: details View Source
 ```tsx
 Box().display('flex').gap('8px').alignItems('center').children([
-  Badge().text('Rounded').shape('rounded').build(),
-  Badge().text('Pill').shape('pill').build()
-]).build()
+  Badge().text('Rounded').shape('rounded'),
+  Badge().text('Pill').shape('pill')
+])
 ```
 :::
 
@@ -115,7 +115,7 @@ Badge()
   .variant('solid')
   .intent('success')
   .shape('pill')
-  .build()
+
 ```
 
 ### With Icon
@@ -125,7 +125,7 @@ Badge()
   .text('12')
   .icon(<HeartIcon />)
   .variant('glass')
-  .build()
+
 ```
 
 ## See Also

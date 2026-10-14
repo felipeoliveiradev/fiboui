@@ -10,10 +10,12 @@ export function toElement(node: FiboChild): ReactNode {
 }
 
 /**
- * Render a builder as a React child without calling `.build()` at the call site.
+ * Optional wrapper. Builders are already React elements:
  *
  * ```tsx
- * <Fibo>{Button('Save').onPress(save)}</Fibo>
+ * function App() {
+ *   return Button('Save').onPress(save);
+ * }
  * ```
  */
 export function Fibo({ children }: { children: FiboChild }): ReactElement {

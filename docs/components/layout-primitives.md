@@ -6,29 +6,29 @@ import { Spacer } from '../../src/layout/Spacer'
 import { Box } from '../../src/structure/Box'
 import { Text } from '../../src/content/Text'
 
-const renderRow = () => 
+const renderRow = () =>
   Row()
     .mainAxisAlignment('spaceBetween')
     .crossAxisAlignment('center')
     .spacing(16)
     .children([
-      Box().padding('16px').backgroundColor('#3B82F6').color('#FFF').children('Item 1').build(),
-      Box().padding('16px').backgroundColor('#10B981').color('#FFF').children('Item 2').build(),
-      Box().padding('16px').backgroundColor('#EF4444').color('#FFF').children('Item 3').build()
+      Box().padding('16px').backgroundColor('#3B82F6').color('#FFF').children('Item 1'),
+      Box().padding('16px').backgroundColor('#10B981').color('#FFF').children('Item 2'),
+      Box().padding('16px').backgroundColor('#EF4444').color('#FFF').children('Item 3')
     ])
-    .build()
 
-const renderColumn = () => 
+
+const renderColumn = () =>
   Column()
     .mainAxisAlignment('start')
     .crossAxisAlignment('stretch')
     .spacing(12)
     .children([
-      Box().padding('12px').backgroundColor('#3B82F6').color('#FFF').children('Item 1').build(),
-      Box().padding('12px').backgroundColor('#10B981').color('#FFF').children('Item 2').build(),
-      Box().padding('12px').backgroundColor('#EF4444').color('#FFF').children('Item 3').build()
+      Box().padding('12px').backgroundColor('#3B82F6').color('#FFF').children('Item 1'),
+      Box().padding('12px').backgroundColor('#10B981').color('#FFF').children('Item 2'),
+      Box().padding('12px').backgroundColor('#EF4444').color('#FFF').children('Item 3')
     ])
-    .build()
+
 
 const renderContainer = () => {
   return Container()
@@ -37,17 +37,17 @@ const renderContainer = () => {
     .backgroundColor('#F3F4F6')
     .borderRadius('8px')
     .children(
-      Text('This content is centered with max-width constraint.').variant('body').build()
+      Text('This content is centered with max-width constraint.').variant('body')
     )
-    .build()
+
 }
 
 const renderSpacer = () => {
   return Box().display('flex').flexDirection('column').children([
-    Box().padding('12px').backgroundColor('#3B82F6').color('#FFF').borderRadius('4px').children('Block 1').build(),
-    Spacer().height('32px').build(),
-    Box().padding('12px').backgroundColor('#10B981').color('#FFF').borderRadius('4px').children('Block 2').build()
-  ]).build()
+    Box().padding('12px').backgroundColor('#3B82F6').color('#FFF').borderRadius('4px').children('Block 1'),
+    Spacer().height('32px'),
+    Box().padding('12px').backgroundColor('#10B981').color('#FFF').borderRadius('4px').children('Block 2')
+  ])
 }
 </script>
 
@@ -70,11 +70,11 @@ Row()
   .crossAxisAlignment('center')
   .spacing(16)
   .children([
-    Box().padding('16px').backgroundColor('#3B82F6').color('#FFF').children('Item 1').build(),
-    Box().padding('16px').backgroundColor('#10B981').color('#FFF').children('Item 2').build(),
-    Box().padding('16px').backgroundColor('#EF4444').color('#FFF').children('Item 3').build()
+    Box().padding('16px').backgroundColor('#3B82F6').color('#FFF').children('Item 1'),
+    Box().padding('16px').backgroundColor('#10B981').color('#FFF').children('Item 2'),
+    Box().padding('16px').backgroundColor('#EF4444').color('#FFF').children('Item 3')
   ])
-  .build()
+
 ```
 :::
 
@@ -108,11 +108,11 @@ Column()
   .crossAxisAlignment('stretch')
   .spacing(12)
   .children([
-    Box().padding('12px').backgroundColor('#3B82F6').color('#FFF').children('Item 1').build(),
-    Box().padding('12px').backgroundColor('#10B981').color('#FFF').children('Item 2').build(),
-    Box().padding('12px').backgroundColor('#EF4444').color('#FFF').children('Item 3').build()
+    Box().padding('12px').backgroundColor('#3B82F6').color('#FFF').children('Item 1'),
+    Box().padding('12px').backgroundColor('#10B981').color('#FFF').children('Item 2'),
+    Box().padding('12px').backgroundColor('#EF4444').color('#FFF').children('Item 3')
   ])
-  .build()
+
 ```
 :::
 
@@ -147,9 +147,9 @@ Container()
   .padding('24px')
   .backgroundColor('#F3F4F6')
   .children(
-    Text('This content is centered with max-width constraint.').variant('body').build()
+    Text('This content is centered with max-width constraint.').variant('body')
   )
-  .build()
+
 ```
 :::
 
@@ -178,10 +178,10 @@ Empty space for vertical or horizontal spacing.
 ::: details View Source
 ```tsx
 Box().display('flex').flexDirection('column').children([
-  Box().padding('12px').backgroundColor('#3B82F6').color('#FFF').children('Block 1').build(),
-  Spacer().height(32).build(),
-  Box().padding('12px').backgroundColor('#10B981').color('#FFF').children('Block 2').build()
-]).build()
+  Box().padding('12px').backgroundColor('#3B82F6').color('#FFF').children('Block 1'),
+  Spacer().height(32),
+  Box().padding('12px').backgroundColor('#10B981').color('#FFF').children('Block 2')
+])
 ```
 :::
 
@@ -208,10 +208,10 @@ Row()
   .crossAxisAlignment('start')
   .spacing(16)
   .children([
-    Column().size('small').children([...]).build(),
-    Column().size('large').children([...]).build()
+    Column().size('small').children([...]),
+    Column().size('large').children([...])
   ])
-  .build()
+
 ```
 
 ### Centered Content
@@ -221,11 +221,11 @@ Container()
   .maxWidth('1200px')
   .padding('40px')
   .children([
-    Text('Welcome').variant('h1').build(),
-    Spacer().height(24).build(),
-    Text('Description text...').variant('body').build()
+    Text('Welcome').variant('h1'),
+    Spacer().height(24),
+    Text('Description text...').variant('body')
   ])
-  .build()
+
 ```
 
 ## See Also

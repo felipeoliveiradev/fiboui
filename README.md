@@ -1,8 +1,8 @@
-# FiboUI v2.0.0
+# FiboUI v2.1.0
 
 **A Flutter & SwiftUI-inspired React UI framework featuring a fluent builder API and fine-grained reactivity.**
 
-FiboUI brings chainable builders to React. Compose screens with `Column()`, `Row()`, `Button()`, and `signal()` — builders passed to `.children()` are finalized automatically.
+FiboUI brings chainable builders to React. Compose screens with `Column()`, `Row()`, `Button()`, and `signal()`. Builders **are** React elements — return them from components, nest them in JSX, and skip `.build()`.
 
 ---
 
@@ -49,26 +49,29 @@ Do not run `npm publish` locally. The `Publish` workflow runs on GitHub Release 
 ```tsx
 import { Card, Text } from 'fiboui';
 
-Card()
-  .className('p-8')
-  .style({ backgroundColor: '#111' })
-  .children([Text('Hello')])
-  .build();
+function Hello() {
+  return Card()
+    .className('p-8')
+    .style({ backgroundColor: '#111' })
+    .children([Text('Hello')]);
+}
 ```
 
-### Implicit construction
+### No `.build()`
 
-Builders in `.children()` do not need `.build()`. The event API on `Button` is **`.onPress`** (not `onClick`). `FiboBuilder.onClick` still exists for raw DOM handlers on any builder.
+Builders are valid React elements (`isValidElement(Button('Go'))`). Use them as JSX children, return values, array items (`.key(id)`), props, or `React.createElement` arguments. `.build()` still exists and is deprecated.
+
+The event API on `Button` is **`.onPress`** (not `onClick`). `FiboBuilder.onClick` still exists for raw DOM handlers on any builder.
 
 ```tsx
 import { Button, Column, Text } from 'fiboui';
 
-Column()
-  .children([
+function App() {
+  return Column().children([
     Text('Title').variant('h1'),
     Button('Action').onPress(() => undefined),
-  ])
-  .build();
+  ]);
+}
 ```
 
 ---
@@ -77,7 +80,7 @@ Column()
 
 ### Signals
 
-`.bindSignal(sig)` subscribes the builder and **re-runs `build()`** when the signal changes. Read the signal inside a **function child** (or `Text(() => ...)`) so the new value is picked up. Interpolating `sig.value` into a string at construction time is a one-shot snapshot.
+`.bindSignal(sig)` subscribes the builder and **re-assembles** when the signal changes. Read the signal inside a **function child** (or `Text(() => ...)`) so the new value is picked up. Interpolating `sig.value` into a string at construction time is a one-shot snapshot.
 
 ```tsx
 import { Box, Button, Text, signal } from 'fiboui';
@@ -91,8 +94,7 @@ Box()
     Button('+').onPress(() => {
       count.value += 1;
     }),
-  ])
-  .build();
+  ]);
 ```
 
 `useSignal(count)` and `.observer()` with a function child also work. Signal subscriptions unsubscribe on unmount and are Safe for React 18/19 StrictMode (`useSyncExternalStore`). Signals are in-memory and client-only — do not rely on them during SSR.
@@ -110,8 +112,7 @@ const store = createStore({ theme: 'dark', user: 'John' });
 
 Box()
   .observer()
-  .children(() => Text(store.getState().user))
-  .build();
+  .children(() => Text(store.getState().user));
 ```
 
 ---
@@ -149,8 +150,7 @@ Scaffold()
   .sideBarLeft(
     Sidebar().width(240).children([Text('Home'), Text('Settings')])
   )
-  .children([Text('Welcome to the main content area.')])
-  .build();
+  .children([Text('Welcome to the main content area.')]);
 ```
 
 ---
@@ -206,8 +206,7 @@ export function ShopHeader() {
             ])
           )
         ),
-    ])
-    .build();
+    ]);
 }
 ```
 

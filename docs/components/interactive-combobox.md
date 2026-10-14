@@ -9,14 +9,14 @@ const renderCombobox = () => {
     { label: 'Angular', value: 'angular' },
     { label: 'Svelte', value: 'svelte' }
   ]
-  
+
   return Combobox()
     .label('Select framework')
     .options(options)
     .value('react')
     .onChange(() => {})
     .maxWidth('400px')
-    .build()
+
 }
 
 const renderMultiple = () => {
@@ -26,7 +26,7 @@ const renderMultiple = () => {
     { label: 'Python', value: 'py' },
     { label: 'Go', value: 'go' }
   ]
-  
+
   return Combobox()
     .label('Select languages')
     .options(options)
@@ -34,7 +34,7 @@ const renderMultiple = () => {
     .multiple(true)
     .onChange(() => {})
     .maxWidth('400px')
-    .build()
+
 }
 </script>
 
@@ -63,7 +63,7 @@ Combobox()
   .options(options)
   .value('react')
   .onChange(() => {})
-  .build()
+
 ```
 :::
 
@@ -79,7 +79,7 @@ Combobox()
   .value(['ts', 'js'])
   .multiple(true)
   .onChange(() => {})
-  .build()
+
 ```
 :::
 
@@ -117,7 +117,7 @@ Combobox()
     // Add new tag to options
     setTagOptions([...tagOptions, { label: newTag, value: newTag }])
   })
-  .build()
+
 ```
 
 ## See Also

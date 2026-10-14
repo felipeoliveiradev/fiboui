@@ -2,12 +2,13 @@ import { CSSProperties, ReactNode, ReactElement } from 'react';
 
 /** Any fluent builder that can produce a React element. */
 export type Buildable = {
+  /** @deprecated Builders are React elements; `.build()` is optional. */
   build(): ReactElement;
 };
 
 /**
- * A single child accepted by `.children()` / layout slots.
- * Builders are first-class — they do not need `.build()` at the call site.
+ * A single child accepted by `.children()` / layout slots / JSX / component returns.
+ * Builders are React elements — they do not need `.build()`.
  */
 export type FiboChild = ReactNode | Buildable;
 

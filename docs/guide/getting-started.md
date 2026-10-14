@@ -15,7 +15,7 @@ Import the stylesheet once — the JS entry does not load CSS:
 import 'fiboui/style.css';
 ```
 
-ESM-only (`import`, no `require`). Next.js App Router files that call builders need `'use client'`. See [MIGRATION.md](../../MIGRATION.md) for 2.0 changes.
+ESM-only (`import`, no `require`). Next.js App Router files that call builders need `'use client'`. See [MIGRATION.md](../../MIGRATION.md). Builders are React elements — no `.build()`.
 
 ## Quick Start
 
@@ -30,9 +30,9 @@ function App() {
     <FiboThemeProvider>
       {
         Box().p(4).children([
-            Text("Hello World").variant("h1").build(),
-            Button("Click Me").onPress(() => alert("Hi!")).build()
-        ]).build()
+            Text("Hello World").variant("h1"),
+            Button("Click Me").onPress(() => alert("Hi!"))
+        ])
       }
     </FiboThemeProvider>
   );
@@ -54,6 +54,6 @@ FiboUI offers a fluent API:
 **FiboUI Builder:**
 ```tsx
 Box().p(4).bg("gray-100").children([
-    Text("Title").variant("h1").weight("bold").build()
-]).build()
+    Text("Title").variant("h1").weight("bold")
+])
 ```

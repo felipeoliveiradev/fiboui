@@ -2,13 +2,13 @@
 import { Alert } from '../../src/content/Alert'
 import { Box } from '../../src/structure/Box'
 
-const renderIntents = () => 
+const renderIntents = () =>
   Box().display('flex').flexDirection('column').gap('16px').children([
-    Alert().title('Information').description('This is an informational message.').intent('info').build(),
-    Alert().title('Success').description('Your action completed successfully.').intent('success').build(),
-    Alert().title('Warning').description('Please review this carefully.').intent('warning').build(),
-    Alert().title('Error').description('An error occurred. Please try again.').intent('error').build()
-  ]).build()
+    Alert().title('Information').description('This is an informational message.').intent('info'),
+    Alert().title('Success').description('Your action completed successfully.').intent('success'),
+    Alert().title('Warning').description('Please review this carefully.').intent('warning'),
+    Alert().title('Error').description('An error occurred. Please try again.').intent('error')
+  ])
 </script>
 
 # Alert
@@ -26,11 +26,11 @@ Prominent notification messages for important information.
 ::: details View Source
 ```tsx
 Box().display('flex').flexDirection('column').gap('16px').children([
-  Alert().title('Information').description('This is an informational message.').intent('info').build(),
-  Alert().title('Success').description('Your action completed successfully.').intent('success').build(),
-  Alert().title('Warning').description('Please review this carefully.').intent('warning').build(),
-  Alert().title('Error').description('An error occurred. Please try again.').intent('error').build()
-]).build()
+  Alert().title('Information').description('This is an informational message.').intent('info'),
+  Alert().title('Success').description('Your action completed successfully.').intent('success'),
+  Alert().title('Warning').description('Please review this carefully.').intent('warning'),
+  Alert().title('Error').description('An error occurred. Please try again.').intent('error')
+])
 ```
 :::
 
@@ -68,7 +68,7 @@ Alert()
   .title('Welcome!')
   .description('Thanks for joining our platform.')
   .intent('success')
-  .build()
+
 ```
 
 ### Error Alert
@@ -78,7 +78,7 @@ Alert()
   .title('Authentication Failed')
   .description('Invalid credentials. Please check your email and password.')
   .intent('error')
-  .build()
+
 ```
 
 ## See Also

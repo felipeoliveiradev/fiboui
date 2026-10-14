@@ -2,34 +2,34 @@
 import { Avatar } from '../../src/content/Avatar'
 import { Box } from '../../src/structure/Box'
 
-const renderSizes = () => 
+const renderSizes = () =>
   Box().display('flex').gap('16px').alignItems('center').children([
-    Avatar().image('https://i.pravatar.cc/100').size(32).build(),
-    Avatar().image('https://i.pravatar.cc/100').size(48).build(),
-    Avatar().image('https://i.pravatar.cc/100').size(64).build(),
-    Avatar().image('https://i.pravatar.cc/100').size(80).build()
-  ]).build()
+    Avatar().image('https://i.pravatar.cc/100').size(32),
+    Avatar().image('https://i.pravatar.cc/100').size(48),
+    Avatar().image('https://i.pravatar.cc/100').size(64),
+    Avatar().image('https://i.pravatar.cc/100').size(80)
+  ])
 
-const renderShapes = () => 
+const renderShapes = () =>
   Box().display('flex').gap('16px').alignItems('center').children([
-    Avatar().image('https://i.pravatar.cc/100').shape('circle').size(64).build(),
-    Avatar().image('https://i.pravatar.cc/100').shape('rounded').size(64).build(),
-    Avatar().image('https://i.pravatar.cc/100').shape('square').size(64).build()
-  ]).build()
+    Avatar().image('https://i.pravatar.cc/100').shape('circle').size(64),
+    Avatar().image('https://i.pravatar.cc/100').shape('rounded').size(64),
+    Avatar().image('https://i.pravatar.cc/100').shape('square').size(64)
+  ])
 
-const renderStatus = () => 
+const renderStatus = () =>
   Box().display('flex').gap('16px').alignItems('center').children([
-    Avatar().image('https://i.pravatar.cc/100').status('online').size(64).build(),
-    Avatar().image('https://i.pravatar.cc/100').status('offline').size(64).build(),
-    Avatar().image('https://i.pravatar.cc/100').status('busy').size(64).build()
-  ]).build()
+    Avatar().image('https://i.pravatar.cc/100').status('online').size(64),
+    Avatar().image('https://i.pravatar.cc/100').status('offline').size(64),
+    Avatar().image('https://i.pravatar.cc/100').status('busy').size(64)
+  ])
 
-const renderBordered = () => 
+const renderBordered = () =>
   Avatar()
     .image('https://i.pravatar.cc/100')
     .size(64)
     .border('3px solid #3B82F6')
-    .build()
+
 </script>
 
 # Avatar
@@ -47,11 +47,11 @@ A component for displaying user profile images with various shapes, sizes, and s
 ::: details View Source
 ```tsx
 Box().display('flex').gap('16px').alignItems('center').children([
-  Avatar().image('https://i.pravatar.cc/100').size(32).build(),
-  Avatar().image('https://i.pravatar.cc/100').size(48).build(),
-  Avatar().image('https://i.pravatar.cc/100').size(64).build(),
-  Avatar().image('https://i.pravatar.cc/100').size(80).build()
-]).build()
+  Avatar().image('https://i.pravatar.cc/100').size(32),
+  Avatar().image('https://i.pravatar.cc/100').size(48),
+  Avatar().image('https://i.pravatar.cc/100').size(64),
+  Avatar().image('https://i.pravatar.cc/100').size(80)
+])
 ```
 :::
 
@@ -62,10 +62,10 @@ Box().display('flex').gap('16px').alignItems('center').children([
 ::: details View Source
 ```tsx
 Box().display('flex').gap('16px').alignItems('center').children([
-  Avatar().image('https://i.pravatar.cc/100').shape('circle').size(64).build(),
-  Avatar().image('https://i.pravatar.cc/100').shape('rounded').size(64).build(),
-  Avatar().image('https://i.pravatar.cc/100').shape('square').size(64).build()
-]).build()
+  Avatar().image('https://i.pravatar.cc/100').shape('circle').size(64),
+  Avatar().image('https://i.pravatar.cc/100').shape('rounded').size(64),
+  Avatar().image('https://i.pravatar.cc/100').shape('square').size(64)
+])
 ```
 :::
 
@@ -76,10 +76,10 @@ Box().display('flex').gap('16px').alignItems('center').children([
 ::: details View Source
 ```tsx
 Box().display('flex').gap('16px').alignItems('center').children([
-  Avatar().image('https://i.pravatar.cc/100').status('online').size(64).build(),
-  Avatar().image('https://i.pravatar.cc/100').status('offline').size(64).build(),
-  Avatar().image('https://i.pravatar.cc/100').status('busy').size(64).build()
-]).build()
+  Avatar().image('https://i.pravatar.cc/100').status('online').size(64),
+  Avatar().image('https://i.pravatar.cc/100').status('offline').size(64),
+  Avatar().image('https://i.pravatar.cc/100').status('busy').size(64)
+])
 ```
 :::
 
@@ -93,7 +93,7 @@ Avatar()
   .image('https://i.pravatar.cc/100')
   .size(64)
   .border('3px solid #3B82F6')
-  .build()
+
 ```
 :::
 
@@ -136,7 +136,7 @@ Avatar()
   .size(96)
   .shape('circle')
   .status('online')
-  .build()
+
 ```
 
 ### Team Member
@@ -147,7 +147,7 @@ Avatar()
   .size(48)
   .shape('rounded')
   .border('2px solid #E5E7EB')
-  .build()
+
 ```
 
 ## See Also

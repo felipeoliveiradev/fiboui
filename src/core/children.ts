@@ -1,4 +1,4 @@
-import { ReactElement, ReactNode } from 'react';
+import React, { ReactElement, ReactNode } from 'react';
 import type { FiboChild, FiboChildren } from './types';
 
 export function isBuildable(child: unknown): child is { build: () => ReactElement } {
@@ -11,6 +11,9 @@ export function isBuildable(child: unknown): child is { build: () => ReactElemen
 }
 
 export function buildChild(child: unknown): ReactNode {
+  if (React.isValidElement(child)) {
+    return child;
+  }
   if (isBuildable(child)) {
     return child.build();
   }

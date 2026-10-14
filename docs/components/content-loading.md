@@ -3,21 +3,21 @@ import { Progress } from '../../src/content/Progress'
 import { Spinner } from '../../src/content/Spinner'
 import { Box } from '../../src/structure/Box'
 
-const renderProgress = () => 
+const renderProgress = () =>
   Box().display('flex').flexDirection('column').gap('24px').children([
-    Progress().value(65).max(100).build(),
-    Progress().value(45).variant('striped').build(),
-    Progress().value(75).variant('segments').build(),
-    Progress().value(50).variant('circular').build()
-  ]).build()
+    Progress().value(65).max(100),
+    Progress().value(45).variant('striped'),
+    Progress().value(75).variant('segments'),
+    Progress().value(50).variant('circular')
+  ])
 
-const renderSpinners = () => 
+const renderSpinners = () =>
   Box().display('flex').gap('24px').alignItems('center').children([
-    Spinner().size('sm').build(),
-    Spinner().size('md').build(),
-    Spinner().size('lg').variant('dots').build(),
-    Spinner().size('lg').variant('pulse').build()
-  ]).build()
+    Spinner().size('sm'),
+    Spinner().size('md'),
+    Spinner().size('lg').variant('dots'),
+    Spinner().size('lg').variant('pulse')
+  ])
 </script>
 
 # Progress & Spinner
@@ -33,11 +33,11 @@ Visual progress indicators with multiple variants.
 ::: details View Source
 ```tsx
 Box().display('flex').flexDirection('column').gap('24px').children([
-  Progress().value(65).max(100).build(),
-  Progress().value(45).variant('striped').build(),
-  Progress().value(75).variant('segments').build(),
-  Progress().value(50).variant('circular').build()
-]).build()
+  Progress().value(65).max(100),
+  Progress().value(45).variant('striped'),
+  Progress().value(75).variant('segments'),
+  Progress().value(50).variant('circular')
+])
 ```
 :::
 
@@ -70,11 +70,11 @@ Animated loading indicators.
 ::: details View Source
 ```tsx
 Box().display('flex').gap('24px').alignItems('center').children([
-  Spinner().size('sm').build(),
-  Spinner().size('md').build(),
-  Spinner().size('lg').variant('dots').build(),
-  Spinner().size('lg').variant('pulse').build()
-]).build()
+  Spinner().size('sm'),
+  Spinner().size('md'),
+  Spinner().size('lg').variant('dots'),
+  Spinner().size('lg').variant('pulse')
+])
 ```
 :::
 
@@ -105,16 +105,16 @@ Progress()
     { title: 'Processing', date: 'In Progress' },
     { title: 'Shipped', date: 'Pending' }
   ])
-  .build()
+
 ```
 
 ### Loading State
 
 ```tsx
 Box().display('flex').alignItems('center').gap('12px').children([
-  Spinner().size('sm').color('#3B82F6').build(),
-  Text('Loading...').variant('body').build()
-]).build()
+  Spinner().size('sm').color('#3B82F6'),
+  Text('Loading...').variant('body')
+])
 ```
 
 ## See Also

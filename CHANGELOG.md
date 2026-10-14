@@ -2,6 +2,30 @@
 
 All notable changes to this project are documented in this file.
 
+## [2.1.0] - 2026-10-14
+
+Builders are React elements. You can return, nest, and pass them anywhere a `ReactNode` is accepted — **no `.build()`**.
+
+### Added
+
+- Every `createBuilder` / `createShapeBuilder` factory stamps the running React’s `$$typeof` (React 18 `react.element` and React 19 `react.transitional.element`) so `Column()`, `Button()`, `Text()`, … are valid `ReactElement`s.
+- Works as JSX children, component return values (`function App() { return Column(...) }`), arrays/lists (`.key(id)`), conditionals, `ReactNode` props, `React.createElement`, `mount()`, StrictMode, and `renderToString` SSR.
+- `.build()` remains as a **deprecated** assemble helper for 2.0 call sites. Test: `tests/no-build.test.tsx`.
+
+### Migration
+
+```tsx
+// before (2.0)
+function App() {
+  return Column().children([Text('Hi')]).build();
+}
+
+// after (2.1)
+function App() {
+  return Column().children([Text('Hi')]);
+}
+```
+
 ## [2.0.0] - 2026-10-14
 
 Breaking release. Nobody was consuming 1.0.x in production; APIs that needed a break were taken now. Migration: [MIGRATION.md](./MIGRATION.md).
