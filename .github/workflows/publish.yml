@@ -61,14 +61,35 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Tag vX.Y.Z on main publishes
+      - name: GitHub Release vX.Y.Z with CHANGELOG notes
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.version.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
-          TAG="v${{ steps.version.outputs.version }}"
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists."
-          else
-            git tag "$TAG"
-            git push origin "$TAG"
+          TAG="v${VERSION}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists."
+            exit 0
           fi
+          NOTES="$(python3 - "$VERSION" <<'PY'
+          import re
+          import sys
+          from pathlib import Path
+
+          version = sys.argv[1]
+          text = Path("CHANGELOG.md").read_text(encoding="utf-8")
+          match = re.search(
+              rf"(?ms)^## \[{re.escape(version)}\][^\n]*\n(.*?)(?=^## \[|\Z)",
+              text,
+          )
+          if not match:
+              sys.exit(f"CHANGELOG.md has no ## [{version}] section")
+          notes = match.group(1).strip()
+          if not notes:
+              sys.exit(f"CHANGELOG.md section [{version}] is empty")
+          print(notes)
+          PY
+          )"
+          gh release create "$TAG" --title "$TAG" --notes "$NOTES"

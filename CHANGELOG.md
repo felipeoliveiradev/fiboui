@@ -18,16 +18,17 @@ Breaking release. Nobody was consuming 1.0.x in production; APIs that needed a b
 
 ### Added
 
+- **Button `shape` / `size` / `tone` / `expand`:** `shape('rect'|'rounded'|'sharp')`, `size('xs')`, `tone('inverse')`, `expand()`, `variant('solid')`, `motion('none')`. Labels are always centered. Test: `tests/ergonomics-2.0.test.tsx`.
+- **`Row.hug()` / `Column.hug()`** — skip the default `w-full` / `self-stretch` so chips stay compact. Test: `tests/column-row.test.tsx`.
+- **`ListTile`** — leading/`.icon()`, title, subtitle, trailing, `.chevron()`, `.divider()`. Test: `tests/ergonomics-2.0.test.tsx`.
+- **`Avatar.icon()` / `.initials()`** — built-in `'user'` glyph or two-letter initials; no image URL required. Test: `tests/ergonomics-2.0.test.tsx`.
+- **`Progress` ring + `segments`:** `variant('ring')` with `.size()`, `.strokeWidth()`, `.segments([{ value, color }])`, centered children. Test: `tests/ergonomics-2.0.test.tsx`.
+- **`mount('#root', App)` / `<Fibo>` / `toElement()`** — root builders no longer need `.build()`. Test: `tests/ergonomics-2.0.test.tsx`.
+- **`Text.nowrap()` / `.mono()` / `.muted()`**; Text default margin is 0. Test: `tests/ergonomics-2.0.test.tsx`.
 - **Per-root `activeEffect`:** `createReactivityRoot()`, `runInScope()`, `ReactivityRoot`. Test: `tests/breaking-2.0.test.tsx`.
 - **Fine-grained text updates:** `Text(() => ...)` and `bindText(signal)` write `textContent` without remounting. Test: `tests/breaking-2.0.test.tsx`.
-- **Monetron example** (`examples/monetron`): Vite + React 18 consumer of the packed `fiboui-2.0.0.tgz` (subpath imports, `bindSignal`, `Text(() => …)`, explicit `style.css`). Playwright + compare shots in `examples/monetron/REPORT.md`.
-- **Button chrome:** `variant('solid')`, `tone('inverse')`, `shape('rect'|'rounded'|'sharp')`, `size('xs')`, `expand()`, `motion('none')`. Labels are always centered. Test: `tests/ergonomics-2.0.test.tsx`.
-- **`Row`/`Column.hug()`** — skip the default `w-full` / `self-stretch`. Test: `tests/column-row.test.tsx`.
-- **`Text.nowrap()` / `.mono()` / `.muted()`**; Text default margin is 0. Test: `tests/ergonomics-2.0.test.tsx`.
-- **`Avatar.initials()` / `.icon('user')`** — no image URL required. Test: `tests/ergonomics-2.0.test.tsx`.
-- **`Progress.variant('ring')`** with `.size()`, `.strokeWidth()`, `.segments([...])`, centered children. Test: `tests/ergonomics-2.0.test.tsx`.
-- **`ListTile`** — leading/icon, title, subtitle, trailing, `.chevron()`, `.divider()`. Test: `tests/ergonomics-2.0.test.tsx`.
-- **`mount('#root', App)` / `<Fibo>` / `toElement()`** — root builders no longer need `.build()`. Test: `tests/ergonomics-2.0.test.tsx`.
+- **Monetron example** (`examples/monetron`): Vite + React 18 consumer of the packed `fiboui-2.0.0.tgz`. Playwright + compare shots in `examples/monetron/REPORT.md`.
+- **Publish workflow** (on `main`): after a successful npm publish, create git tag `vX.Y.Z` and a GitHub Release whose notes are this CHANGELOG section.
 
 ## [1.0.3] - 2026-10-14
 

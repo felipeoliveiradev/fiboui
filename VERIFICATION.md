@@ -63,6 +63,6 @@ Screenshots: `verify-next-ssr.png`, `verify-next-after-clicks.png`
 Workflow: `.github/workflows/publish.yml`  
 Version read: `node --input-type=commonjs -e "…JSON.parse(fs.readFileSync('package.json'))…"` → **`2.0.0`** (this is required now that `"type": "module"`). Covered by `tests/packaging.test.ts`.
 
-Triggers: GitHub Release `published` **and** push to **`main`**. This repo currently has only `teste`. **Create and set `main`** before the workflow can publish on merge. Owner must add secret **`NPM_TOKEN`**. This agent did **not** publish.
+Triggers: GitHub Release `published` **and** push to **`main`**. After a successful `main` publish the workflow opens **`vX.Y.Z`** with the matching CHANGELOG section as notes. Owner must add secret **`NPM_TOKEN`** before merging. This agent did **not** publish.
 
 CI (`.github/workflows/ci.yml`) now also runs `npm run build` so the dts + ESM pack cannot regress silently.

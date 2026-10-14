@@ -44,6 +44,37 @@ describe('package exports / sideEffects', () => {
     expect(pkg.peerDependencies.react).toBe('>=18.0.0');
   });
 
+  it('2.0.0 CHANGELOG names the release APIs used as GitHub Release notes', () => {
+    const log = readFileSync(resolve(__dirname, '../CHANGELOG.md'), 'utf8');
+    const start = log.indexOf('## [2.0.0]');
+    const end = log.indexOf('## [1.0.3]');
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    const section = log.slice(start, end);
+    for (const token of [
+      'shape',
+      'size',
+      'tone',
+      'expand',
+      'Row.hug()',
+      'ListTile',
+      'Avatar.icon()',
+      'ring',
+      'segments',
+      'mount(',
+      'Text.nowrap()',
+    ]) {
+      expect(section, token).toContain(token);
+    }
+  });
+
+  it('publish workflow creates a GitHub Release from the CHANGELOG section', () => {
+    const yml = readFileSync(resolve(__dirname, '../.github/workflows/publish.yml'), 'utf8');
+    expect(yml).toContain('gh release create');
+    expect(yml).toContain('CHANGELOG.md');
+    expect(yml).toContain('github.event_name == \'push\'');
+  });
+
   it('publish workflow reads version under type=module', () => {
     const version = execSync(
       `node --input-type=commonjs -e "const fs=require('fs'); process.stdout.write(JSON.parse(fs.readFileSync('package.json','utf8')).version)"`,

@@ -29,7 +29,7 @@ The workflow (`.github/workflows/publish.yml`) then:
 4. `npm run build`
 5. `npm view fiboui@$VERSION` — if that version already exists, **skip publish** (so merges without a bump do not fail)
 6. Otherwise `npm publish --provenance --access public` using `NODE_AUTH_TOKEN` from `NPM_TOKEN` and `id-token: write`
-7. On `main` publishes, create and push git tag `vX.Y.Z` if it is missing
+7. On `main` publishes, create GitHub Release **`vX.Y.Z`** (and the git tag) whose notes are the matching `CHANGELOG.md` section. A `release` event does not create a second release.
 
 Concurrency group `npm-publish` prevents overlapping publishes.
 

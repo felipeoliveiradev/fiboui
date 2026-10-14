@@ -36,9 +36,9 @@ Next.js App Router: files that **call** builders (`Button()`, `Column()`, …) m
 
 ## Releasing
 
-Publishing is automated. The owner must add an **`NPM_TOKEN`** automation secret in the GitHub repo settings. A **`main`** branch must exist (this repo currently develops on `teste`). See [CONTRIBUTING.md](./CONTRIBUTING.md).
+Publishing is automated. The owner must add an **`NPM_TOKEN`** automation secret in the GitHub repo settings. Release branch is **`main`**. See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-Do not run `npm publish` locally. The `Publish` workflow runs on GitHub Release and on push to `main`: install, typecheck, test, build, then `npm publish --provenance --access public` only if that version is not already on npm.
+Do not run `npm publish` locally. The `Publish` workflow runs on GitHub Release and on push to `main`: install, typecheck, test, build, then `npm publish --provenance --access public` only if that version is not already on npm. After a successful `main` publish it opens GitHub Release `vX.Y.Z` with the matching CHANGELOG section as notes.
 
 ---
 
