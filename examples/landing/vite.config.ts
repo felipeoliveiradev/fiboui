@@ -20,8 +20,14 @@ export default defineConfig({
       fiboui: path.join(repo, 'src/index.ts'),
     },
   },
-  preview: {
-    host: '127.0.0.1',
+  server: {
+    host: true,
     port: 4176,
+    strictPort: true,
+  },
+  preview: {
+    host: true,
+    port: 4176,
+    strictPort: true,
   },
 });

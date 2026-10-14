@@ -54,6 +54,7 @@
   ],
   "scripts": {
     "dev": "vite",
+    "dev:page": "npm run dev --prefix examples/landing",
     "build": "tsc --noEmit && vite build && npm run build:dts && tsc --project tsconfig.cli.json",
     "build:dts": "dts-bundle-generator --no-check --export-referenced-types false --external-imports=@metagptx/css-to-tailwind --external-imports=react --external-imports=react-dom -o dist/index.d.ts src/index.ts",
     "type-check": "tsc --noEmit",

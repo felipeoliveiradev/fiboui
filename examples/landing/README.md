@@ -5,9 +5,12 @@ Marketing site for [fiboui@2.0.0](https://www.npmjs.com/package/fiboui), built *
 Layout follows the repo’s consumer convention (`examples/`, same Vite + Playwright shape as `examples/monetron`) and the clean-architecture folders from `boilerplate/` (`src/main`, `src/modules/<name>/Views`).
 
 ```bash
+# from the repo root
+npm run dev:page     # http://127.0.0.1:4176
+
 cd examples/landing
 npm install
-npm run dev          # http://127.0.0.1:4176
+npm run dev
 npm run build
 npm run preview
 npx playwright install chromium
