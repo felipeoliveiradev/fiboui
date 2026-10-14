@@ -1,0 +1,8 @@
+dist
+test-results
+playwright-report
+blob-report
+node_modules
+landing-desktop.png
+landing-mobile.png
+landing-vs-reference.png
