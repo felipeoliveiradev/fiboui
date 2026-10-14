@@ -39,23 +39,6 @@ export { mount, Fibo, toElement } from './core/mount';
 export { PluginManager } from './core/plugin/PluginManager';
 export type { FiboPlugin, FiboContext, RouteDefinition, SidebarConfig } from './core/plugin/types';
 export { ValueBuilder } from './core/builder';
-export {
-  MOTION_PRESETS,
-  springEase,
-  getMotionCss,
-  MotionStyles,
-  Reveal,
-  Presence,
-  startViewTransition,
-} from './motion';
-export type {
-  MotionPreset,
-  MotionEase,
-  MotionOptions,
-  CustomMotion,
-  RevealOptions,
-  RevealPreset,
-} from './motion';
 
 export { FiboThemeProvider, useFiboTheme } from './theme/provider';
 export { materialTheme } from './theme/material';

@@ -40,10 +40,6 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/theme.js"
     },
-    "./motion": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/motion.js"
-    },
     "./style.css": "./dist/style.css",
     "./package.json": "./package.json"
   },

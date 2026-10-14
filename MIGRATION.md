@@ -27,7 +27,6 @@ The pack contains `dist/` only. Use the root or a subpath:
 import { signal } from 'fiboui/core';
 import { Column, Row } from 'fiboui/layout';
 import { Button } from 'fiboui/interactive';
-import { springEase, MotionStyles } from 'fiboui/motion';
 ```
 
 ## 4. Column default is `center`

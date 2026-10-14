@@ -21,8 +21,7 @@ export default defineConfig({
           { text: 'Getting Started', link: '/guide/getting-started' },
           { text: 'Architecture (Builder Pattern)', link: '/guide/architecture' },
           { text: 'State Management', link: '/guide/state-management' },
-          { text: 'Theming System', link: '/guide/theming' },
-          { text: 'Motion (CSS animations)', link: '/guide/motion' }
+          { text: 'Theming System', link: '/guide/theming' }
         ]
       },
       {

@@ -38,7 +38,6 @@ describe('package exports / sideEffects', () => {
     expect(pkg.exports['./structure'].import).toBe('./dist/structure.js');
     expect(pkg.exports['./navigation'].import).toBe('./dist/navigation.js');
     expect(pkg.exports['./theme'].import).toBe('./dist/theme.js');
-    expect(pkg.exports['./motion'].import).toBe('./dist/motion.js');
     expect(pkg.exports['./style.css']).toBe('./dist/style.css');
     expect(pkg.files).toEqual(['dist']);
     expect(pkg.sideEffects).toEqual(['**/*.css']);
@@ -68,19 +67,6 @@ describe('package exports / sideEffects', () => {
     ]) {
       expect(section, token).toContain(token);
     }
-  });
-
-  it('Unreleased CHANGELOG describes 2.2.0 CSS motion', () => {
-    const log = readFileSync(resolve(__dirname, '../CHANGELOG.md'), 'utf8');
-    const start = log.indexOf('## [Unreleased]');
-    const end = log.indexOf('## [2.1.0]');
-    expect(start).toBeGreaterThan(-1);
-    expect(end).toBeGreaterThan(start);
-    const section = log.slice(start, end);
-    expect(section).toContain('2.2.0');
-    expect(section).toContain('fiboui/motion');
-    expect(section).toMatch(/\.animate\(/);
-    expect(section).toContain('prefers-reduced-motion');
   });
 
   it('2.1.0 CHANGELOG says builders render without .build()', () => {
@@ -160,11 +146,6 @@ describe('built artifacts', () => {
       'cli/bin.js',
     ]) {
       expect(existsSync(resolve(dist, file)), file).toBe(true);
-    }
-    if (existsSync(resolve(dist, 'motion.js'))) {
-      const motion = readFileSync(resolve(dist, 'motion.js'), 'utf8');
-      expect(motion).not.toMatch(/requestAnimationFrame/);
-      expect(motion).toMatch(/fibo-fadeIn|fibo-anim/);
     }
     const dts = readFileSync(resolve(dist, 'index.d.ts'), 'utf8');
     expect(dts).toContain('export declare const Column');
