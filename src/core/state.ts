@@ -9,6 +9,12 @@ export interface Subscribable<T> {
   unsubscribeEffect(effect: Effect): void;
 }
 
+/** Anything `.bindSignal()` can subscribe to (`Signal` or `ComputedSignal`). */
+export interface BindableSignal<T = unknown> {
+  readonly value: T;
+  subscribe(listener: Listener<T>): Unsubscribe;
+}
+
 export class Effect {
   private dependencies = new Set<Subscribable<any>>();
   private _onDispose?: () => void;

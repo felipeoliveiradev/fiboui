@@ -53,7 +53,7 @@ class ScrollViewBuilder extends FiboBuilder {
         className: classNames.join(' '),
         style: scrollStyles,
         ...this._props
-    }, ...this._children);
+    }, ...this.processChildren());
   }
 }
 

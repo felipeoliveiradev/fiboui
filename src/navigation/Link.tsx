@@ -1,5 +1,5 @@
 import React, { MouseEvent, ReactNode } from 'react';
-import { useNavigate } from './RouterContext';
+import { useNavigate, useRouter } from './RouterContext';
 
 interface LinkProps {
   to: string;
@@ -65,7 +65,7 @@ export const NavLink: React.FC<NavLinkProps> = ({
   exact = false,
   ...props
 }) => {
-  const currentPath = window.location.pathname;
+  const { currentPath } = useRouter();
 
   const isActive = exact
     ? currentPath === to

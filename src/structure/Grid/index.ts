@@ -1,4 +1,4 @@
-import React, { ReactElement, ReactNode } from 'react';
+import React, { ReactElement } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps } from '../../core/types';
 
@@ -107,7 +107,6 @@ class GridBuilder extends FiboBuilder {
   private _variant: GridVariant = 'standard';
   private _columns: GridCols | ResponsiveCols = 1;
   private _gap: GridGap = 'md';
-  protected _children: ReactNode[] = [];
 
   variant(v: GridVariant): this {
     this._variant = v;
@@ -124,17 +123,12 @@ class GridBuilder extends FiboBuilder {
     return this;
   }
 
-  children(nodes: ReactNode[]): this {
-    this._children = nodes;
-    return this;
-  }
-
   build(): ReactElement {
     const props = {
         variant: this._variant,
         columns: this._columns,
         gap: this._gap,
-        children: this._children,
+        children: this.processChildren(),
         className: this.getClassName(),
         style: this.getStyle(),
         ...this._props
@@ -147,7 +141,6 @@ class GridBuilder extends FiboBuilder {
 class GridItemBuilder extends FiboBuilder {
     private _colSpan?: number;
     private _rowSpan?: number;
-    protected _children: ReactNode[] = [];
 
     colSpan(span: number): this {
         this._colSpan = span;
@@ -159,16 +152,11 @@ class GridItemBuilder extends FiboBuilder {
         return this;
     }
 
-    children(nodes: ReactNode[]): this {
-        this._children = nodes;
-        return this;
-    }
-
     build(): ReactElement {
         const props = {
             colSpan: this._colSpan,
             rowSpan: this._rowSpan,
-            children: this._children,
+            children: this.processChildren(),
             className: this.getClassName(),
             style: this.getStyle(),
             ...this._props

@@ -64,12 +64,26 @@ const ButtonInner = React.memo((props: any) => {
     variantClass += ' shadow-[0_8px_20px_-6px_rgba(59,130,246,0.4)]';
   }
 
+  const userStyle: React.CSSProperties = style || {};
+  const skipSizeClass =
+    userStyle.padding !== undefined ||
+    userStyle.paddingTop !== undefined ||
+    userStyle.paddingBottom !== undefined ||
+    userStyle.paddingLeft !== undefined ||
+    userStyle.paddingRight !== undefined ||
+    userStyle.fontSize !== undefined ||
+    userStyle.height !== undefined;
+  const skipShapeClass = userStyle.borderRadius !== undefined;
+  const skipWeightClass = userStyle.fontWeight !== undefined;
+
   const mergedClassName = twMerge(
     'fibo-button',
-    variant === 'raw' ? 'inline-flex cursor-pointer' : 'inline-flex items-center justify-center font-semibold whitespace-nowrap active:scale-[0.96] transform transition-all duration-200 ease-out',
+    variant === 'raw'
+      ? 'inline-flex cursor-pointer'
+      : `inline-flex items-center justify-center ${skipWeightClass ? '' : 'font-semibold'} whitespace-nowrap active:scale-[0.96] transform transition-all duration-200 ease-out`,
     disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
-    variant === 'raw' ? '' : sizeClasses[size as ButtonSize],
-    variant === 'raw' ? '' : shapeClass,
+    variant === 'raw' || skipSizeClass ? '' : sizeClasses[size as ButtonSize],
+    variant === 'raw' || skipShapeClass ? '' : shapeClass,
     `fibo-button-${variant}`,
     variantClass,
     className
@@ -96,7 +110,6 @@ const ButtonInner = React.memo((props: any) => {
     'button',
     {
       className: mergedClassName,
-      style: style,
       onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
         if (!disabled) {
           if (document.documentElement.classList.contains('fibo-theme-material') && variant !== 'raw') {
@@ -109,6 +122,8 @@ const ButtonInner = React.memo((props: any) => {
       },
       disabled: disabled,
       ...rest,
+      type: rest.type ?? 'button',
+      style: userStyle,
     },
     ...childrenElements
   );

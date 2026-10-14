@@ -1,5 +1,5 @@
-import { useState, useEffect, createContext, useContext, ReactNode, useRef } from 'react';
-import { Observable, Signal, Tracker } from './state';
+import { useState, useEffect, createContext, useContext, ReactNode, useRef, useCallback, useSyncExternalStore } from 'react';
+import { BindableSignal, Observable, Tracker } from './state';
 
 export function Observer({ children }: { children: () => ReactNode }) {
   const [, forceUpdate] = useState({});
@@ -34,11 +34,11 @@ export function useStateContext() {
 }
 
 interface StateWrapperProps {
-  stateMap: Map<string, any>;
+  stateMap?: Map<string, any>;
   children: ReactNode;
 }
 
-export function StateWrapper({ stateMap, children }: StateWrapperProps) {
+export function StateWrapper({ stateMap = new Map(), children }: StateWrapperProps) {
   const [state] = useState(() => new Map(stateMap));
 
   return (
@@ -50,44 +50,56 @@ export function StateWrapper({ stateMap, children }: StateWrapperProps) {
 
 interface ObserverWrapperProps {
   observables: Set<Observable<any>>;
-  children: ReactNode;
+  children: ReactNode | (() => ReactNode);
 }
 
 export function ObserverWrapper({ observables, children }: ObserverWrapperProps) {
-  const [, forceUpdate] = useState({});
+  const versionRef = useRef(0);
 
-  useEffect(() => {
+  const subscribe = useCallback((onStoreChange: () => void) => {
     const unsubscribers = Array.from(observables).map(obs =>
-      obs.subscribe(() => forceUpdate({}))
+      obs.subscribe(() => {
+        versionRef.current += 1;
+        onStoreChange();
+      })
     );
-
     return () => unsubscribers.forEach(unsub => unsub());
   }, [observables]);
 
-  return <>{children}</>;
+  const getSnapshot = useCallback(() => versionRef.current, []);
+
+  useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+
+  return <>{typeof children === 'function' ? children() : children}</>;
 }
 
 interface SignalWrapperProps {
-  signals: Set<Signal<any>>;
-  children: ReactNode;
+  signals: Set<BindableSignal<any>>;
+  children: ReactNode | (() => ReactNode);
 }
 
 export function SignalWrapper({ signals, children }: SignalWrapperProps) {
-  const [, forceUpdate] = useState({});
+  const versionRef = useRef(0);
 
-  useEffect(() => {
+  const subscribe = useCallback((onStoreChange: () => void) => {
     const unsubscribers = Array.from(signals).map(sig =>
-      sig.subscribe(() => forceUpdate({}))
+      sig.subscribe(() => {
+        versionRef.current += 1;
+        onStoreChange();
+      })
     );
-
     return () => unsubscribers.forEach(unsub => unsub());
   }, [signals]);
 
-  return <>{children}</>;
+  const getSnapshot = useCallback(() => versionRef.current, []);
+
+  useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+
+  return <>{typeof children === 'function' ? children() : children}</>;
 }
 
 interface ProviderWrapperProps {
-  providers: Map<string, any>;
+  providers?: Map<string, any>;
   children: ReactNode;
 }
 
@@ -95,10 +107,10 @@ export const ProviderContext = createContext<Map<string, any>>(new Map());
 
 export function useProvider<T>(key: string): T | undefined {
   const providers = useContext(ProviderContext);
-  return providers.get(key);
+  return providers?.get(key);
 }
 
-export function ProviderWrapper({ providers, children }: ProviderWrapperProps) {
+export function ProviderWrapper({ providers = new Map(), children }: ProviderWrapperProps) {
   return (
     <ProviderContext.Provider value={providers}>
       {children}

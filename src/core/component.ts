@@ -1,15 +1,9 @@
 import { ReactNode } from 'react';
 import { ResponsiveStyles } from './types';
+import { normalizeFiboChildren } from './children';
 
 export function processChildren(children: ReactNode | ReactNode[]): ReactNode[] {
-  const childArray = Array.isArray(children) ? children : [children];
-
-  return childArray.map((child) => {
-    if (child && typeof child === 'object' && 'build' in child) {
-      return (child as any).build();
-    }
-    return child;
-  });
+  return normalizeFiboChildren(children);
 }
 
 export function mergeStyles(...styles: (React.CSSProperties | undefined)[]): React.CSSProperties {

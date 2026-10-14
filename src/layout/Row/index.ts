@@ -49,6 +49,7 @@ class RowBuilder extends FiboBuilder {
       'flex',
       'flex-row',
       'w-full',
+      'self-stretch',
       alignmentMap[this._mainAxisAlignment],
       crossAlignmentMap[this._crossAxisAlignment],
       ...this._classNames,

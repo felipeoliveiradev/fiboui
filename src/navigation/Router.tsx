@@ -28,17 +28,15 @@ export const Router: React.FC<RouterProps> = ({
   onError
 }) => {
   const [currentPath, setCurrentPath] = useState(() => {
+    if (typeof window === 'undefined') return '/';
     return window.location.pathname.replace(basename, '') || '/';
   });
 
-  const [params, setParams] = useState<Record<string, string>>({});
-  const [query, setQuery] = useState(() => new URLSearchParams(window.location.search));
+  const [query, setQuery] = useState(() =>
+    typeof window === 'undefined' ? new URLSearchParams() : new URLSearchParams(window.location.search)
+  );
 
   const { route, params: matchedParams } = findMatchingRoute(routes, currentPath);
-
-  useEffect(() => {
-    setParams(matchedParams);
-  }, [currentPath]);
 
   const navigate = useCallback(async (path: string, options: NavigateOptions = {}) => {
     const { route: nextRoute } = findMatchingRoute(routes, path);
@@ -105,7 +103,7 @@ export const Router: React.FC<RouterProps> = ({
     navigate,
     goBack,
     replace,
-    params,
+    params: matchedParams,
     query,
   };
 

@@ -50,11 +50,13 @@ export class FiboAppBuilder {
     // We wrap the app with necessary providers
     // Note: This is an initial implementation. We might need to wrap with more providers later.
     const App = () => (
-      React.createElement(StateWrapper, null,
-        React.createElement(ProviderWrapper, null,
-          React.createElement(RootComponent, null)
-        )
-      )
+      React.createElement(StateWrapper, {
+        stateMap: new Map(),
+        children: React.createElement(ProviderWrapper, {
+          providers: new Map(),
+          children: React.createElement(RootComponent, null)
+        })
+      })
     );
 
     const root = createRoot(this._rootElement);

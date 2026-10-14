@@ -1,7 +1,8 @@
 import React, { CSSProperties, ReactElement, ReactNode } from 'react';
-import { ResponsiveStyles } from './types';
-import { Observable, Signal } from './state';
+import { FiboChild, FiboChildren, ResponsiveStyles } from './types';
+import { BindableSignal, Observable, Signal } from './state';
 import { Observer, SignalWrapper, ObserverWrapper, StateWrapper, ProviderWrapper } from './StateWrapper';
+import { normalizeFiboChildren } from './children';
 import clsx from 'clsx';
 import { _styleManager } from './styleManager';
 import { cssToTailwind } from '@metagptx/css-to-tailwind';
@@ -41,7 +42,7 @@ export abstract class FiboBuilder {
   protected _state: Map<string, any> = new Map();
   protected _providers: Map<string, any> = new Map();
   protected _observers: Set<Observable<any>> = new Set();
-  protected _signals: Set<Signal<any>> = new Set();
+  protected _signals: Set<BindableSignal<any>> = new Set();
   protected _isObserver: boolean = false;
 
   protected _gesture?: GestureBuilder;
@@ -661,7 +662,7 @@ export abstract class FiboBuilder {
     return this;
   }
 
-  bindSignal<T>(signal: Signal<T>): this {
+  bindSignal<T>(signal: BindableSignal<T>): this {
     this._signals.add(signal);
     return this;
   }
@@ -1028,34 +1029,25 @@ export abstract class FiboBuilder {
     return this;
   }
 
-  protected _childFunction?: () => ReactNode;
+  protected _childFunction?: () => FiboChild | FiboChild[];
 
-  children(children: ReactNode | ReactNode[] | (() => ReactNode)): this {
+  children(children: FiboChildren): this {
     if (typeof children === 'function') {
-      this._childFunction = children as () => ReactNode;
+      this._childFunction = children as () => FiboChild | FiboChild[];
       this._children = [];
     } else {
-      const childArray = Array.isArray(children) ? children : [children];
-      this._children = childArray.map((child) => {
-        if (child && typeof child === 'object' && 'build' in child && typeof (child as any).build === 'function') {
-          return (child as any).build();
-        }
-        return child;
-      });
+      this._children = normalizeFiboChildren(children);
       this._childFunction = undefined;
     }
     return this;
   }
 
   protected getClassName(): string {
+    let extra: string | undefined;
     if (Object.keys(this._cssStyles).length > 0) {
-
-      const tailwindClasses = cssToTailwind(this._cssStyles as Record<string, string | number | undefined>);
-      if (tailwindClasses) {
-        this._classNames.push(tailwindClasses);
-      }
+      extra = cssToTailwind(this._cssStyles as Record<string, string | number | undefined>) || undefined;
     }
-    return clsx(this._classNames);
+    return clsx(this._classNames, extra);
   }
 
   protected getStyle(): CSSProperties {
@@ -1113,14 +1105,12 @@ export abstract class FiboBuilder {
 
   protected processChildren(): ReactNode[] {
     if (this._childFunction) {
-      const result = this._childFunction();
-
-      return Array.isArray(result) ? result : [result];
+      return normalizeFiboChildren(this._childFunction);
     }
     return this._children;
   }
 
-  protected getChildFunction(): (() => ReactNode) | undefined {
+  protected getChildFunction(): (() => FiboChild | FiboChild[]) | undefined {
     return this._childFunction;
   }
 
@@ -1146,64 +1136,73 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
         if (prop === 'build') {
           return () => {
             const isObserver = (target as any)._isObserver;
-            const signals = (target as any)._signals;
+            const signals = (target as any)._signals as Set<BindableSignal<any>> | undefined;
             const observers = (target as any)._observers;
             const state = (target as any)._state;
             const providers = (target as any)._providers;
 
-            if (isObserver) {
-              return React.createElement(Observer, {
-                key: (target as any)._props.key,
-                children: () => target.build()
-              });
-            }
+            const assemble = () => {
+              let element = target.build();
 
-            let element = target.build();
+              const animatedProps = (target as any)._animatedProps;
+              const animationConfig = (target as any)._animationConfig;
+              if (animatedProps && animatedProps.size > 0) {
+                element = React.createElement(AnimatedWrapper, {
+                  animatedProps,
+                  animationConfig,
+                  children: element
+                });
+              }
 
-            const animatedProps = (target as any)._animatedProps;
-            const animationConfig = (target as any)._animationConfig;
-            if (animatedProps && animatedProps.size > 0) {
-              element = React.createElement(AnimatedWrapper, {
-                animatedProps,
-                animationConfig,
-                children: element
-              });
-            }
+              const gesture = (target as any)._gesture;
+              if (gesture) {
+                element = gesture.wrap(element);
+              }
+
+              return element;
+            };
+
+            const observed = isObserver
+              ? React.createElement(Observer, {
+                  key: (target as any)._props.key,
+                  children: assemble
+                })
+              : null;
+
+            const rebuild = () => (observed ?? assemble());
+
+            let tree: ReactElement;
 
             if (signals && signals.size > 0) {
-              element = React.createElement(SignalWrapper, {
-                signals: signals,
-                children: element
+              tree = React.createElement(SignalWrapper, {
+                key: (target as any)._props.key,
+                signals,
+                children: rebuild
               });
-            }
-
-            if (observers && observers.size > 0) {
-              element = React.createElement(ObserverWrapper, {
+            } else if (observers && observers.size > 0) {
+              tree = React.createElement(ObserverWrapper, {
                 observables: observers,
-                children: element
+                children: rebuild
               });
+            } else {
+              tree = rebuild();
             }
 
             if (state && state.size > 0) {
-              element = React.createElement(StateWrapper, {
+              tree = React.createElement(StateWrapper, {
                 stateMap: state,
-                children: element
+                children: tree
               });
             }
 
             if (providers && providers.size > 0) {
-              element = React.createElement(ProviderWrapper, {
+              tree = React.createElement(ProviderWrapper, {
                 providers: providers,
-                children: element
+                children: tree
               });
             }
 
-            const gesture = (target as any)._gesture;
-            if (gesture) {
-              element = gesture.wrap(element);
-            }
-
-            return element;
+            return tree;
           }
         }
 

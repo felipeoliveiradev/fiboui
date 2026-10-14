@@ -1,5 +1,7 @@
 import React, { ReactElement, ReactNode, useState } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
+import { buildChild } from '../../core/children';
+import type { FiboChild } from '../../core/types';
 
 const DashboardLayoutInner = React.memo((props: any) => {
     const { sidebar, header, children, className, style, ...rest } = props;
@@ -65,13 +67,13 @@ class DashboardLayoutBuilder extends FiboBuilder {
     private _sidebar?: ReactNode;
     private _header?: ReactNode;
 
-    sidebar(component: ReactNode): this {
-        this._sidebar = component;
+    sidebar(component: FiboChild): this {
+        this._sidebar = buildChild(component);
         return this;
     }
 
-    header(component: ReactNode): this {
-        this._header = component;
+    header(component: FiboChild): this {
+        this._header = buildChild(component);
         return this;
     }
 

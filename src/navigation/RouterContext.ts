@@ -58,7 +58,7 @@ export function useLocation() {
   const { currentPath } = useRouter();
   return {
     pathname: currentPath,
-    search: window.location.search,
-    hash: window.location.hash,
+    search: typeof window !== 'undefined' ? window.location.search : '',
+    hash: typeof window !== 'undefined' ? window.location.hash : '',
   };
 }

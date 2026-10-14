@@ -1,5 +1,6 @@
 export * from './types';
 export * from './builder';
+export * from './children';
 export * from './component';
 export * from './state';
 export * from './reactivity';

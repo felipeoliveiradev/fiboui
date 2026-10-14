@@ -1,6 +1,7 @@
 import React, { ReactElement, ReactNode, useState } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
-import { BaseProps } from '../../core/types';
+import { BaseProps, FiboChild } from '../../core/types';
+import { buildChild } from '../../core/children';
 import { Box } from '../Box';
 import { Row } from '../../layout/Row';
 import { Text } from '../../content/Text';
@@ -17,8 +18,8 @@ class CollapseBuilder extends FiboBuilder {
     return this;
   }
 
-  content(value: ReactNode): this {
-    this._content = value;
+  content(value: FiboChild): this {
+    this._content = buildChild(value);
     return this;
   }
 
