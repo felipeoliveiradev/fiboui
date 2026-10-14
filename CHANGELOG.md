@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## [Unreleased]
+
+### Security
+
+- Gitleaks CI job on every push/PR (`scripts/secret-scan.sh --git`, values redacted).
+- `prepublishOnly` + Publish workflow scan the working tree and `npm pack` tarball before publish.
+- `.gitignore` / `.npmignore` now cover `.env`, `.npmrc`, key material, and VitePress cache.
+
 ## [2.1.0] - 2026-10-14
 
 Builders are React elements. You can return, nest, and pass them anywhere a `ReactNode` is accepted — **no `.build()`**.

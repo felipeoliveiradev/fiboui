@@ -5,6 +5,9 @@ on:
     branches: [teste, main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -18,3 +21,12 @@ jobs:
       - run: npm run type-check
       - run: npm test
       - run: npm run build
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Gitleaks (git history, redacted)
+        run: bash scripts/secret-scan.sh --git
