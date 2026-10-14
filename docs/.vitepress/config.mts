@@ -22,7 +22,9 @@ export default defineConfig({
           { text: 'Architecture (Builder Pattern)', link: '/guide/architecture' },
           { text: 'State Management', link: '/guide/state-management' },
           { text: 'Theming System', link: '/guide/theming' },
-          { text: 'Responsive / media queries', link: '/guide/responsive' }
+          { text: 'Responsive / media queries', link: '/guide/responsive' },
+          { text: 'Animation', link: '/guide/animation' },
+          { text: 'Scroll', link: '/guide/scroll' }
         ]
       },
       {

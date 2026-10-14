@@ -34,6 +34,29 @@ export { useBuilderState, Observer, ProviderWrapper, useProvider } from './core/
 export { ReactivityRoot } from './core/ReactivityRoot';
 export { FineGrainText, bindText } from './core/FineGrain';
 export { applyResponsiveStyles } from './core/component';
+export {
+  useTransition,
+  useSpring,
+  useStagger,
+  useMountTransition,
+  usePrefersReducedMotion,
+  useScrollProgress,
+  Easing,
+} from './core/animationHooks';
+export type { TransitionConfig, SpringConfig } from './core/animationHooks';
+export { cssCurve } from './core/animations';
+export type { AnimationOptions } from './core/animations';
+export { Presence } from './core/Presence';
+export type { PresenceProps } from './core/Presence';
+export { Reveal } from './core/Reveal';
+export type { RevealProps } from './core/Reveal';
+export { ScrollProgress } from './core/ScrollProgress';
+export { scrollTo, startViewTransition, supportsViewTimeline, supportsScrollTimeline } from './core/scroll';
+export { springEase, resolveCssEase } from './core/easing';
+export type { SpringOptions } from './core/easing';
+export { MOTION_PRESETS, normalizePreset, FIBO_MOTION_CSS } from './core/motionCss';
+export type { MotionPreset, CustomMotion } from './core/motionCss';
+export { MotionStyles, getMotionCss, ensureMotionCss } from './core/styleManager';
 export { FIBO_BREAKPOINTS, toMediaQuery } from './core/breakpoints';
 export type { BreakpointKey } from './core/breakpoints';
 export { useViewportWidth } from './core/ResponsiveWrapper';
@@ -42,6 +65,8 @@ export { mount, Fibo, toElement } from './core/mount';
 export { PluginManager } from './core/plugin/PluginManager';
 export type { FiboPlugin, FiboContext, RouteDefinition, SidebarConfig } from './core/plugin/types';
 export { ValueBuilder } from './core/builder';
+export type { PseudoStateFn } from './core/builder';
+export type { PseudoStateBuilder } from './core/PseudoStateBuilder';
 
 export { FiboThemeProvider, useFiboTheme } from './theme/provider';
 export { materialTheme } from './theme/material';

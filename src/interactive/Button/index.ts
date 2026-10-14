@@ -15,6 +15,7 @@ const ButtonInner = React.memo((props: any) => {
     variant,
     size,
     onPress,
+    onHover,
     disabled,
     icon,
     shape,
@@ -134,6 +135,11 @@ const ButtonInner = React.memo((props: any) => {
     'button',
     {
       className: mergedClassName,
+      onMouseEnter: onHover
+        ? () => {
+            if (!disabled) onHover();
+          }
+        : rest.onMouseEnter,
       onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
         if (!disabled) {
           if (
@@ -162,6 +168,7 @@ class ButtonBuilder extends FiboBuilder {
   private _variant: ExtendedButtonVariant = 'elevated';
   private _size: ButtonSize = 'md';
   private _onPress?: () => void;
+  private _onHover?: () => void;
   private _disabled: boolean = false;
   private _icon?: ReactNode;
   private _shape: ButtonShape = 'default';
@@ -200,6 +207,11 @@ class ButtonBuilder extends FiboBuilder {
 
   onPress(handler: () => void): this {
     this._onPress = handler;
+    return this;
+  }
+
+  onHover(handler: () => void): this {
+    this._onHover = handler;
     return this;
   }
 
@@ -247,6 +259,7 @@ class ButtonBuilder extends FiboBuilder {
       variant: this._variant,
       size: this._size,
       onPress: this._onPress,
+      onHover: this._onHover,
       disabled: this._disabled,
       icon: this._icon,
       shape: this._shape,
@@ -271,6 +284,7 @@ export interface ButtonProps extends BaseProps {
   variant?: ExtendedButtonVariant;
   size?: ButtonSize;
   onPress?: () => void;
+  onHover?: () => void;
   disabled?: boolean;
   icon?: ReactNode;
   shape?: ButtonShape;

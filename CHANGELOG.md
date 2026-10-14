@@ -4,13 +4,35 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
-Planned as **2.2.0**. Easy CSS media queries on every builder. `package.json` stays **2.1.0**.
+## [2.2.0] - 2026-10-14
+
+Easy CSS media queries (**#8**), security scan (**#4**), and CSS motion / scroll / Presence on the existing builders (**#9**). No `fiboui/motion` subpath.
 
 ### Added
 
 - **`.media('md', { padding: 16 })`** and aliases **`.sm()` / `.md()` / `.lg()` / `.xl()`** — compile to `@media (min-width: …)` via StyleManager. Raw queries work: `.media('(prefers-color-scheme: dark)', { … })`.
 - Shared **`FIBO_BREAKPOINTS`** (`sm` 640 / `md` 768 / `lg` 1024 / `xl` 1280, same as Tailwind). `toMediaQuery()`, `useViewportWidth()` exported.
 - Existing **`.responsive({ mobile, tablet, desktop })`** is unchanged (JS `innerWidth` + resize). Prefer `.media()` / `.md()` for CSS.
+- **`.animate('fadeIn')`** CSS presets (`fadeIn`/`fadeOut`, `slide*`, `scale*`, `blur*`, `pop`, `bounce`) compiled to deduped `@keyframes` (`FIBO_MOTION_CSS`, `src/styles/motion.css`, `<MotionStyles />`). Custom `{ from, to }` keyframes via `StyleManager.registerKeyframes`.
+- **`.ease('spring')` / `.spring({ stiffness, damping, mass })`** → CSS `linear()` (no rAF). Same options now apply to `signal().spring()`.
+- **`prefers-reduced-motion`** disable-by-default; `.reducedMotion('never')` opt-out.
+- **`.stagger(ms)`** sets `--fibo-stagger` / `--fibo-i` on children.
+- **Scroll family:** `.onScroll()` / `.reveal()` (IntersectionObserver), `.scrollTimeline('view'|'scroll')` with IO fallback, `.scrollProgress()` (`animation-timeline: scroll()` + `--fibo-progress` fallback), `.smoothScroll()`, `.scrollSnap()` / `.scrollSnapAlign()`, `.sticky()`, `.anchor()` + `scrollTo()`.
+- **Extras:** `.press()`, `.focusVisible()` / `.focusRing()`, `.viewTransition()` + `startViewTransition()`, `Presence(open).enter().exit().duration().children()` (signal or boolean; component form still works), `usePrefersReducedMotion()`, `useScrollProgress()`.
+- Typed exports: `useSpring`, `useTransition`, `useStagger`, `useMountTransition`, `SpringConfig`. Hooks remain the opt-in numeric rAF path.
+- Docs: [Animation](./docs/guide/animation.md), [Scroll](./docs/guide/scroll.md). Demo: `examples/animation`.
+
+### Fixed
+
+- **Easing camelCase** (`easeIn` → `ease-in`) on `.easing()`, `.animation({ curve })`, and AnimatedWrapper.
+- **Spring `damping` / `stiffness` / `mass`** were ignored on `Signal.spring` / `useSpring` defaults now match the CSS sampler.
+- **`.duration()` stacked** a new transition class each call — now replaces one `_transitionClass`.
+- **Hover `.scale()` + `.translateY()`** overwrote `transform` — PseudoStateBuilder composes via a map.
+- **Missing `@keyframes stripes`** used by `Progress` (`animate-[stripes_1s_linear_infinite]`).
+- **`Button.onHover`** now fires on `mouseenter`. Documented as a callback (visual hover is `.hover()`).
+- **`.hover(h => …)` inside `.map()`** no longer infers `h` as implicit `any` (callback overload is last). `PseudoStateBuilder` is a public type.
+- **`Text().variant('h1')`** applies a rem typographic scale (tag-only was invisible under Tailwind preflight).
+- **`.anchor()` / `scrollTo` under a sticky bar** — `.sticky()` publishes `--fibo-sticky-offset`, `html` gets `scroll-padding-top`, anchors get `scroll-margin-top`. Override with `.scrollMargin()`.
 
 ### Security
 
