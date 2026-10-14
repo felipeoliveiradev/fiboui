@@ -73,14 +73,45 @@ describe('package exports / sideEffects', () => {
     expect(yml).toContain('gh release create');
     expect(yml).toContain('CHANGELOG.md');
     expect(yml).toContain('github.event_name == \'push\'');
+    expect(yml).toContain('scripts/npm-version-check.sh');
+    expect(yml).not.toMatch(/VERSION="\$\(node --input-type=commonjs -e "/);
   });
 
   it('publish workflow reads version under type=module', () => {
     const version = execSync(
-      `node --input-type=commonjs -e "const fs=require('fs'); process.stdout.write(JSON.parse(fs.readFileSync('package.json','utf8')).version)"`,
+      `node --input-type=commonjs -p 'require("./package.json").version'`,
       { encoding: 'utf8', cwd: resolve(__dirname, '..') }
-    );
+    ).trim();
     expect(version).toBe('2.0.0');
+  });
+
+  it('npm-version-check.sh treats a missing version as exists=false (exit 0)', () => {
+    const out = execSync('bash scripts/npm-version-check.sh fiboui 0.0.0-never-published', {
+      encoding: 'utf8',
+      cwd: resolve(__dirname, '..'),
+    });
+    expect(out).toMatch(/version=0\.0\.0-never-published/);
+    expect(out).toMatch(/exists=false/);
+    expect(out).toMatch(/will publish/);
+  });
+
+  it('npm-version-check.sh treats a published version as exists=true', () => {
+    const out = execSync('bash scripts/npm-version-check.sh react 18.3.1', {
+      encoding: 'utf8',
+      cwd: resolve(__dirname, '..'),
+    });
+    expect(out).toMatch(/version=18\.3\.1/);
+    expect(out).toMatch(/exists=true/);
+    expect(out).toMatch(/already on npm/);
+  });
+
+  it('npm-version-check.sh reads 2.0.0 from package.json and does not die on E404', () => {
+    const out = execSync('bash scripts/npm-version-check.sh', {
+      encoding: 'utf8',
+      cwd: resolve(__dirname, '..'),
+    });
+    expect(out).toMatch(/version=2\.0\.0/);
+    expect(out).toMatch(/exists=(true|false)/);
   });
 });
 

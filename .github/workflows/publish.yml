@@ -43,17 +43,7 @@ jobs:
 
       - name: Skip if version already on npm
         id: version
-        run: |
-          set -euo pipefail
-          VERSION="$(node --input-type=commonjs -e "const fs=require('fs'); process.stdout.write(JSON.parse(fs.readFileSync('package.json','utf8')).version")")"
-          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          if npm view "fiboui@${VERSION}" version >/dev/null 2>&1; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "fiboui@${VERSION} is already on npm — skipping publish."
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "fiboui@${VERSION} is not on npm — will publish."
-          fi
+        run: bash scripts/npm-version-check.sh fiboui
 
       - name: Publish to npm
         if: steps.version.outputs.exists == 'false'
