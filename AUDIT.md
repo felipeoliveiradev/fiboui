@@ -100,6 +100,9 @@ Leaks: `Observer` / wrappers dispose on unmount. `Effect.dispose` exists. Unsubs
 
 | Sev | Title | Evidence | Fix | Fixed? |
 |-----|-------|----------|-----|--------|
+| high | `react-dom/client` not external — React 19 DOM inlined | `vite.config.ts` rollup `external`; packed ESM was 1.91 MB | React 18 Vite: `reading 'S'` | Externalize react/react-dom/scheduler | **Yes** (this iteration) |
+| high | `exports.require` → UMD | `package.json` | Next SSR: `createContext is not a function` | `index.cjs.js` + `main`/`require` | **Yes** (this iteration) |
+| high | Split `.d.ts` without `.js` extensions | `vite-plugin-dts` default | NodeNext cannot resolve `./src/index` | `rollupTypes: true` | **Yes** (this iteration) |
 | medium | No `exports` / `sideEffects` | 1.0.2 package | Conditional exports + CSS + `sideEffects` | **Yes** (additive) |
 | medium | React peer `^18` vs dev React 19 | `package.json` | `>=18` | **Yes** |
 | medium | `files` includes full `src` (~11 MB unpacked) | `npm pack --dry-run` | Publish `dist` only | 1.1 (some consumers import `src`) |

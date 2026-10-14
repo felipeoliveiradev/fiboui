@@ -2,14 +2,15 @@
   "name": "fiboui",
   "version": "1.0.3",
   "description": "A Flutter/SwiftUI-inspired React UI framework with builder pattern and theme system",
-  "main": "dist/index.umd.js",
+  "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.esm.js",
-      "require": "./dist/index.umd.js"
+      "require": "./dist/index.cjs.js",
+      "default": "./dist/index.esm.js"
     },
     "./style.css": "./dist/style.css",
     "./dist/style.css": "./dist/style.css",

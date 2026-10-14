@@ -8,7 +8,10 @@ export default defineConfig({
   plugins: [
     react(),
     dts({
+      tsconfigPath: './tsconfig.build.json',
       insertTypesEntry: true,
+      rollupTypes: true,
+      exclude: ['src/demo.tsx', 'src/cli', 'src/test', 'tests'],
     }),
   ],
   resolve: {
@@ -23,15 +26,28 @@ export default defineConfig({
     lib: {
       entry: path.resolve(__dirname, 'src/index.ts'),
       name: 'FiboUI',
-      formats: ['es', 'umd'],
-      fileName: (format) => `index.${format === 'es' ? 'esm' : format}.js`,
+      formats: ['es', 'cjs', 'umd'],
+      fileName: (format) => {
+        if (format === 'es') return 'index.esm.js';
+        if (format === 'cjs') return 'index.cjs.js';
+        return 'index.umd.js';
+      },
     },
     rollupOptions: {
-      external: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
+      external: (id) =>
+        id === 'react' ||
+        id === 'react-dom' ||
+        id === 'scheduler' ||
+        id.startsWith('react/') ||
+        id.startsWith('react-dom/'),
       output: {
+        banner: "'use client';",
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
+          'react-dom/client': 'ReactDOM',
+          'react/jsx-runtime': 'jsxRuntime',
+          'react/jsx-dev-runtime': 'jsxDevRuntime',
         },
       },
     },

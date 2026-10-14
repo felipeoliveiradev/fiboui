@@ -31,6 +31,14 @@ import 'fiboui/dist/style.css';
 
 Peer dependencies: React 18 or 19.
 
+Next.js App Router: files that **call** builders (`Button()`, `Column()`, …) must be Client Components (`'use client'`). FiboUI uses hooks and context; it is not an RSC factory API. Import `'fiboui/style.css'` from a layout or the client entry.
+
+## Releasing
+
+Publishing is automated. The owner must add an **`NPM_TOKEN`** automation secret in the GitHub repo settings. A **`main`** branch must exist (this repo currently develops on `teste`). See [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+Do not run `npm publish` locally. The `Publish` workflow runs on GitHub Release and on push to `main`: install, typecheck, test, build, then `npm publish --provenance --access public` only if that version is not already on npm.
+
 ---
 
 ## The assembly pattern

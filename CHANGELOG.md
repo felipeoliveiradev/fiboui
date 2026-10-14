@@ -4,6 +4,20 @@ All notable changes to this project are documented in this file.
 
 ## [1.0.3] - 2026-10-14
 
+### Packaging (verified against a packed tarball)
+
+- Roll up `dist/index.d.ts` so NodeNext consumers resolve types (no extensionless `./src` re-exports).
+- Mark `react`, `react-dom`, `react-dom/client`, and `scheduler` as externals. The previous ESM/UMD builds inlined React 19 DOM and crashed React 18 Vite apps (`Cannot read properties of undefined (reading 'S')`).
+- Emit `dist/index.cjs.js` and point `exports.require` / `main` at it. `require` used to load UMD, which broke Next.js SSR (`createContext is not a function`).
+- `'use client'` on the package entry (source + bundle banner) so App Router treats FiboUI as a client module. Pages that *call* builders still need `'use client'` — factories are not RSC-safe.
+- `exports` for `fiboui/style.css`. Consumer Vite build of `import 'fiboui/style.css'` has **no** esbuild “outside a block” warning.
+
+### Added
+
+- GitHub Actions `Publish` workflow: on GitHub Release **and** push to `main`; install/typecheck/test/build; skip if `npm view fiboui@$VERSION` exists; `npm publish --provenance --access public` with `id-token: write` and `NPM_TOKEN`; concurrency `npm-publish`; tag `vX.Y.Z` on main publishes.
+- [CONTRIBUTING.md](./CONTRIBUTING.md) release steps. **A `main` branch must be created** (repo currently only has `teste`).
+- [VERIFICATION.md](./VERIFICATION.md) pack + Vite/NodeNext/Next/Playwright results.
+
 ### Fixed
 
 - **`bindSignal()` is reactive.** `createBuilder` used to wrap a *pre-built* element in `SignalWrapper`, so a signal update forced a React render of the same stale tree. `SignalWrapper` now accepts a child factory and re-invokes `build()`. Use a function child (or `Text(() => ...)`) so values are read on each rebuild. Covered by `tests/bind-signal.test.tsx`.
