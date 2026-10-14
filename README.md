@@ -13,6 +13,7 @@ FiboUI brings chainable builders to React. Compose screens with `Column()`, `Row
 - **Fine-grained reactivity** — `signal()`, `computed()`, `createStore()`, `.bindSignal()`, `.observer()`.
 - **Multi-theme** — Material, Cupertino, and Web tokens with CSS variables.
 - **Type-safe** — TypeScript builders; `FiboChild` / `FiboChildren` describe child slots.
+- **Media queries** — `Box().padding(8).md({ padding: 16 }).lg({ padding: 24 })` compiles to CSS `@media`. `.responsive({ mobile, tablet, desktop })` still works (JS).
 
 ---
 

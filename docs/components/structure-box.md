@@ -156,13 +156,23 @@ Box()
 
 ### Responsive Styles
 
+Prefer CSS `@media` (easy):
+
+```tsx
+Box()
+  .padding(8)
+  .md({ padding: 16 })
+  .lg({ padding: 24 })
+```
+
+JS viewport (legacy, still works):
+
 ```tsx
 Box()
   .responsive({
     mobile: { padding: '8px' },
     desktop: { padding: '24px' }
   })
-
 ```
 
 ## See Also
