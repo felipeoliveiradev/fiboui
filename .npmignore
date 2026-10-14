@@ -1,0 +1,25 @@
+# Defense in depth. package.json "files" is already ["dist"].
+.env
+.env.*
+.npmrc
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/*.keystore
+**/*.map
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+auth.json
+.secrets
+src
+tests
+docs
+examples
+.github
+coverage
+scripts
+*.tgz
+node_modules

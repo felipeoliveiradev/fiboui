@@ -36,6 +36,7 @@ Concurrency group `npm-publish` prevents overlapping publishes.
 ### Checklist before bumping
 
 - [ ] `npm test` and `npm run type-check` pass
+- [ ] `npm run secret-scan` (or `secret-scan:pack` after a build) is clean
 - [ ] CHANGELOG has a section for the new version
 - [ ] README version string matches `package.json`
 - [ ] ESM-only: `node --input-type=commonjs -e "…package.json version…"` still works (publish.yml)

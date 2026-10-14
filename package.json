@@ -61,6 +61,10 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src tests",
+    "secret-scan": "bash scripts/secret-scan.sh --dir",
+    "secret-scan:git": "bash scripts/secret-scan.sh --git",
+    "secret-scan:pack": "bash scripts/secret-scan.sh --pack",
+    "prepublishOnly": "bash scripts/secret-scan.sh --pack",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs"

@@ -1,0 +1,18 @@
+# FiboUI gitleaks config. Reports must redact values (--redact).
+title = "fiboui"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "generated, vendored, and dependency trees"
+paths = [
+  '''(^|/)\.git/''',
+  '''(^|/)\.cache/''',
+  '''(^|/)node_modules/''',
+  '''(^|/)docs/\.vitepress/cache/''',
+  '''(^|/)coverage/''',
+  '''(^|/)playwright-report/''',
+  '''(^|/)test-results/''',
+  '''(^|/)blob-report/''',
+]

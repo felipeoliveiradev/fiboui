@@ -86,7 +86,31 @@ describe('package exports / sideEffects', () => {
     expect(yml).toContain('CHANGELOG.md');
     expect(yml).toContain('github.event_name == \'push\'');
     expect(yml).toContain('scripts/npm-version-check.sh');
+    expect(yml).toContain('scripts/secret-scan.sh --pack');
+    expect(yml).not.toMatch(/set\s+-x/);
+    expect(yml).not.toMatch(/echo\s+.*NPM_TOKEN/);
+    expect(yml).not.toMatch(/echo\s+.*NODE_AUTH_TOKEN/);
+    expect(yml).not.toMatch(/pull_request_target/);
+    expect(yml).toMatch(/NODE_AUTH_TOKEN:\s*\$\{\{\s*secrets\.NPM_TOKEN\s*\}\}/);
     expect(yml).not.toMatch(/VERSION="\$\(node --input-type=commonjs -e "/);
+  });
+
+  it('CI runs gitleaks and prepublishOnly scans the pack', () => {
+    const ci = readFileSync(resolve(__dirname, '../.github/workflows/ci.yml'), 'utf8');
+    expect(ci).toContain('scripts/secret-scan.sh --git');
+    expect(ci).toMatch(/permissions:\s*\n\s*contents:\s*read/);
+    expect(ci).not.toMatch(/pull_request_target/);
+    expect(pkg.scripts['secret-scan']).toBe('bash scripts/secret-scan.sh --dir');
+    expect(pkg.scripts.prepublishOnly).toBe('bash scripts/secret-scan.sh --pack');
+    expect(existsSync(resolve(__dirname, '../scripts/secret-scan.sh'))).toBe(true);
+    expect(existsSync(resolve(__dirname, '../.gitleaks.toml'))).toBe(true);
+    const ignore = readFileSync(resolve(__dirname, '../.gitignore'), 'utf8');
+    const npmignore = readFileSync(resolve(__dirname, '../.npmignore'), 'utf8');
+    expect(ignore).toMatch(/^\.env$/m);
+    expect(ignore).toMatch(/^\.npmrc$/m);
+    expect(npmignore).toMatch(/^\.env$/m);
+    expect(npmignore).toMatch(/^\.npmrc$/m);
+    expect(pkg.files).toEqual(['dist']);
   });
 
   it('publish workflow reads version under type=module', () => {

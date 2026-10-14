@@ -10,6 +10,8 @@ concurrency:
   group: npm-publish
   cancel-in-progress: false
 
+permissions: {}
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -40,6 +42,9 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Secret scan (tree + pack, redacted)
+        run: bash scripts/secret-scan.sh --pack
 
       - name: Skip if version already on npm
         id: version
