@@ -42,6 +42,7 @@ describe('package exports / sideEffects', () => {
     expect(pkg.files).toEqual(['dist']);
     expect(pkg.sideEffects).toEqual(['**/*.css']);
     expect(pkg.peerDependencies.react).toBe('>=18.0.0');
+    expect(pkg.repository.url).toBe('https://github.com/felipeoliveiradev/fiboui');
   });
 
   it('2.0.0 CHANGELOG names the release APIs used as GitHub Release notes', () => {
