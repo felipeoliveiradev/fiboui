@@ -20,6 +20,7 @@ Breaking release. Nobody was consuming 1.0.x in production; APIs that needed a b
 
 - **Per-root `activeEffect`:** `createReactivityRoot()`, `runInScope()`, `ReactivityRoot`. Test: `tests/breaking-2.0.test.tsx`.
 - **Fine-grained text updates:** `Text(() => ...)` and `bindText(signal)` write `textContent` without remounting. Test: `tests/breaking-2.0.test.tsx`.
+- **Monetron example** (`examples/monetron`): Vite + React 18 consumer of the packed `fiboui-2.0.0.tgz` (subpath imports, `bindSignal`, `Text(() => …)`, explicit `style.css`). Playwright + compare shots in `examples/monetron/REPORT.md`.
 
 ## [1.0.3] - 2026-10-14
 
