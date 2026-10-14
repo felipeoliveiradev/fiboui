@@ -45,7 +45,7 @@ function CounterCard() {
     .className('float card-counter')
     .bindSignal(amount)
     .children(() => [
-      Text('Live signal').className('card-label').muted(),
+      Text('Live signal').className('card-label'),
       Text(() => amountLabel.value)
         .className('big-num')
         .id('hero-amount')
@@ -54,7 +54,7 @@ function CounterCard() {
         .mainAxisAlignment('spaceBetween')
         .crossAxisAlignment('center')
         .children([
-          Text('bindSignal + computed').className('card-label').muted(),
+          Text('bindSignal + computed').className('card-label'),
           Row()
             .hug()
             .children([
@@ -80,7 +80,7 @@ function DeltaCard() {
     .className('float card-delta')
     .bindSignal(deltaLabel)
     .children(() => [
-      Text('Delta').className('card-label').muted(),
+      Text('Delta').className('card-label'),
       Text(() => deltaLabel.value).mono().fontSize(14).id('hero-delta'),
     ]);
 }
@@ -93,9 +93,12 @@ function RingCard() {
       Progress()
         .variant('ring')
         .size(92)
-        .strokeWidth(3.4)
-        .trackColor('#ecece8')
-        .color('#111')
+        .strokeWidth(7)
+        .trackColor('#e4e4e0')
+        .segments([
+          { value: ring.value, color: '#111' },
+          { value: Math.max(0, 100 - ring.value), color: '#e4e4e0' },
+        ])
         .value(ring.value)
         .max(100)
         .label('Signal progress')
@@ -143,10 +146,10 @@ export function Hero() {
     .id('hero')
     .children([
       NavBar(),
-      StepRail(),
       Box()
         .className('hero-dark')
         .children([
+          StepRail(),
           Text('FiboUI 2.0').className('hero-kicker').mono(),
           <h1 className="hero-title" id="hero-title">
             Build UIs

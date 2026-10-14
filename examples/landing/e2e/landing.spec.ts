@@ -6,7 +6,7 @@ const artifacts = '/opt/cursor/artifacts/screenshots';
 
 test('landing: content, signals, screenshots', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('#hero-title')).toHaveText(/Build UIs\s+like you think/);
+  await expect(page.locator('#hero-title')).toHaveText(/Build UIs\s*like you think/);
   await expect(page.locator('#hero-amount')).toHaveText('$3,845.75');
   await expect(page.locator('#hero-ring-value')).toHaveText('64');
   await expect(page.locator('#hero-tile')).toContainText('Builders');

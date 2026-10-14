@@ -36,8 +36,17 @@ export function Compare() {
     .id('compare')
     .children([
       Box()
-        .className('section-grid reverse')
+        .className('section-grid')
         .children([
+          Column()
+            .crossAxisAlignment('start')
+            .children([
+              Text('Assembly').className('eyebrow'),
+              <h2 className="section-title">Same idea. Fewer brackets.</h2>,
+              Text(
+                'Builders in .children() do not need .build(). Text(() => signal.value) patches the text node. mount("#root", App) mounts a root builder without a trailing build() call.'
+              ).className('section-copy'),
+            ]),
           Box()
             .className('compare')
             .children([
@@ -49,15 +58,6 @@ export function Compare() {
                 <span className="code-label">Plain React</span>
                 {react}
               </pre>,
-            ]),
-          Column()
-            .crossAxisAlignment('start')
-            .children([
-              Text('Assembly').className('eyebrow'),
-              <h2 className="section-title">Same idea. Fewer brackets.</h2>,
-              Text(
-                'Builders in .children() do not need .build(). Text(() => signal.value) patches the text node. mount("#root", App) mounts a root builder without a trailing build() call.'
-              ).className('section-copy'),
             ]),
         ]),
     ]);
