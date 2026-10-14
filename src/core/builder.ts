@@ -72,6 +72,10 @@ export abstract class FiboBuilder {
     return this;
   }
 
+  /**
+   * React list key. After this is called, React reads the key as a string.
+   * Builders are valid elements — you do not need `.build()`.
+   */
   key(value: string | number): this {
     this._props.key = value;
     return this;
@@ -1125,7 +1129,137 @@ export abstract class FiboBuilder {
     return this._childFunction;
   }
 
+  /**
+   * @deprecated Builders are React elements. Returning or nesting the builder is enough.
+   * `.build()` still assembles the host tree for older call sites.
+   */
   abstract build(): ReactElement;
+}
+
+const REACT_ELEMENT_FIELDS = new Set<PropertyKey>([
+  '$$typeof',
+  'type',
+  'props',
+  'ref',
+  '_owner',
+  '_store',
+  '_self',
+  '_source',
+  '_debugStack',
+  '_debugTask',
+  '_debugInfo',
+]);
+
+function assembleBuilder(target: FiboBuilder): ReactElement {
+  const isObserver = (target as any)._isObserver;
+  const signals = (target as any)._signals as Set<BindableSignal<any>> | undefined;
+  const observers = (target as any)._observers;
+  const state = (target as any)._state;
+  const providers = (target as any)._providers;
+
+  const assemble = () => {
+    let element = target.build();
+
+    const animatedProps = (target as any)._animatedProps;
+    const animationConfig = (target as any)._animationConfig;
+    if (animatedProps && animatedProps.size > 0) {
+      element = React.createElement(AnimatedWrapper, {
+        animatedProps,
+        animationConfig,
+        children: element
+      });
+    }
+
+    const gesture = (target as any)._gesture;
+    if (gesture) {
+      element = gesture.wrap(element);
+    }
+
+    const responsive = (target as any)._responsive as ResponsiveStyles | undefined;
+    if (responsive) {
+      element = React.createElement(ResponsiveWrapper, {
+        responsive,
+        children: element
+      });
+    }
+
+    return element;
+  };
+
+  const hasState = typeof (target as any).hasStateManagement === 'function'
+    ? (target as any).hasStateManagement()
+    : Boolean(isObserver || (signals && signals.size) || (observers && observers.size) || (state && state.size) || (providers && providers.size));
+
+  const observed = isObserver
+    ? React.createElement(Observer, {
+        key: (target as any)._props.key,
+        children: assemble
+      })
+    : null;
+
+  const rebuild = () => (observed ?? assemble());
+
+  let tree: ReactElement = rebuild();
+
+  if (hasState && signals && signals.size > 0) {
+    tree = React.createElement(SignalWrapper, {
+      key: (target as any)._props.key,
+      signals,
+      children: rebuild
+    });
+  } else if (hasState && observers && observers.size > 0) {
+    tree = React.createElement(ObserverWrapper, {
+      observables: observers,
+      children: rebuild
+    });
+  }
+
+  if (hasState && state && state.size > 0) {
+    tree = React.createElement(StateWrapper, {
+      stateMap: state,
+      children: tree
+    });
+  }
+
+  if (hasState && providers && providers.size > 0) {
+    tree = React.createElement(ProviderWrapper, {
+      providers: providers,
+      children: tree
+    });
+  }
+
+  return tree;
+}
+
+function stampRenderable(
+  instance: object,
+  assemble: () => ReactElement,
+  displayName: string
+): void {
+  const Render = function FiboElement() {
+    return assemble();
+  };
+  Render.displayName = displayName;
+
+  // Steal $$typeof from the running React (18: react.element, 19: transitional.element).
+  const proto = React.createElement(Render);
+  Object.defineProperty(instance, '$$typeof', {
+    value: (proto as any).$$typeof,
+    enumerable: true,
+    configurable: true,
+  });
+  Object.defineProperty(instance, 'type', {
+    value: Render,
+    enumerable: true,
+    configurable: true,
+    writable: true,
+  });
+  (instance as any).ref = (proto as any).ref ?? null;
+  (instance as any).__fiboElementProps = proto.props ?? {};
+  if ((proto as any)._owner !== undefined) {
+    (instance as any)._owner = (proto as any)._owner;
+  }
+  (instance as any)._store = { validated: 1 };
 }
 
 type KnownKeys<T> = {
@@ -1134,97 +1268,59 @@ type KnownKeys<T> = {
 
 type StyleBuilder<T> = T & {
   [K in KnownKeys<CSSProperties>]-?: (value: CSSProperties[K]) => StyleBuilder<T>;
-};
+} & ReactElement;
 
 export function createBuilder<T extends FiboBuilder, Args extends any[]>(
   BuilderClass: new (...args: Args) => T
 ): (...args: Args) => StyleBuilder<T> {
   return (...args: Args) => {
     const instance = new BuilderClass(...args);
+    const displayName = BuilderClass.name.replace(/Builder$/, '') || 'Fibo';
+    const assemble = () => assembleBuilder(instance);
+    stampRenderable(instance, assemble, displayName);
 
     return new Proxy(instance, {
       get(target, prop, receiver) {
         if (prop === 'build') {
-          return () => {
-            const isObserver = (target as any)._isObserver;
-            const signals = (target as any)._signals as Set<BindableSignal<any>> | undefined;
-            const observers = (target as any)._observers;
-            const state = (target as any)._state;
-            const providers = (target as any)._providers;
+          return assemble;
+        }
 
-            const assemble = () => {
-              let element = target.build();
-
-              const animatedProps = (target as any)._animatedProps;
-              const animationConfig = (target as any)._animationConfig;
-              if (animatedProps && animatedProps.size > 0) {
-                element = React.createElement(AnimatedWrapper, {
-                  animatedProps,
-                  animationConfig,
-                  children: element
-                });
-              }
-
-              const gesture = (target as any)._gesture;
-              if (gesture) {
-                element = gesture.wrap(element);
-              }
-
-              const responsive = (target as any)._responsive as ResponsiveStyles | undefined;
-              if (responsive) {
-                element = React.createElement(ResponsiveWrapper, {
-                  responsive,
-                  children: element
-                });
-              }
-
-              return element;
-            };
-
-            const hasState = typeof (target as any).hasStateManagement === 'function'
-              ? (target as any).hasStateManagement()
-              : Boolean(isObserver || (signals && signals.size) || (observers && observers.size) || (state && state.size) || (providers && providers.size));
-
-            const observed = isObserver
-              ? React.createElement(Observer, {
-                  key: (target as any)._props.key,
-                  children: assemble
-                })
-              : null;
-
-            const rebuild = () => (observed ?? assemble());
-
-            let tree: ReactElement = rebuild();
-
-            if (hasState && signals && signals.size > 0) {
-              tree = React.createElement(SignalWrapper, {
-                key: (target as any)._props.key,
-                signals,
-                children: rebuild
-              });
-            } else if (hasState && observers && observers.size > 0) {
-              tree = React.createElement(ObserverWrapper, {
-                observables: observers,
-                children: rebuild
-              });
-            }
-
-            if (hasState && state && state.size > 0) {
-              tree = React.createElement(StateWrapper, {
-                stateMap: state,
-                children: tree
-              });
-            }
-
-            if (hasState && providers && providers.size > 0) {
-              tree = React.createElement(ProviderWrapper, {
-                providers: providers,
-                children: tree
-              });
-            }
-
-            return tree;
+        if (prop === 'key') {
+          const stored = (target as any)._props?.key;
+          if (stored != null && stored !== '') {
+            return typeof stored === 'number' ? String(stored) : stored;
           }
+          if (!(target as any).__fiboKeyFn) {
+            const auto = nextStableId('fibo');
+            const fluent = (value: string | number) => {
+              target.key(value);
+              return receiver;
+            };
+            fluent.toString = () => auto;
+            fluent.valueOf = () => auto;
+            (target as any).__fiboKeyFn = fluent;
+            (target as any).__fiboAutoKey = auto;
+          }
+          return (target as any).__fiboKeyFn;
+        }
+
+        if (prop === 'props') {
+          const method = Object.getPrototypeOf(target).props;
+          if (typeof method === 'function') {
+            const fluent = (extra: Record<string, any>) => {
+              method.call(target, extra);
+              return receiver;
+            };
+            // React reads element.props as the object passed to `type`.
+            // FiboElement ignores it; expose empty props for spread/DEV checks
+            // while keeping .props({...}) callable.
+            return Object.assign(fluent, (target as any).__fiboElementProps ?? {});
+          }
+          return (target as any).__fiboElementProps ?? {};
+        }
+
+        if (REACT_ELEMENT_FIELDS.has(prop)) {
+          return Reflect.get(target, prop, receiver);
         }
 
         if (Reflect.has(target, prop)) {
@@ -1298,7 +1394,9 @@ export class FluentValueBuilder<T> {
   private _error?: (error: Error | unknown) => ReactNode;
   private _builder?: (value: T) => ReactNode;
 
-  constructor(private _signal: SignalLike<T>) { }
+  constructor(private _signal: SignalLike<T>) {
+    stampRenderable(this, () => this.build(), 'ValueBuilder');
+  }
 
   loading(component: ReactNode | (() => ReactNode)): this {
     this._loading = typeof component === 'function' ? (component as () => ReactNode) : () => component;

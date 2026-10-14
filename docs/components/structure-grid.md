@@ -2,35 +2,35 @@
 import { Grid, GridItem } from '../../src/structure/Grid'
 import { Box } from '../../src/structure/Box'
 
-const renderBasic = () => 
+const renderBasic = () =>
   Grid()
     .columns(3)
     .gap(4)
     .children([
-      Box().bg('red-100').h(20).flex().alignItems('center').justifyContent('center').children('1').build(),
-      Box().bg('green-100').h(20).flex().alignItems('center').justifyContent('center').children('2').build(),
-      Box().bg('blue-100').h(20).flex().alignItems('center').justifyContent('center').children('3').build(),
-      Box().bg('yellow-100').h(20).flex().alignItems('center').justifyContent('center').children('4').build(),
-      Box().bg('purple-100').h(20).flex().alignItems('center').justifyContent('center').children('5').build(),
-      Box().bg('pink-100').h(20).flex().alignItems('center').justifyContent('center').children('6').build()
+      Box().bg('red-100').h(20).flex().alignItems('center').justifyContent('center').children('1'),
+      Box().bg('green-100').h(20).flex().alignItems('center').justifyContent('center').children('2'),
+      Box().bg('blue-100').h(20).flex().alignItems('center').justifyContent('center').children('3'),
+      Box().bg('yellow-100').h(20).flex().alignItems('center').justifyContent('center').children('4'),
+      Box().bg('purple-100').h(20).flex().alignItems('center').justifyContent('center').children('5'),
+      Box().bg('pink-100').h(20).flex().alignItems('center').justifyContent('center').children('6')
     ])
-    .build()
 
-const renderSpanning = () => 
+
+const renderSpanning = () =>
   Grid()
     .columns(4)
     .gap(4)
     .children([
       GridItem().colSpan(2).children(
-        Box().bg('blue-200').h(20).flex().alignItems('center').justifyContent('center').children('Span 2').build()
-      ).build(),
-      Box().bg('green-100').h(20).flex().alignItems('center').justifyContent('center').children('1').build(),
-      Box().bg('green-100').h(20).flex().alignItems('center').justifyContent('center').children('2').build(),
+        Box().bg('blue-200').h(20).flex().alignItems('center').justifyContent('center').children('Span 2')
+      ),
+      Box().bg('green-100').h(20).flex().alignItems('center').justifyContent('center').children('1'),
+      Box().bg('green-100').h(20).flex().alignItems('center').justifyContent('center').children('2'),
       GridItem().colSpan(4).children(
-        Box().bg('purple-200').h(20).flex().alignItems('center').justifyContent('center').children('Full Width').build()
-      ).build()
+        Box().bg('purple-200').h(20).flex().alignItems('center').justifyContent('center').children('Full Width')
+      )
     ])
-    .build()
+
 </script>
 
 # Grid
@@ -51,14 +51,14 @@ Grid()
   .columns(3)
   .gap(4)
   .children([
-    Box().bg('red-100').h(20).children('1').build(),
-    Box().bg('green-100').h(20).children('2').build(),
-    Box().bg('blue-100').h(20).children('3').build(),
-    Box().bg('yellow-100').h(20).children('4').build(),
-    Box().bg('purple-100').h(20).children('5').build(),
-    Box().bg('pink-100').h(20).children('6').build()
+    Box().bg('red-100').h(20).children('1'),
+    Box().bg('green-100').h(20).children('2'),
+    Box().bg('blue-100').h(20).children('3'),
+    Box().bg('yellow-100').h(20).children('4'),
+    Box().bg('purple-100').h(20).children('5'),
+    Box().bg('pink-100').h(20).children('6')
   ])
-  .build()
+
 ```
 :::
 
@@ -73,15 +73,15 @@ Grid()
   .gap(4)
   .children([
     GridItem().colSpan(2).children(
-      Box().bg('blue-200').h(20).children('Span 2').build()
-    ).build(),
-    Box().bg('green-100').h(20).children('1').build(),
-    Box().bg('green-100').h(20).children('2').build(),
+      Box().bg('blue-200').h(20).children('Span 2')
+    ),
+    Box().bg('green-100').h(20).children('1'),
+    Box().bg('green-100').h(20).children('2'),
     GridItem().colSpan(4).children(
-      Box().bg('purple-200').h(20).children('Full Width').build()
-    ).build()
+      Box().bg('purple-200').h(20).children('Full Width')
+    )
   ])
-  .build()
+
 ```
 :::
 
@@ -156,7 +156,7 @@ Grid()
   .lg:columns(3)
   .gap(4)
   .children(items)
-  .build()
+
 ```
 
 ### Custom Template
@@ -166,7 +166,7 @@ Grid()
   .templateColumns('200px 1fr 1fr')
   .gap(4)
   .children([...])
-  .build()
+
 ```
 
 ## See Also

@@ -8,12 +8,12 @@ import { Table } from '../../src/structure/Table'
 import { Tags } from '../../src/structure/Tags'
 import { Text } from '../../src/content/Text'
 
-const renderTags = () => 
+const renderTags = () =>
   Tags().items([
      { title: 'Primary' },
      { title: 'Success' },
      { title: 'Warning' }
-  ]).build()
+  ])
 </script>
 
 # Structure Components

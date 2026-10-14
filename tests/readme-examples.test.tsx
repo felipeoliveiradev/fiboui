@@ -25,7 +25,6 @@ describe('README examples type-check and render', () => {
           Text('Title').variant('h1'),
           Button('Action').onPress(handlePress),
         ])
-        .build()
     );
     expect(screen.getByText('Title').tagName).toBe('H1');
     expect(screen.getByRole('button', { name: 'Action' })).toBeInTheDocument();
@@ -43,7 +42,6 @@ describe('README examples type-check and render', () => {
             count.value += 1;
           }),
         ])
-        .build()
     );
 
     expect(screen.getByText('Count: 0')).toBeInTheDocument();
@@ -63,7 +61,6 @@ describe('README examples type-check and render', () => {
             .children([Text('App Title').variant('h2')])
         )
         .children([Text('Welcome to the main content area.')])
-        .build()
     );
 
     expect(screen.getByText('App Title')).toBeInTheDocument();
@@ -108,7 +105,6 @@ describe('README examples type-check and render', () => {
               )
             ),
         ])
-        .build()
     );
 
     expect(screen.getByText('Total: $0.00')).toBeInTheDocument();

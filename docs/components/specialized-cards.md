@@ -5,7 +5,7 @@ import { CollectionCard } from '../../src/structure/cards/CollectionCard'
 import { ContentCard } from '../../src/structure/cards/ContentCard'
 import { Box } from '../../src/structure/Box'
 
-const renderAssetCard = () => 
+const renderAssetCard = () =>
   AssetCard()
     .image('https://picsum.photos/400/400')
     .title('Cosmic Dreams #1234')
@@ -13,9 +13,9 @@ const renderAssetCard = () =>
     .likes('142')
     .timeLeft('2h 15m left')
     .maxWidth('320px')
-    .build()
 
-const renderProfileCard = () => 
+
+const renderProfileCard = () =>
   ProfileCard()
     .banner('https://picsum.photos/400/200')
     .avatar('https://i.pravatar.cc/100')
@@ -23,18 +23,18 @@ const renderProfileCard = () =>
     .handle('@sarahchen')
     .stats({ items: '234', owners: '89', floor: '1.2' })
     .maxWidth('320px')
-    .build()
 
-const renderCollectionCard = () => 
+
+const renderCollectionCard = () =>
   CollectionCard()
     .image('https://picsum.photos/400/400')
     .title('Abstract Visions')
     .author('Michael Ross')
     .items('125 Items')
     .maxWidth('320px')
-    .build()
 
-const renderContentCard = () => 
+
+const renderContentCard = () =>
   ContentCard()
     .image('https://picsum.photos/400/300')
     .title('The Future of Web3 Design')
@@ -42,7 +42,7 @@ const renderContentCard = () =>
     .source('Design Blog')
     .date('Dec 30, 2024')
     .maxWidth('320px')
-    .build()
+
 </script>
 
 # Specialized Cards
@@ -67,7 +67,7 @@ AssetCard()
   .price('2.5')
   .likes('142')
   .timeLeft('2h 15m left')
-  .build()
+
 ```
 :::
 
@@ -97,7 +97,7 @@ ProfileCard()
   .name('Sarah Chen')
   .handle('@sarahchen')
   .stats({ items: '234', owners: '89', floor: '1.2' })
-  .build()
+
 ```
 :::
 
@@ -126,7 +126,7 @@ CollectionCard()
   .title('Abstract Visions')
   .author('Michael Ross')
   .items('125 Items')
-  .build()
+
 ```
 :::
 
@@ -155,7 +155,7 @@ ContentCard()
   .description('Exploring the intersection of blockchain...')
   .source('Design Blog')
   .date('Dec 30, 2024')
-  .build()
+
 ```
 :::
 
@@ -187,11 +187,11 @@ Grid()
   .columns(3)
   .gap(4)
   .children([
-    AssetCard().image('...').title('Item 1').price('1.5').likes('50').build(),
-    AssetCard().image('...').title('Item 2').price('2.0').likes('75').build(),
-    AssetCard().image('...').title('Item 3').price('1.8').likes('60').build()
+    AssetCard().image('...').title('Item 1').price('1.5').likes('50'),
+    AssetCard().image('...').title('Item 2').price('2.0').likes('75'),
+    AssetCard().image('...').title('Item 3').price('1.8').likes('60')
   ])
-  .build()
+
 ```
 
 ### Profile Showcase
@@ -204,7 +204,7 @@ ProfileCard()
   .handle('@johndoe')
   .stats({ items: '500', owners: '120', floor: '2.5' })
   .width('400px')
-  .build()
+
 ```
 
 ## See Also

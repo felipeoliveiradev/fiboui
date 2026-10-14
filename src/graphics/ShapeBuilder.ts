@@ -327,5 +327,29 @@ export class ShapeBuilder {
 }
 
 export function createShapeBuilder<T extends ShapeBuilder>(BuilderClass: new () => T): () => T {
-  return () => new BuilderClass();
+  return () => {
+    const instance = new BuilderClass();
+    const assemble = () => instance.build();
+    const displayName = BuilderClass.name.replace(/Builder$/, '') || 'Shape';
+    const Render = function FiboShape() {
+      return assemble();
+    };
+    Render.displayName = displayName;
+    const proto = React.createElement(Render);
+    Object.defineProperty(instance, '$$typeof', {
+      value: (proto as any).$$typeof,
+      enumerable: true,
+      configurable: true,
+    });
+    Object.defineProperty(instance, 'type', {
+      value: Render,
+      enumerable: true,
+      configurable: true,
+      writable: true,
+    });
+    (instance as any).props = proto.props ?? {};
+    (instance as any).ref = (proto as any).ref ?? null;
+    (instance as any)._store = { validated: 1 };
+    return instance;
+  };
 }

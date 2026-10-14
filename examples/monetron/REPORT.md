@@ -1,6 +1,6 @@
 # Monetron fidelity pass
 
-Packed `fiboui@2.0.0` consumer. Chromium 1024×768. Playwright **1 passed**.
+Packed `fiboui` consumer (2.1 builders need no `.build()`). Chromium 1024×768. Playwright **1 passed**.
 
 | Artifact | What |
 |----------|------|

@@ -86,3 +86,13 @@ Progress().variant('ring').size(190).strokeWidth(2.4).segments([
 ListTile().icon(node).title('Row').chevron().divider()
 mount('#root', App)                  // App returns a builder — no .build()
 ```
+
+## 10. No `.build()` (2.1)
+
+Builders are React elements. Drop trailing `.build()` on returns, JSX children, arrays, and props. `.build()` still assembles the host tree if you have 2.0 call sites.
+
+```tsx
+function App() {
+  return Column().children([Text('Hi')]);
+}
+```

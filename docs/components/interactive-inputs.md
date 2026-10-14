@@ -2,48 +2,48 @@
 import { Box } from '../../src/structure/Box'
 import { TextField } from '../../src/interactive/TextField'
 
-const renderBasic = () => 
+const renderBasic = () =>
   Box().flex().col().gap(4).maxW('400px').children([
     TextField()
       .label('Username')
       .placeholder('Enter your username')
-      .build(),
+      ,
     TextField()
       .label('Email')
       .type('email')
       .placeholder('you@example.com')
-      .build()
-  ]).build()
 
-const renderPassword = () => 
+  ])
+
+const renderPassword = () =>
   TextField()
     .label('Password')
     .type('password')
     .placeholder('Enter password')
     .maxW('400px')
-    .build()
 
-const renderMasked = () => 
+
+const renderMasked = () =>
   Box().flex().col().gap(4).maxW('400px').children([
     TextField()
       .label('Phone')
       .mask('(999) 999-9999')
       .placeholder('(555) 123-4567')
-      .build(),
+      ,
     TextField()
       .label('CPF')
       .mask('999.999.999-99')
       .placeholder('123.456.789-00')
-      .build()
-  ]).build()
 
-const renderError = () => 
+  ])
+
+const renderError = () =>
   TextField()
     .label('Email')
     .type('email')
     .error('Invalid email address')
     .maxW('400px')
-    .build()
+
 </script>
 
 # TextField
@@ -64,13 +64,13 @@ Box().flex().col().gap(4).maxW('400px').children([
   TextField()
     .label('Username')
     .placeholder('Enter your username')
-    .build(),
+    ,
   TextField()
     .label('Email')
     .type('email')
     .placeholder('you@example.com')
-    .build()
-]).build()
+
+])
 ```
 :::
 
@@ -84,7 +84,7 @@ TextField()
   .label('Password')
   .type('password')
   .placeholder('Enter password')
-  .build()
+
 ```
 :::
 
@@ -99,13 +99,13 @@ Box().flex().col().gap(4).maxW('400px').children([
     .label('Phone')
     .mask('(999) 999-9999')
     .placeholder('(555) 123-4567')
-    .build(),
+    ,
   TextField()
     .label('CPF')
     .mask('999.999.999-99')
     .placeholder('123.456.789-00')
-    .build()
-]).build()
+
+])
 ```
 :::
 
@@ -119,7 +119,7 @@ TextField()
   .label('Email')
   .type('email')
   .error('Invalid email address')
-  .build()
+
 ```
 :::
 
@@ -174,13 +174,13 @@ The `.mask()` method accepts a format string where `9` represents a digit placeh
 
 ```tsx
 // Phone: (555) 123-4567
-TextField().mask('(999) 999-9999').build()
+TextField().mask('(999) 999-9999')
 
 // CPF: 123.456.789-00
-TextField().mask('999.999.999-99').build()
+TextField().mask('999.999.999-99')
 
 // Credit Card: 1234 5678 9012 3456
-TextField().mask('9999 9999 9999 9999').build()
+TextField().mask('9999 9999 9999 9999')
 ```
 
 ## Password Toggle

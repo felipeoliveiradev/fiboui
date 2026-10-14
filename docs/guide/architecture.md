@@ -7,7 +7,7 @@ At the core of FiboUI is the `FiboBuilder` class. Every component in the system 
 
 1. **Instantiation**: Calling `Box()` creates a new instance of `BoxBuilder`.
 2. **Chaining**: Methods like `.padding(4)` or `.color('red')` update the internal state of the builder and return `this`, allowing method chaining.
-3. **Building**: The `.build()` method finalizes the configuration and returns a standard React Element.
+3. **Rendering**: The builder **is** a React element (it carries React’s `$$typeof`). Return it, nest it, or pass it as a child — do not call ``. `` still exists and is deprecated.
 
 ## FiboBuilder Base Class
 

@@ -2,16 +2,16 @@
 import { Box } from '../../src/structure/Box'
 import { Text } from '../../src/content/Text'
 
-const renderBasic = () => 
+const renderBasic = () =>
   Box()
     .padding('16px')
     .backgroundColor('#3B82F6')
     .color('#FFFFFF')
     .borderRadius('8px')
     .children('Basic Box')
-    .build()
 
-const renderNested = () => 
+
+const renderNested = () =>
   Box()
     .display('flex')
     .gap('16px')
@@ -19,11 +19,11 @@ const renderNested = () =>
     .backgroundColor('#F3F4F6')
     .borderRadius('12px')
     .children([
-      Box().padding('16px').backgroundColor('#EF4444').color('#FFFFFF').children('Box 1').build(),
-      Box().padding('16px').backgroundColor('#10B981').color('#FFFFFF').children('Box 2').build(),
-      Box().padding('16px').backgroundColor('#3B82F6').color('#FFFFFF').children('Box 3').build()
+      Box().padding('16px').backgroundColor('#EF4444').color('#FFFFFF').children('Box 1'),
+      Box().padding('16px').backgroundColor('#10B981').color('#FFFFFF').children('Box 2'),
+      Box().padding('16px').backgroundColor('#3B82F6').color('#FFFFFF').children('Box 3')
     ])
-    .build()
+
 </script>
 
 # Box
@@ -46,7 +46,7 @@ Box()
   .color('#FFFFFF')
   .borderRadius('8px')
   .children('Basic Box')
-  .build()
+
 ```
 :::
 
@@ -63,11 +63,11 @@ Box()
   .backgroundColor('#F3F4F6')
   .borderRadius('12px')
   .children([
-    Box().padding('16px').backgroundColor('#EF4444').color('#FFFFFF').children('Box 1').build(),
-    Box().padding('16px').backgroundColor('#10B981').color('#FFFFFF').children('Box 2').build(),
-    Box().padding('16px').backgroundColor('#3B82F6').color('#FFFFFF').children('Box 3').build()
+    Box().padding('16px').backgroundColor('#EF4444').color('#FFFFFF').children('Box 1'),
+    Box().padding('16px').backgroundColor('#10B981').color('#FFFFFF').children('Box 2'),
+    Box().padding('16px').backgroundColor('#3B82F6').color('#FFFFFF').children('Box 3')
   ])
-  .build()
+
 ```
 :::
 
@@ -126,7 +126,7 @@ Box()
   .borderRadius('8px')          // CSS: border-radius
   .boxShadow('0 4px 6px rgba(0,0,0,0.1)')  // CSS: box-shadow
   .transform('translateY(-2px)')           // CSS: transform
-  .build()
+
 ```
 
 **Note**: Use camelCase for CSS properties (e.g., `backgroundColor` not `background-color`).
@@ -142,7 +142,7 @@ Box()
   .alignItems('center')
   .gap('16px')
   .children([...])
-  .build()
+
 ```
 
 ### With Tailwind Classes
@@ -151,7 +151,7 @@ Box()
 Box()
   .className('bg-blue-500 text-white p-4 rounded-lg')
   .children('Styled with Tailwind')
-  .build()
+
 ```
 
 ### Responsive Styles
@@ -162,7 +162,7 @@ Box()
     mobile: { padding: '8px' },
     desktop: { padding: '24px' }
   })
-  .build()
+
 ```
 
 ## See Also

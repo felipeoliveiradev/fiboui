@@ -14,18 +14,18 @@ const renderCenter = () => {
     .backgroundColor('#F3F4F6')
     .borderRadius('8px')
     .children(
-      Text('Centered Content').variant('h3').build()
+      Text('Centered Content').variant('h3')
     )
-    .build()
+
 }
 
 const renderHeader = () => {
   return Header()
     .height(64)
     .children(
-      Text('Application Header').variant('h3').build()
+      Text('Application Header').variant('h3')
     )
-    .build()
+
 }
 
 const renderSidebar = () => {
@@ -34,18 +34,18 @@ const renderSidebar = () => {
     .height('300px')
     .children(
       Box().padding('16px').children(
-        Text('Sidebar Content').variant('body').build()
-      ).build()
+        Text('Sidebar Content').variant('body')
+      )
     )
-    .build()
+
 }
 
 const renderScrollView = () => {
   const items = []
   for (let i = 0; i < 10; i++) {
-    items.push(Text(`Item ${i + 1}`).variant('body').marginBottom('8px').build())
+    items.push(Text(`Item ${i + 1}`).variant('body').marginBottom('8px'))
   }
-  
+
   return ScrollView()
     .vertical()
     .height('200px')
@@ -54,7 +54,7 @@ const renderScrollView = () => {
     .borderRadius('8px')
     .padding('16px')
     .children(items)
-    .build()
+
 }
 
 const renderLine = () => {
@@ -62,11 +62,11 @@ const renderLine = () => {
     .sizeHeight('40px')
     .gap('12px')
     .children([
-      Box().padding('8px').backgroundColor('#3B82F6').color('#FFF').children('Item 1').build(),
-      Box().padding('8px').backgroundColor('#10B981').color('#FFF').children('Item 2').build(),
-      Box().padding('8px').backgroundColor('#EF4444').color('#FFF').children('Item 3').build()
+      Box().padding('8px').backgroundColor('#3B82F6').color('#FFF').children('Item 1'),
+      Box().padding('8px').backgroundColor('#10B981').color('#FFF').children('Item 2'),
+      Box().padding('8px').backgroundColor('#EF4444').color('#FFF').children('Item 3')
     ])
-    .build()
+
 }
 </script>
 
@@ -87,9 +87,9 @@ Center()
   .height('150px')
   .backgroundColor('#F3F4F6')
   .children(
-    Text('Centered Content').variant('h3').build()
+    Text('Centered Content').variant('h3')
   )
-  .build()
+
 ```
 :::
 
@@ -113,9 +113,9 @@ Header()
   .height(64)
   .sticky(true)
   .children(
-    Text('Application Header').variant('h3').build()
+    Text('Application Header').variant('h3')
   )
-  .build()
+
 ```
 :::
 
@@ -146,10 +146,10 @@ Sidebar()
   .width(260)
   .children(
     Box().padding('16px').children(
-      Text('Sidebar Content').build()
-    ).build()
+      Text('Sidebar Content')
+    )
   )
-  .build()
+
 ```
 :::
 
@@ -180,11 +180,11 @@ ScrollView()
   .vertical()
   .height('200px')
   .children([
-    Text('Item 1').build(),
-    Text('Item 2').build(),
+    Text('Item 1'),
+    Text('Item 2'),
     // ... more items
   ])
-  .build()
+
 ```
 :::
 
@@ -217,10 +217,10 @@ Line()
   .sizeHeight('40px')
   .gap('12px')
   .children([
-    Box().padding('8px').children('Item 1').build(),
-    Box().padding('8px').children('Item 2').build()
+    Box().padding('8px').children('Item 1'),
+    Box().padding('8px').children('Item 2')
   ])
-  .build()
+
 ```
 :::
 
@@ -242,12 +242,12 @@ Line() → LineBuilder
 
 ```tsx
 Box().display('flex').height('100vh').children([
-  Sidebar().width(260).children([...]).build(),
+  Sidebar().width(260).children([...]),
   Box().flex('1').display('flex').flexDirection('column').children([
-    Header().sticky(true).children([...]).build(),
-    ScrollView().vertical().flex('1').children([...]).build()
-  ]).build()
-]).build()
+    Header().sticky(true).children([...]),
+    ScrollView().vertical().flex('1').children([...])
+  ])
+])
 ```
 
 ## See Also
