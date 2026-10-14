@@ -66,3 +66,15 @@ Version read: `node --input-type=commonjs -e "…JSON.parse(fs.readFileSync('pac
 Triggers: GitHub Release `published` **and** push to **`main`**. After a successful `main` publish the workflow opens **`vX.Y.Z`** with the matching CHANGELOG section as notes. Owner must add secret **`NPM_TOKEN`** before merging. This agent did **not** publish.
 
 CI (`.github/workflows/ci.yml`) now also runs `npm run build` so the dts + ESM pack cannot regress silently.
+
+## 2.1.0 — no `.build()` (packed tarball)
+
+Packed `fiboui-2.1.0.tgz` (**540.7 kB**, 35 files, shasum `18ff6e3d219683d254028ed44d3e644ae282c5dc`). Fresh apps under `/tmp/fibo-verify` installed `file:../fiboui-2.1.0.tgz`. Consumer source has **zero** `.build()` calls.
+
+| Consumer | Result |
+|---|---|
+| Vite 5 + React **18.3.1** + `tsc --noEmit` (strict, `skipLibCheck: false`) | **exit 0**; `vite build` ok |
+| Next **14.2.35** App Router + React 18, `'use client'` page | `next build` ok; prerendered HTML contains `FiboUI 2.1 no-build SSR`, `jsx-ok`, `alpha`, `prop-btn`, `ce-ok` |
+| Playwright (Chromium) vs `vite preview :4176` and `next start :4177` | **2 passed** — JSX child, list `.key()`, conditional, `ReactNode` prop, `createElement`, click handler |
+
+`mount('#root', App)` is the Vite entry; `App` returns `Column()…` with no `.build()`.
