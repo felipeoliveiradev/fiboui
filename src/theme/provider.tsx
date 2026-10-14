@@ -32,6 +32,10 @@ export function FiboThemeProvider({
   const [theme, setThemeObject] = useState<FiboTheme>(themes[initialTheme]);
 
   useEffect(() => {
+    setThemeName(initialTheme);
+  }, [initialTheme]);
+
+  useEffect(() => {
     const newTheme = themes[themeName];
     setThemeObject(newTheme);
 

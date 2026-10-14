@@ -4,6 +4,22 @@ All notable changes to this project are documented in this file.
 
 ## [1.0.3] - 2026-10-14
 
+### Production hardening (all AUDIT.md severities)
+
+- Runtime `.state()` via `useBuilderState`; `StateWrapper` re-renders on `set`.
+- `useSignal` / `useReactiveStore` / `useObservable` / `Observer` use `useSyncExternalStore` (StrictMode, no extra effect write, unsubscribe on unmount).
+- Select/Combobox WAI-ARIA listbox + keyboard; Collapse `<button aria-expanded>`; Spinner/Skeleton `role="status"`; Progress `role="progressbar"`; Table `th scope="col"`.
+- Checkbox/Switch single native control; `indeterminate` written to the DOM input; RadioGroup `useId` name.
+- VirtualColumn/List measurement version bump; List horizontal virtualization; VirtualColumn wraps text children.
+- `responsive()` tablet/desktop via `ResponsiveWrapper`; AnimatedWrapper seeds from current signal; theme `initialTheme` syncs after mount.
+- Grid `bento` variant; Sidebar active path from Router; Link `href` includes `basename`.
+- Stable SVG / gradient ids; `StoreImpl.setState` shallow-compare; `PluginManager.registerStore`.
+- Ripple keyframes renamed to `fibo-ripple`; dead `.fibo-card` border and unused `.fibo-flex-center` removed.
+- ESM bundle minified; ESLint (`npm run lint`); `useReactiveStore` alias; docs aligned to real APIs.
+- Tests: `tests/production-audit.test.tsx`, `tests/builders-smoke.test.tsx`, packaging exports map. Coverage: `npm run test:coverage`.
+
+No breaking changes. Items that would break apps (Column default, drop `src/`, theme hex unify, subpath exports, `"type": "module"`) stay listed in AUDIT.md as intentionally not fixed.
+
 ### Packaging (verified against a packed tarball)
 
 - Roll up `dist/index.d.ts` so NodeNext consumers resolve types (no extensionless `./src` re-exports).

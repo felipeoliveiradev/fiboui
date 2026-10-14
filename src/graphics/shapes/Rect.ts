@@ -235,7 +235,7 @@ class RectBuilder extends ShapeBuilder {
 
     return React.createElement(
       'g',
-      { key: `rect-group-${Math.random()}` },
+      { key: this._className || 'rect-group' },
       groupChildren
     );
   }

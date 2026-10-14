@@ -53,6 +53,35 @@ const GridInner = React.memo((props: any) => {
         return classes.join(' ') || 'grid-cols-1';
     };
 
+    if (variant === 'bento') {
+        const pattern = [
+            { col: 2, row: 2 },
+            { col: 1, row: 1 },
+            { col: 1, row: 1 },
+            { col: 1, row: 2 },
+            { col: 2, row: 1 },
+        ];
+
+        return React.createElement('div', {
+            className: `grid ${getColsClass(columns)} ${getGapClass(gap)} ${className}`,
+            style: {
+                gap: getGapStyle(gap),
+                gridAutoFlow: 'dense',
+                ...style
+            },
+            ...rest
+        }, React.Children.map(children, (child, index) => {
+            if (React.isValidElement<{ className?: string }>(child) && typeof child.props.className === 'string' && child.props.className.includes('col-span')) {
+                return child;
+            }
+            const span = pattern[index % pattern.length];
+            return React.createElement('div', {
+                key: React.isValidElement(child) && child.key != null ? child.key : index,
+                style: { gridColumn: `span ${span.col}`, gridRow: `span ${span.row}` }
+            }, child);
+        }));
+    }
+
     if (variant === 'masonry') {
         const getMasonryColsClass = (cols: GridCols | ResponsiveCols) => {
             if (typeof cols === 'number') return `columns-${cols}`;

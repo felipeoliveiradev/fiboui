@@ -96,12 +96,9 @@
 
 
 .fibo-theme-material .fibo-card {
-  background-color: var(--fibo-surface);
-  border-radius: var(--fibo-radius-md); 
-  border: 1px solid var(--fibo-outline); 
-  
+  border-radius: var(--fibo-radius-md);
   border: none;
-  background-color: var(--fibo-surface-container-low, #F7F2FA); 
+  background-color: var(--fibo-surface-container-low, #F7F2FA);
   box-shadow: var(--fibo-elevation-1);
   padding: 16px;
 }

@@ -11,9 +11,9 @@ import { Text } from '../../src/content/Text'
 
 const renderAlert = () => 
   Box().flex().col().gap(4).children([
-    Alert().title('Info').message('This is an info alert').variant('info').build(),
-    Alert().title('Success').message('Operation successful').variant('success').build(),
-    Alert().title('Error').message('Something went wrong').variant('error').build()
+    Alert().title('Info').description('This is an info alert').intent('info').build(),
+    Alert().title('Success').description('Operation successful').intent('success').build(),
+    Alert().title('Error').description('Something went wrong').intent('error').build()
   ]).build()
 
 const renderAvatar = () => 
@@ -26,9 +26,9 @@ const renderAvatar = () =>
 
 const renderBadge = () => 
   Box().flex().gap(2).children([
-    Badge().label('New').variant('info').build(),
-    Badge().label('Completed').variant('success').build(),
-    Badge().label('Failed').variant('error').build()
+    Badge().text('New').variant('accent').intent('info').build(),
+    Badge().text('Completed').variant('neutral').intent('success').build(),
+    Badge().text('Failed').variant('solid').intent('error').build()
   ]).build()
 
 const renderProgress = () => 

@@ -17,22 +17,26 @@ export function mergeStyles(...styles: (React.CSSProperties | undefined)[]): Rea
 
 export function applyResponsiveStyles(
   baseStyle: React.CSSProperties,
-  responsive?: ResponsiveStyles
+  responsive?: ResponsiveStyles,
+  width?: number
 ): React.CSSProperties {
   if (!responsive) return baseStyle;
 
+  const viewport =
+    width ?? (typeof window !== 'undefined' ? window.innerWidth : undefined);
+
+  if (viewport === undefined) {
+    return baseStyle;
+  }
+
   let finalStyle = { ...baseStyle };
 
-  if (typeof window !== 'undefined') {
-    const width = window.innerWidth;
-
-    if (width < 768 && responsive.mobile) {
-      finalStyle = { ...finalStyle, ...responsive.mobile };
-    } else if (width >= 768 && width < 1024 && responsive.tablet) {
-      finalStyle = { ...finalStyle, ...responsive.tablet };
-    } else if (width >= 1024 && responsive.desktop) {
-      finalStyle = { ...finalStyle, ...responsive.desktop };
-    }
+  if (viewport < 768 && responsive.mobile) {
+    finalStyle = { ...finalStyle, ...responsive.mobile };
+  } else if (viewport >= 768 && viewport < 1024 && responsive.tablet) {
+    finalStyle = { ...finalStyle, ...responsive.tablet };
+  } else if (viewport >= 1024 && responsive.desktop) {
+    finalStyle = { ...finalStyle, ...responsive.desktop };
   }
 
   return finalStyle;

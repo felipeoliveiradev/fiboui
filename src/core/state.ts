@@ -258,13 +258,21 @@ export class StoreImpl<T> implements Store<T> {
   }
 
   setState(partial: Partial<T> | ((state: T) => Partial<T>)): void {
-    const next = typeof partial === 'function' ? (partial as any)(this.state) : partial;
+    const next = typeof partial === 'function' ? (partial as (state: T) => Partial<T>)(this.state) : partial;
     const newState = { ...this.state, ...next };
 
-    if (this.state !== newState) {
-      this.state = newState;
-      this.notify();
+    const prevKeys = Object.keys(this.state as object) as (keyof T)[];
+    const nextKeys = Object.keys(newState as object) as (keyof T)[];
+    const unchanged =
+      prevKeys.length === nextKeys.length &&
+      nextKeys.every((key) => Object.is(newState[key], this.state[key]));
+
+    if (unchanged) {
+      return;
     }
+
+    this.state = newState;
+    this.notify();
   }
 
   subscribe(listener: Listener<T>): Unsubscribe {

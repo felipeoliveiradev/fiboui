@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react';
 import { Route } from '../navigation/RouterContext';
 
 const routeRegistry: Route[] = [];
@@ -26,7 +27,7 @@ export function clearRoutes(): void {
   routeRegistry.length = 0;
 }
 
-export function registerRoute(path: string, component: React.ComponentType, options: { exact?: boolean; meta?: Record<string, any> } = {}): void {
+export function registerRoute(path: string, component: ComponentType, options: { exact?: boolean; meta?: Record<string, any> } = {}): void {
   const route: Route = {
     path,
     component,

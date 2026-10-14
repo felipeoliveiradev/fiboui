@@ -51,11 +51,17 @@ export default defineConfig({
         },
       },
     },
-    minify: false,
+    minify: 'esbuild',
   },
   test: {
     environment: 'jsdom',
     setupFiles: './tests/setup.ts',
     include: ['tests/**/*.{test,spec}.{ts,tsx}'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json-summary'],
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/cli/**', 'src/demo.tsx', 'src/test/**', 'src/styles/**'],
+    },
   },
 });

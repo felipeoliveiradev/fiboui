@@ -12,6 +12,7 @@ export { Component, Page, getRegisteredRoutes, clearRoutes, registerRoute } from
 export { Inject, useInject, OnMount, OnUnmount, BeforeMount, OnUpdate, BeforeUnmount, OnError } from './decorators';
 export { getSignals, initializeSignals } from './decorators';
 export { Store, useStore, getStore, clearStores, isStore } from './state';
+export { useReactiveStore, useSignal, useObservable, useBuilderState } from './core';
 export { persist, clearPersistedState, getPersistedState, storageAdapters } from './state';
 export type { PersistOptions, StorageAdapter } from './state';
 

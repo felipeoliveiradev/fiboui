@@ -21,18 +21,12 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-.fibo-flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .fibo-full-width {
   width: 100%;
 }
 
 
-@keyframes fibo-ripple-anim {
+@keyframes fibo-ripple {
   to {
     transform: scale(4);
     opacity: 0;

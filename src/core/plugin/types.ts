@@ -16,7 +16,8 @@ export interface SidebarConfig {
 
 export interface FiboContext {
   registerService<T>(token: Token<T>, implementation: Provider<T>): void;
-  registerStore(store: any): void;
+  registerStore(store: unknown, name?: string): void;
+  getStore?<T = unknown>(name: string): T | undefined;
   registerRoute(route: RouteDefinition): void;
   registerSidebarItem(item: SidebarConfig): void;
   registerTopbarAction(component: () => FiboBuilder): void;

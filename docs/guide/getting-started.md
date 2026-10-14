@@ -45,6 +45,6 @@ FiboUI offers a fluent API:
 **FiboUI Builder:**
 ```tsx
 Box().p(4).bg("gray-100").children([
-    Text("Title").size("xl").bold().build()
+    Text("Title").variant("h1").weight("bold").build()
 ]).build()
 ```

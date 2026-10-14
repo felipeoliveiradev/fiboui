@@ -9,10 +9,20 @@ interface RadioOption {
     disabled?: boolean;
 }
 
-const RadioGroupInner = React.memo((props: any) => {
+interface RadioGroupInnerProps {
+  value?: string;
+  options?: RadioOption[];
+  onChange?: (value: string) => void;
+  name?: string;
+  direction?: 'vertical' | 'horizontal';
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+const RadioGroupInner = React.memo((props: RadioGroupInnerProps) => {
     const {
         value,
-        options,
+        options = [],
         onChange,
         name,
         direction,
@@ -20,13 +30,17 @@ const RadioGroupInner = React.memo((props: any) => {
         style
     } = props;
 
+    const autoName = React.useId();
+    const groupName = name || autoName;
+
     return React.createElement(
         'div',
         {
+            role: 'radiogroup',
             className: twMerge(`fibo-radio-group flex ${direction === 'vertical' ? 'flex-col gap-2' : 'flex-row gap-4'}`, className),
             style: style
         },
-        options.map((option: any) => {
+        options.map((option) => {
             const isSelected = value === option.value;
             const isDisabled = option.disabled;
 
@@ -44,11 +58,12 @@ const RadioGroupInner = React.memo((props: any) => {
                 React.createElement(
                     'div',
                     {
-                        className: circleClasses
+                        className: circleClasses,
+                        'aria-hidden': true
                     },
                     React.createElement('input', {
                         type: 'radio',
-                        name: name,
+                        name: groupName,
                         value: option.value,
                         checked: isSelected,
                         disabled: isDisabled,
@@ -70,7 +85,7 @@ class RadioGroupBuilder extends FiboBuilder {
   private _value: string = '';
   private _options: RadioOption[] = [];
   private _onChange?: (value: string) => void;
-  private _name: string = `radio-group-${Math.random().toString(36).substr(2, 9)}`;
+  private _name?: string;
   private _direction: 'vertical' | 'horizontal' = 'vertical';
 
   value(val: string): this {
@@ -99,7 +114,7 @@ class RadioGroupBuilder extends FiboBuilder {
   }
 
   build(): ReactElement {
-    const props = {
+    const props: RadioGroupInnerProps = {
         value: this._value,
         options: this._options,
         onChange: this._onChange,

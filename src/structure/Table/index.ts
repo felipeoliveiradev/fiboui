@@ -58,7 +58,8 @@ const TableInner = React.memo((props: any) => {
                 React.createElement('tr', {},
                    columns.map((col: any, i: number) =>
                       React.createElement('th', {
-                          key: i,
+                          key: String(col.accessor ?? col.header ?? i),
+                          scope: 'col',
                           style: {
                               textAlign: col.align || 'left',
                               padding: padding,
@@ -73,7 +74,7 @@ const TableInner = React.memo((props: any) => {
              React.createElement('tbody', { key: 'tbody' },
                  data.map((row: any, i: number) =>
                      React.createElement('tr', {
-                         key: i,
+                         key: row?.id ?? row?.key ?? i,
 
                          className: `group transition-all duration-200 border-b border-gray-50 last:border-b-0 ${
                              striped && i % 2 !== 0 ? 'bg-gray-50/30' : 'bg-transparent'

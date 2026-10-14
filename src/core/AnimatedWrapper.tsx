@@ -8,8 +8,18 @@ interface AnimatedWrapperProps {
   children: ReactElement;
 }
 
+function readAnimatedValues(animatedProps: Map<string, Signal<any>>): Record<string, unknown> {
+  const initial: Record<string, unknown> = {};
+  animatedProps.forEach((signal, propName) => {
+    initial[propName] = signal.value;
+  });
+  return initial;
+}
+
 export function AnimatedWrapper({ animatedProps, animationConfig, children }: AnimatedWrapperProps) {
-  const [transforms, setTransforms] = useState<Record<string, any>>({});
+  const [transforms, setTransforms] = useState<Record<string, any>>(() =>
+    readAnimatedValues(animatedProps)
+  );
 
   useEffect(() => {
     const unsubscribers: Array<() => void> = [];
@@ -23,7 +33,6 @@ export function AnimatedWrapper({ animatedProps, animationConfig, children }: An
       };
 
       unsubscribers.push(signal.subscribe(update));
-
       update(signal.value);
     });
 

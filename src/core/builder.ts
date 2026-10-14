@@ -10,6 +10,8 @@ import { GestureBuilder } from './gestures/GestureBuilders';
 import { AnimationOptions } from './animations';
 import { AnimatedWrapper } from './AnimatedWrapper';
 import { PseudoStateBuilder } from './PseudoStateBuilder';
+import { ResponsiveWrapper } from './ResponsiveWrapper';
+import { nextStableId } from './ids';
 
 interface ThemeColors {
   primary?: string;
@@ -31,6 +33,7 @@ interface ThemeConfig {
 }
 
 export abstract class FiboBuilder {
+  /** @internal Extra DOM props forwarded to the host element. */
   protected _props: Record<string, any> = {};
   protected _style: CSSProperties = {};
   protected _cssStyles: CSSProperties = {};
@@ -855,8 +858,7 @@ export abstract class FiboBuilder {
   private getPseudoStateClassName(): string {
     if (!this._pseudoStateClassName) {
 
-      const uniqueId = Math.random().toString(36).substring(2, 11);
-      this._pseudoStateClassName = `fibo-pseudo-${uniqueId}`;
+      this._pseudoStateClassName = nextStableId('fibo-pseudo');
       this._classNames.push(this._pseudoStateClassName);
     }
     return this._pseudoStateClassName;
@@ -1079,11 +1081,8 @@ export abstract class FiboBuilder {
       }
     }
 
-    if (this._responsive) {
-      if (this._responsive.mobile) {
-        finalStyle = { ...finalStyle, ...this._responsive.mobile };
-      }
-    }
+    // Breakpoints are applied at render time by ResponsiveWrapper so tablet/desktop
+    // update on resize. getStyle() keeps the base (SSR-safe) snapshot.
 
     if (this._transforms.length > 0) {
       const existingTransform = finalStyle.transform || '';
@@ -1159,8 +1158,20 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
                 element = gesture.wrap(element);
               }
 
+              const responsive = (target as any)._responsive as ResponsiveStyles | undefined;
+              if (responsive) {
+                element = React.createElement(ResponsiveWrapper, {
+                  responsive,
+                  children: element
+                });
+              }
+
               return element;
             };
+
+            const hasState = typeof (target as any).hasStateManagement === 'function'
+              ? (target as any).hasStateManagement()
+              : Boolean(isObserver || (signals && signals.size) || (observers && observers.size) || (state && state.size) || (providers && providers.size));
 
             const observed = isObserver
               ? React.createElement(Observer, {
@@ -1171,31 +1182,29 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
 
             const rebuild = () => (observed ?? assemble());
 
-            let tree: ReactElement;
+            let tree: ReactElement = rebuild();
 
-            if (signals && signals.size > 0) {
+            if (hasState && signals && signals.size > 0) {
               tree = React.createElement(SignalWrapper, {
                 key: (target as any)._props.key,
                 signals,
                 children: rebuild
               });
-            } else if (observers && observers.size > 0) {
+            } else if (hasState && observers && observers.size > 0) {
               tree = React.createElement(ObserverWrapper, {
                 observables: observers,
                 children: rebuild
               });
-            } else {
-              tree = rebuild();
             }
 
-            if (state && state.size > 0) {
+            if (hasState && state && state.size > 0) {
               tree = React.createElement(StateWrapper, {
                 stateMap: state,
                 children: tree
               });
             }
 
-            if (providers && providers.size > 0) {
+            if (hasState && providers && providers.size > 0) {
               tree = React.createElement(ProviderWrapper, {
                 providers: providers,
                 children: tree
@@ -1229,7 +1238,7 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
 
 interface SignalLike<T> {
   value: T;
-  subscribe?(listener: (val: T) => void): () => void;
+  subscribe: (listener: (val: T) => void) => () => void;
 }
 
 const ValueBinderInner = <T>({

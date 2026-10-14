@@ -17,6 +17,7 @@ export interface Route {
 
 export interface RouterContextValue {
   currentPath: string;
+  basename: string;
   navigate: (path: string, options?: NavigateOptions) => void;
   goBack: () => void;
   replace: (path: string) => void;
@@ -37,6 +38,10 @@ export function useRouter(): RouterContextValue {
     throw new Error('useRouter must be used within a Router');
   }
   return context;
+}
+
+export function useRouterOptional(): RouterContextValue | null {
+  return useContext(RouterContext);
 }
 
 export function useNavigate() {

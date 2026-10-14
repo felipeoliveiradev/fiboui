@@ -30,6 +30,11 @@ const ProgressInner = React.memo((props: any) => {
         return React.createElement('div', {
             className: `relative inline-flex items-center justify-center ${className}`,
             style: { width: size, height: size, ...style },
+            role: 'progressbar',
+            'aria-valuenow': value,
+            'aria-valuemin': 0,
+            'aria-valuemax': max,
+            'aria-label': label || 'Progress',
             ...rest
         }, [
             React.createElement('svg', {
@@ -272,6 +277,11 @@ const ProgressInner = React.memo((props: any) => {
 
     return React.createElement('div', {
         className: `relative w-full ${variant === 'labeled' ? 'mt-8' : ''}`,
+        role: 'progressbar',
+        'aria-valuenow': value,
+        'aria-valuemin': 0,
+        'aria-valuemax': max,
+        'aria-label': label || 'Progress',
         ...rest
     }, [
         labelElement,

@@ -133,7 +133,7 @@ class CircleBuilder extends ShapeBuilder {
 
     return React.createElement(
       'g',
-      { key: `circle-group-${Math.random()}` },
+      { key: this._className || 'circle-group' },
       groupChildren
     );
   }

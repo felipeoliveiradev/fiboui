@@ -94,7 +94,11 @@ Box()
   .build();
 ```
 
-`useSignal(count)` and `.observer()` with a function child also work.
+`useSignal(count)` and `.observer()` with a function child also work. Signal subscriptions unsubscribe on unmount and are Safe for React 18/19 StrictMode (`useSyncExternalStore`). Signals are in-memory and client-only — do not rely on them during SSR.
+
+`computed(() => ...)` is lazy: the first `.value` read attaches the internal effect. Read it (or `.bindSignal`) so updates notify.
+
+Two store APIs exist: `createStore()` + `useReactiveStore(store)`, and the `@Store()` decorator + `useStore(StoreClass)` (the package-root `useStore`). Builder `.state(key, initial)` is runtime-updatable via `useBuilderState(key)`.
 
 ### Global store
 
