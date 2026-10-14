@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1 --port 4177",
+    "dev": "vite --host 127.0.0.1 --port 4181",
     "build": "vite build",
-    "preview": "vite preview --host 127.0.0.1 --port 4177",
+    "preview": "vite preview --host 127.0.0.1 --port 4181",
     "test:e2e": "playwright test"
   },
   "dependencies": {

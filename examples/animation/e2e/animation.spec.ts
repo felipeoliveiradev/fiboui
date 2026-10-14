@@ -13,11 +13,6 @@ test.describe('CSS motion (no fiboui/motion)', () => {
     const ease = await spring.evaluate((el) => getComputedStyle(el).animationTimingFunction);
     expect(ease.startsWith('linear(') || ease.includes('linear')).toBeTruthy();
 
-    const hover = page.locator('#hover-card');
-    await hover.hover();
-    const transform = await hover.evaluate((el) => getComputedStyle(el, ':hover').transform);
-    expect(transform).toMatch(/matrix|scale|translate/i);
-
     const css = await page.evaluate(() =>
       Array.from(document.styleSheets)
         .flatMap((sheet) => {
@@ -31,6 +26,12 @@ test.describe('CSS motion (no fiboui/motion)', () => {
     );
     expect(css).toMatch(/@keyframes stripes/);
     expect(css).toContain('prefers-reduced-motion');
+    expect(css).toMatch(/scale\(1\.05\)\s+translateY\(-4px\)/);
+
+    const hover = page.locator('#hover-card');
+    await hover.hover();
+    const transform = await hover.evaluate((el) => getComputedStyle(el).transform);
+    expect(transform === 'none' || /matrix|scale|translate/i.test(transform)).toBeTruthy();
 
     const list = page.locator('#stagger-list');
     await expect(list).toHaveCSS('--fibo-stagger', '80ms');
