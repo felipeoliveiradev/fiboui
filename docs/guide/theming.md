@@ -1,33 +1,81 @@
+# Theming
 
-# Theming System
+Three token packs ship in `fiboui/style.css`: **Material** (default), **Cupertino**, and **Web**. `FiboThemeProvider` applies `fibo-theme-{name}` on `document.documentElement` and writes a subset of CSS variables.
 
-FiboUI features a powerful, variable-based theming engine. It supports multiple design languages (Web, iOS/Cupertino, Material) via CSS variables.
+## Provider
 
-## Theme Provider
+```ts snippet
+import { createElement } from 'react';
+import { Column, FiboThemeProvider, Text } from 'fiboui';
 
-The `FiboThemeProvider` injects the selected theme's CSS variables into the root of your application.
-
-```tsx
-<FiboThemeProvider theme="cupertino">
-    <App />
-</FiboThemeProvider>
+export default function Example() {
+  return createElement(FiboThemeProvider, {
+    theme: 'material',
+    children: Column().gap(8).children([
+      Text('Material').variant('h2'),
+      Text('Primary uses --fibo-primary'),
+    ]),
+  });
+}
 ```
 
-## Available Themes
+`theme` defaults to `'material'`. `useFiboTheme()` returns `{ theme, themeName, setTheme }` and **throws** outside the provider.
 
-### Web (Default)
-A clean, flat design suitable for modern SaaS dashboards.
-- font-family: Inter
-- radius: 0.5rem
+```ts snippet
+import { createElement } from 'react';
+import { Button, FiboThemeProvider, useFiboTheme } from 'fiboui';
 
-### Cupertino (iOS-like)
-Mimics the Apple Human Interface Guidelines.
-- font-family: -apple-system
-- radius: 12px
-- transparency: high
+function Toggle() {
+  const { themeName, setTheme } = useFiboTheme();
+  return Button(themeName).onPress(() =>
+    setTheme(themeName === 'material' ? 'web' : 'material')
+  );
+}
 
-### Material
-Mimics Google's Material Design.
-- font-family: Roboto
-- radius: 4px
-- shadows: prominent
+export default function Example() {
+  return createElement(FiboThemeProvider, { children: createElement(Toggle) });
+}
+```
+
+## CSS variables (Material 3 defaults)
+
+Set in `.fibo-theme-material` (and `:root` via the stylesheet). Values from `src/styles/base.css` / `materialTheme`:
+
+| Variable | Material default |
+| --- | --- |
+| `--fibo-primary` | `#6750A4` |
+| `--fibo-on-primary` | `#FFFFFF` |
+| `--fibo-primary-container` | `#EADDFF` |
+| `--fibo-secondary` | `#625B71` |
+| `--fibo-error` | `#B3261E` |
+| `--fibo-background` | `#FFFBFE` |
+| `--fibo-surface` | `#FFFBFE` |
+| `--fibo-on-background` / `--fibo-on-surface` | `#1C1B1F` |
+| `--fibo-font-family` | Roboto stack |
+| `--fibo-spacing-xs` … `xl` | 4 / 8 / 16 / 24 / 32px |
+
+Cupertino uses `--fibo-primary: #007AFF`. Web uses its own pack in `src/styles/themes/web.css`.
+
+`FiboThemeProvider` currently writes: `--fibo-primary`, `--fibo-secondary`, `--fibo-background`, `--fibo-surface`, `--fibo-error`, `--fibo-font-family`.
+
+Override on `:root` or `.fibo-theme-material` if you need different hexes (2.0 unified tokens away from the old blues).
+
+## JS theme objects
+
+`materialTheme`, `cupertinoTheme`, and `webTheme` implement `FiboTheme` (`name`, `colors`, `typography`, `spacing`, `borderRadius`, `shadows`, `fontFamily`). Use them for reading tokens in JS — the painted UI still goes through CSS variables.
+
+## Per-builder override
+
+```ts snippet
+import { Box, Text } from 'fiboui';
+
+export default function Example() {
+  return Box()
+    .theme({ colors: { primary: '#4F378B' } })
+    .bg('primary')
+    .padding(12)
+    .children(Text('Local primary').color('#fff'));
+}
+```
+
+`.bg('primary')` resolves to `var(--fibo-primary)`.

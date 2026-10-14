@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noEmit": true,
+    "declaration": false,
+    "declarationDir": null,
+    "rootDir": ".",
+    "paths": {
+      "fiboui": ["./src/index.ts"],
+      "fiboui/*": ["./src/*"]
+    },
+    "types": ["node"]
+  },
+  "include": ["tests/.generated-snippets/**/*.tsx", "tests/css-modules.d.ts", "src/index.ts"],
+  "exclude": ["node_modules", "dist"]
+}

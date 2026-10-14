@@ -1,24 +1,26 @@
-
 ---
 layout: home
 
 hero:
-  name: "FiboUI"
-  text: "Code UIs like you paint them."
-  tagline: A Flutter/SwiftUI-inspired React framework for rapid UI development.
+  name: FiboUI
+  text: Fluent React UI
+  tagline: Builders are React elements. CSS-compiled motion. Signals when you need them. ESM-only.
   actions:
     - theme: brand
-      text: Get Started
+      text: Get started
       link: /guide/getting-started
     - theme: alt
-      text: View on GitHub
-      link: https:
+      text: API reference
+      link: /api/
+    - theme: alt
+      text: GitHub
+      link: https://github.com/felipeoliveiradev/fiboui
 
 features:
-  - title: Builder Pattern
-    details: Chainable methods for a fluid, readable, and type-safe development experience.
-  - title: React Under the Hood
-    details: Fully compatible with the React ecosystem you know and love.
-  - title: Theme System
-    details: Powerful theming engine with Web, Cupertino, and Material presets.
+  - title: Fluent builders
+    details: Column(), Button(), Text() return React elements. Nest them, return them, key them. No .build() at call sites.
+  - title: CSS motion
+    details: .animate() presets compile to deduped @keyframes. Springs use CSS linear(). Scroll helpers fall back without rAF.
+  - title: Themes as CSS variables
+    details: Material, Cupertino, and Web tokens on --fibo-* variables. Import fiboui/style.css yourself.
 ---

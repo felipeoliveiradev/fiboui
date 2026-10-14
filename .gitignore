@@ -26,5 +26,6 @@ auth.json
 # generated
 docs/.vitepress/cache
 docs/.vitepress/dist
+tests/.generated-snippets
 .cache
 /*.tgz

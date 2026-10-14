@@ -1,42 +1,43 @@
+# Architecture
 
-# Architecture: The Builder Pattern
+FiboUI is a React library, not a separate runtime. Builders assemble host elements (`div`, `button`, `h1`, …) and optional wrappers (`ReactivityRoot`, `Reveal`, `ScrollProgress`).
 
-At the core of FiboUI is the `FiboBuilder` class. Every component in the system is constructed via a builder that extends this base class.
+## Rendering
 
-## How it works
+1. **Factory** — `Box()` constructs an internal builder and stamps React element fields.
+2. **Chain** — methods mutate that instance and return `this` (proxied).
+3. **Render** — React sees a valid element. The assemble function (also exposed as deprecated `.build()`) produces the host tree.
 
-1. **Instantiation**: Calling `Box()` creates a new instance of `BoxBuilder`.
-2. **Chaining**: Methods like `.padding(4)` or `.color('red')` update the internal state of the builder and return `this`, allowing method chaining.
-3. **Rendering**: The builder **is** a React element (it carries React’s `$$typeof`). Return it, nest it, or pass it as a child — do not call ``. `` still exists and is deprecated.
+```ts snippet
+import { Box, Text } from 'fiboui';
 
-## FiboBuilder Base Class
-
-The base class provides common properties shared by all UI elements:
-
-- `className(string)`: append CSS classes.
-- `style(object)`: inline styles.
-- `key(string)`: React key.
-- `onPress(callback)`: click handler.
-
-## Creating your own Builder
-
-You can extend the system by creating your own builders using `createBuilder`.
-
-```typescript
-import { FiboBuilder, createBuilder } from 'fiboui/core';
-
-class MyComponentBuilder extends FiboBuilder {
-    private _title: string = "";
-
-    title(val: string): this {
-        this._title = val;
-        return this;
-    }
-
-    build() {
-        return <div className={this.getClassName()}>{this._title}</div>;
-    }
+export default function Example() {
+  return Box().padding(8).children(Text('Host div'));
 }
-
-export const MyComponent = createBuilder(MyComponentBuilder);
 ```
+
+## Public surface
+
+Named exports are listed in `src/index.ts` and generated in the [API reference](/api/). These are **not** exported:
+
+- `FiboBuilder`, `createBuilder`, `_styleManager`
+- Gesture recognizers and Stakent demo helpers
+- Most `fiboui/navigation` extras (they exist on the **subpath**, not always on the root)
+
+Custom `createBuilder` subclasses are an internal pattern. Apps should compose public factories.
+
+## Entry points
+
+| Import | Use |
+| --- | --- |
+| `fiboui` | Full public API |
+| `fiboui/core` `fiboui/layout` `…` | Subpath bundles (same types file) |
+| `fiboui/style.css` | Required stylesheet |
+| `mount` / `FiboApp` | Client bootstrap |
+| `Fibo` / `toElement` | Convert a `FiboChild` if you already have a React parent |
+
+## Related
+
+- [Mental model](./mental-model.md)
+- [SSR](./ssr.md)
+- [Shared methods](/api/shared-methods)

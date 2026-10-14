@@ -19,7 +19,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run type-check
+      - run: npm run docs:api
       - run: npm test
+      - run: npm run docs:build
       - run: npm run build
 
   gitleaks:

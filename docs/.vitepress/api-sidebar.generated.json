@@ -1,0 +1,262 @@
+[
+  {
+    "text": "Layout",
+    "collapsed": true,
+    "items": [
+      {
+        "text": "Center",
+        "link": "/api/builders/Center"
+      },
+      {
+        "text": "Column",
+        "link": "/api/builders/Column"
+      },
+      {
+        "text": "Container",
+        "link": "/api/builders/Container"
+      },
+      {
+        "text": "Row",
+        "link": "/api/builders/Row"
+      },
+      {
+        "text": "Spacer",
+        "link": "/api/builders/Spacer"
+      },
+      {
+        "text": "Scaffold",
+        "link": "/api/builders/Scaffold"
+      },
+      {
+        "text": "Header",
+        "link": "/api/builders/Header"
+      },
+      {
+        "text": "Sidebar",
+        "link": "/api/builders/Sidebar"
+      },
+      {
+        "text": "DashboardLayout",
+        "link": "/api/builders/DashboardLayout"
+      },
+      {
+        "text": "ZStack",
+        "link": "/api/builders/ZStack"
+      },
+      {
+        "text": "Line",
+        "link": "/api/builders/Line"
+      },
+      {
+        "text": "ScrollView",
+        "link": "/api/builders/ScrollView"
+      },
+      {
+        "text": "VirtualColumn",
+        "link": "/api/builders/VirtualColumn"
+      }
+    ]
+  },
+  {
+    "text": "Content",
+    "collapsed": true,
+    "items": [
+      {
+        "text": "Avatar",
+        "link": "/api/builders/Avatar"
+      },
+      {
+        "text": "Badge",
+        "link": "/api/builders/Badge"
+      },
+      {
+        "text": "Text",
+        "link": "/api/builders/Text"
+      },
+      {
+        "text": "Label",
+        "link": "/api/builders/Label"
+      },
+      {
+        "text": "Image",
+        "link": "/api/builders/Image"
+      },
+      {
+        "text": "Spinner",
+        "link": "/api/builders/Spinner"
+      },
+      {
+        "text": "Skeleton",
+        "link": "/api/builders/Skeleton"
+      },
+      {
+        "text": "Alert",
+        "link": "/api/builders/Alert"
+      },
+      {
+        "text": "Progress",
+        "link": "/api/builders/Progress"
+      },
+      {
+        "text": "Icon",
+        "link": "/api/builders/Icon"
+      },
+      {
+        "text": "Integration",
+        "link": "/api/builders/Integration"
+      }
+    ]
+  },
+  {
+    "text": "Interactive",
+    "collapsed": true,
+    "items": [
+      {
+        "text": "Button",
+        "link": "/api/builders/Button"
+      },
+      {
+        "text": "TextField",
+        "link": "/api/builders/TextField"
+      },
+      {
+        "text": "Switch",
+        "link": "/api/builders/Switch"
+      },
+      {
+        "text": "Checkbox",
+        "link": "/api/builders/Checkbox"
+      },
+      {
+        "text": "RadioGroup",
+        "link": "/api/builders/RadioGroup"
+      },
+      {
+        "text": "Textarea",
+        "link": "/api/builders/Textarea"
+      },
+      {
+        "text": "Select",
+        "link": "/api/builders/Select"
+      },
+      {
+        "text": "Combobox",
+        "link": "/api/builders/Combobox"
+      }
+    ]
+  },
+  {
+    "text": "Structure",
+    "collapsed": true,
+    "items": [
+      {
+        "text": "Box",
+        "link": "/api/builders/Box"
+      },
+      {
+        "text": "Card",
+        "link": "/api/builders/Card"
+      },
+      {
+        "text": "List",
+        "link": "/api/builders/List"
+      },
+      {
+        "text": "ListTile",
+        "link": "/api/builders/ListTile"
+      },
+      {
+        "text": "Table",
+        "link": "/api/builders/Table"
+      },
+      {
+        "text": "Tags",
+        "link": "/api/builders/Tags"
+      },
+      {
+        "text": "Banner",
+        "link": "/api/builders/Banner"
+      },
+      {
+        "text": "Collapse",
+        "link": "/api/builders/Collapse"
+      },
+      {
+        "text": "Grid",
+        "link": "/api/builders/Grid"
+      },
+      {
+        "text": "GridItem",
+        "link": "/api/builders/GridItem"
+      },
+      {
+        "text": "AssetCard",
+        "link": "/api/builders/AssetCard"
+      },
+      {
+        "text": "ProfileCard",
+        "link": "/api/builders/ProfileCard"
+      },
+      {
+        "text": "CollectionCard",
+        "link": "/api/builders/CollectionCard"
+      },
+      {
+        "text": "ContentCard",
+        "link": "/api/builders/ContentCard"
+      }
+    ]
+  },
+  {
+    "text": "Graphics",
+    "collapsed": true,
+    "items": [
+      {
+        "text": "Canvas",
+        "link": "/api/builders/Canvas"
+      },
+      {
+        "text": "Circle",
+        "link": "/api/builders/Circle"
+      },
+      {
+        "text": "Rect",
+        "link": "/api/builders/Rect"
+      },
+      {
+        "text": "Path",
+        "link": "/api/builders/Path"
+      },
+      {
+        "text": "LinearGradient",
+        "link": "/api/builders/LinearGradient"
+      },
+      {
+        "text": "BurgerIcon",
+        "link": "/api/builders/BurgerIcon"
+      }
+    ]
+  },
+  {
+    "text": "Core",
+    "collapsed": true,
+    "items": [
+      {
+        "text": "Presence",
+        "link": "/api/builders/Presence"
+      },
+      {
+        "text": "ValueBuilder",
+        "link": "/api/builders/ValueBuilder"
+      },
+      {
+        "text": "FiboApp",
+        "link": "/api/builders/FiboApp"
+      },
+      {
+        "text": "FiboAppBuilder",
+        "link": "/api/builders/FiboAppBuilder"
+      }
+    ]
+  }
+]

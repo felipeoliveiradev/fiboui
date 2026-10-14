@@ -1,39 +1,73 @@
-
 import { defineConfig } from 'vitepress'
+import apiSidebar from './api-sidebar.generated.json'
 
-// https://vitepress.dev/reference/site-config
 export default defineConfig({
-  title: "FiboUI",
-  description: "A Flutter/SwiftUI-inspired React UI framework",
+  lang: 'en-US',
+  title: 'FiboUI',
+  description: 'Fluent React UI — builders as elements, CSS motion, signals',
   lastUpdated: true,
   themeConfig: {
-    // https://vitepress.dev/reference/default-theme-config
+    search: {
+      provider: 'local',
+    },
     nav: [
-      { text: 'Home', link: '/' },
       { text: 'Guide', link: '/guide/getting-started' },
-      { text: 'Components', link: '/components/structure-box' }
+      { text: 'Examples', link: '/examples/forms' },
+      { text: 'API', link: '/api/' },
+      { text: 'Demos', link: '/components/structure-box' },
     ],
-
     sidebar: [
       {
-        text: 'Introduction',
+        text: 'Guide',
         items: [
-          { text: 'Getting Started', link: '/guide/getting-started' },
-          { text: 'Architecture (Builder Pattern)', link: '/guide/architecture' },
-          { text: 'State Management', link: '/guide/state-management' },
-          { text: 'Theming System', link: '/guide/theming' },
-          { text: 'Responsive / media queries', link: '/guide/responsive' },
+          { text: 'Getting started', link: '/guide/getting-started' },
+          { text: 'Mental model', link: '/guide/mental-model' },
+          { text: 'Migration', link: '/guide/migration' },
+          { text: 'Builders & styling', link: '/guide/builders' },
+          { text: 'Architecture', link: '/guide/architecture' },
+          { text: 'Theming', link: '/guide/theming' },
+          { text: 'Responsive', link: '/guide/responsive' },
+          { text: 'Signals & state', link: '/guide/state-management' },
           { text: 'Animation', link: '/guide/animation' },
-          { text: 'Scroll', link: '/guide/scroll' }
-        ]
+          { text: 'Scroll', link: '/guide/scroll' },
+          { text: 'Routing', link: '/guide/routing' },
+          { text: 'SSR', link: '/guide/ssr' },
+          { text: 'Accessibility', link: '/guide/accessibility' },
+          { text: 'Performance', link: '/guide/performance' },
+          { text: 'FAQ', link: '/guide/faq' },
+          { text: 'Troubleshooting', link: '/guide/troubleshooting' },
+        ],
       },
       {
-        text: 'Core Components',
+        text: 'Examples',
+        items: [
+          { text: 'Forms', link: '/examples/forms' },
+          { text: 'Dashboard', link: '/examples/dashboard' },
+          { text: 'List with keys', link: '/examples/list-keys' },
+          { text: 'Modal + Presence', link: '/examples/modal-presence' },
+          { text: 'Landing (TODO)', link: '/examples/landing' },
+        ],
+      },
+      {
+        text: 'API reference',
+        items: [
+          { text: 'Catalog', link: '/api/' },
+          { text: 'Shared methods', link: '/api/shared-methods' },
+          { text: 'Functions', link: '/api/functions' },
+          { text: 'Hooks', link: '/api/hooks' },
+          { text: 'Types', link: '/api/types' },
+          { text: 'Constants', link: '/api/constants' },
+          ...apiSidebar,
+        ],
+      },
+      {
+        text: 'Live demos',
+        collapsed: true,
         items: [
           { text: 'Box', link: '/components/structure-box' },
           { text: 'Grid', link: '/components/structure-grid' },
           { text: 'Card', link: '/components/structure-card' },
-          { text: 'Specialized Cards', link: '/components/specialized-cards' },
+          { text: 'Specialized cards', link: '/components/specialized-cards' },
           { text: 'List & Table', link: '/components/structure-data' },
           { text: 'Button', link: '/components/interactive-button' },
           { text: 'TextField', link: '/components/interactive-inputs' },
@@ -45,28 +79,21 @@ export default defineConfig({
           { text: 'Badge', link: '/components/content-badge' },
           { text: 'Alert', link: '/components/content-alert' },
           { text: 'Progress & Spinner', link: '/components/content-loading' },
-          { text: 'Utility Components', link: '/components/utility-components' },
-          { text: 'Misc Components', link: '/components/misc-components' },
-          { text: 'Layout Primitives', link: '/components/layout-primitives' },
-          { text: 'Advanced Layout', link: '/components/layout-advanced' },
-          { text: 'Scaffold', link: '/components/layout-scaffold' }
-        ]
+          { text: 'Utility', link: '/components/utility-components' },
+          { text: 'Misc', link: '/components/misc-components' },
+          { text: 'Layout primitives', link: '/components/layout-primitives' },
+          { text: 'Advanced layout', link: '/components/layout-advanced' },
+          { text: 'Scaffold', link: '/components/layout-scaffold' },
+          { text: 'Structure gallery', link: '/components/structure-all' },
+          { text: 'Interactive gallery', link: '/components/interactive-all' },
+          { text: 'Content gallery', link: '/components/content-all' },
+          { text: 'Layout gallery', link: '/components/layout-all' },
+          { text: 'Dashboard layout', link: '/components/layout-dashboard' },
+        ],
       },
-      {
-        text: 'Component Reference',
-        collapsed: true,
-        items: [
-          { text: 'Structure', link: '/components/structure-all' },
-          { text: 'Interactive', link: '/components/interactive-all' },
-          { text: 'Content', link: '/components/content-all' },
-          { text: 'Layout', link: '/components/layout-all' },
-          { text: 'Dashboard Layout', link: '/components/layout-dashboard' }
-        ]
-      }
     ],
-
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/vuejs/vitepress' }
-    ]
-  }
+      { icon: 'github', link: 'https://github.com/felipeoliveiradev/fiboui' },
+    ],
+  },
 })

@@ -22,7 +22,7 @@ const renderStates = () =>
   Box().flex().gap(4).flexWrap('wrap').children([
     Button('Default'),
     Button('Disabled').disabled(true),
-    Button('Loading').loading(true)
+    Button('Pill').shape('pill')
   ])
 </script>
 
@@ -73,88 +73,37 @@ Box().flex().gap(4).alignItems('center').children([
 Box().flex().gap(4).flexWrap('wrap').children([
   Button('Default'),
   Button('Disabled').disabled(true),
-  Button('Loading').loading(true)
+  Button('Pill').shape('pill')
 ])
 ```
 :::
 
+Complete method table (generated from source): [Button API](/api/builders/Button).
+
 ## Constructor
 
-```tsx
-Button(label?: string) → ButtonBuilder
-```
+`Button(text?: string | (() => string))`
 
-Creates a new `Button` builder instance.
+## Methods (source)
 
-**Parameters:**
-- `label` (optional): The button text content
+| Method | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `.text` | `string \| (() => string)` | `''` | Label; function form marks the button as an observer |
+| `.variant` | `'elevated' \| 'filled' \| 'outlined' \| 'text' \| 'ghost' \| 'soft' \| 'outline' \| 'raw' \| 'solid'` | `'elevated'` | Visual style |
+| `.clean` | — | — | Sets variant `raw` |
+| `.size` | `'xs' \| 'sm' \| 'md' \| 'lg'` | `'md'` | Size |
+| `.shape` | `'default' \| 'pill' \| 'square' \| 'rect' \| 'rounded' \| 'sharp'` | `'default'` | Corner treatment |
+| `.tone` | `'default' \| 'inverse'` | `'default'` | Inverse chrome |
+| `.motion` | `'default' \| 'none'` | `'default'` | Built-in press scale |
+| `.shadow` | `'none' \| 'soft'` | `'none'` | Extra shadow |
+| `.expand` | `boolean` | `true` when called | Full-width |
+| `.icon` | `ReactNode` | — | Leading icon |
+| `.disabled` | `boolean` | `true` when called | Disabled |
+| `.onPress` | `() => void` | — | Click (preferred) |
+| `.onHover` | `() => void` | — | `mouseenter` callback — not CSS hover |
+| `.onClick` | inherited | — | Raw DOM click |
 
-## Properties
-
-### Appearance
-
-| Method | Type | Description |
-| :--- | :--- | :--- |
-| `.variant(variant)` | `'primary' \| 'secondary' \| 'outline' \| 'ghost' \| 'soft'` | Sets the button visual style |
-| `.size(size)` | `'sm' \| 'md' \| 'lg'` | Sets the button size |
-| `.pill()` | `boolean` | Makes the button fully rounded |
-
-### Content
-
-| Method | Type | Description |
-| :--- | :--- | :--- |
-| `.text(text)` | `string` | Sets the button text |
-| `.icon(icon)` | `ReactNode` | Sets a leading icon |
-| `.iconRight(icon)` | `ReactNode` | Sets a trailing icon |
-
-### State
-
-| Method | Type | Description |
-| :--- | :--- | :--- |
-| `.disabled(disabled)` | `boolean` | Disables the button |
-| `.loading(loading)` | `boolean` | Shows loading spinner |
-
-### Events
-
-| Method | Type | Description |
-| :--- | :--- | :--- |
-| `.onPress(handler)` | `() => void` | Press / click handler (preferred) |
-| `.onClick(handler)` | `(event: MouseEvent) => void` | Raw DOM click handler |
-| `.onHover(handler)` | `() => void` | `mouseenter` handler (does not receive the event) |
-
-### Inherited from FiboBuilder
-
-`Button` inherits all layout and styling methods from `FiboBuilder`:
-
-- Layout: `.flex()`, `.flexDirection()`, `.alignItems()`, `.justifyContent()`
-- Spacing: `.p()`, `.m()`, `.px()`, `.py()`, `.mx()`, `.my()`
-- Sizing: `.w()`, `.h()`, `.minW()`, `.maxW()`
-- Colors: `.bg()`, `.color()`, `.opacity()`
-- Advanced: `.className()`, `.style()`, `.css()`, `.props()`
-
-See [Box](/components/structure-box) for complete builder API reference.
-
-## Usage Examples
-
-### With Icons
-
-```tsx
-Button('Save')
-  .icon(<SaveIcon />)
-  .variant('primary')
-  .onClick(() => console.log('Saved!'))
-
-```
-
-### Loading State
-
-```tsx
-Button('Submit')
-  .loading(isLoading)
-  .disabled(isLoading)
-  .onClick(handleSubmit)
-
-```
+There is **no** `.loading()` or `.pill()` — use a `Spinner` child / `.disabled()`, and `.shape('pill')`.
 
 ### Hover handler
 
@@ -167,15 +116,14 @@ Button('Notify')
   .onPress(submit)
 ```
 
-### Custom Styling
+### Custom styling
 
-```tsx
-Button('Custom')
-  .variant('ghost')
-  .p(6)
-  .fontSize('18px')
-  .fontWeight('bold')
+```ts snippet
+import { Button } from 'fiboui';
 
+export default function Example() {
+  return Button('Custom').variant('ghost').p(6).fontSize('18px').fontWeight('bold');
+}
 ```
 
 ## See Also

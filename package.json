@@ -65,8 +65,10 @@
     "secret-scan:git": "bash scripts/secret-scan.sh --git",
     "secret-scan:pack": "bash scripts/secret-scan.sh --pack",
     "prepublishOnly": "bash scripts/secret-scan.sh --pack",
+    "docs:api": "node scripts/generate-api-docs.mjs",
+    "docs:snippets": "node scripts/extract-doc-snippets.mjs",
     "docs:dev": "vitepress dev docs",
-    "docs:build": "vitepress build docs",
+    "docs:build": "node scripts/generate-api-docs.mjs && vitepress build docs",
     "docs:preview": "vitepress preview docs"
   },
   "keywords": [

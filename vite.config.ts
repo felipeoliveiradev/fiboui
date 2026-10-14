@@ -10,6 +10,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      fiboui: path.resolve(__dirname, './src/index.ts'),
+      'fiboui/style.css': path.resolve(__dirname, './src/styles/base.css'),
+      'fibo-docs-style': path.resolve(__dirname, './src/styles/base.css'),
     },
   },
   optimizeDeps: {

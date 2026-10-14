@@ -1,40 +1,55 @@
 # Scroll
 
-The scroll helpers live on the same builders as `.md()` / `.animate()`. Import `scrollTo` for anchors.
+Scroll helpers live on the same builders as `.md()` / `.animate()`. Import `scrollTo` for programmatic anchors.
 
 ## Reveal
 
-```tsx
-Card().onScroll('fadeIn')
-Card().reveal({ preset: 'slideUp', once: true, rootMargin: '0px 0px -10% 0px' })
+```ts snippet
+import { Card } from 'fiboui';
+
+export default function Example() {
+  return Card()
+    .onScroll('fadeIn')
+    .reveal({ preset: 'slideUp', once: true, rootMargin: '0px 0px -10% 0px' })
+    .children('In view');
+}
 ```
 
-IntersectionObserver toggles `.fibo-inview`. No rAF.
+IntersectionObserver toggles `.fibo-inview`. No rAF. `.onScroll(preset)` is an alias of `.reveal()` (default preset `fadeIn` vs `fadeUp`).
 
 ## Scroll-driven CSS
 
-```tsx
-Box().animate('fadeIn').scrollTimeline('view')
-Box().scrollProgress() // page progress bar
+```ts snippet
+import { Box } from 'fiboui';
+
+export default function Example() {
+  return Box().children([
+    Box().animate('fadeIn').scrollTimeline('view').children('view timeline'),
+    Box().scrollProgress(),
+  ]);
+}
 ```
 
-Uses `animation-timeline: view()` / `scroll()`. Fallback: reveal IO, or a `scroll` listener that sets `--fibo-progress`.
+Uses `animation-timeline: view()` / `scroll()` when `supportsViewTimeline()` / `supportsScrollTimeline()` are true. Fallback: reveal IO, or a `scroll` listener that sets `--fibo-progress`.
 
 ## Snap, smooth, sticky, anchors
 
-```tsx
-Column().smoothScroll().scrollSnap('y').children([
-  Box().scrollSnapAlign('start').anchor('one').children('1'),
-  Box().scrollSnapAlign('start').anchor('two').children('2'),
-])
+```ts snippet
+import { Box, Column, Header, Text, scrollTo } from 'fiboui';
 
-Header().sticky()
-Box().sticky(0)
-Box().anchor('two')          // scroll-margin-top: var(--fibo-sticky-offset)
-Box().anchor('two').scrollMargin(80) // explicit override
-scrollTo('#two')
+export default function Example() {
+  return Column().smoothScroll().scrollSnap('y').children([
+    Header().sticky().children(Text('Bar')),
+    Box().scrollSnapAlign('start').anchor('one').children('1'),
+    Box().scrollSnapAlign('start').anchor('two').scrollMargin(80).children('2'),
+  ]);
+}
+
+export function jump() {
+  scrollTo('#two');
+}
 ```
 
-`.sticky()` / `Header().sticky()` set `--fibo-sticky-offset` on `:root` (default **64px** when top is `0`). `html` uses `scroll-padding-top`, and `.anchor()` applies `scroll-margin-top`, so hash / `scrollTo` targets are not hidden under the bar.
+`.sticky()` / `Header().sticky()` set `--fibo-sticky-offset` on `:root` (default **64px** when top is `0`). `html` uses `scroll-padding-top`, and `.anchor()` applies `scroll-margin-top`.
 
-Pair with [Animation](./animation.md) for enter presets and reduced motion.
+`scrollTo(target, { behavior?, block? })` accepts a selector or `Element`.

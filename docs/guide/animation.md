@@ -52,10 +52,26 @@ FiboUI 2.2 extends the **existing builder API**. There is no `fiboui/motion` pac
 
 ## Presets
 
-```tsx
-Box().animate('fadeIn').duration(300).ease('spring')
-Box().animate('slideUp', { from: 24, delay: 80 })
-Box().animate({ from: { opacity: 0 }, to: { opacity: 1 }, duration: 400 })
+```ts snippet
+import { Box } from 'fiboui';
+
+export default function Example() {
+  return Box()
+    .animate('fadeIn')
+    .duration(300)
+    .ease('spring')
+    .children('fadeIn');
+}
+```
+
+```ts snippet
+import { Box } from 'fiboui';
+
+export default function Example() {
+  return Box()
+    .animate({ from: { opacity: 0 }, to: { opacity: 1 }, duration: 400 })
+    .children('custom');
+}
 ```
 
 Presets: `fadeIn` / `fadeOut` / `fade`, `slideUp` / `slideDown` / `slideLeft` / `slideRight`, `scaleIn` / `scaleOut` / `scale`, `blurIn` / `blurOut` / `blur`, `pop`, `bounce`.
@@ -68,13 +84,22 @@ Keyframes are compiled once (`FIBO_MOTION_CSS` + `import 'fiboui/style.css'`). `
 
 `.hover().scale()` and `.translateY()` **compose** into one `transform`. `.duration()` replaces the previous transition class (no stacking). The callback form infers `PseudoStateBuilder` (exported) even inside `.map()`.
 
-```tsx
-Box()
-  .hover((h) => h.scale(1.04).translateY(-4))
-  .press()
-  .focusRing()
+```ts snippet
+import { Box, Card } from 'fiboui';
 
-items.map((item) => Card().key(item.id).hover((h) => h.scale(1.03)).children(item.title))
+const items = [{ id: '1', title: 'Card' }];
+
+export default function Example() {
+  return Box()
+    .hover((h) => h.scale(1.04).translateY(-4))
+    .press()
+    .focusRing()
+    .children(
+      items.map((item) =>
+        Card().key(item.id).hover((h) => h.scale(1.03)).children(item.title)
+      )
+    );
+}
 ```
 
 <ReactWrapper :component="renderHover" />
@@ -85,26 +110,41 @@ items.map((item) => Card().key(item.id).hover((h) => h.scale(1.03)).children(ite
 
 `.ease('spring')` / `.spring({ stiffness, damping, mass })` become CSS `linear(...)`. stiffness/damping are no longer ignored.
 
-```tsx
-Box().animate('pop').spring({ stiffness: 220, damping: 24 })
-Box().hover((h) => h.scale(1.06).ease('spring'))
+```ts snippet
+import { Box } from 'fiboui';
+
+export default function Example() {
+  return Box()
+    .animate('pop')
+    .spring({ stiffness: 220, damping: 24 })
+    .hover((h) => h.scale(1.06).ease('spring'))
+    .children('spring');
+}
 ```
 
 ## Reduced motion
 
 On by default: `@media (prefers-reduced-motion: reduce)` drops animation/transition. Opt out per node with `.reducedMotion('never')`.
 
-```tsx
-Box().animate('fadeIn').reducedMotion('never')
+```ts snippet
+import { Box } from 'fiboui';
+
+export default function Example() {
+  return Box().animate('fadeIn').reducedMotion('never').children('forced');
+}
 ```
 
 ## Stagger
 
-```tsx
-Column().stagger(80).children([
-  Card().animate('fadeIn'),
-  Card().animate('fadeIn'),
-])
+```ts snippet
+import { Card, Column } from 'fiboui';
+
+export default function Example() {
+  return Column().stagger(80).children([
+    Card().key('a').animate('fadeIn').children('A'),
+    Card().key('b').animate('fadeIn').children('B'),
+  ]);
+}
 ```
 
 <ReactWrapper :component="renderStagger" />
@@ -113,61 +153,84 @@ Column().stagger(80).children([
 
 ## Scroll family
 
-```tsx
-Box().onScroll('fadeIn')          // IntersectionObserver + class
-Box().reveal('slideUp')           // same, default once
-Box().animate('fadeIn').scrollTimeline('view')  // animation-timeline: view(); IO fallback
-Box().scrollProgress()            // scaleX along scroll(); scroll-listener fallback
-Box().smoothScroll()
-Box().scrollSnap('y').scrollSnapAlign('start')
-Box().sticky(0)
-Box().anchor('pricing')
-scrollTo('#pricing')
+```ts snippet
+import { Box, scrollTo } from 'fiboui';
+
+export default function Example() {
+  return Box().smoothScroll().children([
+    Box().onScroll('fadeIn').children('reveal'),
+    Box().reveal('slideUp').children('once'),
+    Box().animate('fadeIn').scrollTimeline('view').children('timeline'),
+    Box().scrollProgress(),
+    Box().scrollSnap('y').scrollSnapAlign('start').children('snap'),
+    Box().sticky(0).children('bar'),
+    Box().anchor('pricing').children('pricing'),
+    Box().children('go'),
+  ]);
+}
+
+export function go() {
+  scrollTo('#pricing');
+}
 ```
 
 `animation-timeline` is used when the browser supports `view()` / `scroll()`. Otherwise reveal uses IntersectionObserver and progress binds `--fibo-progress` on `scroll` (not rAF).
 
 ## Enter / exit & view transitions
 
-```ts
-import { Presence, signal, startViewTransition } from 'fiboui';
+```ts snippet
+import { Box, Presence, Text, signal, startViewTransition } from 'fiboui';
 
 const open = signal(true);
+const page = signal('a');
 
-Presence(open).enter('fadeIn').exit('fadeOut').duration(200).children(panel)
-Presence(true).exit('fadeOut').children(panel)
+export default function Example() {
+  return Box().viewTransition('hero').children([
+    Presence(open).enter('fadeIn').exit('fadeOut').duration(200).children(Text('Panel')),
+    Presence(true).exit('fadeOut').children(Text('Static')),
+  ]);
+}
 
-Box().viewTransition('hero')
-startViewTransition(() => { page.value = next })
+export function nextPage() {
+  startViewTransition(() => {
+    page.value = 'b';
+  });
+}
 ```
 
 `Presence(signal | boolean)` is a builder (React element, no `.build()`). It stays mounted through the exit keyframe (`animationend`). The component form `Presence({ show, children })` still works. `startViewTransition` no-ops when the API is missing.
 
 ## Hooks (typed, opt-in rAF)
 
-```tsx
-import { useSpring, useTransition, useStagger, useScrollProgress, usePrefersReducedMotion } from 'fiboui';
+```ts snippet
+import { Text, usePrefersReducedMotion, useScrollProgress, useSpring, useStagger } from 'fiboui';
 
-const x = useSpring(target, { stiffness: 170, damping: 26 });
-const delays = useStagger(items.length, 50);
+export default function Example() {
+  const x = useSpring(1, { stiffness: 170, damping: 26 });
+  const delays = useStagger(3, 50);
+  const reduce = usePrefersReducedMotion();
+  const progress = useScrollProgress();
+  return Text(`${x >= 0}:${delays.length}:${reduce}:${progress >= 0}`);
+}
 ```
 
 Use these for **numbers you interpolate in JS**. UI enter/hover/scroll should stay on the CSS builder methods.
 
 ## Before / after
 
-```tsx
-// before (2.1) — fragmented, buggy
-Box().duration(200).duration(400)              // stacked two transition classes
-Box().hover((h) => h.scale(1.05).translateY(-2)) // second transform won
-Box().animation({ curve: 'easeIn' })           // invalid CSS "easeIn"
-signal(0).spring(1)                            // damping/stiffness ignored
-Button('Go').onHover(fn)                       // never fired
-Box().className('animate-pulse')               // Tailwind only
+2.1 stacked transition classes, overwrote hover transforms, ignored spring params, and never fired `Button.onHover`. 2.2:
 
-// after (2.2)
-Box().animate('fadeIn').duration(400).ease('spring')
-Box().hover((h) => h.scale(1.05).translateY(-2))
-Box().onScroll('fadeIn').stagger(80)
-Button('Go').onHover(fn)
+```ts snippet
+import { Box, Button } from 'fiboui';
+
+export default function Example() {
+  return Box()
+    .animate('fadeIn')
+    .duration(400)
+    .ease('spring')
+    .hover((h) => h.scale(1.05).translateY(-2))
+    .onScroll('fadeIn')
+    .stagger(80)
+    .children(Button('Go').onHover(() => undefined));
+}
 ```
