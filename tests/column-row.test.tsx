@@ -16,6 +16,21 @@ describe('Column / Row cross-axis defaults', () => {
     expect(column?.className).not.toMatch(/items-start/);
   });
 
+  it('lets Row.hug() opt out of the full-width stretch', () => {
+    const { container } = render(
+      Column()
+        .children([
+          Row()
+            .hug()
+            .children([Text('chip')]),
+        ])
+        .build()
+    );
+    const row = container.querySelector('.fibo-row');
+    expect(row?.className).toMatch(/w-auto/);
+    expect(row?.className).not.toMatch(/self-stretch/);
+  });
+
   it('makes Row self-stretch so spaceBetween works inside a Column', () => {
     const { container } = render(
       Column()

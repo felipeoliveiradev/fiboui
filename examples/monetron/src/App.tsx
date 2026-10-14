@@ -1,8 +1,8 @@
 import { signal, computed } from 'fiboui/core';
 import { Column, Row } from 'fiboui/layout';
-import { Text, Avatar } from 'fiboui/content';
+import { Text, Avatar, Progress } from 'fiboui/content';
 import { Button } from 'fiboui/interactive';
-import { Box } from 'fiboui/structure';
+import { Box, ListTile } from 'fiboui/structure';
 import * as I from './icons';
 
 export const started = signal(false);
@@ -13,16 +13,9 @@ export const nav = signal(0);
 const wallet = computed(() => (hidden.value ? '$ ••••••' : '$ 195,654.80'));
 
 const LINE = '1px solid #3b3b3b';
-const MUTED = '#9a9a9a';
 
-const T = (s: string | (() => string), size = 11, color = '#fff') =>
-  Text(s)
-    .fontSize(size)
-    .color(color)
-    .letterSpacing('0.06em')
-    .margin(0)
-    .lineHeight(1.3)
-    .fontFamily("'Space Mono', monospace");
+const T = (s: string | (() => string), size = 11) =>
+  Text(s).mono().fontSize(size).letterSpacing('0.06em').lineHeight(1.3);
 
 const Phone = () =>
   Column()
@@ -34,18 +27,8 @@ const Phone = () =>
     .overflow('hidden')
     .position('relative');
 
-const ghost = {
-  borderRadius: 2,
-  padding: '9px 0',
-  fontSize: 9,
-  letterSpacing: '0.1em',
-  fontFamily: 'inherit',
-  boxShadow: 'none',
-  flex: 1,
-  cursor: 'pointer',
-  fontWeight: 400,
-  height: 'auto',
-} as const;
+const monoBtn = (label: string | (() => string)) =>
+  Button(label).tone('inverse').shape('rect').size('xs');
 
 function Splash() {
   return Phone()
@@ -59,36 +42,25 @@ function Splash() {
       Box()
         .bindSignal(started)
         .children(() =>
-          Button(started.value ? 'WELCOME ✓' : 'GET STARTED')
-            .variant('raw')
+          monoBtn(started.value ? 'WELCOME ✓' : 'GET STARTED')
+            .variant(started.value ? 'outline' : 'solid')
             .id('get-started')
+            .marginBottom(52)
             .onPress(() => {
               started.value = !started.value;
-            })
-            .style({
-              background: started.value ? '#000' : '#f2f2f2',
-              color: started.value ? '#fff' : '#000',
-              border: '1px solid #f2f2f2',
-              borderRadius: 8,
-              padding: '9px 26px',
-              fontSize: 10,
-              letterSpacing: '0.12em',
-              fontFamily: 'inherit',
-              marginBottom: 52,
-              boxShadow: 'none',
-              cursor: 'pointer',
-              fontWeight: 400,
-              height: 'auto',
             })
         ),
     ]);
 }
 
 const Stat = (label: string, value: string, id?: string) =>
-  Column().spacing(8).children([
-    T(label, 8, MUTED),
-    T(() => (hidden.value ? '••••••' : value), 9).id(id ?? `stat-${label.toLowerCase()}`),
-  ]);
+  Column()
+    .crossAxisAlignment('start')
+    .spacing(8)
+    .children([
+      T(label, 8).muted(),
+      T(() => (hidden.value ? '••••••' : value), 9).id(id ?? `stat-${label.toLowerCase()}`),
+    ]);
 
 const Tracker = (label: string, value: string, pct: number | null, i: number) =>
   Column()
@@ -100,7 +72,9 @@ const Tracker = (label: string, value: string, pct: number | null, i: number) =>
         .mainAxisAlignment('spaceBetween')
         .children([
           T(label, 8),
-          T(() => (hidden.value ? '••••••' : value), 8, MUTED).id(`track-${label.toLowerCase().replace(' ', '-')}`),
+          T(() => (hidden.value ? '••••••' : value), 8)
+            .muted()
+            .id(`track-${label.toLowerCase().replace(' ', '-')}`),
         ]),
       pct === null
         ? null
@@ -111,16 +85,11 @@ const Tracker = (label: string, value: string, pct: number | null, i: number) =>
     ]);
 
 const Tool = (label: string, last: boolean) =>
-  Row()
-    .crossAxisAlignment('center')
-    .spacing(12)
-    .padding('14px 0')
-    .borderBottom(last ? 'none' : LINE)
-    .children([
-      Box().color(MUTED).display('flex').children(<I.Wallet />),
-      T(label, 8).flex(1),
-      Box().color(MUTED).display('flex').children(<I.Chevron />),
-    ]);
+  ListTile()
+    .icon(<I.Wallet />)
+    .title(T(label, 8))
+    .chevron()
+    .divider(!last);
 
 function Dashboard() {
   return Phone().children([
@@ -132,17 +101,16 @@ function Dashboard() {
       .borderBottom(LINE)
       .children([
         Row()
+          .hug()
           .crossAxisAlignment('center')
           .spacing(10)
-          .children([
-            Avatar().size(24).shape('circle').image(I.AVATAR_URI),
-            T('0X80EBCB', 13),
-          ]),
+          .children([Avatar().size(24).icon('user'), T('0X80EBCB', 13)]),
         Row()
+          .hug()
           .border(LINE)
           .children([
-            Box().padding('4px 7px').borderRight(LINE).display('flex').color(MUTED).children(<I.Wallet />),
-            T(() => wallet.value, 8, MUTED).padding('5px 8px').id('wallet'),
+            Box().padding('4px 7px').borderRight(LINE).display('flex').color('#9a9a9a').children(<I.Wallet />),
+            T(() => wallet.value, 8).muted().padding('5px 8px').id('wallet'),
           ]),
       ]),
     Column()
@@ -168,10 +136,11 @@ function Dashboard() {
           .crossAxisAlignment('center')
           .marginBottom(20)
           .children([
-            T('MONEY TRACKER', 11),
+            T('MONEY TRACKER', 11).nowrap(),
             Row()
+              .hug()
               .spacing(14)
-              .color(MUTED)
+              .color('#9a9a9a')
               .children([
                 Box()
                   .id('eye')
@@ -239,6 +208,7 @@ function Dashboard() {
 
 const Legend = (label: string, color: string) =>
   Row()
+    .hug()
     .crossAxisAlignment('center')
     .spacing(6)
     .children([Box().width(6).height(6).backgroundColor(color), T(label, 8)]);
@@ -248,50 +218,57 @@ const Holding = (label: string, value: string, delta: string) =>
     .crossAxisAlignment('stretch')
     .spacing(8)
     .children([
-      T(label, 8, MUTED),
+      T(label, 8).muted(),
       Row()
         .mainAxisAlignment('spaceBetween')
         .children([
           T(() => (hidden.value ? '••••••' : value), 9).id(`hold-${label.toLowerCase()}`),
-          T(delta, 8, MUTED),
+          T(delta, 8).muted(),
         ]),
     ]);
 
 function Investment() {
   return Phone().children([
     Column()
+      .crossAxisAlignment('start')
       .height(106)
       .flexShrink(0)
       .padding('40px 12px 0')
       .borderBottom(LINE)
-      .children([Box().color(MUTED).display('flex').children(<I.Back />), T('INVESTMENT', 13).marginTop(12)]),
+      .children([Box().color('#9a9a9a').display('flex').children(<I.Back />), T('INVESTMENT', 13).marginTop(12)]),
     Column()
       .crossAxisAlignment('center')
       .padding('26px 12px 0')
       .borderBottom(LINE)
       .children([
         Box()
-          .position('relative')
-          .width(190)
-          .height(190)
           .bindSignal(analyze)
-          .children(() => [
-            <I.Ring key="r" analyze={analyze.value} />,
-            Column()
-              .key('c')
-              .position('absolute')
-              .inset(0)
-              .alignItems('center')
-              .justifyContent('center')
-              .spacing(6)
+          .children(() =>
+            Progress()
+              .variant('ring')
+              .size(190)
+              .strokeWidth(2.4)
+              .segments([
+                { value: 50, color: '#fff', strokeWidth: analyze.value ? 5 : 2.4 },
+                { value: 25, color: analyze.value ? '#bbb' : '#888' },
+                { value: 12, color: '#555' },
+                { value: 11, color: '#2a2a2a' },
+              ])
               .children([
-                T('TOTAL', 9, MUTED),
-                T(() => (hidden.value ? '••••' : '$650.5K'), 19).fontWeight(700).id('total'),
-                T(() => (analyze.value ? 'vs 30D: -8.37%' : '-8.37%'), 9).id('delta'),
-              ]),
-          ]),
-        T('COMBINED VALUE AS OF TODAY AT 3:42 PM', 6.5, MUTED).marginTop(18),
+                Column()
+                  .hug()
+                  .crossAxisAlignment('center')
+                  .spacing(6)
+                  .children([
+                    T('TOTAL', 9).muted(),
+                    T(() => (hidden.value ? '••••' : '$650.5K'), 19).id('total'),
+                    T(() => (analyze.value ? 'vs 30D: -8.37%' : '-8.37%'), 9).id('delta'),
+                  ]),
+              ])
+          ),
+        T('COMBINED VALUE AS OF TODAY AT 3:42 PM', 6.5).muted().marginTop(18),
         Row()
+          .hug()
           .spacing(22)
           .marginTop(24)
           .children([
@@ -309,21 +286,13 @@ function Investment() {
               .width('100%')
               .margin('30px 0 30px')
               .children([
-                Button('SET GOALS')
-                  .variant('raw')
-                  .id('set-goals')
-                  .style({ ...ghost, background: '#000', color: '#fff', border: LINE }),
-                Button(analyze.value ? 'ANALYZING…' : 'ANALYZE')
-                  .variant('raw')
+                monoBtn('SET GOALS').variant('outline').expand().id('set-goals'),
+                monoBtn(analyze.value ? 'ANALYZING…' : 'ANALYZE')
+                  .variant(analyze.value ? 'outline' : 'solid')
+                  .expand()
                   .id('analyze')
                   .onPress(() => {
                     analyze.value = !analyze.value;
-                  })
-                  .style({
-                    ...ghost,
-                    background: analyze.value ? '#000' : '#f2f2f2',
-                    color: analyze.value ? '#fff' : '#000',
-                    border: '1px solid #f2f2f2',
                   }),
               ])
           ),
@@ -358,6 +327,5 @@ export function App() {
     .width(1024)
     .height(768)
     .backgroundColor('#000')
-    .children([Splash(), Dashboard(), Investment()])
-    .build();
+    .children([Splash(), Dashboard(), Investment()]);
 }

@@ -131,6 +131,9 @@ describe('2.0 curated exports', () => {
     expect(publicApi.Button).toBeTypeOf('function');
     expect(publicApi.Column).toBeTypeOf('function');
     expect(publicApi.signal).toBeTypeOf('function');
+    expect(publicApi.ListTile).toBeTypeOf('function');
+    expect(publicApi.mount).toBeTypeOf('function');
+    expect(publicApi.Fibo).toBeTypeOf('function');
     expect(publicApi).not.toHaveProperty('StakentButton');
     expect(publicApi).not.toHaveProperty('_styleManager');
     expect(publicApi).not.toHaveProperty('createBuilder');

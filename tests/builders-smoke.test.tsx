@@ -22,6 +22,7 @@ import {
   Label,
   Line,
   List,
+  ListTile,
   Progress,
   RadioGroup,
   Row,
@@ -59,10 +60,14 @@ describe('public builder smoke renders', () => {
         Alert().title('Heads up').description('Body').intent('info'),
         Badge().text('New').variant('accent'),
         Avatar().image('/avatar.png').size(32),
+        Avatar().size(24).icon('user'),
+        Avatar().size(24).initials('AB'),
+        ListTile().title('Row').icon(Text('i')).chevron().divider(),
         Image('/x.png').alt('demo'),
         Spinner().size('sm'),
         Skeleton().width(40).height(10),
         Progress().value(25).max(100),
+        Progress().variant('ring').size(80).segments([{ value: 1, color: '#fff' }]),
         Banner('Notice'),
         Tags().items([{ title: 'tag' }]),
         Table().columns([{ header: 'Col', accessor: 'v' }]).data([{ id: 1, v: 'cell' }]),
@@ -89,6 +94,6 @@ describe('public builder smoke renders', () => {
     expect(screen.getByText('Heads up')).toBeInTheDocument();
     expect(screen.getByText('cell')).toBeInTheDocument();
     expect(screen.getAllByRole('status').length).toBeGreaterThan(0);
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getAllByRole('progressbar').length).toBeGreaterThan(0);
   });
 });

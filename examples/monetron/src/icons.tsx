@@ -49,12 +49,6 @@ export const Wallet = () => (
   </svg>
 );
 
-export const Chevron = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" {...s} strokeWidth={2} aria-hidden>
-    <path d="M9 5l7 7-7 7" />
-  </svg>
-);
-
 export const Back = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" {...s} strokeWidth={2} aria-hidden>
     <path d="M15 5l-7 7 7 7" />
@@ -63,61 +57,29 @@ export const Back = () => (
 
 export const Gauge = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" {...s} aria-hidden>
-    <path d="M3 16a9 9 0 0118 0" />
-    <path d="M12 16l4-5" />
+    <path d="M4.2 16.2a8.2 8.2 0 0115.6 0" />
+    <path d="M12 16.2l4-5.2" />
   </svg>
 );
 
 export const Bars = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" {...s} aria-hidden>
-    <path d="M5 20V9M9 20V6M13 20V8M17 20V5" />
+    <path d="M6 18V11M10 18V7M14 18V13M18 18V9" />
   </svg>
 );
 
 export const Trend = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" {...s} aria-hidden>
-    <path d="M3 17l6-6 4 4 8-8M15 7h6v6" />
+    <path d="M4 16l5.5-5.5 3.2 3.2 7.3-7.3" />
+    <path d="M15 6.4h4.6V11" />
   </svg>
 );
 
 export const Apps = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" {...s} aria-hidden>
-    <rect x="4" y="4" width="6" height="6" />
-    <rect x="14" y="4" width="6" height="6" />
-    <rect x="4" y="14" width="6" height="6" />
-    <rect x="14" y="14" width="6" height="6" />
+    <rect x="4.5" y="4.5" width="6" height="6" />
+    <rect x="13.5" y="4.5" width="6" height="6" />
+    <rect x="4.5" y="13.5" width="6" height="6" />
+    <rect x="13.5" y="13.5" width="6" height="6" />
   </svg>
 );
-
-/** Multi-segment ring. fiboui Progress is single-value; no vector primitive. */
-export const Ring = ({ analyze }: { analyze: boolean }) => {
-  const C = 2 * Math.PI * 88;
-  const seg = (from: number, len: number, color: string, w: number) => (
-    <circle
-      cx="100"
-      cy="100"
-      r="88"
-      stroke={color}
-      strokeWidth={w}
-      fill="none"
-      strokeDasharray={`${len * C} ${C}`}
-      strokeDashoffset={-from * C}
-      transform="rotate(-90 100 100)"
-      style={{ transition: 'all .4s' }}
-    />
-  );
-  return (
-    <svg width="190" height="190" viewBox="0 0 200 200" aria-hidden>
-      {seg(0.0, 0.5, '#fff', analyze ? 5 : 2.4)}
-      {seg(0.505, 0.25, analyze ? '#bbb' : '#888', 2.4)}
-      {seg(0.76, 0.12, '#555', 2.4)}
-      {seg(0.885, 0.11, '#2a2a2a', 2.4)}
-    </svg>
-  );
-};
-
-export const AVATAR_URI =
-  'data:image/svg+xml;utf8,' +
-  encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect width="24" height="24" fill="#ddd"/><circle cx="12" cy="10" r="5" fill="#555"/><rect x="5" y="16" width="14" height="10" rx="5" fill="#555"/></svg>'
-  );

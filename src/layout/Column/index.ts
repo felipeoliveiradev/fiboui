@@ -56,7 +56,7 @@ class ColumnBuilder extends FiboBuilder {
       'fibo-column',
       'flex',
       'flex-col',
-      'w-full',
+      this.isHug() ? 'w-auto self-auto' : 'w-full',
       alignmentMap[this._mainAxisAlignment],
       crossAlignmentMap[this._crossAxisAlignment],
       this._size ? sizeMap[this._size] : '',

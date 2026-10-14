@@ -65,4 +65,24 @@ The decorator `Store` / `useStore(Class)` stays. The reactive store type is expo
 
 ## 8. Isolated reactivity roots
 
-Wrap independent islands (or multiple `createRoot` trees) in `<ReactivityRoot>` so `activeEffect` does not leak across them. `FiboApp().mount()` does this for you.
+Wrap independent islands (or multiple `createRoot` trees) in `<ReactivityRoot>` so `activeEffect` does not leak across them. `FiboApp().mount()` and `mount('#root', App)` do this for you.
+
+## 9. Ergonomic builders (new, preferred)
+
+Custom chrome no longer needs `variant('raw')` plus a long `.style()` object.
+
+```ts
+Button('GET STARTED').variant('solid').tone('inverse').shape('rect').size('xs')
+Button('ANALYZE').variant('solid').tone('inverse').shape('rect').size('xs').expand()
+Row().hug()                          // chip / compact cluster
+Text('MONEY TRACKER').nowrap().mono()
+Text('SAVING').muted()
+Avatar().size(24).icon('user')
+Avatar().size(32).initials('AB')
+Progress().variant('ring').size(190).strokeWidth(2.4).segments([
+  { value: 50, color: '#fff' },
+  { value: 25, color: '#888' },
+])
+ListTile().icon(node).title('Row').chevron().divider()
+mount('#root', App)                  // App returns a builder — no .build()
+```

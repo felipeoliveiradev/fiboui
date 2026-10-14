@@ -22,7 +22,7 @@ const TextInner = React.memo((props: any) => {
     elementMap[type as TextType],
     {
       className: `fibo-text fibo-text-${type} ${className}`,
-      style,
+      style: { margin: 0, ...style },
       ...rest,
     },
     text
@@ -53,6 +53,21 @@ class TextBuilder extends FiboBuilder {
     return this;
   }
 
+  nowrap(): this {
+    this._classNames.push('whitespace-nowrap');
+    return this;
+  }
+
+  mono(): this {
+    this._classNames.push('font-mono');
+    return this;
+  }
+
+  muted(): this {
+    this._style = { ...this._style, color: '#9a9a9a' };
+    return this;
+  }
+
   build(): ReactElement {
     const elementMap: Record<TextType, keyof HTMLElementTagNameMap> = {
       h1: 'h1',
@@ -72,7 +87,7 @@ class TextBuilder extends FiboBuilder {
         compute,
         as: elementMap[this._type],
         className: `fibo-text fibo-text-${this._type} ${this.getClassName()}`,
-        style: this.getStyle(),
+        style: { margin: 0, ...this.getStyle() },
         ...this._props
       });
     }

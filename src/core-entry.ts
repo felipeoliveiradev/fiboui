@@ -25,4 +25,5 @@ export { ReactivityRoot } from './core/ReactivityRoot';
 export { FineGrainText, bindText } from './core/FineGrain';
 export { applyResponsiveStyles } from './core/component';
 export { FiboApp, FiboAppBuilder } from './core/FiboApp';
+export { mount, Fibo, toElement } from './core/mount';
 export { ValueBuilder } from './core/builder';

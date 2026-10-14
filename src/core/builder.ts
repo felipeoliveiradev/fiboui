@@ -55,6 +55,18 @@ export abstract class FiboBuilder {
 
   protected _pseudoStateClassName?: string;
 
+  /** Shrink-wrap: skip the default `w-full` / `self-stretch` on Row and Column. */
+  protected _hug = false;
+
+  hug(): this {
+    this._hug = true;
+    return this;
+  }
+
+  protected isHug(): boolean {
+    return this._hug;
+  }
+
   id(value: string): this {
     this._props.id = value;
     return this;
