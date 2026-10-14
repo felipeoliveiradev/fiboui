@@ -17,9 +17,12 @@ const UserGlyph = ({ size }: { size: number | string }) =>
       'aria-hidden': true,
       className: 'fibo-avatar-user',
     },
-    React.createElement('rect', { width: 24, height: 24, fill: '#ddd' }),
-    React.createElement('circle', { cx: 12, cy: 10, r: 5, fill: '#555' }),
-    React.createElement('rect', { x: 5, y: 16, width: 14, height: 10, rx: 5, fill: '#555' })
+    React.createElement('circle', { cx: 12, cy: 12, r: 12, fill: '#f2f2f2' }),
+    React.createElement('circle', { cx: 12, cy: 9.4, r: 3.6, fill: '#6a6a6a' }),
+    React.createElement('path', {
+      d: 'M5.6 19.2c.9-3.1 3.4-5 6.4-5s5.5 1.9 6.4 5C16.6 20.6 14.4 21.4 12 21.4s-4.6-.8-6.4-2.2z',
+      fill: '#6a6a6a',
+    })
   );
 
 const AvatarInner = React.memo((props: any) => {

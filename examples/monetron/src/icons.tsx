@@ -49,6 +49,14 @@ export const Wallet = () => (
   </svg>
 );
 
+/** Credit-card / chip — matches Monetron list + wallet glyphs. */
+export const Card = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" {...s} aria-hidden>
+    <rect x="5" y="6.5" width="14" height="11" rx="2.2" />
+    <circle cx="8.6" cy="12" r="1.55" />
+  </svg>
+);
+
 export const Back = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" {...s} strokeWidth={2} aria-hidden>
     <path d="M15 5l-7 7 7 7" />

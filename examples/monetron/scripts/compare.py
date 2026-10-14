@@ -13,6 +13,9 @@ except ImportError:
 root = Path(__file__).resolve().parents[1]
 original = Image.open(root / 'original.png').convert('RGB')
 replica = Image.open(root / 'monetron-initial.png').convert('RGB')
+# original.png is a 1029-wide crop of an older compare; drop the 5px sliver
+if original.width != replica.width:
+    original = original.crop((0, 0, replica.width, original.height))
 if replica.size != original.size:
     replica = replica.resize(original.size, Image.Resampling.LANCZOS)
 
@@ -26,17 +29,17 @@ INV = PAD_X + 2 * (PW + GAP)
 REGIONS = {
     'splash-logo':     (PAD_X + 50, PAD_Y + 130, 190, 180),
     'splash-title':    (PAD_X + 16, PAD_Y + 330, 258, 80),
-    'splash-btn':      (PAD_X + 40, PAD_Y + 480, 210, 70),
+    'splash-btn':      (118, 602, 140, 48),
     'dash-header':     (DASH, PAD_Y, PW, 84),
     'dash-stats':      (DASH, PAD_Y + 84, PW, 78),
     'dash-tracker':    (DASH, PAD_Y + 162, PW, 220),
-    'dash-tools':      (DASH, PAD_Y + 400, PW, 175),
+    'dash-tools':      (DASH, 515, PW, 140),
     'dash-nav':        (DASH, PAD_Y + PH - 52, PW, 52),
     'inv-header':      (INV, PAD_Y, PW, 106),
     'inv-ring':        (INV + 48, PAD_Y + 126, 194, 200),
-    'inv-legend':      (INV + 8, PAD_Y + 338, 274, 40),
-    'inv-btns':        (INV + 8, PAD_Y + 378, 274, 62),
-    'inv-portfolio':   (INV, PAD_Y + 455, PW, 170),
+    'inv-legend':      (INV + 8, PAD_Y + 400, 274, 36),
+    'inv-btns':        (700, 482, 276, 50),
+    'inv-portfolio':   (INV, PAD_Y + 530, PW, 165),
 }
 
 ZOOM = {

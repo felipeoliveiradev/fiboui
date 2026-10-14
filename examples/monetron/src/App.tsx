@@ -28,7 +28,7 @@ const Phone = () =>
     .position('relative');
 
 const monoBtn = (label: string | (() => string)) =>
-  Button(label).tone('inverse').shape('rect').size('xs');
+  Button(label).tone('inverse').shape('sharp').size('xs');
 
 function Splash() {
   return Phone()
@@ -86,7 +86,7 @@ const Tracker = (label: string, value: string, pct: number | null, i: number) =>
 
 const Tool = (label: string, last: boolean) =>
   ListTile()
-    .icon(<I.Wallet />)
+    .icon(<I.Card />)
     .title(T(label, 8))
     .chevron()
     .divider(!last);
@@ -109,7 +109,7 @@ function Dashboard() {
           .hug()
           .border(LINE)
           .children([
-            Box().padding('4px 7px').borderRight(LINE).display('flex').color('#9a9a9a').children(<I.Wallet />),
+            Box().padding('4px 7px').borderRight(LINE).display('flex').color('#9a9a9a').children(<I.Card />),
             T(() => wallet.value, 8).muted().padding('5px 8px').id('wallet'),
           ]),
       ]),

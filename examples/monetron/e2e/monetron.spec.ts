@@ -40,14 +40,13 @@ test('Monetron 2.0: bindSignal, mask, analyze, nav, compare', async ({ page }) =
   await page.screenshot({ path: resolve(process.cwd(), 'monetron-after.png') });
 
   const styled = page.locator('#get-started');
-  await expect(styled).toHaveCSS('border-radius', '2px');
+  await expect(styled).toHaveCSS('border-radius', '0px');
   await expect(styled).toHaveCSS('font-size', '10px');
   await expect(styled).toHaveCSS('font-weight', '400');
-  await expect(styled).toHaveCSS('letter-spacing', /.*/);
 
   const analyzeBtn = page.locator('#analyze');
-  await expect(analyzeBtn).toHaveCSS('border-radius', '2px');
-  await expect(page.locator('#set-goals')).toHaveCSS('border-radius', '2px');
+  await expect(analyzeBtn).toHaveCSS('border-radius', '0px');
+  await expect(page.locator('#set-goals')).toHaveCSS('border-radius', '0px');
 
   execFileSync('python3', [resolve(process.cwd(), 'scripts/compare.py')], { stdio: 'inherit' });
 });

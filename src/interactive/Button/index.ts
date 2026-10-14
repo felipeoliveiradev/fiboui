@@ -28,7 +28,7 @@ const ButtonInner = React.memo((props: any) => {
   } = props;
 
   const sizeClasses: Record<ButtonSize, string> = {
-    xs: 'px-[26px] py-[9px] text-[10px] gap-[6px] h-auto tracking-[0.12em] font-normal',
+    xs: 'px-[21px] py-[8px] text-[10px] gap-[6px] h-auto tracking-[0.12em] font-normal',
     sm: 'px-[14px] py-[6px] text-[13px] gap-[6px] h-[32px]',
     md: 'px-[22px] py-[10px] text-[15px] gap-[8px] h-[44px]',
     lg: 'px-[32px] py-[16px] text-[17px] gap-[10px] h-[56px]'
