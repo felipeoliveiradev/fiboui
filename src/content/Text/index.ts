@@ -1,6 +1,7 @@
 import React, { ReactElement } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps, TextType } from '../../core/types';
+import { FineGrainText } from '../../core/FineGrain';
 
 const TextInner = React.memo((props: any) => {
   const { text, type, className, style, ...rest } = props;
@@ -39,9 +40,6 @@ class TextBuilder extends FiboBuilder {
 
   text(value: string | (() => string)): this {
     this._text = value;
-    if (typeof value === 'function') {
-      this.observer();
-    }
     return this;
   }
 
@@ -56,10 +54,31 @@ class TextBuilder extends FiboBuilder {
   }
 
   build(): ReactElement {
-    const finalText = typeof this._text === 'function' ? this._text() : this._text;
+    const elementMap: Record<TextType, keyof HTMLElementTagNameMap> = {
+      h1: 'h1',
+      h2: 'h2',
+      h3: 'h3',
+      h4: 'h4',
+      h5: 'h5',
+      h6: 'h6',
+      body: 'p',
+      caption: 'span',
+      label: 'label',
+    };
+
+    if (typeof this._text === 'function') {
+      const compute = this._text;
+      return React.createElement(FineGrainText, {
+        compute,
+        as: elementMap[this._type],
+        className: `fibo-text fibo-text-${this._type} ${this.getClassName()}`,
+        style: this.getStyle(),
+        ...this._props
+      });
+    }
 
     const props = {
-      text: finalText,
+      text: this._text,
       type: this._type,
       className: this.getClassName(),
       style: this.getStyle(),

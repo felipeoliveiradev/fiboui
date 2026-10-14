@@ -45,7 +45,7 @@ jobs:
         id: version
         run: |
           set -euo pipefail
-          VERSION="$(node -p "require('./package.json').version")"
+          VERSION="$(node --input-type=commonjs -e "const fs=require('fs'); process.stdout.write(JSON.parse(fs.readFileSync('package.json','utf8')).version")")"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           if npm view "fiboui@${VERSION}" version >/dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"

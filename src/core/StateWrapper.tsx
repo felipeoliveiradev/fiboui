@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback, useSyncExternalStore, ReactNode } from 'react';
-import { BindableSignal, Observable, Tracker } from './state';
+import { BindableSignal, Observable, Tracker, runInScope } from './state';
+import { useReactivityScope } from './ReactivityRoot';
 
 export function Observer({ children }: { children: () => ReactNode }) {
   const versionRef = useRef(0);
@@ -29,9 +30,11 @@ export function Observer({ children }: { children: () => ReactNode }) {
     };
   }, []);
 
+  const scope = useReactivityScope();
+
   let result: ReactNode = null;
   try {
-    result = tracker.current.execute(children);
+    result = runInScope(scope, () => tracker.current!.execute(children));
   } catch {
     result = null;
   }

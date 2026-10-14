@@ -2,8 +2,8 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { FiboPlugin } from './plugin/types';
 import { PluginManager } from './plugin/PluginManager';
-import { StateWrapper } from './StateWrapper';
-import { ProviderWrapper } from './StateWrapper';
+import { StateWrapper, ProviderWrapper } from './StateWrapper';
+import { ReactivityRoot } from './ReactivityRoot';
 
 export class FiboAppBuilder {
   private _rootComponent: React.ComponentType | null = null;
@@ -50,11 +50,13 @@ export class FiboAppBuilder {
     // We wrap the app with necessary providers
     // Note: This is an initial implementation. We might need to wrap with more providers later.
     const App = () => (
-      React.createElement(StateWrapper, {
-        stateMap: new Map(),
-        children: React.createElement(ProviderWrapper, {
-          providers: new Map(),
-          children: React.createElement(RootComponent, null)
+      React.createElement(ReactivityRoot, {
+        children: React.createElement(StateWrapper, {
+          stateMap: new Map(),
+          children: React.createElement(ProviderWrapper, {
+            providers: new Map(),
+            children: React.createElement(RootComponent, null)
+          })
         })
       })
     );

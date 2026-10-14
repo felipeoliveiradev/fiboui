@@ -4,10 +4,8 @@ import { ChildrenProps, MainAxisAlignment, CrossAxisAlignment } from '../../core
 
 class ColumnBuilder extends FiboBuilder {
   private _mainAxisAlignment: MainAxisAlignment = 'start';
-  // Flutter Column defaults to CrossAxisAlignment.center; SwiftUI VStack to .center.
-  // We keep `start` (existing 1.0.2 default) to avoid stretching Buttons/Text.
-  // Rows self-stretch so spaceBetween works inside a Column — see Row + CHANGELOG.
-  private _crossAxisAlignment: CrossAxisAlignment = 'start';
+  // Flutter Column / SwiftUI VStack default: center. Stretch is opt-in.
+  private _crossAxisAlignment: CrossAxisAlignment = 'center';
   private _spacing?: string | number;
   private _size?: 'small' | 'medium' | 'large';
 

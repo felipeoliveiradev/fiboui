@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented in this file.
 
+## [2.0.0] - 2026-10-14
+
+Breaking release. Nobody was consuming 1.0.x in production; APIs that needed a break were taken now. Migration: [MIGRATION.md](./MIGRATION.md).
+
+### Breaking
+
+- **Column default is `center`** (Flutter `CrossAxisAlignment.center` / SwiftUI `VStack`). Use `.crossAxisAlignment('start'|'stretch')` to opt out. Test: `tests/column-row.test.tsx`, `tests/breaking-2.0.test.tsx`.
+- **`src/` is not published.** Import from `fiboui` or a subpath, never `fiboui/src/...`. Test: `tests/breaking-2.0.test.tsx` / `tests/packaging.test.ts`.
+- **CSS is not imported from JS.** Callers must `import 'fiboui/style.css'` (or a layout). Test: `tests/breaking-2.0.test.tsx`.
+- **ESM-only** (`"type": "module"`). No `require('fiboui')` / CJS / UMD. Test: `tests/packaging.test.ts`.
+- **Subpath exports:** `fiboui/core`, `fiboui/layout`, `fiboui/content`, `fiboui/interactive`, `fiboui/structure`, `fiboui/navigation`, `fiboui/theme`. Test: `tests/packaging.test.ts`.
+- **Curated named exports.** `Stakent*`, `_styleManager`, `createBuilder`, and other internals are not on the public surface. Test: `tests/breaking-2.0.test.tsx`.
+- **Theme tokens unified to Material 3** (`--fibo-primary: #6750A4` in CSS + `materialTheme`). Test: `tests/breaking-2.0.test.tsx`.
+
+### Added
+
+- **Per-root `activeEffect`:** `createReactivityRoot()`, `runInScope()`, `ReactivityRoot`. Test: `tests/breaking-2.0.test.tsx`.
+- **Fine-grained text updates:** `Text(() => ...)` and `bindText(signal)` write `textContent` without remounting. Test: `tests/breaking-2.0.test.tsx`.
+
 ## [1.0.3] - 2026-10-14
 
 ### Production hardening (all AUDIT.md severities)

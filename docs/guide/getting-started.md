@@ -9,11 +9,20 @@ FiboUI is a React UI framework inspired by the **Builder Pattern** found in Flut
 npm install fiboui
 ```
 
+Import the stylesheet once — the JS entry does not load CSS:
+
+```tsx
+import 'fiboui/style.css';
+```
+
+ESM-only (`import`, no `require`). Next.js App Router files that call builders need `'use client'`. See [MIGRATION.md](../../MIGRATION.md) for 2.0 changes.
+
 ## Quick Start
 
 Wrap your application in the `FiboThemeProvider` and start building.
 
 ```tsx
+import 'fiboui/style.css';
 import { FiboThemeProvider, Box, Text, Button } from 'fiboui';
 
 function App() {

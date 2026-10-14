@@ -1,7 +1,41 @@
 export type Listener<T> = (value: T) => void;
 export type Unsubscribe = () => void;
 
-let activeEffect: Effect | null = null;
+/** Isolated reactive graph for one React root / test / island. */
+export class ReactivityScope {
+  activeEffect: Effect | Tracker | null = null;
+}
+
+const defaultScope = new ReactivityScope();
+const scopeStack: ReactivityScope[] = [defaultScope];
+
+export function createReactivityRoot(): ReactivityScope {
+  return new ReactivityScope();
+}
+
+export function getCurrentScope(): ReactivityScope {
+  return scopeStack[scopeStack.length - 1] ?? defaultScope;
+}
+
+export function getActiveEffect(): Effect | Tracker | null {
+  return getCurrentScope().activeEffect;
+}
+
+export function runInScope<T>(scope: ReactivityScope, fn: () => T): T {
+  scopeStack.push(scope);
+  try {
+    return fn();
+  } finally {
+    scopeStack.pop();
+  }
+}
+
+function pushActive(effect: Effect | Tracker | null): Effect | Tracker | null {
+  const scope = getCurrentScope();
+  const prev = scope.activeEffect;
+  scope.activeEffect = effect;
+  return prev;
+}
 
 export interface Subscribable<T> {
   subscribe(listener: Listener<T>): Unsubscribe;
@@ -24,13 +58,12 @@ export class Effect {
   }
 
   run() {
-    const prevEffect = activeEffect;
-    activeEffect = this;
+    const prevEffect = pushActive(this);
     try {
       this.cleanup();
       this.fn();
     } finally {
-      activeEffect = prevEffect;
+      pushActive(prevEffect);
     }
   }
 
@@ -60,14 +93,13 @@ export class Tracker {
   constructor(private _onInvalidate: () => void) { }
 
   execute<T>(fn: () => T): T {
-    const prevEffect = activeEffect;
-    activeEffect = this as any;
+    const prevEffect = pushActive(this);
 
     try {
       this.cleanup();
       return fn();
     } finally {
-      activeEffect = prevEffect;
+      pushActive(prevEffect);
     }
   }
 
@@ -97,8 +129,9 @@ export class Signal<T> implements Subscribable<T> {
   constructor(private _value: T) { }
 
   get value(): T {
-    if (activeEffect) {
-      activeEffect.track(this);
+    const active = getActiveEffect();
+    if (active) {
+      active.track(this);
     }
     return this._value;
   }
@@ -153,18 +186,18 @@ export class ComputedSignal<T> implements Subscribable<T> {
   }
 
   get value(): T {
-    if (activeEffect) {
-      activeEffect.track(this);
+    const active = getActiveEffect();
+    if (active) {
+      active.track(this);
     }
     if (this._dirty) {
-      const prevEffect = activeEffect;
-      activeEffect = this.internalEffect;
+      const prevEffect = pushActive(this.internalEffect);
       try {
         this.internalEffect.cleanup();
         this._value = this.fn();
         this._dirty = false;
       } finally {
-        activeEffect = prevEffect;
+        pushActive(prevEffect);
       }
     }
     return this._value;
@@ -203,8 +236,9 @@ export class Observable<T> implements Subscribable<T> {
   constructor(private _value: T) { }
 
   get(): T {
-    if (activeEffect) {
-      activeEffect.track(this);
+    const active = getActiveEffect();
+    if (active) {
+      active.track(this);
     }
     return this._value;
   }
@@ -251,8 +285,9 @@ export class StoreImpl<T> implements Store<T> {
   constructor(private state: T) { }
 
   getState(): T {
-    if (activeEffect) {
-      activeEffect.track(this);
+    const active = getActiveEffect();
+    if (active) {
+      active.track(this);
     }
     return this.state;
   }

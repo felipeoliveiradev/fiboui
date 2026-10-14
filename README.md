@@ -1,4 +1,4 @@
-# FiboUI v1.0.3
+# FiboUI v2.0.0
 
 **A Flutter & SwiftUI-inspired React UI framework featuring a fluent builder API and fine-grained reactivity.**
 
@@ -25,9 +25,10 @@ npm install fiboui
 Import the stylesheet once in your entry file:
 
 ```tsx
-import 'fiboui/dist/style.css';
-// or: import 'fiboui/style.css';
+import 'fiboui/style.css';
 ```
+
+**Required.** The JS entry does not load CSS. ESM-only (`import`, no `require`). See [MIGRATION.md](./MIGRATION.md) if you used 1.x snapshots.
 
 Peer dependencies: React 18 or 19.
 
@@ -119,9 +120,9 @@ Box()
 
 ### Column + Row (`spaceBetween`)
 
-Flutter `Column` defaults to `CrossAxisAlignment.center`. SwiftUI `VStack` defaults to `.center`. FiboUI **keeps Column at `crossAxisAlignment('start')`** (the 1.0.2 default) so buttons and text do not stretch to full width.
+Flutter `Column` defaults to `CrossAxisAlignment.center`. SwiftUI `VStack` defaults to `.center`. FiboUI **2.0 matches that: `crossAxisAlignment('center')`.**
 
-CSS `align-items: flex-start` prevents a child `width: 100%` from resolving, which made `Row().mainAxisAlignment('spaceBetween')` look collapsed. **Row now uses `align-self: stretch`** so it fills the Column’s width, matching how a Flutter `Row` expands on its main axis when the parent gives a bounded max width.
+**Row uses `align-self: stretch`** so `spaceBetween` still fills the Column width under a centered cross axis.
 
 To stretch every child (Flutter `CrossAxisAlignment.stretch`):
 

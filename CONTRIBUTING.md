@@ -38,4 +38,5 @@ Concurrency group `npm-publish` prevents overlapping publishes.
 - [ ] `npm test` and `npm run type-check` pass
 - [ ] CHANGELOG has a section for the new version
 - [ ] README version string matches `package.json`
+- [ ] ESM-only: `node --input-type=commonjs -e "…package.json version…"` still works (publish.yml)
 - [ ] You are not republishing an existing version number
