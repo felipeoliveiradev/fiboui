@@ -5,8 +5,14 @@ import { resolve } from 'node:path';
 const artifacts = '/opt/cursor/artifacts/screenshots';
 
 test('landing: content, signals, screenshots', async ({ page }) => {
+  const pageErrors: string[] = [];
+  page.on('pageerror', (error) => pageErrors.push(error.message));
+
   await page.goto('/');
   await expect(page.locator('#hero-title')).toHaveText(/Build UIs\s*like you think/);
+  expect(pageErrors.join('\n'), pageErrors.join('\n')).not.toMatch(
+    /older version of React|invalid hook call|multiple copies of React/i
+  );
   await expect(page.locator('#hero-amount')).toHaveText('$3,845.75');
   await expect(page.locator('#hero-ring-value')).toHaveText('64');
   await expect(page.locator('#hero-tile')).toContainText('Builders');

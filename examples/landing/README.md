@@ -27,3 +27,5 @@ Idiomatic 2.0 usage in this app:
 - `ListTile`, `Avatar`, `Progress` ring
 
 `npm test` at the repo root includes `tests/landing-no-jsx.test.ts`, which fails if this folder grows a `.tsx` file or any JSX node.
+
+Vite aliases `fiboui` to the repo `src/` and **dedupes `react` / `react-dom` to this app’s React 18**. Without that, the library source resolves the monorepo’s React 19 and the page throws “A React Element from an older version of React was rendered.”
