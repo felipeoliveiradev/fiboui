@@ -42,11 +42,12 @@ export function Why() {
           Box()
             .className('why-grid')
             .children([
-              ...reasons.map((reason) =>
+              ...reasons.map((reason, index) =>
                 Box()
                   .className('why-card')
                   .key(reason.title)
                   .children([
+                    Text(`0${index + 1}`).span().className('why-index').mono(),
                     Text(reason.title).h3(),
                     Text(reason.body),
                   ])

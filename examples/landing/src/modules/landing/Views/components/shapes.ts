@@ -1,11 +1,9 @@
 import {
-  Circle,
   Defs,
   Ellipse,
+  Path,
   RadialGradient,
   Svg,
-  SvgFilter,
-  SvgGroup,
 } from 'fiboui';
 import { Box } from 'fiboui/structure';
 
@@ -17,34 +15,27 @@ export function Blob() {
     .children([
       Defs().children([
         RadialGradient('blob-body')
-          .cx('38%')
-          .cy('32%')
-          .r('68%')
-          .stop('0%', '#3a3a3a')
-          .stop('42%', '#161616')
-          .stop('100%', '#050505'),
+          .cx('36%')
+          .cy('30%')
+          .r('72%')
+          .stop('0%', '#3f3f3f')
+          .stop('28%', '#1a1a1a')
+          .stop('68%', '#0a0a0a')
+          .stop('100%', '#000000'),
         RadialGradient('blob-spec')
           .cx('34%')
           .cy('28%')
-          .r('28%')
-          .stop('0%', '#ffffff', 0.22)
+          .r('26%')
+          .stop('0%', '#ffffff', 0.28)
+          .stop('55%', '#ffffff', 0.06)
           .stop('100%', '#ffffff', 0),
-        SvgFilter('blob-goo')
-          .region('-20%', '-20%', '140%', '140%')
-          .blur(16)
-          .colorMatrix('1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -10'),
       ]),
-      SvgGroup()
-        .filter('url(#blob-goo)')
-        .paint('url(#blob-body)')
-        .children([
-          Circle().cx(168).cy(168).r(96).fill('url(#blob-body)'),
-          Circle().cx(256).cy(154).r(86).fill('url(#blob-body)'),
-          Circle().cx(248).cy(248).r(92).fill('url(#blob-body)'),
-          Circle().cx(160).cy(246).r(80).fill('url(#blob-body)'),
-          Circle().cx(210).cy(210).r(70).fill('url(#blob-body)'),
-        ]),
-      Ellipse().cx(176).cy(156).rx(54).ry(36).paint('url(#blob-spec)'),
+      Path()
+        .d(
+          'M214 74c62-8 128 28 148 88 18 54-2 118-52 154-46 34-108 42-160 18-54-24-86-86-78-142 8-58 66-110 142-118z'
+        )
+        .fill('url(#blob-body)'),
+      Ellipse().cx(178).cy(154).rx(58).ry(38).paint('url(#blob-spec)'),
     ]);
 }
 

@@ -70,8 +70,8 @@ export function Showcase() {
                     .children([
                       Progress()
                         .variant('ring')
-                        .size(140)
-                        .strokeWidth(8)
+                        .size(148)
+                        .strokeWidth(16)
                         .trackColor('#3b3b3b')
                         .segments([
                           { value: ring.value, color: '#fff' },

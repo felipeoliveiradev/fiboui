@@ -1,6 +1,6 @@
 import { Avatar, Code, Progress, Text } from 'fiboui/content';
 import { Button } from 'fiboui/interactive';
-import { Column, Nav, Row } from 'fiboui/layout';
+import { Nav, Row } from 'fiboui/layout';
 import { Anchor } from 'fiboui/navigation';
 import { Box, ListTile } from 'fiboui/structure';
 import {
@@ -30,20 +30,12 @@ function StepRail() {
     .className('steps')
     .label('Page sections')
     .children(
-      steps.map((step, index) =>
-        Column()
-          .hug()
-          .crossAxisAlignment('start')
+      steps.map((step) =>
+        Anchor(`#${step.id}`)
           .key(step.id)
-          .children([
-            Anchor(`#${step.id}`)
-              .className(step.active ? 'step is-active' : 'step')
-              .children([
-                Box().className('step-dot'),
-                Text(step.label).span(),
-              ]),
-            index < steps.length - 1 ? Box().className('step-rail') : null,
-          ])
+          .label(step.label)
+          .className(step.active ? 'step is-active' : 'step')
+          .children(Box().className('step-dot'))
       )
     );
 }
@@ -62,7 +54,7 @@ function CounterCard() {
         .mainAxisAlignment('spaceBetween')
         .crossAxisAlignment('center')
         .children([
-          Text('bindSignal + computed').className('card-label'),
+          Text('signal + computed').className('card-label'),
           Row()
             .hug()
             .children([
@@ -100,8 +92,8 @@ function RingCard() {
     .children(() =>
       Progress()
         .variant('ring')
-        .size(92)
-        .strokeWidth(7)
+        .size(96)
+        .strokeWidth(16)
         .trackColor('#e4e4e0')
         .segments([
           { value: ring.value, color: '#111' },
@@ -167,34 +159,19 @@ export function Hero() {
             .className('hero-title')
             .id('hero-title'),
           Text(
-            'A Flutter and SwiftUI-inspired React framework. Fluent builders, fine-grained signals, and children that finalize themselves.'
+            'Fluent builders, fine-grained signals, and children that finalize themselves — the Flutter / SwiftUI assembly pattern for React.'
           ).className('hero-copy'),
-          Row()
-            .className('hero-cta')
-            .crossAxisAlignment('center')
-            .children([
-              Box()
-                .className('install')
-                .bindSignal(copied)
-                .children(() => [
-                  Code('npm install fiboui').inline(),
-                  Button(() => (copied.value ? 'Copied' : 'Copy'))
-                    .variant('raw')
-                    .className('pill pill-invert')
-                    .size('xs')
-                    .id('copy-install')
-                    .onPress(copyInstall),
-                ]),
-              Button('GitHub')
+          Box()
+            .className('install')
+            .bindSignal(copied)
+            .children(() => [
+              Code('npm install fiboui').inline(),
+              Button(() => (copied.value ? 'Copied' : 'Copy'))
                 .variant('raw')
-                .className('pill pill-ghost')
-                .onPress(() => {
-                  window.open(
-                    'https://github.com/felipeoliveiradev/fiboui',
-                    '_blank',
-                    'noreferrer'
-                  );
-                }),
+                .className('pill pill-invert')
+                .size('xs')
+                .id('copy-install')
+                .onPress(copyInstall),
             ]),
         ]),
       Box()
