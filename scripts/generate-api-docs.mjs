@@ -160,7 +160,17 @@ const VALUES = [];
 for (const sym of moduleExports) {
   const name = sym.getName();
   const flags = sym.getFlags();
-  if (flags & ts.SymbolFlags.TypeAlias || flags & ts.SymbolFlags.Interface) {
+  const resolvedFlags = (() => {
+    try {
+      return checker.getAliasedSymbol(sym).getFlags();
+    } catch {
+      return flags;
+    }
+  })();
+  const isType = Boolean(
+    (flags | resolvedFlags) & (ts.SymbolFlags.TypeAlias | ts.SymbolFlags.Interface)
+  ) && !((flags | resolvedFlags) & ts.SymbolFlags.Value);
+  if (isType) {
     TYPES.push(sym);
   } else if (name.startsWith('use')) {
     HOOKS.add(name);

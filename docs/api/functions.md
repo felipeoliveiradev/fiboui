@@ -4,20 +4,6 @@ Generated from `src/index.ts`. Builders live under [API builders](/api/). Hooks:
 
 | Name | Kind | Source | Type |
 | --- | --- | --- | --- |
-| [`Buildable`](#buildable) | function | `src/core/types.ts` | `any` |
-| [`FiboChild`](#fibochild) | function | `src/core/types.ts` | `any` |
-| [`FiboChildren`](#fibochildren) | function | `src/core/types.ts` | `any` |
-| [`FiboThemeName`](#fibothemename) | function | `src/core/types.ts` | `any` |
-| [`ResponsiveStyles`](#responsivestyles) | function | `src/core/types.ts` | `any` |
-| [`BaseProps`](#baseprops) | function | `src/core/types.ts` | `any` |
-| [`ChildrenProps`](#childrenprops) | function | `src/core/types.ts` | `any` |
-| [`Alignment`](#alignment) | function | `src/core/types.ts` | `any` |
-| [`MainAxisAlignment`](#mainaxisalignment) | function | `src/core/types.ts` | `any` |
-| [`CrossAxisAlignment`](#crossaxisalignment) | function | `src/core/types.ts` | `any` |
-| [`LayoutProps`](#layoutprops) | function | `src/core/types.ts` | `any` |
-| [`TextType`](#texttype) | function | `src/core/types.ts` | `any` |
-| [`ButtonVariant`](#buttonvariant) | function | `src/core/types.ts` | `any` |
-| [`StatusType`](#statustype) | function | `src/core/types.ts` | `any` |
 | [`signal`](#signal) | function | `src/core/state.ts` | `<T>(initialValue: T) => Signal<T>` |
 | [`computed`](#computed) | function | `src/core/state.ts` | `<T>(fn: () => T) => ComputedSignal<T>` |
 | [`observable`](#observable) | function | `src/core/state.ts` | `<T>(initialValue: T) => Observable<T>` |
@@ -28,8 +14,6 @@ Generated from `src/index.ts`. Builders live under [API builders](/api/). Hooks:
 | [`createReactivityRoot`](#createreactivityroot) | function | `src/core/state.ts` | `() => ReactivityScope` |
 | [`runInScope`](#runinscope) | function | `src/core/state.ts` | `<T>(scope: ReactivityScope, fn: () => T) => T` |
 | [`getCurrentScope`](#getcurrentscope) | function | `src/core/state.ts` | `() => ReactivityScope` |
-| [`BindableSignal`](#bindablesignal) | function | `src/core/state.ts` | `any` |
-| [`ReactiveStore`](#reactivestore) | function | `src/core/state.ts` | `any` |
 | [`ReactivityScope`](#reactivityscope) | function | `src/core/state.ts` | `typeof ReactivityScope` |
 | [`Observer`](#observer) | value | `src/core/StateWrapper.tsx` | `({ children }: { children: () => ReactNode; }) => Element` |
 | [`ProviderWrapper`](#providerwrapper) | value | `src/core/StateWrapper.tsx` | `({ providers, children }: ProviderWrapperProps) => Element` |
@@ -37,13 +21,8 @@ Generated from `src/index.ts`. Builders live under [API builders](/api/). Hooks:
 | [`FineGrainText`](#finegraintext) | value | `src/core/FineGrain.tsx` | `({ compute, as, className, style, ...rest }: FineGrainTextProps & Record<string, unknown>) => DetailedReactHTMLElement<{ ref: MutableRefObject<HTMLElement>; className: string; styl` |
 | [`bindText`](#bindtext) | function | `src/core/FineGrain.tsx` | `(signal: BindableSignal<unknown>, as?: keyof HTMLElementTagNameMap) => FunctionComponentElement<FineGrainTextProps & Record<string, unknown>>` |
 | [`applyResponsiveStyles`](#applyresponsivestyles) | function | `src/core/component.ts` | `(baseStyle: CSSProperties, responsive?: ResponsiveStyles, width?: number) => CSSProperties` |
-| [`TransitionConfig`](#transitionconfig) | function | `src/core/animationHooks.ts` | `any` |
-| [`SpringConfig`](#springconfig) | function | `src/core/animationHooks.ts` | `any` |
 | [`cssCurve`](#csscurve) | function | `src/core/animations.ts` | `(options?: Partial<AnimationOptions>) => string` |
-| [`AnimationOptions`](#animationoptions) | function | `src/core/animations.ts` | `any` |
-| [`PresenceProps`](#presenceprops) | function | `src/core/Presence.tsx` | `any` |
 | [`Reveal`](#reveal) | value | `src/core/Reveal.tsx` | `({ preset, once, rootMargin, threshold, forceMotion, preferTimeline, children, }: RevealProps) => DetailedReactHTMLElement<{ ref: MutableRefObject<HTMLDivElement>; className: strin` |
-| [`RevealProps`](#revealprops) | function | `src/core/Reveal.tsx` | `any` |
 | [`ScrollProgress`](#scrollprogress) | value | `src/core/ScrollProgress.tsx` | `({ children }: ScrollProgressProps) => DetailedReactHTMLElement<{ ref: MutableRefObject<HTMLDivElement>; 'data-fibo-scroll-progress': string; style: { display: "contents"; }; }, HT` |
 | [`scrollTo`](#scrollto) | function | `src/core/scroll.ts` | `(target: string \| Element, options?: { behavior?: ScrollBehavior; block?: ScrollLogicalPosition; }) => void` |
 | [`startViewTransition`](#startviewtransition) | function | `src/core/scroll.ts` | `(update: () => void) => void` |
@@ -51,24 +30,15 @@ Generated from `src/index.ts`. Builders live under [API builders](/api/). Hooks:
 | [`supportsScrollTimeline`](#supportsscrolltimeline) | function | `src/core/scroll.ts` | `() => boolean` |
 | [`springEase`](#springease) | function | `src/core/easing.ts` | `(options?: SpringOptions) => string` |
 | [`resolveCssEase`](#resolvecssease) | function | `src/core/easing.ts` | `(value: string, spring?: SpringOptions) => string` |
-| [`SpringOptions`](#springoptions) | function | `src/core/easing.ts` | `any` |
 | [`normalizePreset`](#normalizepreset) | function | `src/core/motionCss.ts` | `(name: string) => "fadeIn" \| "fadeOut" \| "fade" \| "slideUp" \| "slideDown" \| "slideLeft" \| "slideRight" \| "scaleIn" \| "scaleOut" \| "scale" \| "blurIn" \| "blurOut" \| "blur` |
-| [`MotionPreset`](#motionpreset) | function | `src/core/motionCss.ts` | `any` |
-| [`CustomMotion`](#custommotion) | function | `src/core/motionCss.ts` | `any` |
 | [`MotionStyles`](#motionstyles) | value | `src/core/styleManager.ts` | `() => ReactElement<any, string \| JSXElementConstructor<any>>` |
 | [`getMotionCss`](#getmotioncss) | function | `src/core/styleManager.ts` | `() => string` |
 | [`ensureMotionCss`](#ensuremotioncss) | function | `src/core/styleManager.ts` | `() => void` |
 | [`toMediaQuery`](#tomediaquery) | function | `src/core/breakpoints.ts` | `(query: string) => string` |
-| [`BreakpointKey`](#breakpointkey) | function | `src/core/breakpoints.ts` | `any` |
 | [`mount`](#mount) | function | `src/core/mount.ts` | `(target: string \| Element, app: (() => FiboChild) \| FiboChild, options?: { strict?: boolean; }) => Root` |
 | [`Fibo`](#fibo) | function | `src/core/mount.ts` | `({ children }: { children: FiboChild; }) => ReactElement<any, string \| JSXElementConstructor<any>>` |
 | [`toElement`](#toelement) | function | `src/core/mount.ts` | `(node: FiboChild) => ReactNode` |
 | [`PluginManager`](#pluginmanager) | class | `src/core/plugin/PluginManager.ts` | `typeof PluginManager` |
-| [`FiboPlugin`](#fiboplugin) | function | `src/core/plugin/types.ts` | `any` |
-| [`FiboContext`](#fibocontext) | function | `src/core/plugin/types.ts` | `any` |
-| [`RouteDefinition`](#routedefinition) | function | `src/core/plugin/types.ts` | `any` |
-| [`SidebarConfig`](#sidebarconfig) | function | `src/core/plugin/types.ts` | `any` |
-| [`PseudoStateFn`](#pseudostatefn) | function | `src/core/builder.ts` | `any` |
 | [`PseudoStateBuilder`](#pseudostatebuilder) | function | `src/core/PseudoStateBuilder.ts` | `typeof PseudoStateBuilder` |
 | [`FiboThemeProvider`](#fibothemeprovider) | value | `src/theme/provider.tsx` | `({ theme: initialTheme, children }: FiboThemeProviderProps) => Element` |
 | [`Router`](#router) | value | `src/navigation/Router.tsx` | `FC<RouterProps>` |
@@ -86,121 +56,6 @@ Generated from `src/index.ts`. Builders live under [API builders](/api/). Hooks:
 | [`persist`](#persist) | function | `src/state/persistence.ts` | `<T>(signal: Signal<T>, options: PersistOptions<T>) => () => void` |
 | [`clearPersistedState`](#clearpersistedstate) | function | `src/state/persistence.ts` | `(key: string, storage?: StorageAdapter) => void` |
 | [`getPersistedState`](#getpersistedstate) | function | `src/state/persistence.ts` | `<T>(key: string, storage?: StorageAdapter) => T` |
-| [`PersistOptions`](#persistoptions) | function | `src/state/persistence.ts` | `any` |
-| [`StorageAdapter`](#storageadapter) | function | `src/state/persistence.ts` | `any` |
-
-### Buildable
-
-Any fluent builder that can produce a React element.
-
-- **Source:** `src/core/types.ts`
-- **Type:** `any`
-
-
-### FiboChild
-
-A single child accepted by `.children()` / layout slots / JSX / component returns.
-Builders are React elements — they do not need `.build()`.
-
-- **Source:** `src/core/types.ts`
-- **Type:** `any`
-
-
-### FiboChildren
-
-Value accepted by `.children()`: one child, a list, or a lazy factory.
-
-- **Source:** `src/core/types.ts`
-- **Type:** `any`
-
-
-### FiboThemeName
-
-Public export `FiboThemeName`.
-
-- **Source:** `src/core/types.ts`
-- **Type:** `any`
-
-
-### ResponsiveStyles
-
-Public export `ResponsiveStyles`.
-
-- **Source:** `src/core/types.ts`
-- **Type:** `any`
-
-
-### BaseProps
-
-Public export `BaseProps`.
-
-- **Source:** `src/core/types.ts`
-- **Type:** `any`
-
-
-### ChildrenProps
-
-Public export `ChildrenProps`.
-
-- **Source:** `src/core/types.ts`
-- **Type:** `any`
-
-
-### Alignment
-
-Public export `Alignment`.
-
-- **Source:** `src/core/types.ts`
-- **Type:** `any`
-
-
-### MainAxisAlignment
-
-Public export `MainAxisAlignment`.
-
-- **Source:** `src/core/types.ts`
-- **Type:** `any`
-
-
-### CrossAxisAlignment
-
-Public export `CrossAxisAlignment`.
-
-- **Source:** `src/core/types.ts`
-- **Type:** `any`
-
-
-### LayoutProps
-
-Public export `LayoutProps`.
-
-- **Source:** `src/core/types.ts`
-- **Type:** `any`
-
-
-### TextType
-
-Public export `TextType`.
-
-- **Source:** `src/core/types.ts`
-- **Type:** `any`
-
-
-### ButtonVariant
-
-Public export `ButtonVariant`.
-
-- **Source:** `src/core/types.ts`
-- **Type:** `any`
-
-
-### StatusType
-
-Public export `StatusType`.
-
-- **Source:** `src/core/types.ts`
-- **Type:** `any`
-
 
 ### signal
 
@@ -320,22 +175,6 @@ Public export `getCurrentScope`.
 - **Type:** `() => ReactivityScope`
 
 
-### BindableSignal
-
-Anything `.bindSignal()` can subscribe to (`Signal` or `ComputedSignal`).
-
-- **Source:** `src/core/state.ts`
-- **Type:** `any`
-
-
-### ReactiveStore
-
-Public export `ReactiveStore`.
-
-- **Source:** `src/core/state.ts`
-- **Type:** `any`
-
-
 ### ReactivityScope
 
 Isolated reactive graph for one React root / test / island.
@@ -400,22 +239,6 @@ Public export `applyResponsiveStyles`.
 - **Type:** `(baseStyle: CSSProperties, responsive?: ResponsiveStyles, width?: number) => CSSProperties`
 
 
-### TransitionConfig
-
-Public export `TransitionConfig`.
-
-- **Source:** `src/core/animationHooks.ts`
-- **Type:** `any`
-
-
-### SpringConfig
-
-Public export `SpringConfig`.
-
-- **Source:** `src/core/animationHooks.ts`
-- **Type:** `any`
-
-
 ### cssCurve
 
 Public export `cssCurve`.
@@ -424,36 +247,12 @@ Public export `cssCurve`.
 - **Type:** `(options?: Partial<AnimationOptions>) => string`
 
 
-### AnimationOptions
-
-Public export `AnimationOptions`.
-
-- **Source:** `src/core/animations.ts`
-- **Type:** `any`
-
-
-### PresenceProps
-
-Public export `PresenceProps`.
-
-- **Source:** `src/core/Presence.tsx`
-- **Type:** `any`
-
-
 ### Reveal
 
 IntersectionObserver toggles `.fibo-inview`. Motion is CSS — no rAF.
 
 - **Source:** `src/core/Reveal.tsx`
 - **Type:** `({ preset, once, rootMargin, threshold, forceMotion, preferTimeline, children, }: RevealProps) => DetailedReactHTMLElement<{ ref: MutableRefObject<HTMLDivElement>; className: string; 'data-fibo-reveal': string; }, HTMLDivElement>`
-
-
-### RevealProps
-
-Public export `RevealProps`.
-
-- **Source:** `src/core/Reveal.tsx`
-- **Type:** `any`
 
 
 ### ScrollProgress
@@ -523,36 +322,12 @@ Public export `resolveCssEase`.
 - **Type:** `(value: string, spring?: SpringOptions) => string`
 
 
-### SpringOptions
-
-Public export `SpringOptions`.
-
-- **Source:** `src/core/easing.ts`
-- **Type:** `any`
-
-
 ### normalizePreset
 
 Public export `normalizePreset`.
 
 - **Source:** `src/core/motionCss.ts`
 - **Type:** `(name: string) => "fadeIn" | "fadeOut" | "fade" | "slideUp" | "slideDown" | "slideLeft" | "slideRight" | "scaleIn" | "scaleOut" | "scale" | "blurIn" | "blurOut" | "blur" | "pop" | "bounce"`
-
-
-### MotionPreset
-
-Public export `MotionPreset`.
-
-- **Source:** `src/core/motionCss.ts`
-- **Type:** `any`
-
-
-### CustomMotion
-
-Public export `CustomMotion`.
-
-- **Source:** `src/core/motionCss.ts`
-- **Type:** `any`
 
 
 ### MotionStyles
@@ -585,14 +360,6 @@ Resolve `md` → `(min-width: 768px)`, or pass through a raw media query.
 
 - **Source:** `src/core/breakpoints.ts`
 - **Type:** `(query: string) => string`
-
-
-### BreakpointKey
-
-Public export `BreakpointKey`.
-
-- **Source:** `src/core/breakpoints.ts`
-- **Type:** `any`
 
 
 ### mount
@@ -664,47 +431,6 @@ Public export `PluginManager`.
 
 - **Source:** `src/core/plugin/PluginManager.ts`
 - **Type:** `typeof PluginManager`
-
-
-### FiboPlugin
-
-Public export `FiboPlugin`.
-
-- **Source:** `src/core/plugin/types.ts`
-- **Type:** `any`
-
-
-### FiboContext
-
-Public export `FiboContext`.
-
-- **Source:** `src/core/plugin/types.ts`
-- **Type:** `any`
-
-
-### RouteDefinition
-
-Public export `RouteDefinition`.
-
-- **Source:** `src/core/plugin/types.ts`
-- **Type:** `any`
-
-
-### SidebarConfig
-
-Public export `SidebarConfig`.
-
-- **Source:** `src/core/plugin/types.ts`
-- **Type:** `any`
-
-
-### PseudoStateFn
-
-Callback form of `.hover()` / `.focus()` / … Contextual typing uses the *last*
-overload, so this signature must stay last or `h` becomes implicit `any` inside `.map()`.
-
-- **Source:** `src/core/builder.ts`
-- **Type:** `any`
 
 
 ### PseudoStateBuilder
@@ -841,21 +567,5 @@ Public export `getPersistedState`.
 
 - **Source:** `src/state/persistence.ts`
 - **Type:** `<T>(key: string, storage?: StorageAdapter) => T`
-
-
-### PersistOptions
-
-Public export `PersistOptions`.
-
-- **Source:** `src/state/persistence.ts`
-- **Type:** `any`
-
-
-### StorageAdapter
-
-Public export `StorageAdapter`.
-
-- **Source:** `src/state/persistence.ts`
-- **Type:** `any`
 
 

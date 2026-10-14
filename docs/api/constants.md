@@ -9,7 +9,6 @@
 | `materialTheme` | `src/theme/material.ts` | `FiboTheme` |
 | `cupertinoTheme` | `src/theme/cupertino.ts` | `FiboTheme` |
 | `webTheme` | `src/theme/web.ts` | `FiboTheme` |
-| `FiboTheme` | `src/theme/types.ts` | `any` |
 | `storageAdapters` | `src/state/persistence.ts` | `{ localStorage: StorageAdapter; sessionStorage: StorageAdapter; }` |
 
 ### MOTION_PRESETS
