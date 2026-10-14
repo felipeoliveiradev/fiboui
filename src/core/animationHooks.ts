@@ -6,6 +6,12 @@ export interface TransitionConfig {
   easing?: (t: number) => number;
 }
 
+export interface SpringConfig {
+  stiffness?: number;
+  damping?: number;
+  mass?: number;
+}
+
 export const Easing = {
   linear: (t: number) => t,
   easeIn: (t: number) => t * t,
@@ -32,6 +38,8 @@ export function useTransition(
   const { duration = 300, delay = 0, easing = Easing.easeOut } = config || {};
   const [currentValue, setCurrentValue] = useState(targetValue);
   const cancelRef = useRef<number>();
+  const valueRef = useRef(currentValue);
+  valueRef.current = currentValue;
 
   useEffect(() => {
     if (cancelRef.current) {
@@ -39,7 +47,7 @@ export function useTransition(
     }
 
     let startTime: number | null = null;
-    const startValue = currentValue;
+    const startValue = valueRef.current;
 
     const animate = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
@@ -75,7 +83,7 @@ export function useTransition(
 
 export function useSpring(
   targetValue: number,
-  config?: { stiffness?: number; damping?: number; mass?: number }
+  config?: SpringConfig
 ): number {
   const { stiffness = 170, damping = 26, mass = 1 } = config || {};
   const [currentValue, setCurrentValue] = useState(targetValue);
@@ -144,4 +152,45 @@ export function useMountTransition(
 
 export function useStagger(count: number, delayBetween: number = 50): number[] {
   return Array.from({ length: count }, (_, i) => i * delayBetween);
+}
+
+export function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(() =>
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const onChange = () => setReduced(mq.matches);
+    onChange();
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
+  return reduced;
+}
+
+/** Scroll position 0–1. Uses `scroll` / `resize` listeners — not rAF. */
+export function useScrollProgress(): number {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const update = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      setProgress(max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0);
+    };
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
+  }, []);
+
+  return progress;
 }

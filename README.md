@@ -14,6 +14,7 @@ FiboUI brings chainable builders to React. Compose screens with `Column()`, `Row
 - **Multi-theme** — Material, Cupertino, and Web tokens with CSS variables.
 - **Type-safe** — TypeScript builders; `FiboChild` / `FiboChildren` describe child slots.
 - **Media queries** — `Box().padding(8).md({ padding: 16 }).lg({ padding: 24 })` compiles to CSS `@media`. `.responsive({ mobile, tablet, desktop })` still works (JS).
+- **CSS motion & scroll** — `Box().animate('fadeIn').ease('spring')`, `.onScroll('fadeIn')`, `.stagger(80)`, `.scrollProgress()`. Default path is CSS (no rAF). See `docs/guide/animation.md`.
 
 ---
 

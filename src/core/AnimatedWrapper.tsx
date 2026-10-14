@@ -1,5 +1,6 @@
 import { CSSProperties, ReactElement, cloneElement, useEffect, useState } from 'react';
 import { AnimationOptions } from './animations';
+import { resolveCssEase } from './easing';
 import { Signal } from './state';
 
 interface AnimatedWrapperProps {
@@ -62,10 +63,8 @@ export function AnimatedWrapper({ animatedProps, animationConfig, children }: An
   }
 
   if (animationConfig) {
-    const { duration = 300, curve = 'easeOut' } = animationConfig;
-    const timingFunction = curve === 'spring'
-      ? 'cubic-bezier(0.68, -0.55, 0.265, 1.55)'
-      : curve;
+    const { duration = 300, curve = 'easeOut', stiffness, damping } = animationConfig;
+    const timingFunction = resolveCssEase(curve, { stiffness, damping });
     animatedStyle.transition = `transform ${duration}ms ${timingFunction}`;
   }
 

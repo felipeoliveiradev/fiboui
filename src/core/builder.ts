@@ -13,6 +13,18 @@ import { AnimatedWrapper } from './AnimatedWrapper';
 import { PseudoStateBuilder } from './PseudoStateBuilder';
 import { ResponsiveWrapper } from './ResponsiveWrapper';
 import { nextStableId } from './ids';
+import { resolveCssEase, springEase, type SpringOptions } from './easing';
+import {
+  CustomMotion,
+  MotionPreset,
+  cssDecls,
+  hashDecls,
+  isCustomMotion,
+  normalizePreset,
+} from './motionCss';
+import { Reveal } from './Reveal';
+import { ScrollProgress } from './ScrollProgress';
+import { MotionStyles, ensureMotionCss } from './styleManager';
 
 interface ThemeColors {
   primary?: string;
@@ -55,6 +67,14 @@ export abstract class FiboBuilder {
   protected _transforms: string[] = [];
 
   protected _pseudoStateClassName?: string;
+  protected _transitionClass?: string;
+  protected _motionClass?: string;
+  protected _staggerMs?: number;
+  protected _reveal?: { preset: string; once?: boolean; rootMargin?: string; threshold?: number };
+  protected _scrollProgress = false;
+  protected _viewTransition?: string;
+  protected _reducedMotion: 'reduce' | 'never' = 'reduce';
+  protected _usesCssMotion = false;
 
   /** Shrink-wrap: skip the default `w-full` / `self-stretch` on Row and Column. */
   protected _hug = false;
@@ -71,6 +91,11 @@ export abstract class FiboBuilder {
   id(value: string): this {
     this._props.id = value;
     return this;
+  }
+
+  /** Scroll target. Same as `.id()`; pair with `scrollTo('#name')`. */
+  anchor(value: string): this {
+    return this.id(value);
   }
 
   /**
@@ -834,21 +859,16 @@ export abstract class FiboBuilder {
   ): this {
     // If only one argument and it's a string with spaces, treat as CSS string
     if (typeof valueOrProperties === 'string' && duration === undefined) {
-      const cls = _styleManager.register('transition', valueOrProperties);
-      this._classNames.push(cls);
+      this.replaceTransitionClass(_styleManager.register('transition', valueOrProperties));
       return this;
     }
 
-    // Otherwise, build transition from parameters
     const props = Array.isArray(valueOrProperties) ? valueOrProperties.join(', ') : valueOrProperties;
     const dur = `${duration || this._transitionDuration}ms`;
-    const ease = easing || this._transitionEasing;
+    const ease = resolveCssEase(easing || this._transitionEasing);
     const del = delay ? `${delay}ms` : '0ms';
 
-    const transitionValue = `${props} ${dur} ${ease} ${del}`;
-    const cls = _styleManager.register('transition', transitionValue);
-    this._classNames.push(cls);
-
+    this.replaceTransitionClass(_styleManager.register('transition', `${props} ${dur} ${ease} ${del}`));
     return this;
   }
 
@@ -858,6 +878,10 @@ export abstract class FiboBuilder {
    */
   duration(ms: number): this {
     this._transitionDuration = ms;
+    if (this._motionClass) {
+      (this._style as Record<string, string>)['--fibo-dur'] = `${ms}ms`;
+      return this;
+    }
     this._applyTransition();
     return this;
   }
@@ -866,10 +890,19 @@ export abstract class FiboBuilder {
    * Set transition easing function
    * Example: .easing('ease-in-out')
    */
-  easing(value: 'linear' | 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out' | string): this {
-    this._transitionEasing = value;
+  easing(value: 'linear' | 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out' | 'spring' | string): this {
+    this._transitionEasing = resolveCssEase(value);
+    if (this._motionClass) {
+      (this._style as Record<string, string>)['--fibo-ease'] = this._transitionEasing;
+      return this;
+    }
     this._applyTransition();
     return this;
+  }
+
+  /** Alias of `.easing()`. `'spring'` becomes CSS `linear()`. */
+  ease(value: string): this {
+    return this.easing(value);
   }
 
   /**
@@ -878,6 +911,10 @@ export abstract class FiboBuilder {
    */
   delay(ms: number): this {
     this._transitionDelay = ms;
+    if (this._motionClass) {
+      (this._style as Record<string, string>)['--fibo-delay'] = `${ms}ms`;
+      return this;
+    }
     this._applyTransition();
     return this;
   }
@@ -900,10 +937,221 @@ export abstract class FiboBuilder {
     const duration = `${this._transitionDuration}ms`;
     const easing = this._transitionEasing;
     const delay = this._transitionDelay > 0 ? `${this._transitionDelay}ms` : '0ms';
+    this.replaceTransitionClass(_styleManager.register('transition', `${props} ${duration} ${easing} ${delay}`));
+  }
 
-    const transitionValue = `${props} ${duration} ${easing} ${delay}`;
-    const cls = _styleManager.register('transition', transitionValue);
+  private replaceTransitionClass(cls: string): void {
+    if (this._transitionClass) {
+      this._classNames = this._classNames.filter((c) => c !== this._transitionClass);
+    }
+    this._transitionClass = cls;
     this._classNames.push(cls);
+  }
+
+  /**
+   * CSS enter/exit preset. Compiles to `@keyframes` — no rAF.
+   * @example Box().animate('fadeIn').duration(300).ease('spring')
+   */
+  animate(
+    preset: MotionPreset | string,
+    options?: {
+      duration?: number;
+      ease?: string;
+      delay?: number;
+      from?: number | string;
+      stiffness?: number;
+      damping?: number;
+      mass?: number;
+    }
+  ): this;
+  animate(custom: CustomMotion): this;
+  animate(
+    presetOrCustom: MotionPreset | string | CustomMotion,
+    options?: {
+      duration?: number;
+      ease?: string;
+      delay?: number;
+      from?: number | string;
+      stiffness?: number;
+      damping?: number;
+      mass?: number;
+    }
+  ): this {
+    ensureMotionCss();
+    this._usesCssMotion = true;
+    if (this._motionClass) {
+      this._classNames = this._classNames.filter((c) => c !== this._motionClass);
+    }
+
+    const custom = isCustomMotion(presetOrCustom);
+    const duration = (custom ? presetOrCustom.duration : options?.duration) ?? this._transitionDuration;
+    const delay = (custom ? presetOrCustom.delay : options?.delay) ?? this._transitionDelay;
+    let easeName = custom ? presetOrCustom.ease : options?.ease;
+    const spring: SpringOptions = {
+      stiffness: (custom ? presetOrCustom.stiffness : options?.stiffness) ?? undefined,
+      damping: (custom ? presetOrCustom.damping : options?.damping) ?? undefined,
+      mass: (custom ? presetOrCustom.mass : options?.mass) ?? undefined,
+    };
+
+    if (custom) {
+      const from = cssDecls(presetOrCustom.from);
+      const to = cssDecls(presetOrCustom.to);
+      const name = _styleManager.registerKeyframes(hashDecls(`${from}=>${to}`), from, to);
+      this._motionClass = `fibo-anim ${name}`;
+      this._props['data-fibo-anim'] = 'custom';
+    } else {
+      const preset = normalizePreset(presetOrCustom);
+      this._motionClass = `fibo-anim fibo-anim-${preset}`;
+      this._props['data-fibo-anim'] = preset;
+      if (options?.from !== undefined) {
+        (this._style as Record<string, string>)['--fibo-from'] =
+          typeof options.from === 'number' ? `${options.from}px` : options.from;
+      }
+      if (!easeName && preset === 'pop') easeName = 'spring';
+    }
+
+    const ease = resolveCssEase(easeName ?? 'ease', spring);
+    this._classNames.push(this._motionClass);
+    const cssVars = this._style as Record<string, string>;
+    cssVars['--fibo-dur'] = `${duration}ms`;
+    cssVars['--fibo-ease'] = ease;
+    cssVars['--fibo-delay'] = `${delay}ms`;
+    if (this._reducedMotion === 'never' && !this._classNames.includes('fibo-motion-force')) {
+      this._classNames.push('fibo-motion-force');
+    }
+    return this;
+  }
+
+  /** CSS `linear()` spring. Works on `.animate()` and `.transition()` / `.hover()`. */
+  spring(options?: SpringOptions): this {
+    const ease = springEase(options);
+    this._transitionEasing = ease;
+    if (this._motionClass) {
+      (this._style as Record<string, string>)['--fibo-ease'] = ease;
+      return this;
+    }
+    this._applyTransition();
+    return this;
+  }
+
+  reducedMotion(mode: 'reduce' | 'never' = 'reduce'): this {
+    this._reducedMotion = mode;
+    if (mode === 'never' && !this._classNames.includes('fibo-motion-force')) {
+      this._classNames.push('fibo-motion-force');
+    }
+    return this;
+  }
+
+  press(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this {
+    this.ensureInteractiveTransition();
+    if (callback) {
+      this.active(callback);
+      return this;
+    }
+    this.active((s) => {
+      s.scale(0.97);
+    });
+    return this;
+  }
+
+  focusVisible(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+    const className = this.getPseudoStateClassName();
+    const builder = new PseudoStateBuilder(className, 'focus-visible', this);
+    if (callback) {
+      callback(builder);
+      return this;
+    }
+    return builder;
+  }
+
+  stagger(ms: number): this {
+    this._staggerMs = ms;
+    this._usesCssMotion = true;
+    (this._style as Record<string, string>)['--fibo-stagger'] = `${ms}ms`;
+    ensureMotionCss();
+    return this;
+  }
+
+  /** Scroll-reveal: IntersectionObserver toggles `.fibo-inview`. */
+  reveal(preset: string | { preset?: string; once?: boolean; rootMargin?: string; threshold?: number } = 'fadeUp'): this {
+    this._reveal = typeof preset === 'string' ? { preset, once: true } : { preset: 'fadeUp', once: true, ...preset };
+    this._usesCssMotion = true;
+    ensureMotionCss();
+    return this;
+  }
+
+  /** Alias of `.reveal()` for scroll-triggered presets. */
+  onScroll(preset: string = 'fadeIn'): this {
+    return this.reveal(preset);
+  }
+
+  /** CSS `animation-timeline: view()` / `scroll()`; IntersectionObserver reveal is the fallback. */
+  scrollTimeline(kind: 'view' | 'scroll' = 'view'): this {
+    ensureMotionCss();
+    this._classNames.push(kind === 'scroll' ? 'fibo-scroll-timeline' : 'fibo-view-timeline');
+    this._usesCssMotion = true;
+    if (kind === 'view' && !this._reveal) {
+      this._reveal = { preset: 'fadeUp', once: true };
+    }
+    return this;
+  }
+
+  scrollProgress(): this {
+    ensureMotionCss();
+    this._scrollProgress = true;
+    this._classNames.push('fibo-scroll-progress');
+    this._usesCssMotion = true;
+    return this;
+  }
+
+  smoothScroll(): this {
+    this._classNames.push(_styleManager.register('scroll-behavior', 'smooth'));
+    return this;
+  }
+
+  scrollSnap(axis: 'x' | 'y' | 'both' = 'y'): this {
+    ensureMotionCss();
+    this._classNames.push(`fibo-snap-${axis}`);
+    return this;
+  }
+
+  scrollSnapAlign(align: 'start' | 'center' | 'end' = 'start'): this {
+    ensureMotionCss();
+    this._classNames.push(`fibo-snap-${align}`);
+    return this;
+  }
+
+  sticky(top: number | string | boolean = 0): this {
+    if (top === false) return this;
+    this._classNames.push(_styleManager.register('position', 'sticky'));
+    const value = top === true ? '0px' : typeof top === 'number' ? `${top}px` : top;
+    this._classNames.push(_styleManager.register('top', value));
+    return this;
+  }
+
+  viewTransition(name: string): this {
+    this._viewTransition = name;
+    (this._style as Record<string, string>).viewTransitionName = name;
+    return this;
+  }
+
+  /** Default `:focus-visible` ring. Pass a callback to customize. */
+  focusRing(color = 'var(--fibo-primary)'): this {
+    this.focusVisible((state) => {
+      state.css('outline', `2px solid ${color}`);
+      state.css('outline-offset', '2px');
+    });
+    return this;
+  }
+
+  protected ensureInteractiveTransition(): void {
+    if (this._transitionClass || this._motionClass) return;
+    this.replaceTransitionClass(
+      _styleManager.register(
+        'transition',
+        `transform ${this._transitionDuration}ms ${this._transitionEasing}, opacity ${this._transitionDuration}ms ${this._transitionEasing}`
+      )
+    );
   }
 
   theme(themeConfig: ThemeConfig): this {
@@ -923,6 +1171,7 @@ export abstract class FiboBuilder {
   hover(callback: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this;
   hover(): PseudoStateBuilder;
   hover(callback?: (builder: PseudoStateBuilder) => void | PseudoStateBuilder): this | PseudoStateBuilder {
+    this.ensureInteractiveTransition();
     const className = this.getPseudoStateClassName();
     const builder = new PseudoStateBuilder(className, 'hover', this);
 
@@ -1148,10 +1397,8 @@ export abstract class FiboBuilder {
     }
 
     if (this._animationConfig && this._animatedProps.size === 0) {
-      const { duration = 300, curve = 'easeOut' } = this._animationConfig;
-      const timingFunction = curve === 'spring'
-        ? 'cubic-bezier(0.68, -0.55, 0.265, 1.55)'
-        : curve;
+      const { duration = 300, curve = 'easeOut', stiffness, damping } = this._animationConfig;
+      const timingFunction = resolveCssEase(curve, { stiffness, damping });
       finalStyle.transition = `all ${duration}ms ${timingFunction}`;
     }
 
@@ -1159,10 +1406,21 @@ export abstract class FiboBuilder {
   }
 
   protected processChildren(): ReactNode[] {
-    if (this._childFunction) {
-      return normalizeFiboChildren(this._childFunction);
-    }
-    return this._children;
+    const raw = this._childFunction
+      ? normalizeFiboChildren(this._childFunction)
+      : this._children;
+    if (this._staggerMs == null) return raw;
+    return raw.map((child, index) =>
+      React.createElement(
+        'span',
+        {
+          key: React.isValidElement(child) && child.key != null ? child.key : `fibo-stagger-${index}`,
+          className: 'fibo-stagger-item',
+          style: { ['--fibo-i' as string]: String(index) },
+        },
+        child
+      )
+    );
   }
 
   protected getChildFunction(): (() => FiboChild | FiboChild[]) | undefined {
@@ -1208,6 +1466,29 @@ function assembleBuilder(target: FiboBuilder): ReactElement {
         animationConfig,
         children: element
       });
+    }
+
+    const reveal = (target as any)._reveal as
+      | { preset: string; once?: boolean; rootMargin?: string; threshold?: number }
+      | undefined;
+    if (reveal) {
+      element = React.createElement(Reveal, {
+        preset: reveal.preset,
+        once: reveal.once,
+        rootMargin: reveal.rootMargin,
+        threshold: reveal.threshold,
+        forceMotion: (target as any)._reducedMotion === 'never',
+        preferTimeline: (target as any)._classNames?.includes('fibo-view-timeline'),
+        children: element,
+      });
+    }
+
+    if ((target as any)._scrollProgress) {
+      element = React.createElement(ScrollProgress, { children: element });
+    }
+
+    if ((target as any)._usesCssMotion) {
+      element = React.createElement(React.Fragment, null, React.createElement(MotionStyles), element);
     }
 
     const gesture = (target as any)._gesture;

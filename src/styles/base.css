@@ -1,4 +1,5 @@
 @import './core.css';
+@import './motion.css';
 @import './themes/material.css';
 @import './themes/cupertino.css';
 @import './themes/web.css';

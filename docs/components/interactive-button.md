@@ -120,7 +120,7 @@ Creates a new `Button` builder instance.
 | :--- | :--- | :--- |
 | `.onPress(handler)` | `() => void` | Press / click handler (preferred) |
 | `.onClick(handler)` | `(event: MouseEvent) => void` | Raw DOM click handler |
-| `.onHover(handler)` | `() => void` | Hover event handler |
+| `.onHover(handler)` | `() => void` | `mouseenter` handler (does not receive the event) |
 
 ### Inherited from FiboBuilder
 
@@ -154,6 +154,17 @@ Button('Submit')
   .disabled(isLoading)
   .onClick(handleSubmit)
 
+```
+
+### Hover handler
+
+`.onHover` is a **callback**, not the CSS hover style. Use builder `.hover()` for visual hover.
+
+```tsx
+Button('Notify')
+  .onHover(() => console.log('entered'))
+  .hover((h) => h.scale(1.03))
+  .onPress(submit)
 ```
 
 ### Custom Styling

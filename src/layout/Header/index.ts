@@ -24,8 +24,15 @@ class HeaderBuilder extends FiboBuilder {
         return this;
     }
 
-    sticky(enable: boolean = true): this {
-        this._sticky = enable;
+    sticky(enable: boolean | number | string = true): this {
+        if (enable === false) {
+            this._sticky = false;
+            return this;
+        }
+        this._sticky = true;
+        if (enable !== true) {
+            super.sticky(enable);
+        }
         return this;
     }
 

@@ -33,6 +33,11 @@ body {
   }
 }
 
+@keyframes stripes {
+  from { background-position: 0 0; }
+  to { background-position: 40px 0; }
+}
+
 .fibo-ripple-container {
   position: absolute;
   top: 0;
