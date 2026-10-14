@@ -16,7 +16,7 @@ Planned as **2.2.0**. Easy CSS media queries, CSS motion presets, and a fluent s
 - **`prefers-reduced-motion`** disable-by-default; `.reducedMotion('never')` opt-out.
 - **`.stagger(ms)`** sets `--fibo-stagger` / `--fibo-i` on children.
 - **Scroll family:** `.onScroll()` / `.reveal()` (IntersectionObserver), `.scrollTimeline('view'|'scroll')` with IO fallback, `.scrollProgress()` (`animation-timeline: scroll()` + `--fibo-progress` fallback), `.smoothScroll()`, `.scrollSnap()` / `.scrollSnapAlign()`, `.sticky()`, `.anchor()` + `scrollTo()`.
-- **Extras:** `.press()`, `.focusVisible()` / `.focusRing()`, `.viewTransition()` + `startViewTransition()`, `<Presence enter/exit>`, `usePrefersReducedMotion()`, `useScrollProgress()`.
+- **Extras:** `.press()`, `.focusVisible()` / `.focusRing()`, `.viewTransition()` + `startViewTransition()`, `Presence(open).enter().exit().duration().children()` (signal or boolean; component form still works), `usePrefersReducedMotion()`, `useScrollProgress()`.
 - Typed exports: `useSpring`, `useTransition`, `useStagger`, `useMountTransition`, `SpringConfig`. Hooks remain the opt-in numeric rAF path.
 - Docs: [Animation](./docs/guide/animation.md), [Scroll](./docs/guide/scroll.md). Demo: `examples/animation`.
 

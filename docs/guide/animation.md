@@ -62,7 +62,7 @@ Presets: `fadeIn` / `fadeOut` / `fade`, `slideUp` / `slideDown` / `slideLeft` / 
 
 <ReactWrapper :component="renderPresets" />
 
-Keyframes are compiled once (`FIBO_MOTION_CSS` + `import 'fiboui/style.css'`). `<MotionStyles />` is injected automatically when you call `.animate()` so SSR/HTML still contains the sheet.
+Keyframes are compiled once (`FIBO_MOTION_CSS` + `import 'fiboui/style.css'`). `MotionStyles` is injected automatically when you call `.animate()` so SSR/HTML still contains the sheet.
 
 ## Hover, press, focus
 
@@ -127,18 +127,19 @@ scrollTo('#pricing')
 
 ## Enter / exit & view transitions
 
-```tsx
-import { Presence, startViewTransition } from 'fiboui';
+```ts
+import { Presence, signal, startViewTransition } from 'fiboui';
 
-<Presence show={open} enter="fadeIn" exit="fadeOut">
-  {panel}
-</Presence>
+const open = signal(true);
+
+Presence(open).enter('fadeIn').exit('fadeOut').duration(200).children(panel)
+Presence(true).exit('fadeOut').children(panel)
 
 Box().viewTransition('hero')
-startViewTransition(() => setPage(next))
+startViewTransition(() => { page.value = next })
 ```
 
-`Presence` stays mounted through the exit keyframe (`animationend`). `startViewTransition` no-ops when the API is missing.
+`Presence(signal | boolean)` is a builder (React element, no `.build()`). It stays mounted through the exit keyframe (`animationend`). The component form `Presence({ show, children })` still works. `startViewTransition` no-ops when the API is missing.
 
 ## Hooks (typed, opt-in rAF)
 

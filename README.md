@@ -2,7 +2,7 @@
 
 **A Flutter & SwiftUI-inspired React UI framework featuring a fluent builder API and fine-grained reactivity.**
 
-FiboUI brings chainable builders to React. Compose screens with `Column()`, `Row()`, `Button()`, and `signal()`. Builders **are** React elements — return them from components, nest them in JSX, and skip `.build()`.
+FiboUI brings chainable builders to React. Compose screens with `Column()`, `Row()`, `Button()`, and `signal()`. Builders **are** React elements — return them from functions and skip `.build()`. Prefer the fluent API (no JSX tags).
 
 ---
 
@@ -14,7 +14,7 @@ FiboUI brings chainable builders to React. Compose screens with `Column()`, `Row
 - **Multi-theme** — Material, Cupertino, and Web tokens with CSS variables.
 - **Type-safe** — TypeScript builders; `FiboChild` / `FiboChildren` describe child slots.
 - **Media queries** — `Box().padding(8).md({ padding: 16 }).lg({ padding: 24 })` compiles to CSS `@media`. `.responsive({ mobile, tablet, desktop })` still works (JS).
-- **CSS motion & scroll** — `Box().animate('fadeIn').ease('spring')`, `.onScroll('fadeIn')`, `.stagger(80)`, `.scrollProgress()`. Default path is CSS (no rAF). See `docs/guide/animation.md`.
+- **CSS motion & scroll** — `Box().animate('fadeIn').ease('spring')`, `.onScroll('fadeIn')`, `.stagger(80)`, `.scrollProgress()`, `Presence(open).enter('fadeIn').exit('fadeOut')`. Default path is CSS (no rAF). See `docs/guide/animation.md`.
 
 ---
 
@@ -61,7 +61,7 @@ function Hello() {
 
 ### No `.build()`
 
-Builders are valid React elements (`isValidElement(Button('Go'))`). Use them as JSX children, return values, array items (`.key(id)`), props, or `React.createElement` arguments. `.build()` still exists and is deprecated.
+Builders are valid React elements (`isValidElement(Button('Go'))`). Return them from functions, nest them in `.children()`, or pass them as `React.createElement` arguments. `.build()` still exists and is deprecated.
 
 The event API on `Button` is **`.onPress`** (not `onClick`). `FiboBuilder.onClick` still exists for raw DOM handlers on any builder.
 

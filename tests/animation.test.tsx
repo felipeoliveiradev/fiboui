@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { isValidElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   Box,
@@ -193,8 +194,21 @@ describe('stagger / press / focus / scroll helpers', () => {
   });
 });
 
+function stubReducedMotion(reduce: boolean): void {
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    matches: reduce && query.includes('prefers-reduced-motion'),
+    media: query,
+    onchange: null,
+    addListener: () => undefined,
+    removeListener: () => undefined,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+    dispatchEvent: () => false,
+  }));
+}
+
 describe('Presence + Button.onHover + hooks', () => {
-  it('keeps children through exit then unmounts', () => {
+  it('component form keeps children through exit then unmounts', () => {
     const { rerender } = render(
       <Presence show>
         <span>panel</span>
@@ -211,6 +225,39 @@ describe('Presence + Button.onHover + hooks', () => {
     expect(wrap.className).toMatch(/fibo-anim-fadeOut/);
     fireEvent.animationEnd(wrap);
     expect(screen.queryByText('panel')).toBeNull();
+  });
+
+  it('fluent builder is a React element and plays exit on signal toggle', () => {
+    const open = signal(true);
+    const tree = Presence(open).enter('fadeIn').exit('fadeOut').duration(200).children('panel');
+    expect(isValidElement(tree)).toBe(true);
+    render(tree);
+    expect(screen.getByText('panel')).toBeTruthy();
+    act(() => {
+      open.value = false;
+    });
+    const wrap = document.querySelector('[data-fibo-presence="exit"]') as HTMLElement;
+    expect(wrap).toBeTruthy();
+    expect(wrap.className).toMatch(/fibo-anim-fadeOut/);
+    fireEvent.animationEnd(wrap);
+    expect(screen.queryByText('panel')).toBeNull();
+  });
+
+  it('fluent builder unmounts immediately when reduced-motion is set', () => {
+    stubReducedMotion(true);
+    const open = signal(true);
+    render(Presence(open).exit('fadeOut').children('panel'));
+    expect(screen.getByText('panel')).toBeTruthy();
+    act(() => {
+      open.value = false;
+    });
+    expect(screen.queryByText('panel')).toBeNull();
+    expect(document.querySelector('[data-fibo-presence="exit"]')).toBeNull();
+  });
+
+  it('fluent builder accepts a boolean show', () => {
+    render(Presence(true).enter('fadeIn').children('shown'));
+    expect(screen.getByText('shown')).toBeTruthy();
   });
 
   it('fires Button.onHover on mouseenter', () => {
