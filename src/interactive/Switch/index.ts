@@ -3,14 +3,25 @@ import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps } from '../../core/types';
 import { twMerge } from 'tailwind-merge';
 
-const SwitchInner = React.memo((props: any) => {
+interface SwitchInnerProps {
+  checked?: boolean;
+  onChange?: (checked: boolean) => void;
+  label?: string;
+  disabled?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+  id?: string;
+}
+
+const SwitchInner = React.memo((props: SwitchInnerProps) => {
     const {
         checked,
         onChange,
         label,
         disabled,
         className,
-        style
+        style,
+        id
     } = props;
 
     const trackClasses = twMerge(
@@ -34,12 +45,7 @@ const SwitchInner = React.memo((props: any) => {
             {
                 className: trackClasses,
                 style: style,
-                onClick: (e: React.MouseEvent) => {
-                    e.preventDefault();
-                    if (!disabled && onChange) {
-                        onChange(!checked);
-                    }
-                }
+                'aria-hidden': true
             },
             React.createElement('div', { className: thumbClasses })
         ),
@@ -50,8 +56,10 @@ const SwitchInner = React.memo((props: any) => {
         ),
 
         React.createElement('input', {
+            id,
             type: 'checkbox',
-            checked: checked,
+            role: 'switch',
+            checked: !!checked,
             disabled: disabled,
             className: 'sr-only',
             onChange: (e: React.ChangeEvent<HTMLInputElement>) => !disabled && onChange?.(e.target.checked)
@@ -86,13 +94,14 @@ class SwitchBuilder extends FiboBuilder {
   }
 
   build(): ReactElement {
-    const props = {
+    const props: SwitchInnerProps = {
         checked: this._checked,
         onChange: this._onChange,
         label: this._label,
         disabled: this._disabled,
         className: this.getClassName(),
-        style: this.getStyle()
+        style: this.getStyle(),
+        ...(this._props as SwitchInnerProps)
     };
     return React.createElement(SwitchInner, props);
   }

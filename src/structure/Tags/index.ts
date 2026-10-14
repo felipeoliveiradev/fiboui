@@ -13,7 +13,7 @@ const TagsInner = React.memo((props: any) => {
       React.createElement(
         'span',
         {
-          key: index,
+          key: item.title ? `${item.title}-${index}` : `tag-${index}`,
           className: 'fibo-tag',
         },
         item.title

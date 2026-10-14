@@ -1,0 +1,18 @@
+{
+  "overall": 6.12,
+  "regions": {
+    "splash-logo": 9.24,
+    "splash-title": 13.92,
+    "splash-btn": 24.19,
+    "dash-header": 14.93,
+    "dash-stats": 9.97,
+    "dash-tracker": 13.86,
+    "dash-tools": 7.75,
+    "dash-nav": 4.44,
+    "inv-header": 4.68,
+    "inv-ring": 18.08,
+    "inv-legend": 16.67,
+    "inv-btns": 23.28,
+    "inv-portfolio": 9.11
+  }
+}

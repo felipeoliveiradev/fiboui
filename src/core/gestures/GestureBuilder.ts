@@ -30,7 +30,7 @@ export class GestureBuilder extends FiboBuilder {
 
   build(): any {
     return React.createElement(GestureComponent, {
-      key: this._props.key,
+      key: this._props.key as React.Key | undefined,
       onPanStart: this._onPanStart,
       onPanUpdate: this._onPanUpdate,
       onPanEnd: this._onPanEnd,

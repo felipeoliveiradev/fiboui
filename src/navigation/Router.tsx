@@ -28,23 +28,24 @@ export const Router: React.FC<RouterProps> = ({
   onError
 }) => {
   const [currentPath, setCurrentPath] = useState(() => {
+    if (typeof window === 'undefined') return '/';
     return window.location.pathname.replace(basename, '') || '/';
   });
 
-  const [params, setParams] = useState<Record<string, string>>({});
-  const [query, setQuery] = useState(() => new URLSearchParams(window.location.search));
+  const [query, setQuery] = useState(() =>
+    typeof window === 'undefined' ? new URLSearchParams() : new URLSearchParams(window.location.search)
+  );
 
   const { route, params: matchedParams } = findMatchingRoute(routes, currentPath);
-
-  useEffect(() => {
-    setParams(matchedParams);
-  }, [currentPath]);
+  const routeRef = React.useRef(route);
+  routeRef.current = route;
 
   const navigate = useCallback(async (path: string, options: NavigateOptions = {}) => {
+    const currentRoute = routeRef.current;
     const { route: nextRoute } = findMatchingRoute(routes, path);
 
-    if (route?.beforeLeave && nextRoute) {
-      const leaveResult = await route.beforeLeave(nextRoute, route);
+    if (currentRoute?.beforeLeave && nextRoute) {
+      const leaveResult = await currentRoute.beforeLeave(nextRoute, currentRoute);
 
       if (leaveResult === false) {
         return;
@@ -57,7 +58,7 @@ export const Router: React.FC<RouterProps> = ({
     }
 
     if (nextRoute?.beforeEnter) {
-      const enterResult = await nextRoute.beforeEnter(nextRoute, route);
+      const enterResult = await nextRoute.beforeEnter(nextRoute, currentRoute);
 
       if (enterResult === false) {
         return;
@@ -71,18 +72,22 @@ export const Router: React.FC<RouterProps> = ({
 
     const fullPath = basename + path;
 
-    if (options.replace) {
-      window.history.replaceState(options.state || {}, '', fullPath);
-    } else {
-      window.history.pushState(options.state || {}, '', fullPath);
+    if (typeof window !== 'undefined') {
+      if (options.replace) {
+        window.history.replaceState(options.state || {}, '', fullPath);
+      } else {
+        window.history.pushState(options.state || {}, '', fullPath);
+      }
+      setQuery(new URLSearchParams(window.location.search));
     }
 
     setCurrentPath(path);
-    setQuery(new URLSearchParams(window.location.search));
-  }, [basename, route, routes]);
+  }, [basename, routes]);
 
   const goBack = useCallback(() => {
-    window.history.back();
+    if (typeof window !== 'undefined') {
+      window.history.back();
+    }
   }, []);
 
   const replace = useCallback((path: string) => {
@@ -102,10 +107,11 @@ export const Router: React.FC<RouterProps> = ({
 
   const contextValue: RouterContextValue = {
     currentPath,
+    basename,
     navigate,
     goBack,
     replace,
-    params,
+    params: matchedParams,
     query,
   };
 

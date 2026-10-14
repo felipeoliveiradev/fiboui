@@ -1,165 +1,211 @@
-# 🏗️ FiboUI v1.0.0
+# FiboUI v2.0.0
 
-**A Flutter & SwiftUI-inspired React UI framework featuring a powerful Assembly Pattern and high-fidelity reactivity.**
+**A Flutter & SwiftUI-inspired React UI framework featuring a fluent builder API and fine-grained reactivity.**
 
-FiboUI brings the expressive, chainable syntax of modern mobile frameworks to React. Build complex, beautiful, and highly-performant UIs with **zero boilerplate** and **maximum readability**.
-
----
-
-## ✨ Features
-
-- 🏗️ **The Assembly Pattern** - Components return builders for endless chaining.
-- ⚡ **Zero-Build Children** - Pass builders directly to `.children()`; they build implicitly.
-- 🔬 **Fine-Grained Reactivity** - Native support for Signals, Computed, and Observables.
-- 🎭 **Dynamic Multi-Theme** - Material, Cupertino, and Web themes with instant global switching.
-- 🎨 **Premium Aesthetics** - Built-in glassmorphism, micro-animations, and sleek dark modes.
-- 🔷 **100% Type-Safe** - Built with TypeScript for the best developer experience.
+FiboUI brings chainable builders to React. Compose screens with `Column()`, `Row()`, `Button()`, and `signal()` — builders passed to `.children()` are finalized automatically.
 
 ---
 
-## 🚀 Installation
+## Features
+
+- **Assembly pattern** — factories return builders for endless chaining.
+- **Zero-build children** — pass builders to `.children()`; they build implicitly. Typed methods (`.onPress`, `.id`, `.spacing`, `.children`) stay assignable as children.
+- **Fine-grained reactivity** — `signal()`, `computed()`, `createStore()`, `.bindSignal()`, `.observer()`.
+- **Multi-theme** — Material, Cupertino, and Web tokens with CSS variables.
+- **Type-safe** — TypeScript builders; `FiboChild` / `FiboChildren` describe child slots.
+
+---
+
+## Installation
 
 ```bash
 npm install fiboui
 ```
 
-Import the styles in your main entry file:
+Import the stylesheet once in your entry file:
 
 ```tsx
-import 'fiboui/dist/style.css';
+import 'fiboui/style.css';
 ```
+
+**Required.** The JS entry does not load CSS. ESM-only (`import`, no `require`). See [MIGRATION.md](./MIGRATION.md) if you used 1.x snapshots.
+
+Peer dependencies: React 18 or 19.
+
+Next.js App Router: files that **call** builders (`Button()`, `Column()`, …) must be Client Components (`'use client'`). FiboUI uses hooks and context; it is not an RSC factory API. Import `'fiboui/style.css'` from a layout or the client entry.
+
+## Releasing
+
+Publishing is automated. The owner must add an **`NPM_TOKEN`** automation secret in the GitHub repo settings. Release branch is **`main`**. See [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+Do not run `npm publish` locally. The `Publish` workflow runs on GitHub Release and on push to `main`: install, typecheck, test, build, then `npm publish --provenance --access public` only if that version is not already on npm. After a successful `main` publish it opens GitHub Release `vX.Y.Z` with the matching CHANGELOG section as notes.
 
 ---
 
-## 🏗️ The Assembly Pattern
+## The assembly pattern
 
-### 1. Components as Builders
-Components return builder instances, allowing customization before rendering.
+### Components as builders
 
 ```tsx
-StakentCard()
-  .className("p-8 hover:border-indigo-500/50")
+import { Card, Text } from 'fiboui';
+
+Card()
+  .className('p-8')
   .style({ backgroundColor: '#111' })
-  .children([ ... ])
-  .build()
+  .children([Text('Hello')])
+  .build();
 ```
 
-### 2. Implicit Construction
-Builders in `.children()` are automatically finalized.
+### Implicit construction
+
+Builders in `.children()` do not need `.build()`. The event API on `Button` is **`.onPress`** (not `onClick`). `FiboBuilder.onClick` still exists for raw DOM handlers on any builder.
 
 ```tsx
-Column().children([
-  Text("Title").variant("h1"), 
-  Button("Action").onClick(handlePress)
-]).build()
+import { Button, Column, Text } from 'fiboui';
+
+Column()
+  .children([
+    Text('Title').variant('h1'),
+    Button('Action').onPress(() => undefined),
+  ])
+  .build();
 ```
 
 ---
 
-## ⚡ Reactivity & State
+## Reactivity & state
 
-### Signals (Primitives)
+### Signals
+
+`.bindSignal(sig)` subscribes the builder and **re-runs `build()`** when the signal changes. Read the signal inside a **function child** (or `Text(() => ...)`) so the new value is picked up. Interpolating `sig.value` into a string at construction time is a one-shot snapshot.
+
 ```tsx
+import { Box, Button, Text, signal } from 'fiboui';
+
 const count = signal(0);
 
 Box()
   .bindSignal(count)
-  .children([
+  .children(() => [
     Text(`Count: ${count.value}`),
-    Button("+").onPress(() => count.value++)
+    Button('+').onPress(() => {
+      count.value += 1;
+    }),
   ])
-  .build()
+  .build();
 ```
 
-### Global Store
+`useSignal(count)` and `.observer()` with a function child also work. Signal subscriptions unsubscribe on unmount and are Safe for React 18/19 StrictMode (`useSyncExternalStore`). Signals are in-memory and client-only — do not rely on them during SSR.
+
+`computed(() => ...)` is lazy: the first `.value` read attaches the internal effect. Read it (or `.bindSignal`) so updates notify.
+
+Two store APIs exist: `createStore()` + `useReactiveStore(store)`, and the `@Store()` decorator + `useStore(StoreClass)` (the package-root `useStore`). Builder `.state(key, initial)` is runtime-updatable via `useBuilderState(key)`.
+
+### Global store
+
 ```tsx
+import { Box, Text, createStore } from 'fiboui';
+
 const store = createStore({ theme: 'dark', user: 'John' });
 
-Box().observer().children([
-  Text(store.getState().user)
-])
+Box()
+  .observer()
+  .children(() => Text(store.getState().user))
+  .build();
 ```
 
 ---
 
-## 📱 Scaffold & Layout Shells
+## Layout notes
 
-The `Scaffold` and `DashboardLayout` components provide professional-grade app structures.
+### Column + Row (`spaceBetween`)
+
+Flutter `Column` defaults to `CrossAxisAlignment.center`. SwiftUI `VStack` defaults to `.center`. FiboUI **2.0 matches that: `crossAxisAlignment('center')`.**
+
+**Row uses `align-self: stretch`** so `spaceBetween` still fills the Column width under a centered cross axis.
+
+To stretch every child (Flutter `CrossAxisAlignment.stretch`):
 
 ```tsx
-import { Scaffold, Sidebar, Header, Text, StakentButton } from 'fiboui';
+Column().crossAxisAlignment('stretch');
+```
+
+---
+
+## Scaffold & layout shells
+
+`Scaffold` uses `headerBar`, `footerBar`, `sideBarLeft`, and `sideBarRight`. `DashboardLayout` uses `header` and `sidebar`.
+
+```tsx
+import { Header, Scaffold, Sidebar, Text } from 'fiboui';
 
 Scaffold()
-  .header(
-    Header().height(80).className("px-6 bg-white shadow-sm").children([
-      Text("App Title").variant("h2"),
-      StakentButton({ text: "Profile", variant: "outline" })
-    ])
+  .headerBar(
+    Header()
+      .height(80)
+      .className('px-6 bg-white shadow-sm')
+      .children([Text('App Title').variant('h2')])
   )
-  .sidebar(
-    Sidebar().width(240).children([
-       StakentSidebarItem({ label: "Home", active: true, icon: "home" }),
-       StakentSidebarItem({ label: "Settings", icon: "settings" })
-    ])
+  .sideBarLeft(
+    Sidebar().width(240).children([Text('Home'), Text('Settings')])
   )
-  .fab(
-    Button("+").variant("fab").onPress(() => console.log("Added!"))
-  )
-  .children([
-    Text("Welcome to the main content area.")
-  ])
-  .build()
+  .children([Text('Welcome to the main content area.')])
+  .build();
 ```
 
 ---
 
-## 🛒 Full Example: E-commerce Store
-
-Combine **Signals**, **Store**, and **Builders** for a complete reactive application.
+## Example: reactive product grid
 
 ```tsx
-import { signal, computed, createStore, Scaffold, Box, Text, Button, Badge, Row } from 'fiboui';
+import {
+  Badge,
+  Box,
+  Button,
+  Card,
+  Grid,
+  Row,
+  Text,
+  computed,
+  createStore,
+} from 'fiboui';
 
-// 1. Global Store
 const appStore = createStore({
-  cart: [],
+  cart: [] as { id: string; name: string; price: number; quantity: number }[],
   products: [
-    { id: '1', name: 'MacBook Pro', price: 2499, image: '💻' },
-    { id: '2', name: 'iPhone 15', price: 999, image: '📱' }
-  ]
+    { id: '1', name: 'MacBook Pro', price: 2499 },
+    { id: '2', name: 'iPhone 15', price: 999 },
+  ],
 });
 
-// 2. Reactive Computed Values
 const cartTotal = computed(() => {
   const cart = appStore.getState().cart;
   return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 });
 
-// 3. UI Component
-export function EcommerceApp() {
-  return Scaffold()
-    .header(
-      Header().children([
-        Text('🛒 FiboShop').variant("h2"),
-        Row().children([
-          Text(`Total: $${cartTotal.value.toFixed(2)}`).bindSignal(cartTotal),
-          Badge().text(appStore.getState().cart.length.toString()).observer()
-        ])
-      ])
-    )
-    .children([
-      Grid().columns(2).gap("md").children(
-        appStore.getState().products.map(product => 
-          Card().children([
-            Text(product.image).fontSize(40),
-            Text(product.name).fontWeight("bold"),
-            Button(`Add $${product.price}`).onPress(() => {
-              // Update Store & Watch UI React!
-              appStore.setState(s => ({ cart: [...s.cart, { ...product, quantity: 1 }] }));
-            })
-          ])
-        )
-      )
+export function ShopHeader() {
+  return Box()
+    .observer()
+    .children(() => [
+      Row().children([
+        Text(`Total: $${cartTotal.value.toFixed(2)}`).bindSignal(cartTotal),
+        Badge().text(String(appStore.getState().cart.length)),
+      ]),
+      Grid()
+        .columns(2)
+        .gap('md')
+        .children(
+          appStore.getState().products.map((product) =>
+            Card().children([
+              Text(product.name).weight('bold'),
+              Button(`Add $${product.price}`).onPress(() => {
+                appStore.setState((s) => ({
+                  cart: [...s.cart, { ...product, quantity: 1 }],
+                }));
+              }),
+            ])
+          )
+        ),
     ])
     .build();
 }
@@ -167,6 +213,6 @@ export function EcommerceApp() {
 
 ---
 
-## 📄 License
+## License
 
-MIT © 2025 FiboUI
+MIT © 2025–2026 FiboUI

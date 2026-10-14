@@ -29,11 +29,13 @@ const ListInner = React.memo((props: any) => {
     customItemFocus
   } = props;
 
-  const [scrollTop, setScrollTop] = useState(0);
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const [layoutVersion, setLayoutVersion] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const heightCache = useRef<Map<number, number>>(new Map());
   const observerRef = useRef<HTMLDivElement>(null);
+  const isHorizontal = direction === 'horizontal';
 
   const itemCount = items.length;
   const shouldVirtualize = itemCount > VIRTUALIZATION_THRESHOLD;
@@ -58,15 +60,15 @@ const ListInner = React.memo((props: any) => {
     return total;
   };
 
-  const findStartIndex = (scrollTop: number): number => {
+  const findStartIndex = (offset: number): number => {
     let low = 0;
     let high = itemCount - 1;
 
     while (low < high) {
       const mid = Math.floor((low + high) / 2);
-      const offset = getItemOffset(mid);
+      const itemOffset = getItemOffset(mid);
 
-      if (offset < scrollTop) {
+      if (itemOffset < offset) {
         low = mid + 1;
       } else {
         high = mid;
@@ -82,12 +84,12 @@ const ListInner = React.memo((props: any) => {
   let totalHeight = 0;
 
   if (shouldVirtualize) {
-    startIndex = Math.max(0, findStartIndex(scrollTop) - OVERSCAN);
+    startIndex = Math.max(0, findStartIndex(scrollOffset) - OVERSCAN);
 
     let currentOffset = getItemOffset(startIndex);
     let index = startIndex;
 
-    while (currentOffset < scrollTop + containerHeight + (OVERSCAN * DEFAULT_ITEM_HEIGHT) && index < itemCount) {
+    while (currentOffset < scrollOffset + containerHeight + (OVERSCAN * DEFAULT_ITEM_HEIGHT) && index < itemCount) {
       currentOffset += getItemHeight(index);
       index++;
     }
@@ -102,23 +104,29 @@ const ListInner = React.memo((props: any) => {
   useLayoutEffect(() => {
     if (!shouldVirtualize) return;
 
-    visibleItems.forEach((_: any, i: number) => {
+    let changed = false;
+    visibleItems.forEach((_: unknown, i: number) => {
       const actualIndex = startIndex + i;
       const element = itemRefs.current.get(actualIndex);
 
       if (element) {
         const rect = element.getBoundingClientRect();
-        const measuredHeight = rect.height;
+        const measured = isHorizontal ? rect.width : rect.height;
 
-        if (measuredHeight > 0) {
-          const cachedHeight = heightCache.current.get(actualIndex);
-          if (cachedHeight !== measuredHeight) {
-            heightCache.current.set(actualIndex, measuredHeight);
+        if (measured > 0) {
+          const cached = heightCache.current.get(actualIndex);
+          if (cached !== measured) {
+            heightCache.current.set(actualIndex, measured);
+            changed = true;
           }
         }
       }
     });
-  }, [visibleItems, startIndex, shouldVirtualize]);
+
+    if (changed) {
+      setLayoutVersion((version) => version + 1);
+    }
+  }, [visibleItems, startIndex, shouldVirtualize, isHorizontal, layoutVersion]);
 
   useLayoutEffect(() => {
     if (!onEndReached || loading) return;
@@ -141,11 +149,12 @@ const ListInner = React.memo((props: any) => {
 
   const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
     if (shouldVirtualize) {
-      setScrollTop(e.currentTarget.scrollTop);
+      setScrollOffset(isHorizontal ? e.currentTarget.scrollLeft : e.currentTarget.scrollTop);
     }
   };
 
   useEffect(() => {
+    if (typeof document === 'undefined') return;
     if (!customItemHover && !customItemActive && !customItemFocus) return;
 
     const styleId = 'fibo-list-custom-styles';
@@ -234,11 +243,13 @@ const ListInner = React.memo((props: any) => {
         ref: containerRef,
         className: `fibo-list fibo-list-virtualized ${className || ''}`,
         style: {
-          height: `${containerHeight}px`,
-          overflowY: 'auto',
+          height: isHorizontal ? undefined : `${containerHeight}px`,
+          width: isHorizontal ? `${containerHeight}px` : undefined,
+          overflowY: isHorizontal ? 'hidden' : 'auto',
+          overflowX: isHorizontal ? 'auto' : 'hidden',
           position: 'relative',
           display: 'flex',
-          flexDirection: direction === 'horizontal' ? 'row' : 'column',
+          flexDirection: isHorizontal ? 'row' : 'column',
           ...variantStyles[variant as ListVariant],
           ...style
         },
@@ -246,8 +257,8 @@ const ListInner = React.memo((props: any) => {
       },
       React.createElement('div', {
         style: {
-          height: `${totalHeight}px`,
-          width: '1px',
+          height: isHorizontal ? '1px' : `${totalHeight}px`,
+          width: isHorizontal ? `${totalHeight}px` : '1px',
           position: 'absolute',
           top: 0,
           left: 0,
@@ -259,8 +270,11 @@ const ListInner = React.memo((props: any) => {
         'div',
         {
           style: {
-            transform: `translateY(${startOffset}px)`,
-            width: '100%'
+            transform: isHorizontal ? `translateX(${startOffset}px)` : `translateY(${startOffset}px)`,
+            width: isHorizontal ? 'auto' : '100%',
+            height: isHorizontal ? '100%' : undefined,
+            display: isHorizontal ? 'flex' : undefined,
+            flexDirection: isHorizontal ? 'row' : undefined
           }
         },
         visibleItems.map((item: any, i: number) => {

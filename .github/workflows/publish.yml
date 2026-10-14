@@ -1,0 +1,95 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+  push:
+    branches: [main]
+
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run type-check
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Skip if version already on npm
+        id: version
+        run: |
+          set -euo pipefail
+          VERSION="$(node --input-type=commonjs -e "const fs=require('fs'); process.stdout.write(JSON.parse(fs.readFileSync('package.json','utf8')).version")")"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          if npm view "fiboui@${VERSION}" version >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "fiboui@${VERSION} is already on npm — skipping publish."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "fiboui@${VERSION} is not on npm — will publish."
+          fi
+
+      - name: Publish to npm
+        if: steps.version.outputs.exists == 'false'
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: GitHub Release vX.Y.Z with CHANGELOG notes
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.version.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          TAG="v${VERSION}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists."
+            exit 0
+          fi
+          NOTES="$(python3 - "$VERSION" <<'PY'
+          import re
+          import sys
+          from pathlib import Path
+
+          version = sys.argv[1]
+          text = Path("CHANGELOG.md").read_text(encoding="utf-8")
+          match = re.search(
+              rf"(?ms)^## \[{re.escape(version)}\][^\n]*\n(.*?)(?=^## \[|\Z)",
+              text,
+          )
+          if not match:
+              sys.exit(f"CHANGELOG.md has no ## [{version}] section")
+          notes = match.group(1).strip()
+          if not notes:
+              sys.exit(f"CHANGELOG.md section [{version}] is empty")
+          print(notes)
+          PY
+          )"
+          gh release create "$TAG" --title "$TAG" --notes "$NOTES"

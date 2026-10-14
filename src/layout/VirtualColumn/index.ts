@@ -105,10 +105,12 @@ const VirtualColumnInner = React.memo((props: VirtualColumnInnerProps) => {
   const visibleItems = children.slice(startIndex, endIndex);
   const startOffset = getItemOffset(startIndex);
   const totalHeight = getTotalHeight();
+  const [layoutVersion, setLayoutVersion] = useState(0);
 
   useLayoutEffect(() => {
     if (!measureItems || isFixedHeight) return;
 
+    let changed = false;
     visibleItems.forEach((_, i) => {
       const actualIndex = startIndex + i;
       const element = itemRefs.current.get(actualIndex);
@@ -121,11 +123,16 @@ const VirtualColumnInner = React.memo((props: VirtualColumnInnerProps) => {
           const cachedHeight = heightCache.current.get(actualIndex);
           if (cachedHeight !== measuredHeight) {
             heightCache.current.set(actualIndex, measuredHeight);
+            changed = true;
           }
         }
       }
     });
-  }, [visibleItems, startIndex, measureItems, isFixedHeight]);
+
+    if (changed) {
+      setLayoutVersion((version) => version + 1);
+    }
+  }, [visibleItems, startIndex, measureItems, isFixedHeight, layoutVersion]);
 
   const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
     setScrollTop(e.currentTarget.scrollTop);
@@ -166,18 +173,20 @@ const VirtualColumnInner = React.memo((props: VirtualColumnInnerProps) => {
       visibleItems.map((child, i) => {
         const actualIndex = startIndex + i;
 
-        return React.cloneElement(
-          child as React.ReactElement,
+        return React.createElement(
+          'div',
           {
             key: actualIndex,
-            ref: (el: HTMLElement | null) => {
+            ref: (el: HTMLDivElement | null): void => {
               if (el && measureItems && !isFixedHeight) {
-                itemRefs.current.set(actualIndex, el as HTMLDivElement);
+                itemRefs.current.set(actualIndex, el);
               } else if (!el) {
                 itemRefs.current.delete(actualIndex);
               }
-            }
-          }
+            },
+            style: { width: '100%' }
+          },
+          child
         );
       })
     )

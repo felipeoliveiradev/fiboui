@@ -1,5 +1,19 @@
 import { CSSProperties, ReactNode, ReactElement } from 'react';
 
+/** Any fluent builder that can produce a React element. */
+export type Buildable = {
+  build(): ReactElement;
+};
+
+/**
+ * A single child accepted by `.children()` / layout slots.
+ * Builders are first-class — they do not need `.build()` at the call site.
+ */
+export type FiboChild = ReactNode | Buildable;
+
+/** Value accepted by `.children()`: one child, a list, or a lazy factory. */
+export type FiboChildren = FiboChild | FiboChild[] | (() => FiboChild | FiboChild[]);
+
 export type FiboThemeName = 'material' | 'cupertino' | 'web';
 
 export interface ResponsiveStyles {

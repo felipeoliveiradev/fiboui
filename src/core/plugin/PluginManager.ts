@@ -11,6 +11,8 @@ export class PluginManager implements FiboContext {
   private sidebarItems: SidebarConfig[] = [];
   private topbarActions: (() => FiboBuilder)[] = [];
   private overlays: (() => FiboBuilder)[] = [];
+  private stores: Map<string, unknown> = new Map();
+  private storeSeq = 0;
 
   private constructor() { }
 
@@ -23,11 +25,9 @@ export class PluginManager implements FiboContext {
 
   use(plugin: FiboPlugin): this {
     if (this.plugins.has(plugin.name)) {
-      console.warn(`Plugin ${plugin.name} is already registered.`);
       return this;
     }
 
-    console.log(`[FiboUI] Loading plugin: ${plugin.name}`);
     this.plugins.set(plugin.name, plugin);
     plugin.setup(this);
     return this;
@@ -37,8 +37,17 @@ export class PluginManager implements FiboContext {
     container.register(token, implementation);
   }
 
-  registerStore(_store: any): void {
-    // Store logic to be integrated with state management
+  registerStore(store: unknown, name?: string): void {
+    const key = name ?? `store-${this.storeSeq++}`;
+    this.stores.set(key, store);
+  }
+
+  getStore<T = unknown>(name: string): T | undefined {
+    return this.stores.get(name) as T | undefined;
+  }
+
+  getStores(): Map<string, unknown> {
+    return this.stores;
   }
 
   registerRoute(route: RouteDefinition): void {

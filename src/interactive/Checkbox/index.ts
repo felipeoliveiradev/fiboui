@@ -1,9 +1,20 @@
-import React, { ReactElement } from 'react';
+import React, { ReactElement, useEffect, useRef } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps } from '../../core/types';
 import { twMerge } from 'tailwind-merge';
 
-const CheckboxInner = React.memo((props: any) => {
+interface CheckboxInnerProps {
+  checked?: boolean;
+  onChange?: (checked: boolean) => void;
+  label?: string;
+  disabled?: boolean;
+  indeterminate?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+  id?: string;
+}
+
+const CheckboxInner = React.memo((props: CheckboxInnerProps) => {
     const {
         checked,
         onChange,
@@ -11,10 +22,18 @@ const CheckboxInner = React.memo((props: any) => {
         disabled,
         indeterminate,
         className,
-        style
+        style,
+        id
     } = props;
 
+    const inputRef = useRef<HTMLInputElement>(null);
     const isCheckedOrIndeterminate = checked || indeterminate;
+
+    useEffect(() => {
+        if (inputRef.current) {
+            inputRef.current.indeterminate = !!indeterminate;
+        }
+    }, [indeterminate]);
 
     let icon = null;
     if (indeterminate) {
@@ -25,7 +44,8 @@ const CheckboxInner = React.memo((props: any) => {
             height: '12',
             viewBox: '0 0 12 12',
             fill: 'none',
-            xmlns: 'http://www.w3.org/2000/svg'
+            xmlns: 'http://www.w3.org/2000/svg',
+            'aria-hidden': true
         },
         React.createElement('path', {
             d: 'M10 3L4.5 8.5L2 6',
@@ -39,7 +59,6 @@ const CheckboxInner = React.memo((props: any) => {
     return React.createElement(
         'label',
         {
-
             className: twMerge('fibo-checkbox flex items-center gap-2', className)
         },
         React.createElement(
@@ -54,12 +73,7 @@ const CheckboxInner = React.memo((props: any) => {
 
                 ),
                 style: style,
-                onClick: (e: React.MouseEvent) => {
-                    e.preventDefault();
-                    if (!disabled && onChange) {
-                        onChange(!checked);
-                    }
-                }
+                'aria-hidden': true
             },
             icon
         ),
@@ -69,8 +83,10 @@ const CheckboxInner = React.memo((props: any) => {
             label
         ),
         React.createElement('input', {
+            ref: inputRef,
+            id,
             type: 'checkbox',
-            checked: checked,
+            checked: !!checked,
             disabled: disabled,
             className: 'sr-only',
             onChange: (e: React.ChangeEvent<HTMLInputElement>) => !disabled && onChange?.(e.target.checked)
@@ -111,14 +127,15 @@ class CheckboxBuilder extends FiboBuilder {
   }
 
   build(): ReactElement {
-    const props = {
+    const props: CheckboxInnerProps = {
         checked: this._checked,
         onChange: this._onChange,
         label: this._label,
         disabled: this._disabled,
         indeterminate: this._indeterminate,
         className: this.getClassName(),
-        style: this.getStyle()
+        style: this.getStyle(),
+        ...(this._props as CheckboxInnerProps)
     };
     return React.createElement(CheckboxInner, props);
   }

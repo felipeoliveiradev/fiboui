@@ -17,6 +17,7 @@ export interface Route {
 
 export interface RouterContextValue {
   currentPath: string;
+  basename: string;
   navigate: (path: string, options?: NavigateOptions) => void;
   goBack: () => void;
   replace: (path: string) => void;
@@ -39,6 +40,10 @@ export function useRouter(): RouterContextValue {
   return context;
 }
 
+export function useRouterOptional(): RouterContextValue | null {
+  return useContext(RouterContext);
+}
+
 export function useNavigate() {
   const { navigate } = useRouter();
   return navigate;
@@ -58,7 +63,7 @@ export function useLocation() {
   const { currentPath } = useRouter();
   return {
     pathname: currentPath,
-    search: window.location.search,
-    hash: window.location.hash,
+    search: typeof window !== 'undefined' ? window.location.search : '',
+    hash: typeof window !== 'undefined' ? window.location.hash : '',
   };
 }

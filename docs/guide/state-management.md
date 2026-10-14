@@ -39,6 +39,13 @@ Box()
   .build()
 ```
 
+Signals live in memory on the client. Do not read or write them during SSR to persist UI — wrap reactive trees in Client Components (`'use client'`). Subscriptions are cleaned up on unmount (including React StrictMode double-mount).
+
+There are two store APIs:
+
+- `createStore()` + `useReactiveStore(store)` — reactive object store (also exported historically as `useStore` from `fiboui/core` hooks).
+- `@Store()` class decorator + `useStore(StoreClass)` — the public `useStore` from the `fiboui` package root.
+
 ### How it Works
 
 ```
@@ -74,6 +81,8 @@ Box()
 ## Computed Signals
 
 Computed signals are derived values that recalculate automatically when dependencies change.
+
+Computed values are lazy: the first `.value` read attaches the internal effect and computes. Read the computed (or bind it) so dependents stay subscribed.
 
 ### Basic Usage
 

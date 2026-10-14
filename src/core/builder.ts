@@ -1,7 +1,8 @@
 import React, { CSSProperties, ReactElement, ReactNode } from 'react';
-import { ResponsiveStyles } from './types';
-import { Observable, Signal } from './state';
+import { FiboChild, FiboChildren, ResponsiveStyles } from './types';
+import { BindableSignal, Observable, Signal } from './state';
 import { Observer, SignalWrapper, ObserverWrapper, StateWrapper, ProviderWrapper } from './StateWrapper';
+import { normalizeFiboChildren } from './children';
 import clsx from 'clsx';
 import { _styleManager } from './styleManager';
 import { cssToTailwind } from '@metagptx/css-to-tailwind';
@@ -9,6 +10,8 @@ import { GestureBuilder } from './gestures/GestureBuilders';
 import { AnimationOptions } from './animations';
 import { AnimatedWrapper } from './AnimatedWrapper';
 import { PseudoStateBuilder } from './PseudoStateBuilder';
+import { ResponsiveWrapper } from './ResponsiveWrapper';
+import { nextStableId } from './ids';
 
 interface ThemeColors {
   primary?: string;
@@ -30,6 +33,7 @@ interface ThemeConfig {
 }
 
 export abstract class FiboBuilder {
+  /** @internal Extra DOM props forwarded to the host element. */
   protected _props: Record<string, any> = {};
   protected _style: CSSProperties = {};
   protected _cssStyles: CSSProperties = {};
@@ -41,7 +45,7 @@ export abstract class FiboBuilder {
   protected _state: Map<string, any> = new Map();
   protected _providers: Map<string, any> = new Map();
   protected _observers: Set<Observable<any>> = new Set();
-  protected _signals: Set<Signal<any>> = new Set();
+  protected _signals: Set<BindableSignal<any>> = new Set();
   protected _isObserver: boolean = false;
 
   protected _gesture?: GestureBuilder;
@@ -50,6 +54,18 @@ export abstract class FiboBuilder {
   protected _transforms: string[] = [];
 
   protected _pseudoStateClassName?: string;
+
+  /** Shrink-wrap: skip the default `w-full` / `self-stretch` on Row and Column. */
+  protected _hug = false;
+
+  hug(): this {
+    this._hug = true;
+    return this;
+  }
+
+  protected isHug(): boolean {
+    return this._hug;
+  }
 
   id(value: string): this {
     this._props.id = value;
@@ -661,7 +677,7 @@ export abstract class FiboBuilder {
     return this;
   }
 
-  bindSignal<T>(signal: Signal<T>): this {
+  bindSignal<T>(signal: BindableSignal<T>): this {
     this._signals.add(signal);
     return this;
   }
@@ -854,8 +870,7 @@ export abstract class FiboBuilder {
   private getPseudoStateClassName(): string {
     if (!this._pseudoStateClassName) {
 
-      const uniqueId = Math.random().toString(36).substring(2, 11);
-      this._pseudoStateClassName = `fibo-pseudo-${uniqueId}`;
+      this._pseudoStateClassName = nextStableId('fibo-pseudo');
       this._classNames.push(this._pseudoStateClassName);
     }
     return this._pseudoStateClassName;
@@ -1028,34 +1043,25 @@ export abstract class FiboBuilder {
     return this;
   }
 
-  protected _childFunction?: () => ReactNode;
+  protected _childFunction?: () => FiboChild | FiboChild[];
 
-  children(children: ReactNode | ReactNode[] | (() => ReactNode)): this {
+  children(children: FiboChildren): this {
     if (typeof children === 'function') {
-      this._childFunction = children as () => ReactNode;
+      this._childFunction = children as () => FiboChild | FiboChild[];
       this._children = [];
     } else {
-      const childArray = Array.isArray(children) ? children : [children];
-      this._children = childArray.map((child) => {
-        if (child && typeof child === 'object' && 'build' in child && typeof (child as any).build === 'function') {
-          return (child as any).build();
-        }
-        return child;
-      });
+      this._children = normalizeFiboChildren(children);
       this._childFunction = undefined;
     }
     return this;
   }
 
   protected getClassName(): string {
+    let extra: string | undefined;
     if (Object.keys(this._cssStyles).length > 0) {
-
-      const tailwindClasses = cssToTailwind(this._cssStyles as Record<string, string | number | undefined>);
-      if (tailwindClasses) {
-        this._classNames.push(tailwindClasses);
-      }
+      extra = cssToTailwind(this._cssStyles as Record<string, string | number | undefined>) || undefined;
     }
-    return clsx(this._classNames);
+    return clsx(this._classNames, extra);
   }
 
   protected getStyle(): CSSProperties {
@@ -1087,11 +1093,8 @@ export abstract class FiboBuilder {
       }
     }
 
-    if (this._responsive) {
-      if (this._responsive.mobile) {
-        finalStyle = { ...finalStyle, ...this._responsive.mobile };
-      }
-    }
+    // Breakpoints are applied at render time by ResponsiveWrapper so tablet/desktop
+    // update on resize. getStyle() keeps the base (SSR-safe) snapshot.
 
     if (this._transforms.length > 0) {
       const existingTransform = finalStyle.transform || '';
@@ -1113,14 +1116,12 @@ export abstract class FiboBuilder {
 
   protected processChildren(): ReactNode[] {
     if (this._childFunction) {
-      const result = this._childFunction();
-
-      return Array.isArray(result) ? result : [result];
+      return normalizeFiboChildren(this._childFunction);
     }
     return this._children;
   }
 
-  protected getChildFunction(): (() => ReactNode) | undefined {
+  protected getChildFunction(): (() => FiboChild | FiboChild[]) | undefined {
     return this._childFunction;
   }
 
@@ -1146,64 +1147,83 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
         if (prop === 'build') {
           return () => {
             const isObserver = (target as any)._isObserver;
-            const signals = (target as any)._signals;
+            const signals = (target as any)._signals as Set<BindableSignal<any>> | undefined;
             const observers = (target as any)._observers;
             const state = (target as any)._state;
             const providers = (target as any)._providers;
 
-            if (isObserver) {
-              return React.createElement(Observer, {
+            const assemble = () => {
+              let element = target.build();
+
+              const animatedProps = (target as any)._animatedProps;
+              const animationConfig = (target as any)._animationConfig;
+              if (animatedProps && animatedProps.size > 0) {
+                element = React.createElement(AnimatedWrapper, {
+                  animatedProps,
+                  animationConfig,
+                  children: element
+                });
+              }
+
+              const gesture = (target as any)._gesture;
+              if (gesture) {
+                element = gesture.wrap(element);
+              }
+
+              const responsive = (target as any)._responsive as ResponsiveStyles | undefined;
+              if (responsive) {
+                element = React.createElement(ResponsiveWrapper, {
+                  responsive,
+                  children: element
+                });
+              }
+
+              return element;
+            };
+
+            const hasState = typeof (target as any).hasStateManagement === 'function'
+              ? (target as any).hasStateManagement()
+              : Boolean(isObserver || (signals && signals.size) || (observers && observers.size) || (state && state.size) || (providers && providers.size));
+
+            const observed = isObserver
+              ? React.createElement(Observer, {
+                  key: (target as any)._props.key,
+                  children: assemble
+                })
+              : null;
+
+            const rebuild = () => (observed ?? assemble());
+
+            let tree: ReactElement = rebuild();
+
+            if (hasState && signals && signals.size > 0) {
+              tree = React.createElement(SignalWrapper, {
                 key: (target as any)._props.key,
-                children: () => target.build()
+                signals,
+                children: rebuild
               });
-            }
-
-            let element = target.build();
-
-            const animatedProps = (target as any)._animatedProps;
-            const animationConfig = (target as any)._animationConfig;
-            if (animatedProps && animatedProps.size > 0) {
-              element = React.createElement(AnimatedWrapper, {
-                animatedProps,
-                animationConfig,
-                children: element
-              });
-            }
-
-            if (signals && signals.size > 0) {
-              element = React.createElement(SignalWrapper, {
-                signals: signals,
-                children: element
-              });
-            }
-
-            if (observers && observers.size > 0) {
-              element = React.createElement(ObserverWrapper, {
+            } else if (hasState && observers && observers.size > 0) {
+              tree = React.createElement(ObserverWrapper, {
                 observables: observers,
-                children: element
+                children: rebuild
               });
             }
 
-            if (state && state.size > 0) {
-              element = React.createElement(StateWrapper, {
+            if (hasState && state && state.size > 0) {
+              tree = React.createElement(StateWrapper, {
                 stateMap: state,
-                children: element
+                children: tree
               });
             }
 
-            if (providers && providers.size > 0) {
-              element = React.createElement(ProviderWrapper, {
+            if (hasState && providers && providers.size > 0) {
+              tree = React.createElement(ProviderWrapper, {
                 providers: providers,
-                children: element
+                children: tree
               });
             }
 
-            const gesture = (target as any)._gesture;
-            if (gesture) {
-              element = gesture.wrap(element);
-            }
-
-            return element;
+            return tree;
           }
         }
 
@@ -1230,7 +1250,7 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
 
 interface SignalLike<T> {
   value: T;
-  subscribe?(listener: (val: T) => void): () => void;
+  subscribe: (listener: (val: T) => void) => () => void;
 }
 
 const ValueBinderInner = <T>({

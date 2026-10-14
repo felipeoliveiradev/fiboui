@@ -2,7 +2,13 @@ import React, { ReactElement } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps } from '../../core/types';
 
-type ProgressVariant = 'default' | 'striped' | 'labeled' | 'circular' | 'segments' | 'knob' | 'steps' | 'chevron' | 'floating' | 'pagination' | 'timeline';
+type ProgressVariant = 'default' | 'striped' | 'labeled' | 'circular' | 'ring' | 'segments' | 'knob' | 'steps' | 'chevron' | 'floating' | 'pagination' | 'timeline';
+
+export interface ProgressSegment {
+    value: number;
+    color: string;
+    strokeWidth?: number;
+}
 
 interface ProgressItem {
     title?: string;
@@ -14,11 +20,82 @@ const ProgressInner = React.memo((props: any) => {
     const {
         value, max, color, height, variant = 'default',
         label, subLabel, items = [],
+        size: ringSize, strokeWidth, segments, gap, trackColor, children,
         className, style, ...rest
     } = props;
 
     const percentage = Math.min(100, Math.max(0, (value / max) * 100));
     const mainColor = color || '#3B82F6';
+
+    if (variant === 'ring') {
+        const size = ringSize ?? (typeof height === 'number' ? height : 190);
+        const defaultStroke = strokeWidth ?? 2.4;
+        const segs: ProgressSegment[] = Array.isArray(segments) && segments.length
+            ? segments
+            : [{ value: percentage, color: mainColor }];
+        const gapFrac = gap ?? (segs.length > 1 ? 0.005 : 0);
+        const r = 88;
+        const C = 2 * Math.PI * r;
+        const total = segs.reduce((sum, seg) => sum + seg.value, 0) || 1;
+        let offset = 0;
+        const circles: ReactElement[] = [];
+
+        if (trackColor) {
+            circles.push(React.createElement('circle', {
+                key: 'track',
+                cx: 100,
+                cy: 100,
+                r,
+                stroke: trackColor,
+                strokeWidth: defaultStroke,
+                fill: 'none',
+            }));
+        }
+
+        segs.forEach((seg, i) => {
+            const frac = seg.value / total;
+            const len = Math.max(0, frac * C - gapFrac * C);
+            circles.push(React.createElement('circle', {
+                key: `seg-${i}`,
+                cx: 100,
+                cy: 100,
+                r,
+                stroke: seg.color,
+                strokeWidth: seg.strokeWidth ?? defaultStroke,
+                fill: 'none',
+                strokeDasharray: `${len} ${C}`,
+                strokeDashoffset: -offset,
+                transform: 'rotate(-90 100 100)',
+                style: { transition: 'all .4s' },
+            }));
+            offset += frac * C;
+        });
+
+        return React.createElement('div', {
+            className: `fibo-progress-ring relative inline-flex items-center justify-center ${className || ''}`,
+            style: { width: size, height: size, ...style },
+            role: 'progressbar',
+            'aria-valuenow': value,
+            'aria-valuemin': 0,
+            'aria-valuemax': max,
+            'aria-label': label || 'Progress',
+            ...rest
+        }, [
+            React.createElement('svg', {
+                key: 'svg',
+                width: size,
+                height: size,
+                viewBox: '0 0 200 200',
+                'aria-hidden': true,
+            }, circles),
+            children
+                ? React.createElement('div', {
+                    key: 'center',
+                    className: 'absolute inset-0 flex flex-col items-center justify-center',
+                }, children)
+                : null
+        ]);
+    }
 
     if (variant === 'circular') {
         const size = typeof height === 'number' ? height : 64;
@@ -30,6 +107,11 @@ const ProgressInner = React.memo((props: any) => {
         return React.createElement('div', {
             className: `relative inline-flex items-center justify-center ${className}`,
             style: { width: size, height: size, ...style },
+            role: 'progressbar',
+            'aria-valuenow': value,
+            'aria-valuemin': 0,
+            'aria-valuemax': max,
+            'aria-label': label || 'Progress',
             ...rest
         }, [
             React.createElement('svg', {
@@ -272,6 +354,11 @@ const ProgressInner = React.memo((props: any) => {
 
     return React.createElement('div', {
         className: `relative w-full ${variant === 'labeled' ? 'mt-8' : ''}`,
+        role: 'progressbar',
+        'aria-valuenow': value,
+        'aria-valuemin': 0,
+        'aria-valuemax': max,
+        'aria-label': label || 'Progress',
         ...rest
     }, [
         labelElement,
@@ -304,6 +391,11 @@ class ProgressBuilder extends FiboBuilder {
   private _label?: string;
   private _subLabel?: string;
   private _items?: ProgressItem[];
+  private _size?: number;
+  private _strokeWidth?: number;
+  private _segments?: ProgressSegment[];
+  private _gap?: number;
+  private _trackColor?: string;
 
   value(current: number): this {
     this._value = current;
@@ -322,6 +414,31 @@ class ProgressBuilder extends FiboBuilder {
 
   height(val: number | string): this {
     this._height = val;
+    return this;
+  }
+
+  size(val: number): this {
+    this._size = val;
+    return this;
+  }
+
+  strokeWidth(val: number): this {
+    this._strokeWidth = val;
+    return this;
+  }
+
+  segments(list: ProgressSegment[]): this {
+    this._segments = list;
+    return this;
+  }
+
+  gap(frac: number): this {
+    this._gap = frac;
+    return this;
+  }
+
+  trackColor(hex: string): this {
+    this._trackColor = hex;
     return this;
   }
 
@@ -355,6 +472,12 @@ class ProgressBuilder extends FiboBuilder {
         label: this._label,
         subLabel: this._subLabel,
         items: this._items,
+        size: this._size,
+        strokeWidth: this._strokeWidth,
+        segments: this._segments,
+        gap: this._gap,
+        trackColor: this._trackColor,
+        children: this.processChildren(),
         className: this.getClassName(),
         style: this.getStyle(),
         ...this._props
@@ -374,4 +497,9 @@ export interface ProgressProps extends BaseProps {
   label?: string;
   subLabel?: string;
   items?: ProgressItem[];
+  size?: number;
+  strokeWidth?: number;
+  segments?: ProgressSegment[];
+  gap?: number;
+  trackColor?: string;
 }

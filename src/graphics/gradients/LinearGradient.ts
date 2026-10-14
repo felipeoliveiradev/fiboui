@@ -1,8 +1,9 @@
 import React from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
+import { nextStableId } from '../../core/ids';
 
 class LinearGradientBuilder extends FiboBuilder {
-  private _id: string = `gradient-${Math.random().toString(36).substr(2, 9)}`;
+  private _id: string = nextStableId('gradient');
   private _colors: string[] = ['#000', '#fff'];
   private _stops?: number[];
   private _angle: number = 0;

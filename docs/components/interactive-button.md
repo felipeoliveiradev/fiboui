@@ -103,7 +103,7 @@ Creates a new `Button` builder instance.
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.label(text)` | `string` | Sets the button text |
+| `.text(text)` | `string` | Sets the button text |
 | `.icon(icon)` | `ReactNode` | Sets a leading icon |
 | `.iconRight(icon)` | `ReactNode` | Sets a trailing icon |
 
@@ -118,7 +118,8 @@ Creates a new `Button` builder instance.
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.onClick(handler)` | `(event: MouseEvent) => void` | Click event handler |
+| `.onPress(handler)` | `() => void` | Press / click handler (preferred) |
+| `.onClick(handler)` | `(event: MouseEvent) => void` | Raw DOM click handler |
 | `.onHover(handler)` | `() => void` | Hover event handler |
 
 ### Inherited from FiboBuilder
