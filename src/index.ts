@@ -34,6 +34,9 @@ export { useBuilderState, Observer, ProviderWrapper, useProvider } from './core/
 export { ReactivityRoot } from './core/ReactivityRoot';
 export { FineGrainText, bindText } from './core/FineGrain';
 export { applyResponsiveStyles } from './core/component';
+export { FIBO_BREAKPOINTS, toMediaQuery } from './core/breakpoints';
+export type { BreakpointKey } from './core/breakpoints';
+export { useViewportWidth } from './core/ResponsiveWrapper';
 export { FiboApp, FiboAppBuilder } from './core/FiboApp';
 export { mount, Fibo, toElement } from './core/mount';
 export { PluginManager } from './core/plugin/PluginManager';

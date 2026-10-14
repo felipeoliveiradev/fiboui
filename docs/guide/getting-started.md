@@ -15,7 +15,7 @@ Import the stylesheet once — the JS entry does not load CSS:
 import 'fiboui/style.css';
 ```
 
-ESM-only (`import`, no `require`). Next.js App Router files that call builders need `'use client'`. See [MIGRATION.md](../../MIGRATION.md). Builders are React elements — no `.build()`.
+ESM-only (`import`, no `require`). Next.js App Router files that call builders need `'use client'`. See [MIGRATION.md](../../MIGRATION.md). Builders are React elements — no `.build()`. Breakpoints: [Responsive](./responsive.md).
 
 ## Quick Start
 

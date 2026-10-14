@@ -149,8 +149,9 @@ The predefined variants map to the following styles:
 ```tsx
 Text('Responsive Heading')
   .variant('h2')
-  .fontSize({ sm: '1.5rem', md: '2rem', lg: '2.5rem' })
-
+  .fontSize('1.5rem')
+  .md({ fontSize: '2rem' })
+  .lg({ fontSize: '2.5rem' })
 ```
 
 ### Styled Body Text

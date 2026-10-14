@@ -1,5 +1,6 @@
 import React, { CSSProperties, ReactElement, ReactNode } from 'react';
 import { FiboChild, FiboChildren, ResponsiveStyles } from './types';
+import { BreakpointKey, toMediaQuery } from './breakpoints';
 import { BindableSignal, Observable, Signal } from './state';
 import { Observer, SignalWrapper, ObserverWrapper, StateWrapper, ProviderWrapper } from './StateWrapper';
 import { normalizeFiboChildren } from './children';
@@ -461,6 +462,45 @@ export abstract class FiboBuilder {
   responsive(styles: ResponsiveStyles): this {
     this._responsive = styles;
     return this;
+  }
+
+  /**
+   * CSS `@media` (min-width or a raw query). Compiles to a class — no resize JS.
+   *
+   * @example Box().padding(8).media('md', { padding: 16 }).media('(prefers-color-scheme: dark)', { backgroundColor: '#111' })
+   */
+  media(query: BreakpointKey | string, styles: CSSProperties): this {
+    const mq = toMediaQuery(query);
+    const unitless = new Set([
+      'opacity', 'zIndex', 'z-index', 'flex', 'flexGrow', 'flexShrink',
+      'order', 'fontWeight', 'lineHeight',
+    ]);
+    for (const [key, raw] of Object.entries(styles)) {
+      if (raw === undefined || raw === null) continue;
+      const prop = key.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
+      const value =
+        typeof raw === 'number' && !unitless.has(key) && !unitless.has(prop)
+          ? `${raw}px`
+          : String(raw);
+      this._classNames.push(_styleManager.registerMedia(mq, prop, value));
+    }
+    return this;
+  }
+
+  sm(styles: CSSProperties): this {
+    return this.media('sm', styles);
+  }
+
+  md(styles: CSSProperties): this {
+    return this.media('md', styles);
+  }
+
+  lg(styles: CSSProperties): this {
+    return this.media('lg', styles);
+  }
+
+  xl(styles: CSSProperties): this {
+    return this.media('xl', styles);
   }
 
   rounded(value: string | number): this {

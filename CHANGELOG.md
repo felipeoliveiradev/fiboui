@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+Planned as **2.2.0**. Easy CSS media queries on every builder. `package.json` stays **2.1.0**.
+
+### Added
+
+- **`.media('md', { padding: 16 })`** and aliases **`.sm()` / `.md()` / `.lg()` / `.xl()`** — compile to `@media (min-width: …)` via StyleManager. Raw queries work: `.media('(prefers-color-scheme: dark)', { … })`.
+- Shared **`FIBO_BREAKPOINTS`** (`sm` 640 / `md` 768 / `lg` 1024 / `xl` 1280, same as Tailwind). `toMediaQuery()`, `useViewportWidth()` exported.
+- Existing **`.responsive({ mobile, tablet, desktop })`** is unchanged (JS `innerWidth` + resize). Prefer `.media()` / `.md()` for CSS.
+
 ### Security
 
 - Gitleaks CI job on every push/PR (`scripts/secret-scan.sh --git`, values redacted).
