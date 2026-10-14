@@ -1,5 +1,6 @@
 import { _styleManager } from './styleManager';
 import type { FiboBuilder } from './builder';
+import { resolveEase } from '../motion/easing';
 
 export class PseudoStateBuilder {
   private baseClassName: string;
@@ -156,9 +157,13 @@ export class PseudoStateBuilder {
   }
 
   easing(value: 'linear' | 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out' | string): this {
-    this.transitionEasing = value;
+    this.transitionEasing = resolveEase(value);
     this.applyTransition();
     return this;
+  }
+
+  ease(value: 'linear' | 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out' | 'spring' | string): this {
+    return this.easing(value);
   }
 
   delay(ms: number): this {

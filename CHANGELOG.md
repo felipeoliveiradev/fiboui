@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## [Unreleased]
+
+Planned as **2.2.0**. CSS-first fluent motion — no per-frame JavaScript.
+
+### Added
+
+- **`fiboui/motion`** tree-shakeable subpath: presets, `springEase()`, `MotionStyles`, `Reveal`, `Presence`, `startViewTransition()`.
+- Builder API: `.animate('fadeIn').duration(300).ease('spring')`, `.transition({ opacity: 200 })`, enter/exit presets (`fade`, `slide*`, `scale`, `blur`, `pop`, `bounce`), `.hover(s => s.scale(1.03))`, `.press()`, `.stagger(ms)`, `.reveal('fadeUp')` (IntersectionObserver + class), `.viewTransition(name)`, `.reducedMotion()`.
+- Generated `@keyframes` / classes are injected **once** (`#fibo-motion`). SSR-safe: `renderToString` emits the sheet; Next can also render `<MotionStyles />`.
+- Spring easing is CSS `linear()` (sampled at compile time). `prefers-reduced-motion: reduce` is the default (`fibo-motion-force` to opt out).
+- Tests: `tests/motion.test.tsx`. Demo: `examples/motion`. Docs: `docs/guide/motion.md`.
+
 ## [2.1.0] - 2026-10-14
 
 Builders are React elements. You can return, nest, and pass them anywhere a `ReactNode` is accepted — **no `.build()`**.

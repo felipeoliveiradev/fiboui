@@ -13,6 +13,7 @@ FiboUI brings chainable builders to React. Compose screens with `Column()`, `Row
 - **Fine-grained reactivity** — `signal()`, `computed()`, `createStore()`, `.bindSignal()`, `.observer()`.
 - **Multi-theme** — Material, Cupertino, and Web tokens with CSS variables.
 - **Type-safe** — TypeScript builders; `FiboChild` / `FiboChildren` describe child slots.
+- **CSS motion** — `.animate('fadeIn').ease('spring')` compiles to `@keyframes` + `linear()`; no per-frame JS. Subpath: `fiboui/motion`.
 
 ---
 

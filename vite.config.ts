@@ -26,6 +26,7 @@ export default defineConfig({
         structure: path.resolve(__dirname, 'src/structure-entry.ts'),
         navigation: path.resolve(__dirname, 'src/navigation-entry.ts'),
         theme: path.resolve(__dirname, 'src/theme-entry.ts'),
+        motion: path.resolve(__dirname, 'src/motion-entry.ts'),
         style: path.resolve(__dirname, 'src/style-entry.ts'),
       },
       formats: ['es'],
