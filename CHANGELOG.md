@@ -4,7 +4,9 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
-Planned as **2.2.0**. Easy CSS media queries, CSS motion presets, and a fluent scroll family on the existing builders (no `fiboui/motion` subpath). `package.json` stays **2.1.0** until publish.
+## [2.2.0] - 2026-10-14
+
+Easy CSS media queries (**#8**), security scan (**#4**), and CSS motion / scroll / Presence on the existing builders (**#9**). No `fiboui/motion` subpath.
 
 ### Added
 

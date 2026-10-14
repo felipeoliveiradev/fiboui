@@ -25,7 +25,7 @@ describe('library bundle', () => {
 describe('package exports / sideEffects', () => {
   it('is ESM-only with subpath exports and no src/ pack', () => {
     expect(pkg.type).toBe('module');
-    expect(pkg.version).toBe('2.1.0');
+    expect(pkg.version).toBe('2.2.0');
     expect(pkg.main).toBe('./dist/index.js');
     expect(pkg.module).toBe('./dist/index.js');
     expect(pkg.types).toBe('./dist/index.d.ts');
@@ -80,6 +80,26 @@ describe('package exports / sideEffects', () => {
     expect(section).toMatch(/React element/i);
   });
 
+  it('2.2.0 CHANGELOG names media queries, motion, Presence, and security', () => {
+    const log = readFileSync(resolve(__dirname, '../CHANGELOG.md'), 'utf8');
+    const start = log.indexOf('## [2.2.0]');
+    const end = log.indexOf('## [2.1.0]');
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    const section = log.slice(start, end);
+    for (const token of [
+      '.media(',
+      '.animate(',
+      '.onScroll()',
+      'Presence(',
+      'Gitleaks',
+      '.scrollMargin()',
+      'PseudoStateBuilder',
+    ]) {
+      expect(section, token).toContain(token);
+    }
+  });
+
   it('publish workflow creates a GitHub Release from the CHANGELOG section', () => {
     const yml = readFileSync(resolve(__dirname, '../.github/workflows/publish.yml'), 'utf8');
     expect(yml).toContain('gh release create');
@@ -118,7 +138,7 @@ describe('package exports / sideEffects', () => {
       `node --input-type=commonjs -p 'require("./package.json").version'`,
       { encoding: 'utf8', cwd: resolve(__dirname, '..') }
     ).trim();
-    expect(version).toBe('2.1.0');
+    expect(version).toBe('2.2.0');
   });
 
   it('npm-version-check.sh treats a missing version as exists=false (exit 0)', () => {
@@ -141,12 +161,12 @@ describe('package exports / sideEffects', () => {
     expect(out).toMatch(/already on npm/);
   });
 
-  it('npm-version-check.sh reads 2.1.0 from package.json and does not die on E404', () => {
+  it('npm-version-check.sh reads 2.2.0 from package.json and does not die on E404', () => {
     const out = execSync('bash scripts/npm-version-check.sh', {
       encoding: 'utf8',
       cwd: resolve(__dirname, '..'),
     });
-    expect(out).toMatch(/version=2\.1\.0/);
+    expect(out).toMatch(/version=2\.2\.0/);
     expect(out).toMatch(/exists=(true|false)/);
   });
 });
