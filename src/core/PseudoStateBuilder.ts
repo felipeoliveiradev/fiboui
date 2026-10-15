@@ -1,6 +1,10 @@
 import { _styleManager } from './styleManager';
 import type { FiboBuilder } from './builder';
 import { resolveCssEase } from './easing';
+import {
+  applyInteractionEffect,
+  type InteractionEffectName,
+} from './interactionEffects';
 
 export class PseudoStateBuilder {
   private pseudoState: string;
@@ -17,6 +21,16 @@ export class PseudoStateBuilder {
     this.pseudoState = pseudoState;
     this.parentBuilder = parentBuilder;
     this.isGroup = isGroup;
+  }
+
+  /**
+   * Apply a named interaction effect (forward, float, grow, glow, …).
+   * Works on any pseudo trigger — hover, press/active, focus, groupHover, etc.
+   */
+  effect(name: InteractionEffectName | string): this {
+    const def = applyInteractionEffect(this, name);
+    this.parentBuilder.ensureEffectTransition(def.properties);
+    return this;
   }
 
   bg(color: string): this {

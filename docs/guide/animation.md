@@ -81,6 +81,25 @@ items.map((item) => Card().key(item.id).hover((h) => h.scale(1.03)).children(ite
 
 `Button.onHover(fn)` fires on `mouseenter` (see [Button](/components/interactive-button)).
 
+## Interaction effect presets
+
+Named effects are **state-agnostic** — the same catalog works on hover, press, focus, active, or groupHover. Inspired by [Hover.css](https://ianlunn.github.io/Hover/) 2D transitions, implemented inside fiboui (no third-party CSS, commercial-safe).
+
+```tsx
+// Compose with surface styles
+Box()
+  .hover((h) => h.effect('nudge').bg('var(--card-hover)').borderColor('var(--border-mid)'))
+  .press((p) => p.effect('shrink'))
+  .focus((f) => f.effect('glow'))
+
+// Shortcuts
+Box().hoverEffect('forward').pressEffect('shrink').focusEffect('glow')
+```
+
+Presets: `forward`, `backward`, `float`, `sink`, `grow`, `shrink`, `pulse`, `pop`, `nudge`, `fade`, `lift`, `glow`.
+
+Aliases (`hang` → `float`, `icon-forward` → `forward`, …) are accepted for familiarity. Export: `INTERACTION_EFFECTS`, `normalizeInteractionEffect`.
+
 ## Spring
 
 `.ease('spring')` / `.spring({ stiffness, damping, mass })` become CSS `linear(...)`. stiffness/damping are no longer ignored.
