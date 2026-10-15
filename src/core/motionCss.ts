@@ -143,7 +143,6 @@ export const FIBO_MOTION_CSS = `
 .fibo-reveal {
   min-width: 0;
   max-width: 100%;
-  width: 100%;
   opacity: 0;
   transform: translate3d(0, 12px, 0);
   transition-property: opacity, transform, filter;

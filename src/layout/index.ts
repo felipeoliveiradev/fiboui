@@ -10,4 +10,5 @@ export * from './DashboardLayout';
 export * from './Stack';
 export * from './Line';
 export * from './ScrollView';
+export { ScrollController } from './ScrollView';
 export * from './VirtualColumn';

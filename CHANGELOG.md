@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.2.3] - 2026-10-15
+
+### Added
+
+- **`ScrollController`** + `ScrollView().controller(c)` — programmatic `scrollBy` / `scrollTo` / `scrollByChild` without `document.querySelector` (carousel prev/next).
+
+### Fixed
+
+- **Reveal** — removed forced `width: 100%` / `w-full` so horizontal `ScrollView` slides keep their flex basis (carousel-safe). Still `min-width: 0` for grid/flex shrink.
+
 ## [2.2.2] - 2026-10-15
 
 Patch: flex/grid overflow containment.
