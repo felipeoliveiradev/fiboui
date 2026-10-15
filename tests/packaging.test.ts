@@ -57,7 +57,7 @@ describe('package exports / sideEffects', () => {
     expect(section).toContain('writeClipboard');
     expect(section).toContain('bindHotkeys');
     expect(section).toContain('goHash');
-    expect(section).toContain('openUrl');
+    expect(section).toContain('openExternal');
   });
 
   it('2.2.3 CHANGELOG names ScrollController and Reveal carousel fix', () => {

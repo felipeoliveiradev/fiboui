@@ -54,7 +54,8 @@ export { ScrollProgress } from './core/ScrollProgress';
 export { scrollTo, startViewTransition, supportsViewTimeline, supportsScrollTimeline } from './core/scroll';
 export {
   writeClipboard,
-  openUrl,
+  open,
+  openExternal,
   goHash,
   bindHotkeys,
   delay,

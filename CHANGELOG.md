@@ -9,11 +9,9 @@ All notable changes to this project are documented in this file.
 ### Added
 
 - **Platform facade** — apps should not touch `window` / `document` / `navigator` directly:
-  - `writeClipboard(text)`
-  - `openUrl(url)`
-  - `goHash(id)` (hash + smooth scroll)
-  - `bindHotkeys([{ key, metaOrCtrl, run, when }])`
-  - `delay(ms, fn)` (cancellable)
+  - `writeClipboard(text)` / `bindHotkeys` / `delay` (new)
+  - `open(url)` + alias `openExternal` (lifts site helper into the package)
+  - `goHash(id)` — sets hash then calls existing `scrollTo()`
 
 ### Fixed
 

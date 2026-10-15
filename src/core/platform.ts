@@ -1,8 +1,12 @@
 import { scrollTo } from './scroll';
 
 /**
- * Browser/platform facade — the only place apps should touch “native” behavior.
- * App / ViewModel code uses these helpers; never `window` / `document` / `navigator` directly.
+ * Thin browser facade. Prefer these over raw `window` / `document` / `navigator`.
+ *
+ * Already existed elsewhere in fiboui:
+ * - `scrollTo(id)` — in-page scroll (this module’s `goHash` only adds `location.hash`)
+ *
+ * Site already used the names `goHash` / `openExternal` — same names here.
  */
 
 /** Write text to the system clipboard. Returns false if unavailable. */
@@ -16,8 +20,11 @@ export async function writeClipboard(text: string): Promise<boolean> {
   }
 }
 
-/** Open a URL (default: new tab with noopener). */
-export function openUrl(
+/**
+ * Open a URL (default: new tab + noopener).
+ * Same role as the site helper formerly named `openExternal`.
+ */
+export function open(
   url: string,
   options?: { target?: '_blank' | '_self'; features?: string },
 ): void {
@@ -28,8 +35,11 @@ export function openUrl(
   window.open(url, target, features);
 }
 
+/** Alias — matches the name already used in the fibogrid site (`openExternal`). */
+export const openExternal = open;
+
 /**
- * In-page hash navigation: set `location.hash` and smooth-scroll to the element.
+ * In-page hash jump: sets `location.hash` then calls existing `scrollTo()`.
  * Accepts `"architecture"` or `"#architecture"`.
  */
 export function goHash(
@@ -47,7 +57,6 @@ export function goHash(
 }
 
 export type HotkeyChord = {
-  /** Key from KeyboardEvent.key, e.g. `"k"`, `"Escape"`. */
   key: string;
   meta?: boolean;
   ctrl?: boolean;
@@ -56,7 +65,6 @@ export type HotkeyChord = {
   /** Require meta OR ctrl (⌘K / Ctrl+K). */
   metaOrCtrl?: boolean;
   preventDefault?: boolean;
-  /** Skip when false. */
   when?: () => boolean;
   run: () => void;
 };
@@ -74,10 +82,7 @@ function chordMatches(e: KeyboardEvent, c: HotkeyChord): boolean {
   return true;
 }
 
-/**
- * Bind global keydown chords. Returns an unsubscribe function.
- * SSR-safe: no-ops when `window` is missing.
- */
+/** Bind global keydown chords. Returns unsubscribe. SSR-safe. */
 export function bindHotkeys(chords: HotkeyChord[]): () => void {
   if (typeof window === 'undefined') return () => undefined;
 
@@ -95,7 +100,7 @@ export function bindHotkeys(chords: HotkeyChord[]): () => void {
   return () => window.removeEventListener('keydown', onKeyDown);
 }
 
-/** Schedule a callback (SSR-safe). Prefer this over raw `setTimeout` in apps. */
+/** Cancellable timer. Prefer this over raw `setTimeout` in apps. */
 export function delay(ms: number, fn: () => void): () => void {
   if (typeof window === 'undefined') return () => undefined;
   const id = window.setTimeout(fn, ms);

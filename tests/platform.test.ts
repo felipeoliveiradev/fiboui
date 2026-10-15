@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { bindHotkeys, delay, goHash, openUrl, writeClipboard } from '../src/core/platform';
+import {
+  bindHotkeys,
+  delay,
+  goHash,
+  open,
+  openExternal,
+  writeClipboard,
+} from '../src/core/platform';
 
 describe('platform facade', () => {
   afterEach(() => {
@@ -16,11 +23,17 @@ describe('platform facade', () => {
     expect(writeText).toHaveBeenCalledWith('hi');
   });
 
-  it('openUrl wraps window.open', () => {
-    const open = vi.spyOn(window, 'open').mockReturnValue(null);
-    openUrl('https://example.com');
-    expect(open).toHaveBeenCalledWith(
+  it('open / openExternal wrap window.open', () => {
+    const spy = vi.spyOn(window, 'open').mockReturnValue(null);
+    open('https://example.com');
+    openExternal('https://npmjs.com');
+    expect(spy).toHaveBeenCalledWith(
       'https://example.com',
+      '_blank',
+      'noopener,noreferrer',
+    );
+    expect(spy).toHaveBeenCalledWith(
+      'https://npmjs.com',
       '_blank',
       'noopener,noreferrer',
     );
