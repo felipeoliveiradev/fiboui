@@ -3,12 +3,21 @@ import { describe, expect, it } from 'vitest';
 import { Box } from '../src';
 import { StyleManager } from '../src/core/styleManager';
 import {
+  formatCssTransition,
   promoteSurfaceLonghandsInStyle,
   toTranslate3d,
   withRestTransform,
 } from '../src/core/smoothInteraction';
 
 describe('smoothInteraction helpers', () => {
+  it('formats multi-property transitions with duration on every property', () => {
+    expect(formatCssTransition(['transform', 'opacity', 'border-color'], 240, 'ease-out')).toBe(
+      'transform 240ms ease-out, opacity 240ms ease-out, border-color 240ms ease-out',
+    );
+    // Regression: joining props then appending duration once makes only the last prop animate.
+    expect(formatCssTransition(['a', 'b'], 200, 'ease')).not.toBe('a, b 200ms ease');
+  });
+
   it('promotes background/border shorthands to longhands', () => {
     const next = promoteSurfaceLonghandsInStyle({
       background: 'var(--card)',
@@ -71,8 +80,10 @@ describe('hover surface smoothing', () => {
     expect(css).toMatch(/background-color:\s*var\(--card-hover\)\s*!important/);
     expect(css).toMatch(/border-color:\s*var\(--border-mid\)\s*!important/);
     expect(css).toMatch(/translate3d\(4px,\s*0,\s*0\)/);
-    expect(css).toMatch(/240ms/);
-    expect(css).toMatch(/ease-out/);
+    // Every listed property must carry its own duration (not "a, b, c 240ms").
+    expect(css).toMatch(
+      /transform 240ms ease-out,\s*opacity 240ms ease-out,\s*box-shadow 240ms ease-out,\s*background-color 240ms ease-out,\s*border-color 240ms ease-out/,
+    );
   });
 
   it('does not stamp rest transform for color-only hover', () => {

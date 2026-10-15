@@ -1,6 +1,29 @@
 import type { CSSProperties } from 'react';
 
 /**
+ * Build a valid CSS `transition` value for one or more properties.
+ *
+ * WRONG: `transform, opacity, border-color 240ms ease-out`
+ * (only the last property gets duration — the rest default to 0s → snap)
+ *
+ * RIGHT: `transform 240ms ease-out, opacity 240ms ease-out, border-color 240ms ease-out`
+ */
+export function formatCssTransition(
+  properties: string | string[],
+  durationMs: number,
+  easing: string,
+  delayMs = 0,
+): string {
+  const list = (Array.isArray(properties) ? properties : [properties])
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (list.length === 0) list.push('all');
+  const dur = `${durationMs}ms`;
+  const delay = delayMs > 0 ? ` ${delayMs}ms` : '';
+  return list.map((p) => `${p} ${dur} ${easing}${delay}`).join(', ');
+}
+
+/**
  * Promote surface shorthands to longhands so CSS transitions can interpolate
  * against `:hover` / `:active` rules that set `background-color` / `border-color`.
  *

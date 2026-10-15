@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.4.2] - 2026-10-15
+
+### Fixed
+
+- **Multi-property CSS transitions** — `.hover()` / `.transition([…])` used to emit `transform, opacity, border-color 240ms ease-out`, so only the *last* property got a duration (the rest snapped at 0s). Now each property gets its own `240ms ease-out`.
+
 ## [2.4.1] - 2026-10-15
 
 ### Fixed

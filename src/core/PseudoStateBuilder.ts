@@ -8,7 +8,7 @@ import {
   type InteractionEffectName,
 } from './interactionEffects';
 import { ensureInteractionFxCss } from './ensureInteractionFx';
-import { toTranslate3d } from './smoothInteraction';
+import { formatCssTransition, toTranslate3d } from './smoothInteraction';
 
 const SMOOTH_PROPS: Record<string, string[]> = {
   'background-color': ['background-color'],
@@ -127,11 +127,14 @@ export class PseudoStateBuilder {
       return this.set('transition', valueOrProperties);
     }
 
-    const props = Array.isArray(valueOrProperties) ? valueOrProperties.join(', ') : valueOrProperties;
-    const dur = `${duration || this.transitionDuration}ms`;
+    const props = Array.isArray(valueOrProperties)
+      ? valueOrProperties
+      : [valueOrProperties as string];
     const ease = resolveCssEase(easing || this.transitionEasing);
-    const del = delay ? `${delay}ms` : '0ms';
-    return this.set('transition', `${props} ${dur} ${ease} ${del}`);
+    return this.set(
+      'transition',
+      formatCssTransition(props, duration || this.transitionDuration, ease, delay || 0),
+    );
   }
 
   duration(ms: number): this {
@@ -163,11 +166,15 @@ export class PseudoStateBuilder {
   }
 
   private applyTransition(): void {
-    const props = this.transitionProperties.join(', ');
-    const duration = `${this.transitionDuration}ms`;
-    const easing = this.transitionEasing;
-    const delay = this.transitionDelay > 0 ? `${this.transitionDelay}ms` : '0ms';
-    this.set('transition', `${props} ${duration} ${easing} ${delay}`);
+    this.set(
+      'transition',
+      formatCssTransition(
+        this.transitionProperties,
+        this.transitionDuration,
+        this.transitionEasing,
+        this.transitionDelay,
+      ),
+    );
   }
 
   private flushTransform(): this {
