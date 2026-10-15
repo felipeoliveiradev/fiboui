@@ -56,8 +56,9 @@ describe('package exports / sideEffects', () => {
     const section = log.slice(start, end);
     expect(section).toContain('hoverEffect');
     expect(section).toContain('.effect(');
-    expect(section).toContain('nudge');
+    expect(section).toContain('sweep');
     expect(section).toContain('INTERACTION_EFFECTS');
+    expect(section).toContain('fiboui-owned');
   });
 
   it('2.3.0 CHANGELOG names fluent theme engine + noir', () => {

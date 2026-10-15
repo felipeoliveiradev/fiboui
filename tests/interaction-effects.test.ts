@@ -5,58 +5,48 @@ import {
   Button,
   INTERACTION_EFFECTS,
   normalizeInteractionEffect,
-  applyInteractionEffect,
+  interactionEffectClass,
+  FIBO_INTERACTION_FX_CSS,
   type InteractionEffectName,
   type PseudoStateBuilder,
 } from '../src';
 import { StyleManager } from '../src/core/styleManager';
+import { resetInteractionFxCssForTests } from '../src/core/ensureInteractionFx';
 
-describe('interaction effect presets', () => {
-  it('lists a stable curated catalog', () => {
-    expect(INTERACTION_EFFECTS).toContain('forward');
-    expect(INTERACTION_EFFECTS).toContain('nudge');
-    expect(INTERACTION_EFFECTS).toContain('glow');
-    expect(INTERACTION_EFFECTS).toHaveLength(12);
+describe('interaction effect presets (full catalog)', () => {
+  it('covers the Hover.css-inspired catalog', () => {
+    expect(INTERACTION_EFFECTS.length).toBeGreaterThanOrEqual(100);
+    for (const name of [
+      'grow',
+      'sweepToRight',
+      'iconForward',
+      'underlineFromLeft',
+      'shadowGlow',
+      'bubbleTop',
+      'curlTopLeft',
+      'wobbleHorizontal',
+      'shutterInHorizontal',
+      'nudge',
+    ] as InteractionEffectName[]) {
+      expect(INTERACTION_EFFECTS).toContain(name);
+    }
   });
 
-  it('normalizes Hover.css-style aliases', () => {
-    expect(normalizeInteractionEffect('hang')).toBe('float');
-    expect(normalizeInteractionEffect('icon-forward')).toBe('forward');
-    expect(() => normalizeInteractionEffect('curl-top-left')).toThrow(
+  it('normalizes kebab / hvr aliases', () => {
+    expect(normalizeInteractionEffect('sweep-to-right')).toBe('sweepToRight');
+    expect(normalizeInteractionEffect('hvr-float')).toBe('float');
+    expect(normalizeInteractionEffect('icon-forward')).toBe('iconForward');
+    expect(normalizeInteractionEffect('curl-top-left')).toBe('curlTopLeft');
+    expect(() => normalizeInteractionEffect('not-a-real-effect')).toThrow(
       /Unknown interaction effect/,
     );
   });
 
-  it('applies transform presets onto a target', () => {
-    const calls: string[] = [];
-    const target = {
-      translateX(v: number | string) {
-        calls.push(`tx:${v}`);
-        return this;
-      },
-      translateY(v: number | string) {
-        calls.push(`ty:${v}`);
-        return this;
-      },
-      scale(v: number) {
-        calls.push(`scale:${v}`);
-        return this;
-      },
-      opacity(v: number) {
-        calls.push(`opacity:${v}`);
-        return this;
-      },
-      shadow(v: string) {
-        calls.push(`shadow:${v}`);
-        return this;
-      },
-    };
-    applyInteractionEffect(target, 'nudge');
-    expect(calls).toEqual(['tx:3']);
-    calls.length = 0;
-    applyInteractionEffect(target, 'lift');
-    expect(calls[0]).toBe('ty:-3');
-    expect(calls[1]?.startsWith('shadow:')).toBe(true);
+  it('ships CSS for every catalog id', () => {
+    for (const name of INTERACTION_EFFECTS) {
+      const cls = interactionEffectClass(name);
+      expect(FIBO_INTERACTION_FX_CSS).toContain(`.${cls}`);
+    }
   });
 
   it('infers .effect() typing inside hover callbacks', () => {
@@ -64,36 +54,35 @@ describe('interaction effect presets', () => {
       .hover((h) => {
         expectTypeOf(h).toEqualTypeOf<PseudoStateBuilder>();
         expectTypeOf(h.effect).parameter(0).toMatchTypeOf<InteractionEffectName | string>();
-        h.effect('forward').bg('var(--card-hover)');
+        h.effect('nudge').bg('var(--card-hover)');
       })
       .children('typed');
   });
 
-  it('wires shortcuts onto builders without throwing', () => {
+  it('stamps fibo-fx classes for any trigger shortcut', () => {
     StyleManager.resetForTests();
-    const { container } = render(
-      Box().children([
-        Box().key('h').hoverEffect('nudge').children('hover'),
-        Button('press').key('p').pressEffect('shrink'),
-        Box().key('f').focusEffect('glow').children('focus'),
-        Box().key('a').activeEffect('pulse').children('active'),
-        Box().key('g').groupHoverEffect('float').children('group'),
-        Box()
-          .key('compose')
-          .hover((h) => {
-            h.effect('forward').borderColor('var(--border-mid)');
-          })
-          .children('compose'),
-      ]).build(),
-    );
-    expect(container.querySelectorAll('.fibo-box, .fibo-button').length).toBeGreaterThan(3);
-  });
+    resetInteractionFxCssForTests();
 
-  it('registers pseudo transform rules for .effect("forward")', () => {
-    StyleManager.resetForTests();
-    render(Box().hoverEffect('forward').children('fwd').build());
+    const { container } = render(
+      Box()
+        .children([
+          Box().key('h').hoverEffect('forward').children('hover'),
+          Button('press').key('p').pressEffect('shrink'),
+          Box().key('f').focusEffect('glow').children('focus'),
+          Box().key('s').hoverEffect('sweepToRight').children('sweep'),
+          Box().key('c').hoverEffect('curlTopLeft').children('curl'),
+        ])
+        .build(),
+    );
+
+    const forward = container.querySelector('.fibo-fx-forward');
+    expect(forward?.className).toMatch(/fibo-fx-on-hover/);
+    expect(container.querySelector('.fibo-fx-sweep-to-right')).toBeTruthy();
+    expect(container.querySelector('.fibo-fx-curl-top-left')).toBeTruthy();
+    expect(container.querySelector('.fibo-fx-shrink')).toBeTruthy();
+
     const css = StyleManager.getInstance().getCss();
-    expect(css).toMatch(/translateX\(4px\)/);
-    expect(css).toMatch(/:hover/);
+    expect(css).toMatch(/fibo-fx-forward/);
+    expect(css).toMatch(/@keyframes fibo-fx-pulse/);
   });
 });

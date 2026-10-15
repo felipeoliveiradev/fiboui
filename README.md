@@ -15,7 +15,7 @@ FiboUI brings chainable builders to React. Compose screens with `Column()`, `Row
 - **Type-safe** — TypeScript builders; `FiboChild` / `FiboChildren` describe child slots.
 - **Media queries** — `Box().padding(8).md({ padding: 16 }).lg({ padding: 24 })` compiles to CSS `@media`. `.responsive({ mobile, tablet, desktop })` still works (JS).
 - **CSS motion & scroll** — `Box().animate('fadeIn').ease('spring')`, `.onScroll('fadeIn')`, `.stagger(80)`, `.scrollProgress()`, `Presence(open).enter('fadeIn').exit('fadeOut')`. Default path is CSS (no rAF). See `docs/guide/animation.md`.
-- **Interaction effects** — state-agnostic presets (`forward`, `float`, `grow`, `nudge`, `glow`, …) on any trigger: `.hover(h => h.effect("nudge"))`, `.pressEffect("shrink")`, `.focusEffect("glow")`.
+- **Interaction effects** — full Hover.css–inspired catalog (2D, background sweeps, borders, shadows, bubbles, curls) as fiboui-owned CSS. Any trigger: `.hover(h => h.effect("sweepToRight"))`, `.pressEffect("shrink")`, `.hoverEffect("float")`.
 
 ---
 
