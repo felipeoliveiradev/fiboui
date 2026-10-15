@@ -56,6 +56,8 @@ export function Reveal({
   const className = [
     'fibo-reveal',
     `fibo-reveal-${preset}`,
+    // min-w-0 only — do NOT force w-full (breaks horizontal ScrollView / carousel slides)
+    'min-w-0',
     forceMotion ? 'fibo-motion-force' : '',
   ]
     .filter(Boolean)

@@ -4,6 +4,27 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.2.3] - 2026-10-15
+
+### Added
+
+- **`ScrollController`** + `ScrollView().controller(c)` — programmatic `scrollBy` / `scrollTo` / `scrollByChild` without `document.querySelector` (carousel prev/next).
+
+### Fixed
+
+- **Reveal** — removed forced `width: 100%` / `w-full` so horizontal `ScrollView` slides keep their flex basis (carousel-safe). Still `min-width: 0` for grid/flex shrink.
+
+## [2.2.2] - 2026-10-15
+
+Patch: flex/grid overflow containment.
+
+### Fixed
+
+- **Column / Row** — filled (non-hug) layouts now include `min-w-0` so flex/grid children can shrink below intrinsic content width (wide tables, nowrap text no longer explode the track).
+- **Box** — default `min-w-0` for the same reason.
+- **Text** — `overflow-wrap: anywhere`, `word-break: break-word`, `max-width: 100%`, and `min-w-0` so long tokens wrap inside cards instead of overflowing.
+- **Reveal** — wrapper is `min-w-0 max-w-full w-full` (CSS + classes) so `.reveal()` / `.onScroll()` wrappers do not become an unconstrained flex item around wide content.
+
 ## [2.2.1] - 2026-10-15
 
 Patch: SSR / hydration.
