@@ -143,7 +143,8 @@ const KEYFRAMES = `
 const BASE = `
 .fibo-fx {
   -webkit-tap-highlight-color: transparent;
-  transform: perspective(1px) translateZ(0);
+  /* Do NOT set a resting transform — hover/active replace transform and would jump. */
+  backface-visibility: hidden;
   box-shadow: 0 0 1px rgba(0,0,0,0);
 }
 .fibo-fx[class*="fibo-fx-sweep"],
@@ -208,7 +209,7 @@ blocks.push(fx('buzz', { active: 'animation-name:fibo-fx-buzz;animation-duration
 blocks.push(fx('buzz-out', { active: 'animation-name:fibo-fx-buzz-out;animation-duration:.75s;animation-timing-function:linear;animation-iteration-count:1;' }));
 blocks.push(fx('forward', { base: 'transition-duration:.3s;transition-property:transform;', active: 'transform:translateX(8px);' }));
 blocks.push(fx('backward', { base: 'transition-duration:.3s;transition-property:transform;', active: 'transform:translateX(-8px);' }));
-blocks.push(fx('nudge', { base: 'transition-duration:.2s;transition-property:transform;transition-timing-function:ease-out;', active: 'transform:translateX(3px);' }));
+blocks.push(fx('nudge', { base: 'transition-duration:.24s;transition-property:transform;transition-timing-function:ease-out;', active: 'transform:translate3d(3px,0,0);' }));
 
 // —— Background ——
 blocks.push(fx('fade', { base: 'transition-duration:.3s;transition-property:background-color,color,opacity;', active: 'background-color:var(--fibo-fx-fill,rgba(127,127,127,.15));' }));

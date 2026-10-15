@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.4.1] - 2026-10-15
+
+### Fixed
+
+- **Interaction effects smoothness** — `.fibo-fx` no longer sets a resting `transform` (perspective/translateZ). Hover/active transforms were replacing the whole matrix and felt jumpy (e.g. `nudge` on cards). `nudge` now uses `translate3d` + 240ms ease-out.
+
 ## [2.4.0] - 2026-10-15
 
 ### Added
