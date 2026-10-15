@@ -70,6 +70,13 @@ export { springEase, resolveCssEase } from './core/easing';
 export type { SpringOptions } from './core/easing';
 export { MOTION_PRESETS, normalizePreset, FIBO_MOTION_CSS } from './core/motionCss';
 export type { MotionPreset, CustomMotion } from './core/motionCss';
+export {
+  INTERACTION_EFFECTS,
+  normalizeInteractionEffect,
+  getInteractionEffect,
+  applyInteractionEffect,
+} from './core/interactionEffects';
+export type { InteractionEffectName, InteractionEffectDef } from './core/interactionEffects';
 export { MotionStyles, FiboStyles, getMotionCss, ensureMotionCss, getCss, getStyleTag } from './core/styleManager';
 export { FIBO_BREAKPOINTS, toMediaQuery } from './core/breakpoints';
 export type { BreakpointKey } from './core/breakpoints';

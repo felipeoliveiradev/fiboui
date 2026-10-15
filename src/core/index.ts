@@ -9,6 +9,7 @@ export * from './animations';
 export * from './animationHooks';
 export * from './easing';
 export * from './motionCss';
+export * from './interactionEffects';
 export * from './Presence';
 export * from './Reveal';
 export * from './ScrollProgress';

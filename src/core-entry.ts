@@ -44,6 +44,13 @@ export { springEase, resolveCssEase } from './core/easing';
 export type { SpringOptions } from './core/easing';
 export { MOTION_PRESETS } from './core/motionCss';
 export type { MotionPreset, CustomMotion } from './core/motionCss';
+export {
+  INTERACTION_EFFECTS,
+  normalizeInteractionEffect,
+  getInteractionEffect,
+  applyInteractionEffect,
+} from './core/interactionEffects';
+export type { InteractionEffectName, InteractionEffectDef } from './core/interactionEffects';
 export { MotionStyles, FiboStyles, getMotionCss, getCss, getStyleTag } from './core/styleManager';
 export { FiboApp, FiboAppBuilder } from './core/FiboApp';
 export { mount, Fibo, toElement } from './core/mount';

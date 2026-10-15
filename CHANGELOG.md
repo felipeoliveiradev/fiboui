@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-10-15
+
+### Added
+
+- **Interaction effect presets** (Hover.css–inspired, fiboui-owned, commercial-safe):
+  - Catalog: `forward`, `backward`, `float`, `sink`, `grow`, `shrink`, `pulse`, `pop`, `nudge`, `fade`, `lift`, `glow`
+  - State-agnostic: `.hover(h => h.effect("forward"))`, `.press(p => p.effect("shrink"))`, `.focus(f => f.effect("glow"))`
+  - Shortcuts: `.hoverEffect()`, `.pressEffect()`, `.focusEffect()`, `.activeEffect()`, `.groupHoverEffect()`
+  - Exports: `INTERACTION_EFFECTS`, `normalizeInteractionEffect`, `getInteractionEffect`, `applyInteractionEffect`
+  - Hover.css name aliases (`hang` → `float`, `icon-forward` → `forward`, …) for familiarity without vendoring that library
+
 ## [2.3.0] - 2026-10-15
 
 ### Added
