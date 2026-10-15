@@ -2,28 +2,28 @@
 import { Box } from '../../src/structure/Box'
 import { Button } from '../../src/interactive/Button'
 
-const renderVariants = () => 
+const renderVariants = () =>
   Box().flex().gap(4).flexWrap('wrap').children([
-    Button('Primary').variant('primary').build(),
-    Button('Secondary').variant('secondary').build(),
-    Button('Outline').variant('outline').build(),
-    Button('Ghost').variant('ghost').build(),
-    Button('Soft').variant('soft').build()
-  ]).build()
+    Button('Primary').variant('primary'),
+    Button('Secondary').variant('secondary'),
+    Button('Outline').variant('outline'),
+    Button('Ghost').variant('ghost'),
+    Button('Soft').variant('soft')
+  ])
 
-const renderSizes = () => 
+const renderSizes = () =>
   Box().flex().gap(4).alignItems('center').children([
-    Button('Small').size('sm').build(),
-    Button('Medium').size('md').build(),
-    Button('Large').size('lg').build()
-  ]).build()
+    Button('Small').size('sm'),
+    Button('Medium').size('md'),
+    Button('Large').size('lg')
+  ])
 
-const renderStates = () => 
+const renderStates = () =>
   Box().flex().gap(4).flexWrap('wrap').children([
-    Button('Default').build(),
-    Button('Disabled').disabled(true).build(),
-    Button('Loading').loading(true).build()
-  ]).build()
+    Button('Default'),
+    Button('Disabled').disabled(true),
+    Button('Loading').loading(true)
+  ])
 </script>
 
 # Button
@@ -41,12 +41,12 @@ An interactive button component with multiple variants, sizes, and states.
 ::: details View Source
 ```tsx
 Box().flex().gap(4).flexWrap('wrap').children([
-  Button('Primary').variant('primary').build(),
-  Button('Secondary').variant('secondary').build(),
-  Button('Outline').variant('outline').build(),
-  Button('Ghost').variant('ghost').build(),
-  Button('Soft').variant('soft').build()
-]).build()
+  Button('Primary').variant('primary'),
+  Button('Secondary').variant('secondary'),
+  Button('Outline').variant('outline'),
+  Button('Ghost').variant('ghost'),
+  Button('Soft').variant('soft')
+])
 ```
 :::
 
@@ -57,10 +57,10 @@ Box().flex().gap(4).flexWrap('wrap').children([
 ::: details View Source
 ```tsx
 Box().flex().gap(4).alignItems('center').children([
-  Button('Small').size('sm').build(),
-  Button('Medium').size('md').build(),
-  Button('Large').size('lg').build()
-]).build()
+  Button('Small').size('sm'),
+  Button('Medium').size('md'),
+  Button('Large').size('lg')
+])
 ```
 :::
 
@@ -71,10 +71,10 @@ Box().flex().gap(4).alignItems('center').children([
 ::: details View Source
 ```tsx
 Box().flex().gap(4).flexWrap('wrap').children([
-  Button('Default').build(),
-  Button('Disabled').disabled(true).build(),
-  Button('Loading').loading(true).build()
-]).build()
+  Button('Default'),
+  Button('Disabled').disabled(true),
+  Button('Loading').loading(true)
+])
 ```
 :::
 
@@ -103,7 +103,7 @@ Creates a new `Button` builder instance.
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.label(text)` | `string` | Sets the button text |
+| `.text(text)` | `string` | Sets the button text |
 | `.icon(icon)` | `ReactNode` | Sets a leading icon |
 | `.iconRight(icon)` | `ReactNode` | Sets a trailing icon |
 
@@ -118,8 +118,9 @@ Creates a new `Button` builder instance.
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.onClick(handler)` | `(event: MouseEvent) => void` | Click event handler |
-| `.onHover(handler)` | `() => void` | Hover event handler |
+| `.onPress(handler)` | `() => void` | Press / click handler (preferred) |
+| `.onClick(handler)` | `(event: MouseEvent) => void` | Raw DOM click handler |
+| `.onHover(handler)` | `() => void` | `mouseenter` handler (does not receive the event) |
 
 ### Inherited from FiboBuilder
 
@@ -142,7 +143,7 @@ Button('Save')
   .icon(<SaveIcon />)
   .variant('primary')
   .onClick(() => console.log('Saved!'))
-  .build()
+
 ```
 
 ### Loading State
@@ -152,7 +153,18 @@ Button('Submit')
   .loading(isLoading)
   .disabled(isLoading)
   .onClick(handleSubmit)
-  .build()
+
+```
+
+### Hover handler
+
+`.onHover` is a **callback**, not the CSS hover style. Use builder `.hover()` for visual hover.
+
+```tsx
+Button('Notify')
+  .onHover(() => console.log('entered'))
+  .hover((h) => h.scale(1.03))
+  .onPress(submit)
 ```
 
 ### Custom Styling
@@ -163,7 +175,7 @@ Button('Custom')
   .p(6)
   .fontSize('18px')
   .fontWeight('bold')
-  .build()
+
 ```
 
 ## See Also

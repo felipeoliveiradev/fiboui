@@ -30,14 +30,21 @@ const count = signal(0)
 Box()
   .bindSignal(count)
   .children([
-    Text(`Count: ${count.value}`).build(),
+    Text(`Count: ${count.value}`),
     Button()
       .text('Increment')
       .onClick(() => count.value++)
-      .build()
+
   ])
-  .build()
+
 ```
+
+Signals live in memory on the client. Do not read or write them during SSR to persist UI — wrap reactive trees in Client Components (`'use client'`). Subscriptions are cleaned up on unmount (including React StrictMode double-mount).
+
+There are two store APIs:
+
+- `createStore()` + `useReactiveStore(store)` — reactive object store (also exported historically as `useStore` from `fiboui/core` hooks).
+- `@Store()` class decorator + `useStore(StoreClass)` — the public `useStore` from the `fiboui` package root.
 
 ### How it Works
 
@@ -64,9 +71,9 @@ Box()
 
 ### When to Use
 
-✅ Counter values  
-✅ Toggle states  
-✅ Form field values  
+✅ Counter values
+✅ Toggle states
+✅ Form field values
 ✅ Any primitive that changes frequently
 
 ---
@@ -74,6 +81,8 @@ Box()
 ## Computed Signals
 
 Computed signals are derived values that recalculate automatically when dependencies change.
+
+Computed values are lazy: the first `.value` read attaches the internal effect and computes. Read the computed (or bind it) so dependents stay subscribed.
 
 ### Basic Usage
 
@@ -111,7 +120,7 @@ const cart = signal([
 ])
 
 const cartTotal = computed(() => {
-  return cart.value.reduce((sum, item) => 
+  return cart.value.reduce((sum, item) =>
     sum + (item.price * item.quantity), 0
   )
 })
@@ -119,9 +128,9 @@ const cartTotal = computed(() => {
 Box()
   .bindSignal(cartTotal)
   .children([
-    Text(`Total: $${cartTotal.value}`).build()
+    Text(`Total: $${cartTotal.value}`)
   ])
-  .build()
+
 ```
 
 ### Performance Benefits
@@ -141,10 +150,10 @@ for (let i = 0; i < 100; i++) {
 
 ### When to Use
 
-✅ Filtered/sorted lists  
-✅ Form validation  
-✅ Calculated totals  
-✅ Formatted values  
+✅ Filtered/sorted lists
+✅ Form validation
+✅ Calculated totals
+✅ Formatted values
 ✅ Any expensive computation
 
 ---
@@ -167,13 +176,13 @@ const user = observable({
 Box()
   .observe(user)
   .children([
-    Text(`Name: ${user.get().name}`).build(),
+    Text(`Name: ${user.get().name}`),
     Button()
       .text('Update')
       .onClick(() => user.set({ ...user.get(), name: 'Jane' }))
-      .build()
+
   ])
-  .build()
+
 ```
 
 ### Multiple Observables
@@ -191,9 +200,9 @@ Box()
       .onChange((e) => {
         filters.set({ ...filters.get(), search: e.target.value })
       })
-      .build()
+
   ])
-  .build()
+
 
 // Component only re-renders when products change
 Box()
@@ -201,14 +210,14 @@ Box()
   .children(
     products.get().map(p => ProductCard(p))
   )
-  .build()
+
 ```
 
 ### When to Use
 
-✅ Form state  
-✅ Filter/search state  
-✅ Complex objects  
+✅ Form state
+✅ Filter/search state
+✅ Complex objects
 ✅ Isolated component state
 
 ---
@@ -264,10 +273,10 @@ function Header() {
   return Box()
     .observer()  // Re-renders when store changes
     .children([
-      Text(state.user.name).build(),
-      Text(`Cart: ${state.cart.length}`).build()
+      Text(state.user.name),
+      Text(`Cart: ${state.cart.length}`)
     ])
-    .build()
+
 }
 ```
 
@@ -299,9 +308,9 @@ const actions = {
 
 ### When to Use
 
-✅ User authentication  
-✅ Shopping cart  
-✅ App-wide settings  
+✅ User authentication
+✅ Shopping cart
+✅ App-wide settings
 ✅ Shared data across components
 
 ---
@@ -324,14 +333,14 @@ Box()
   .children([
     ChildComponent()
   ])
-  .build()
+
 
 // Consumer
 function ChildComponent() {
   return Box()
     .consume('theme')
     .backgroundColor((theme) => theme.primary)
-    .build()
+
 }
 ```
 
@@ -349,7 +358,7 @@ function App() {
       Content(),
       Footer()
     ])
-    .build()
+
 }
 
 function Header() {
@@ -360,20 +369,20 @@ function Header() {
       Button()
         .text('Toggle Theme')
         .onClick(() => {
-          currentTheme.value = 
+          currentTheme.value =
             currentTheme.value === lightTheme ? darkTheme : lightTheme
         })
-        .build()
+
     ])
-    .build()
+
 }
 ```
 
 ### When to Use
 
-✅ Theme configuration  
-✅ Localization (i18n)  
-✅ Feature flags  
+✅ Theme configuration
+✅ Localization (i18n)
+✅ Feature flags
 ✅ User permissions
 
 ---
@@ -507,25 +516,25 @@ function AppHeader() {
     .bindSignal(cartItemCount) // Re-renders only when count changes
     .bindSignal(cartTotal)     // Re-renders only when total changes
     .children([
-      Text('🛒 FiboShop').build(),
+      Text('🛒 FiboShop'),
       Row().children([
-        Text(`Total: $${cartTotal.value.toFixed(2)}`).build(),
-        Badge().text(cartItemCount.value.toString()).build()
-      ]).build()
+        Text(`Total: $${cartTotal.value.toFixed(2)}`),
+        Badge().text(cartItemCount.value.toString())
+      ])
     ])
-    .build();
+    ;
 }
 
 function CartContent() {
   return Box()
     .observer() // Re-renders whenever the appStore updates
     .children([
-      Text('My Cart').build(),
+      Text('My Cart'),
       ...appStore.getState().cart.map(item => (
-        Text(`${item.name} x ${item.quantity}`).build()
+        Text(`${item.name} x ${item.quantity}`)
       ))
     ])
-    .build();
+    ;
 }
 
 // 6. Main Application
@@ -539,9 +548,9 @@ export function EcommerceApp() {
           ProductSidebar(), // Sidebar updates the store
           CartContent(),    // Content observes the store
         ])
-        .build(),
+        ,
     ])
-    .build();
+    ;
 }
 ```
 
@@ -553,10 +562,10 @@ graph TD
     Button -->|Call| Action[actions.addToCart]
     Action -->|Update| Store[(Global Store)]
     Action -->|Update| Signal((cartItemCount Signal))
-    
+
     Store -->|Notify| Observer[CartContent Component]
     Signal -->|Notify| Binder[AppHeader Badge]
-    
+
     Observer -->|Re-render| UI1[Cart List Updated]
     Binder -->|Re-render| UI2[Badge Count Updated]
 ```

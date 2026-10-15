@@ -1,4 +1,4 @@
-import React, { ReactElement, useState, useRef, useEffect } from 'react';
+import React, { ReactElement, useState, useRef, useEffect, KeyboardEvent } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { twMerge } from 'tailwind-merge';
 import { BaseProps } from '../../core/types';
@@ -8,10 +8,26 @@ interface Option {
   value: string;
 }
 
-const SelectInner = React.memo((props: any) => {
+interface SelectInnerProps {
+  containerClass?: string;
+  containerStyle?: React.CSSProperties;
+  label?: string;
+  error?: string;
+  value?: string | string[];
+  options?: Option[];
+  placeholder?: string;
+  onChange?: (value: string | string[]) => void;
+  disabled?: boolean;
+  multiple?: boolean;
+  id?: string;
+}
+
+const SelectInner = React.memo((props: SelectInnerProps) => {
     const uniqueId = React.useId();
     const inputId = props.id || uniqueId;
+    const listboxId = `${inputId}-listbox`;
     const [isOpen, setIsOpen] = useState(false);
+    const [highlighted, setHighlighted] = useState(0);
     const containerRef = useRef<HTMLDivElement>(null);
 
     const {
@@ -25,7 +41,6 @@ const SelectInner = React.memo((props: any) => {
         onChange,
         disabled,
         multiple,
-        ...rest
     } = props;
 
     useEffect(() => {
@@ -49,12 +64,12 @@ const SelectInner = React.memo((props: any) => {
     if (multiple) {
         if (Array.isArray(value) && value.length > 0) {
            displayText = options
-               .filter((opt: Option) => value.includes(opt.value))
-               .map((opt: Option) => opt.label)
+               .filter((opt) => value.includes(opt.value))
+               .map((opt) => opt.label)
                .join(', ');
         }
     } else {
-        const selectedOption = options.find((opt: Option) => opt.value === value);
+        const selectedOption = options.find((opt) => opt.value === value);
         displayText = selectedOption ? selectedOption.label : '';
     }
 
@@ -76,6 +91,50 @@ const SelectInner = React.memo((props: any) => {
         }
     };
 
+    const moveHighlight = (delta: number) => {
+        if (options.length === 0) return;
+        setHighlighted((prev) => (prev + delta + options.length) % options.length);
+    };
+
+    const onTriggerKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+        if (disabled) return;
+        switch (event.key) {
+            case 'ArrowDown':
+                event.preventDefault();
+                if (!isOpen) setIsOpen(true);
+                else moveHighlight(1);
+                break;
+            case 'ArrowUp':
+                event.preventDefault();
+                if (!isOpen) setIsOpen(true);
+                else moveHighlight(-1);
+                break;
+            case 'Home':
+                event.preventDefault();
+                setHighlighted(0);
+                break;
+            case 'End':
+                event.preventDefault();
+                setHighlighted(Math.max(0, options.length - 1));
+                break;
+            case 'Enter':
+            case ' ':
+                event.preventDefault();
+                if (!isOpen) {
+                    setIsOpen(true);
+                } else if (options[highlighted]) {
+                    handleSelect(options[highlighted].value);
+                }
+                break;
+            case 'Escape':
+                event.preventDefault();
+                setIsOpen(false);
+                break;
+            default:
+                break;
+        }
+    };
+
     return React.createElement(
       'div',
       {
@@ -88,10 +147,15 @@ const SelectInner = React.memo((props: any) => {
               key: 'trigger',
               id: inputId,
               type: 'button',
+              role: 'combobox',
+              'aria-expanded': isOpen,
+              'aria-haspopup': 'listbox',
+              'aria-controls': listboxId,
+              'aria-activedescendant': isOpen && options[highlighted] ? `${listboxId}-opt-${options[highlighted].value}` : undefined,
               disabled: disabled,
               className: `fibo-textfield-input text-left w-full flex items-center justify-between ${!displayText ? 'text-gray-400' : ''}`,
               onClick: () => !disabled && setIsOpen(!isOpen),
-              ...rest
+              onKeyDown: onTriggerKeyDown,
           }, [
               React.createElement('span', { key: 'text', className: 'truncate' }, displayText || placeholder || ' '),
               React.createElement('svg', {
@@ -99,7 +163,8 @@ const SelectInner = React.memo((props: any) => {
                   className: `w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`,
                   fill: "none",
                   stroke: "currentColor",
-                  viewBox: "0 0 24 24"
+                  viewBox: "0 0 24 24",
+                  'aria-hidden': true
               }, React.createElement('path', { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M19 9l-7 7-7-7" }))
           ]),
 
@@ -115,20 +180,29 @@ const SelectInner = React.memo((props: any) => {
 
           isOpen && React.createElement('div', {
               key: 'dropdown',
+              id: listboxId,
+              role: 'listbox',
+              'aria-multiselectable': multiple || undefined,
               className: 'absolute z-50 w-full mt-1 bg-[var(--fibo-surface)] border border-[var(--fibo-outline)] rounded-md shadow-lg max-h-60 overflow-auto focus:outline-none'
-          }, options.map((opt: Option) => {
+          }, options.map((opt, index) => {
                const selected = isSelected(opt.value);
+               const active = index === highlighted;
                return React.createElement('div', {
                    key: opt.value,
-                   className: `px-4 py-2 cursor-pointer text-sm hover:bg-[var(--fibo-primary-container)] hover:text-[var(--fibo-on-primary-container)] flex items-center justify-between ${selected ? 'bg-[var(--fibo-primary-container)] text-[var(--fibo-on-primary-container)] font-medium' : 'text-[var(--fibo-on-surface)]'}`,
-                   onClick: () => handleSelect(opt.value)
+                   id: `${listboxId}-opt-${opt.value}`,
+                   role: 'option',
+                   'aria-selected': selected,
+                   className: `px-4 py-2 cursor-pointer text-sm hover:bg-[var(--fibo-primary-container)] hover:text-[var(--fibo-on-primary-container)] flex items-center justify-between ${selected || active ? 'bg-[var(--fibo-primary-container)] text-[var(--fibo-on-primary-container)] font-medium' : 'text-[var(--fibo-on-surface)]'}`,
+                   onClick: () => handleSelect(opt.value),
+                   onMouseEnter: () => setHighlighted(index)
                }, [
                    React.createElement('span', { key: 'label' }, opt.label),
                    selected && React.createElement('svg', {
                        key: 'check',
                        className: "w-4 h-4 text-[var(--fibo-primary)]",
                        viewBox: "0 0 20 20",
-                       fill: "currentColor"
+                       fill: "currentColor",
+                       'aria-hidden': true
                    }, React.createElement('path', { fillRule: "evenodd", d: "M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z", clipRule: "evenodd" }))
                ])
           }))
@@ -136,7 +210,7 @@ const SelectInner = React.memo((props: any) => {
 
       error && React.createElement(
         'span',
-        { className: 'text-[var(--fibo-error)] text-xs mt-1 ml-1' },
+        { className: 'text-[var(--fibo-error)] text-xs mt-1 ml-1', role: 'alert' },
         error
       )
     );
@@ -195,7 +269,7 @@ class SelectBuilder extends FiboBuilder {
   build(): ReactElement {
     const containerClass = twMerge('fibo-textfield-container relative', ...this._classNames);
 
-    const props = {
+    const props: SelectInnerProps = {
         containerClass,
         containerStyle: this.getStyle(),
         label: this._label,
@@ -206,7 +280,7 @@ class SelectBuilder extends FiboBuilder {
         disabled: this._disabled,
         multiple: this._multiple,
         onChange: this._onChange,
-        ...this._props
+        ...(this._props as SelectInnerProps)
     };
 
     return React.createElement(SelectInner, props);

@@ -1,8 +1,8 @@
 import { _styleManager } from './styleManager';
 import type { FiboBuilder } from './builder';
+import { resolveCssEase } from './easing';
 
 export class PseudoStateBuilder {
-  private baseClassName: string;
   private pseudoState: string;
   private parentBuilder: FiboBuilder;
   private isGroup: boolean;
@@ -11,30 +11,20 @@ export class PseudoStateBuilder {
   private transitionEasing: string = 'ease-in-out';
   private transitionDelay: number = 0;
   private transitionProperties: string[] = ['all'];
+  private transforms = new Map<string, string>();
 
-  constructor(baseClassName: string, pseudoState: string, parentBuilder: FiboBuilder, isGroup: boolean = false) {
-    this.baseClassName = baseClassName;
+  constructor(pseudoState: string, parentBuilder: FiboBuilder, isGroup: boolean = false) {
     this.pseudoState = pseudoState;
     this.parentBuilder = parentBuilder;
     this.isGroup = isGroup;
   }
 
   bg(color: string): this {
-    if (this.isGroup) {
-      _styleManager.registerGroupPseudo(this.baseClassName, this.pseudoState, 'background-color', color);
-    } else {
-      _styleManager.registerPseudo(this.baseClassName, this.pseudoState, 'background-color', color);
-    }
-    return this;
+    return this.set('background-color', color);
   }
 
   color(value: string): this {
-    if (this.isGroup) {
-      _styleManager.registerGroupPseudo(this.baseClassName, this.pseudoState, 'color', value);
-    } else {
-      _styleManager.registerPseudo(this.baseClassName, this.pseudoState, 'color', value);
-    }
-    return this;
+    return this.set('color', value);
   }
 
   text(color: string): this {
@@ -42,77 +32,46 @@ export class PseudoStateBuilder {
   }
 
   opacity(value: number): this {
-    if (this.isGroup) {
-      _styleManager.registerGroupPseudo(this.baseClassName, this.pseudoState, 'opacity', String(value));
-    } else {
-      _styleManager.registerPseudo(this.baseClassName, this.pseudoState, 'opacity', String(value));
-    }
-    return this;
+    return this.set('opacity', String(value));
   }
 
   borderColor(value: string): this {
-    if (this.isGroup) {
-      _styleManager.registerGroupPseudo(this.baseClassName, this.pseudoState, 'border-color', value);
-    } else {
-      _styleManager.registerPseudo(this.baseClassName, this.pseudoState, 'border-color', value);
-    }
-    return this;
+    return this.set('border-color', value);
   }
 
   transform(value: string): this {
-    if (this.isGroup) {
-      _styleManager.registerGroupPseudo(this.baseClassName, this.pseudoState, 'transform', value);
-    } else {
-      _styleManager.registerPseudo(this.baseClassName, this.pseudoState, 'transform', value);
-    }
-    return this;
+    this.transforms.set('raw', value);
+    return this.flushTransform();
   }
 
   scale(value: number): this {
-    if (this.isGroup) {
-      _styleManager.registerGroupPseudo(this.baseClassName, this.pseudoState, 'transform', `scale(${value})`);
-    } else {
-      _styleManager.registerPseudo(this.baseClassName, this.pseudoState, 'transform', `scale(${value})`);
-    }
-    return this;
+    this.transforms.set('scale', `scale(${value})`);
+    return this.flushTransform();
   }
 
   translateX(value: number | string): this {
     const finalValue = typeof value === 'number' ? `${value}px` : value;
-    if (this.isGroup) {
-      _styleManager.registerGroupPseudo(this.baseClassName, this.pseudoState, 'transform', `translateX(${finalValue})`);
-    } else {
-      _styleManager.registerPseudo(this.baseClassName, this.pseudoState, 'transform', `translateX(${finalValue})`);
-    }
-    return this;
+    this.transforms.set('translateX', `translateX(${finalValue})`);
+    return this.flushTransform();
   }
 
   translateY(value: number | string): this {
     const finalValue = typeof value === 'number' ? `${value}px` : value;
-    if (this.isGroup) {
-      _styleManager.registerGroupPseudo(this.baseClassName, this.pseudoState, 'transform', `translateY(${finalValue})`);
-    } else {
-      _styleManager.registerPseudo(this.baseClassName, this.pseudoState, 'transform', `translateY(${finalValue})`);
-    }
-    return this;
+    this.transforms.set('translateY', `translateY(${finalValue})`);
+    return this.flushTransform();
+  }
+
+  rotate(degrees: number): this {
+    this.transforms.set('rotate', `rotate(${degrees}deg)`);
+    return this.flushTransform();
   }
 
   shadow(value: string): this {
-    if (this.isGroup) {
-      _styleManager.registerGroupPseudo(this.baseClassName, this.pseudoState, 'box-shadow', value);
-    } else {
-      _styleManager.registerPseudo(this.baseClassName, this.pseudoState, 'box-shadow', value);
-    }
-    return this;
+    return this.set('box-shadow', value);
   }
 
   css(property: string, value: string): this {
-    if (this.isGroup) {
-      _styleManager.registerGroupPseudo(this.baseClassName, this.pseudoState, property, value);
-    } else {
-      _styleManager.registerPseudo(this.baseClassName, this.pseudoState, property, value);
-    }
-    return this;
+    return this.set(property, value);
   }
 
   transition(value: string): this;
@@ -123,30 +82,15 @@ export class PseudoStateBuilder {
     easing?: string,
     delay?: number
   ): this {
-
     if (typeof valueOrProperties === 'string' && duration === undefined) {
-      if (this.isGroup) {
-        _styleManager.registerGroupPseudo(this.baseClassName, this.pseudoState, 'transition', valueOrProperties);
-      } else {
-        _styleManager.registerPseudo(this.baseClassName, this.pseudoState, 'transition', valueOrProperties);
-      }
-      return this;
+      return this.set('transition', valueOrProperties);
     }
 
     const props = Array.isArray(valueOrProperties) ? valueOrProperties.join(', ') : valueOrProperties;
     const dur = `${duration || this.transitionDuration}ms`;
-    const ease = easing || this.transitionEasing;
+    const ease = resolveCssEase(easing || this.transitionEasing);
     const del = delay ? `${delay}ms` : '0ms';
-
-    const transitionValue = `${props} ${dur} ${ease} ${del}`;
-
-    if (this.isGroup) {
-      _styleManager.registerGroupPseudo(this.baseClassName, this.pseudoState, 'transition', transitionValue);
-    } else {
-      _styleManager.registerPseudo(this.baseClassName, this.pseudoState, 'transition', transitionValue);
-    }
-
-    return this;
+    return this.set('transition', `${props} ${dur} ${ease} ${del}`);
   }
 
   duration(ms: number): this {
@@ -155,10 +99,14 @@ export class PseudoStateBuilder {
     return this;
   }
 
-  easing(value: 'linear' | 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out' | string): this {
-    this.transitionEasing = value;
+  easing(value: 'linear' | 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out' | 'spring' | string): this {
+    this.transitionEasing = resolveCssEase(value);
     this.applyTransition();
     return this;
+  }
+
+  ease(value: string): this {
+    return this.easing(value);
   }
 
   delay(ms: number): this {
@@ -178,17 +126,20 @@ export class PseudoStateBuilder {
     const duration = `${this.transitionDuration}ms`;
     const easing = this.transitionEasing;
     const delay = this.transitionDelay > 0 ? `${this.transitionDelay}ms` : '0ms';
-
-    const transitionValue = `${props} ${duration} ${easing} ${delay}`;
-
-    if (this.isGroup) {
-      _styleManager.registerGroupPseudo(this.baseClassName, this.pseudoState, 'transition', transitionValue);
-    } else {
-      _styleManager.registerPseudo(this.baseClassName, this.pseudoState, 'transition', transitionValue);
-    }
+    this.set('transition', `${props} ${duration} ${easing} ${delay}`);
   }
 
-  end(): any {
+  private flushTransform(): this {
+    return this.set('transform', [...this.transforms.values()].join(' '));
+  }
+
+  private set(property: string, value: string): this {
+    const className = _styleManager.registerPseudo(this.pseudoState, property, value, this.isGroup);
+    this.parentBuilder.addClassName(className);
+    return this;
+  }
+
+  end(): FiboBuilder {
     return this.parentBuilder;
   }
 }

@@ -9,24 +9,30 @@ FiboUI is a React UI framework inspired by the **Builder Pattern** found in Flut
 npm install fiboui
 ```
 
-## Quick Start
-
-Wrap your application in the `FiboThemeProvider` and start building.
+Import the stylesheet once — the JS entry does not load CSS:
 
 ```tsx
-import { FiboThemeProvider, Box, Text, Button } from 'fiboui';
+import 'fiboui/style.css';
+```
+
+ESM-only (`import`, no `require`). Next.js App Router files that call builders need `'use client'`. See [MIGRATION.md](../../MIGRATION.md). Builders are React elements — no `.build()`. Breakpoints: [Responsive](./responsive.md). SSR: [SSR / hydration](./ssr.md). Motion: [Animation](./animation.md) / [Scroll](./scroll.md).
+
+## Quick Start
+
+Apply a theme fluently (or wrap with `FiboThemeProvider`). See [Theming](./theming.md).
+
+```tsx
+import 'fiboui/style.css';
+import { Box, Text, Button } from 'fiboui';
 
 function App() {
-  return (
-    <FiboThemeProvider>
-      {
-        Box().p(4).children([
-            Text("Hello World").variant("h1").build(),
-            Button("Click Me").onPress(() => alert("Hi!")).build()
-        ]).build()
-      }
-    </FiboThemeProvider>
-  );
+  return Box()
+    .theme('web')
+    .p(4)
+    .children([
+      Text('Hello World').variant('h1'),
+      Button('Click Me').onPress(() => alert('Hi!')),
+    ]);
 }
 ```
 
@@ -45,6 +51,6 @@ FiboUI offers a fluent API:
 **FiboUI Builder:**
 ```tsx
 Box().p(4).bg("gray-100").children([
-    Text("Title").size("xl").bold().build()
-]).build()
+    Text("Title").variant("h1").weight("bold")
+])
 ```

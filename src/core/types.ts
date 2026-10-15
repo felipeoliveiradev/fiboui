@@ -1,6 +1,21 @@
 import { CSSProperties, ReactNode, ReactElement } from 'react';
 
-export type FiboThemeName = 'material' | 'cupertino' | 'web';
+/** Any fluent builder that can produce a React element. */
+export type Buildable = {
+  /** @deprecated Builders are React elements; `.build()` is optional. */
+  build(): ReactElement;
+};
+
+/**
+ * A single child accepted by `.children()` / layout slots / JSX / component returns.
+ * Builders are React elements — they do not need `.build()`.
+ */
+export type FiboChild = ReactNode | Buildable;
+
+/** Value accepted by `.children()`: one child, a list, or a lazy factory. */
+export type FiboChildren = FiboChild | FiboChild[] | (() => FiboChild | FiboChild[]);
+
+export type FiboThemeName = 'material' | 'cupertino' | 'web' | 'noir';
 
 export interface ResponsiveStyles {
   mobile?: CSSProperties;

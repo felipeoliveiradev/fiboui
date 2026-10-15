@@ -20,6 +20,7 @@ class BoxBuilder extends FiboBuilder {
   build(): ReactElement {
     const classes = [
       'fibo-box',
+      'min-w-0',
       ...this._classNames,
     ];
 

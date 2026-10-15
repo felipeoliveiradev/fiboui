@@ -48,7 +48,8 @@ class RowBuilder extends FiboBuilder {
       'fibo-row',
       'flex',
       'flex-row',
-      'w-full',
+      // min-w-0: flex item can shrink below content intrinsic width (grid/flex overflow)
+      this.isHug() ? 'w-auto self-auto shrink-0' : 'w-full min-w-0 self-stretch',
       alignmentMap[this._mainAxisAlignment],
       crossAlignmentMap[this._crossAxisAlignment],
       ...this._classNames,

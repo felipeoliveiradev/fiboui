@@ -16,6 +16,8 @@
   
   --fibo-surface: #FFFFFF;
   --fibo-on-surface: #0F172A;
+  --fibo-surface-variant: #F1F5F9;
+  --fibo-on-surface-variant: #64748B;
   
   --fibo-outline: #E2E8F0;
   
@@ -123,8 +125,19 @@
 }
 
 
+.fibo-theme-web .fibo-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  white-space: nowrap;
+  height: 28px;
+  border-radius: var(--fibo-radius-md);
+  padding: 0 10px;
+  font-size: 0.75rem;
   background-color: var(--fibo-primary-container);
   color: var(--fibo-on-primary-container);
+}
 
 
 

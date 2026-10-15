@@ -2,32 +2,32 @@
 import { Box } from '../../src/structure/Box'
 import { Text } from '../../src/content/Text'
 
-const renderVariants = () => 
+const renderVariants = () =>
   Box().flex().col().gap(4).children([
-    Text('Heading 1').variant('h1').build(),
-    Text('Heading 2').variant('h2').build(),
-    Text('Heading 3').variant('h3').build(),
-    Text('Body Text').variant('body').build(),
-    Text('Caption Text').variant('caption').build()
-  ]).build()
+    Text('Heading 1').variant('h1'),
+    Text('Heading 2').variant('h2'),
+    Text('Heading 3').variant('h3'),
+    Text('Body Text').variant('body'),
+    Text('Caption Text').variant('caption')
+  ])
 
-const renderColors = () => 
+const renderColors = () =>
   Box().flex().col().gap(2).children([
-    Text('Default Color').build(),
-    Text('Primary Color').color('blue-600').build(),
-    Text('Success Color').color('green-600').build(),
-    Text('Error Color').color('red-600').build(),
-    Text('Muted Color').color('gray-500').build()
-  ]).build()
+    Text('Default Color'),
+    Text('Primary Color').color('blue-600'),
+    Text('Success Color').color('green-600'),
+    Text('Error Color').color('red-600'),
+    Text('Muted Color').color('gray-500')
+  ])
 
-const renderWeights = () => 
+const renderWeights = () =>
   Box().flex().col().gap(2).children([
-    Text('Light Weight').fontWeight('300').build(),
-    Text('Normal Weight').fontWeight('400').build(),
-    Text('Medium Weight').fontWeight('500').build(),
-    Text('Semibold Weight').fontWeight('600').build(),
-    Text('Bold Weight').fontWeight('700').build()
-  ]).build()
+    Text('Light Weight').fontWeight('300'),
+    Text('Normal Weight').fontWeight('400'),
+    Text('Medium Weight').fontWeight('500'),
+    Text('Semibold Weight').fontWeight('600'),
+    Text('Bold Weight').fontWeight('700')
+  ])
 </script>
 
 # Text
@@ -45,12 +45,12 @@ A typography component with predefined variants and flexible styling.
 ::: details View Source
 ```tsx
 Box().flex().col().gap(4).children([
-  Text('Heading 1').variant('h1').build(),
-  Text('Heading 2').variant('h2').build(),
-  Text('Heading 3').variant('h3').build(),
-  Text('Body Text').variant('body').build(),
-  Text('Caption Text').variant('caption').build()
-]).build()
+  Text('Heading 1').variant('h1'),
+  Text('Heading 2').variant('h2'),
+  Text('Heading 3').variant('h3'),
+  Text('Body Text').variant('body'),
+  Text('Caption Text').variant('caption')
+])
 ```
 :::
 
@@ -61,12 +61,12 @@ Box().flex().col().gap(4).children([
 ::: details View Source
 ```tsx
 Box().flex().col().gap(2).children([
-  Text('Default Color').build(),
-  Text('Primary Color').color('blue-600').build(),
-  Text('Success Color').color('green-600').build(),
-  Text('Error Color').color('red-600').build(),
-  Text('Muted Color').color('gray-500').build()
-]).build()
+  Text('Default Color'),
+  Text('Primary Color').color('blue-600'),
+  Text('Success Color').color('green-600'),
+  Text('Error Color').color('red-600'),
+  Text('Muted Color').color('gray-500')
+])
 ```
 :::
 
@@ -77,12 +77,12 @@ Box().flex().col().gap(2).children([
 ::: details View Source
 ```tsx
 Box().flex().col().gap(2).children([
-  Text('Light Weight').fontWeight('300').build(),
-  Text('Normal Weight').fontWeight('400').build(),
-  Text('Medium Weight').fontWeight('500').build(),
-  Text('Semibold Weight').fontWeight('600').build(),
-  Text('Bold Weight').fontWeight('700').build()
-]).build()
+  Text('Light Weight').fontWeight('300'),
+  Text('Normal Weight').fontWeight('400'),
+  Text('Medium Weight').fontWeight('500'),
+  Text('Semibold Weight').fontWeight('600'),
+  Text('Bold Weight').fontWeight('700')
+])
 ```
 :::
 
@@ -149,8 +149,9 @@ The predefined variants map to the following styles:
 ```tsx
 Text('Responsive Heading')
   .variant('h2')
-  .fontSize({ sm: '1.5rem', md: '2rem', lg: '2.5rem' })
-  .build()
+  .fontSize('1.5rem')
+  .md({ fontSize: '2rem' })
+  .lg({ fontSize: '2.5rem' })
 ```
 
 ### Styled Body Text
@@ -161,7 +162,7 @@ Text('Important information')
   .color('gray-700')
   .fontWeight('500')
   .lineHeight('1.8')
-  .build()
+
 ```
 
 ### Truncated Text
@@ -170,7 +171,7 @@ Text('Important information')
 Text('This is a very long text that will be truncated...')
   .truncate()
   .maxW('200px')
-  .build()
+
 ```
 
 ## See Also

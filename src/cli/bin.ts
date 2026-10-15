@@ -1,8 +1,10 @@
 #!/usr/bin/env node
+import { createRequire } from 'node:module';
 import { Command } from 'commander';
 import { generateCommand } from './commands/generate';
 import { initCommand } from './commands/init';
 
+const require = createRequire(import.meta.url);
 const pkg = require('../../package.json');
 const version = pkg.version;
 

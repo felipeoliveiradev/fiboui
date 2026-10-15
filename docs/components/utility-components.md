@@ -11,33 +11,33 @@ const renderRadioGroup = () => {
     { label: 'Option 2', value: 'option2' },
     { label: 'Option 3', value: 'option3' }
   ]
-  
+
   return RadioGroup()
     .options(options)
     .value('option2')
     .onChange(() => {})
-    .build()
+
 }
 
-const renderImage = () => 
+const renderImage = () =>
   Image('https://picsum.photos/400/300')
     .alt('Sample image')
     .clipShape('rounded')
     .frame({ width: 400, height: 300 })
-    .build()
 
-const renderLabel = () => 
+
+const renderLabel = () =>
   Box().display('flex').flexDirection('column').gap('8px').children([
-    Label('Email Address').required(true).build(),
-    Label('Optional Field').build()
-  ]).build()
+    Label('Email Address').required(true),
+    Label('Optional Field')
+  ])
 
-const renderSkeleton = () => 
+const renderSkeleton = () =>
   Box().display('flex').flexDirection('column').gap('12px').children([
-    Skeleton().width('100%').height('20px').build(),
-    Skeleton().width('80%').height('20px').build(),
-    Skeleton().width(64).height(64).shape('circle').build()
-  ]).build()
+    Skeleton().width('100%').height('20px'),
+    Skeleton().width('80%').height('20px'),
+    Skeleton().width(64).height(64).shape('circle')
+  ])
 </script>
 
 # Utility Components
@@ -63,7 +63,7 @@ RadioGroup()
   .options(options)
   .value(value)
   .onChange(setValue)
-  .build()
+
 ```
 :::
 
@@ -90,7 +90,7 @@ Image('https://picsum.photos/400/300')
   .alt('Sample image')
   .clipShape('rounded')
   .frame({ width: 400, height: 300 })
-  .build()
+
 ```
 :::
 
@@ -117,9 +117,9 @@ Form label with required indicator.
 ::: details View Source
 ```tsx
 Box().display('flex').flexDirection('column').gap('8px').children([
-  Label('Email Address').required(true).build(),
-  Label('Optional Field').build()
-]).build()
+  Label('Email Address').required(true),
+  Label('Optional Field')
+])
 ```
 :::
 
@@ -142,10 +142,10 @@ Loading placeholder with pulse animation.
 ::: details View Source
 ```tsx
 Box().display('flex').flexDirection('column').gap('12px').children([
-  Skeleton().width('100%').height('20px').build(),
-  Skeleton().width('80%').height('20px').build(),
-  Skeleton().width(64).height(64).shape('circle').build()
-]).build()
+  Skeleton().width('100%').height('20px'),
+  Skeleton().width('80%').height('20px'),
+  Skeleton().width(64).height(64).shape('circle')
+])
 ```
 :::
 
@@ -163,19 +163,19 @@ Box().display('flex').flexDirection('column').gap('12px').children([
 
 ```tsx
 Box().display('flex').flexDirection('column').gap('16px').children([
-  Label('Username').htmlFor('username').required(true).build(),
-  TextField().id('username').placeholder('Enter username').build()
-]).build()
+  Label('Username').htmlFor('username').required(true),
+  TextField().id('username').placeholder('Enter username')
+])
 ```
 
 ### Card Skeleton
 
 ```tsx
 Box().display('flex').flexDirection('column').gap('12px').padding('16px').children([
-  Skeleton().width(64).height(64).shape('circle').build(),
-  Skeleton().width('100%').height('20px').build(),
-  Skeleton().width('80%').height('16px').build()
-]).build()
+  Skeleton().width(64).height(64).shape('circle'),
+  Skeleton().width('100%').height('20px'),
+  Skeleton().width('80%').height('16px')
+])
 ```
 
 ## See Also

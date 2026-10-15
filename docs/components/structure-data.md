@@ -6,13 +6,13 @@ import { Text } from '../../src/content/Text'
 
 const renderList = () => {
   const items = ['Item 1', 'Item 2', 'Item 3', 'Item 4']
-  
+
   return List()
     .items(items)
     .variant('card')
-    .renderItem((item) => Text(item).variant('body').build())
+    .renderItem((item) => Text(item).variant('body'))
     .maxWidth('400px')
-    .build()
+
 }
 
 const renderTable = () => {
@@ -21,19 +21,19 @@ const renderTable = () => {
     { name: 'Jane Smith', email: 'jane@example.com', role: 'User' },
     { name: 'Bob Johnson', email: 'bob@example.com', role: 'User' }
   ]
-  
+
   const columns = [
     { header: 'Name', accessor: 'name' },
     { header: 'Email', accessor: 'email' },
     { header: 'Role', accessor: 'role', align: 'right' }
   ]
-  
+
   return Table()
     .data(data)
     .columns(columns)
     .variant('clean')
     .striped(true)
-    .build()
+
 }
 </script>
 
@@ -54,8 +54,8 @@ const items = ['Item 1', 'Item 2', 'Item 3', 'Item 4']
 List()
   .items(items)
   .variant('card')
-  .renderItem((item) => Text(item).variant('body').build())
-  .build()
+  .renderItem((item) => Text(item).variant('body'))
+
 ```
 :::
 
@@ -102,7 +102,7 @@ Table()
   .columns(columns)
   .variant('clean')
   .striped(true)
-  .build()
+
 ```
 :::
 
@@ -143,13 +143,13 @@ interface TableColumn<T> {
 List()
   .items(users)
   .variant('card')
-  .renderItem((user) => 
+  .renderItem((user) =>
     Box().display('flex').alignItems('center').gap('12px').children([
-      Avatar().image(user.avatar).size(40).build(),
-      Text(user.name).variant('body').build()
-    ]).build()
+      Avatar().image(user.avatar).size(40),
+      Text(user.name).variant('body')
+    ])
   )
-  .build()
+
 ```
 
 ### Table with Custom Cells
@@ -159,14 +159,14 @@ Table()
   .data(products)
   .columns([
     { header: 'Product', accessor: 'name' },
-    { 
-      header: 'Price', 
-      render: (item) => Text(`$${item.price}`).fontWeight('600').build() 
+    {
+      header: 'Price',
+      render: (item) => Text(`$${item.price}`).fontWeight('600')
     },
     { header: 'Stock', accessor: 'stock', align: 'right' }
   ])
   .density('relaxed')
-  .build()
+
 ```
 
 ## See Also

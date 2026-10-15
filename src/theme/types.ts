@@ -16,6 +16,8 @@ export interface ThemeColors {
   onBackground: string;
   onSurface: string;
   onError: string;
+  /** Borders / hairlines — maps to `--fibo-outline`. */
+  outline?: string;
 }
 
 export interface ThemeTypography {

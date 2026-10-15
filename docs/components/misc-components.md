@@ -11,27 +11,27 @@ const renderTags = () => {
     { title: 'Vite' },
     { title: 'TailwindCSS' }
   ]
-  
+
   return Tags()
     .items(tags)
-    .build()
+
 }
 
-const renderBanner = () => 
+const renderBanner = () =>
   Box().display('flex').flexDirection('column').gap('12px').children([
-    Banner('Info Banner').status('info').subtitle('This is an informational message.').build(),
-    Banner('Success Banner').status('success').subtitle('Operation completed successfully.').build(),
-    Banner('Warning Banner').status('warning').subtitle('Please review this carefully.').build(),
-    Banner('Error Banner').status('error').subtitle('An error occurred.').build()
-  ]).build()
+    Banner('Info Banner').status('info').subtitle('This is an informational message.'),
+    Banner('Success Banner').status('success').subtitle('Operation completed successfully.'),
+    Banner('Warning Banner').status('warning').subtitle('Please review this carefully.'),
+    Banner('Error Banner').status('error').subtitle('An error occurred.')
+  ])
 
-const renderCollapse = () => 
+const renderCollapse = () =>
   Collapse()
     .title('Click to expand')
     .isOpen(true)
     .onToggle(() => {})
     .children('This is the collapsible content that can be shown or hidden.')
-    .build()
+
 </script>
 
 # Miscellaneous Components
@@ -55,7 +55,7 @@ const tags = [
 
 Tags()
   .items(tags)
-  .build()
+
 ```
 :::
 
@@ -82,11 +82,11 @@ Status banner for announcements and notifications.
 ::: details View Source
 ```tsx
 Box().display('flex').flexDirection('column').gap('12px').children([
-  Banner('Info Banner').status('info').subtitle('This is an informational message.').build(),
-  Banner('Success Banner').status('success').subtitle('Operation completed successfully.').build(),
-  Banner('Warning Banner').status('warning').subtitle('Please review this carefully.').build(),
-  Banner('Error Banner').status('error').subtitle('An error occurred.').build()
-]).build()
+  Banner('Info Banner').status('info').subtitle('This is an informational message.'),
+  Banner('Success Banner').status('success').subtitle('Operation completed successfully.'),
+  Banner('Warning Banner').status('warning').subtitle('Please review this carefully.'),
+  Banner('Error Banner').status('error').subtitle('An error occurred.')
+])
 ```
 :::
 
@@ -121,7 +121,7 @@ Collapse()
   .isOpen(isOpen)
   .onToggle(() => setIsOpen(!isOpen))
   .children('This is the collapsible content.')
-  .build()
+
 ```
 :::
 
@@ -153,7 +153,7 @@ Tags()
     { title: 'Rust' }
   ])
   .gap('8px')
-  .build()
+
 ```
 
 ### Notification Banner
@@ -163,17 +163,17 @@ Banner('System Update')
   .status('warning')
   .subtitle('Scheduled maintenance on Dec 31, 2024')
   .padding('16px')
-  .build()
+
 ```
 
 ### FAQ Accordion
 
 ```tsx
 Box().display('flex').flexDirection('column').gap('8px').children([
-  Collapse().title('What is FiboUI?').children('FiboUI is...').build(),
-  Collapse().title('How do I install?').children('Run npm install...').build(),
-  Collapse().title('Is it free?').children('Yes, it is open source.').build()
-]).build()
+  Collapse().title('What is FiboUI?').children('FiboUI is...'),
+  Collapse().title('How do I install?').children('Run npm install...'),
+  Collapse().title('Is it free?').children('Yes, it is open source.')
+])
 ```
 
 ## See Also

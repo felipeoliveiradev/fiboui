@@ -53,6 +53,7 @@ class ImageBuilder extends FiboBuilder {
   private _clipShape?: ClipShape;
   private _frameWidth?: number;
   private _frameHeight?: number;
+  private _foregroundStyle?: string;
 
   constructor(src: string = '') {
     super();
@@ -95,7 +96,8 @@ class ImageBuilder extends FiboBuilder {
     return this;
   }
 
-  foregroundStyle(_style: string): this {
+  foregroundStyle(style: string): this {
+    this._foregroundStyle = style;
     return this;
   }
 
@@ -109,6 +111,10 @@ class ImageBuilder extends FiboBuilder {
     }
 
     const className = classes.filter(Boolean).join(' ');
+    const style = this.getStyle();
+    if (this._foregroundStyle) {
+      style.color = this._foregroundStyle;
+    }
 
     const props = {
         src: this._src,
@@ -119,7 +125,7 @@ class ImageBuilder extends FiboBuilder {
         frameWidth: this._frameWidth,
         frameHeight: this._frameHeight,
         className: className,
-        style: this.getStyle(),
+        style,
         ...this._props
     };
 

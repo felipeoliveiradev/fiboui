@@ -3,27 +3,27 @@ import { Card } from '../../src/structure/Card'
 import { Box } from '../../src/structure/Box'
 import { Text } from '../../src/content/Text'
 
-const renderBasic = () => 
+const renderBasic = () =>
   Card()
     .text('REVENUE')
     .number('$12,345')
     .subtitle('+12% from last month')
-    .build()
 
-const renderColored = () => 
+
+const renderColored = () =>
   Box().display('flex').gap('16px').flexWrap('wrap').children([
-    Card().text('USERS').number('1,234').color('blue').build(),
-    Card().text('SALES').number('$5,678').color('green').build(),
-    Card().text('ALERTS').number('23').color('red').build()
-  ]).build()
+    Card().text('USERS').number('1,234').color('blue'),
+    Card().text('SALES').number('$5,678').color('green'),
+    Card().text('ALERTS').number('23').color('red')
+  ])
 
-const renderCustom = () => 
+const renderCustom = () =>
   Card()
     .text('CUSTOM CARD')
     .children([
-      Text('You can add custom content inside cards.').variant('body').color('#6B7280').build()
+      Text('You can add custom content inside cards.').variant('body').color('#6B7280')
     ])
-    .build()
+
 </script>
 
 # Card
@@ -44,7 +44,7 @@ Card()
   .text('REVENUE')
   .number('$12,345')
   .subtitle('+12% from last month')
-  .build()
+
 ```
 :::
 
@@ -55,10 +55,10 @@ Card()
 ::: details View Source
 ```tsx
 Box().display('flex').gap('16px').flexWrap('wrap').children([
-  Card().text('USERS').number('1,234').color('blue').build(),
-  Card().text('SALES').number('$5,678').color('green').build(),
-  Card().text('ALERTS').number('23').color('red').build()
-]).build()
+  Card().text('USERS').number('1,234').color('blue'),
+  Card().text('SALES').number('$5,678').color('green'),
+  Card().text('ALERTS').number('23').color('red')
+])
 ```
 :::
 
@@ -74,9 +74,9 @@ Card()
     Text('You can add custom content inside cards.')
       .variant('body')
       .color('#6B7280')
-      .build()
+
   ])
-  .build()
+
 ```
 :::
 
@@ -119,7 +119,7 @@ Card()
   .number('$45,231')
   .subtitle('+20.1% from last month')
   .color('green')
-  .build()
+
 ```
 
 ### Status Card
@@ -130,7 +130,7 @@ Card()
   .number('99.9%')
   .subtitle('Uptime this month')
   .color('blue')
-  .build()
+
 ```
 
 ## See Also

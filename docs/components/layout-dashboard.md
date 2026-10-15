@@ -14,14 +14,14 @@ It implements the **Classic Sidebar Layout** pattern with a modern responsive im
 ```tsx
 DashboardLayout()
     .sidebar(
-        Sidebar().children([...]).build()
+        Sidebar().children([...])
     )
     .header(
-        Header().children([...]).build()
+        Header().children([...])
     )
     .children([
         // Main Content Area
-        Box().p(8).children("Content").build()
+        Box().p(8).children("Content")
     ])
-    .build()
+
 ```

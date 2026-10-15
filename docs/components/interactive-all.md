@@ -10,48 +10,48 @@ import { Switch } from '../../src/interactive/Switch'
 import { TextField } from '../../src/interactive/TextField'
 import { Textarea } from '../../src/interactive/Textarea'
 
-const renderButtons = () => 
+const renderButtons = () =>
   Box().flex().gap(4).children([
-    Button('Primary').variant('primary').build(),
-    Button('Secondary').variant('secondary').build(),
-    Button('Outline').variant('outline').build(),
-    Button('Ghost').variant('ghost').build()
-  ]).build()
+    Button('Primary').variant('primary'),
+    Button('Secondary').variant('secondary'),
+    Button('Outline').variant('outline'),
+    Button('Ghost').variant('ghost')
+  ])
 
-const renderCheckbox = () => 
+const renderCheckbox = () =>
   Box().flex().col().gap(2).children([
-    Checkbox().label('Accept Terms').build(),
-    Checkbox().label('Checked').checked(true).build()
-  ]).build()
+    Checkbox().label('Accept Terms'),
+    Checkbox().label('Checked').checked(true)
+  ])
 
-const renderRadioGroup = () => 
+const renderRadioGroup = () =>
   RadioGroup().options([
     { label: 'Option A', value: 'a' },
     { label: 'Option B', value: 'b' }
-  ]).build()
+  ])
 
-const renderSelect = () => 
+const renderSelect = () =>
   Select().options([
     { label: 'Red', value: 'red' },
     { label: 'Green', value: 'green' },
     { label: 'Blue', value: 'blue' }
-  ]).placeholder('Choose a color').build()
+  ]).placeholder('Choose a color')
 
-const renderSwitch = () => 
+const renderSwitch = () =>
   Box().flex().col().gap(4).children([
-    Switch().label('Notifications').build(),
-    Switch().label('Dark Mode').checked(true).build()
-  ]).build()
+    Switch().label('Notifications'),
+    Switch().label('Dark Mode').checked(true)
+  ])
 
-const renderTextField = () => 
+const renderTextField = () =>
   Box().flex().col().gap(4).maxW('300px').children([
-    TextField().placeholder('Username').label('Username').build(),
-    TextField().placeholder('Password').type('password').label('Password').build(),
-    TextField().placeholder('Error state').error('Invalid input').build()
-  ]).build()
+    TextField().placeholder('Username').label('Username'),
+    TextField().placeholder('Password').type('password').label('Password'),
+    TextField().placeholder('Error state').error('Invalid input')
+  ])
 
-const renderTextarea = () => 
-  Textarea().placeholder('Enter your bio...').rows(4).build()
+const renderTextarea = () =>
+  Textarea().placeholder('Enter your bio...').rows(4)
 </script>
 
 # Interactive Components

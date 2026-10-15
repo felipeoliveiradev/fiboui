@@ -9,8 +9,31 @@ interface RouterProps {
   fallback?: React.ComponentType;
   loading?: ReactNode;
   basename?: string;
+  /** Request path for SSR. First client render uses this (or `/`), then window after mount. */
+  initialPath?: string;
+  /** Request search string (`?a=1` or `a=1`) for SSR. */
+  initialSearch?: string;
+  /** Request hash (`#section` or `section`) for SSR. */
+  initialHash?: string;
   errorBoundary?: ReactNode | ((error: Error, errorInfo: ErrorInfo) => ReactNode);
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
+}
+
+function stripBasename(path: string, basename: string): string {
+  if (basename && path.startsWith(basename)) {
+    return path.slice(basename.length) || '/';
+  }
+  return path || '/';
+}
+
+function normalizeSearch(search: string | undefined): string {
+  if (!search) return '';
+  return search.startsWith('?') ? search.slice(1) : search;
+}
+
+function normalizeHash(hash: string | undefined): string {
+  if (!hash) return '';
+  return hash.startsWith('#') ? hash : `#${hash}`;
 }
 
 export const CurrentRouteContext = createContext<Route | null>(null);
@@ -24,27 +47,26 @@ export const Router: React.FC<RouterProps> = ({
   fallback: FallbackComponent,
   loading,
   basename = '',
+  initialPath = '/',
+  initialSearch = '',
+  initialHash = '',
   errorBoundary,
   onError
 }) => {
-  const [currentPath, setCurrentPath] = useState(() => {
-    return window.location.pathname.replace(basename, '') || '/';
-  });
-
-  const [params, setParams] = useState<Record<string, string>>({});
-  const [query, setQuery] = useState(() => new URLSearchParams(window.location.search));
+  const [currentPath, setCurrentPath] = useState(() => stripBasename(initialPath, basename));
+  const [query, setQuery] = useState(() => new URLSearchParams(normalizeSearch(initialSearch)));
+  const [hash, setHash] = useState(() => normalizeHash(initialHash));
 
   const { route, params: matchedParams } = findMatchingRoute(routes, currentPath);
-
-  useEffect(() => {
-    setParams(matchedParams);
-  }, [currentPath]);
+  const routeRef = React.useRef(route);
+  routeRef.current = route;
 
   const navigate = useCallback(async (path: string, options: NavigateOptions = {}) => {
+    const currentRoute = routeRef.current;
     const { route: nextRoute } = findMatchingRoute(routes, path);
 
-    if (route?.beforeLeave && nextRoute) {
-      const leaveResult = await route.beforeLeave(nextRoute, route);
+    if (currentRoute?.beforeLeave && nextRoute) {
+      const leaveResult = await currentRoute.beforeLeave(nextRoute, currentRoute);
 
       if (leaveResult === false) {
         return;
@@ -57,7 +79,7 @@ export const Router: React.FC<RouterProps> = ({
     }
 
     if (nextRoute?.beforeEnter) {
-      const enterResult = await nextRoute.beforeEnter(nextRoute, route);
+      const enterResult = await nextRoute.beforeEnter(nextRoute, currentRoute);
 
       if (enterResult === false) {
         return;
@@ -71,18 +93,22 @@ export const Router: React.FC<RouterProps> = ({
 
     const fullPath = basename + path;
 
-    if (options.replace) {
-      window.history.replaceState(options.state || {}, '', fullPath);
-    } else {
-      window.history.pushState(options.state || {}, '', fullPath);
+    if (typeof window !== 'undefined') {
+      if (options.replace) {
+        window.history.replaceState(options.state || {}, '', fullPath);
+      } else {
+        window.history.pushState(options.state || {}, '', fullPath);
+      }
+      setQuery(new URLSearchParams(window.location.search));
     }
 
     setCurrentPath(path);
-    setQuery(new URLSearchParams(window.location.search));
-  }, [basename, route, routes]);
+  }, [basename, routes]);
 
   const goBack = useCallback(() => {
-    window.history.back();
+    if (typeof window !== 'undefined') {
+      window.history.back();
+    }
   }, []);
 
   const replace = useCallback((path: string) => {
@@ -90,23 +116,28 @@ export const Router: React.FC<RouterProps> = ({
   }, [navigate]);
 
   useEffect(() => {
-    const handlePopState = () => {
-      const newPath = window.location.pathname.replace(basename, '') || '/';
-      setCurrentPath(newPath);
+    if (typeof window === 'undefined') return;
+
+    const syncFromWindow = () => {
+      setCurrentPath(stripBasename(window.location.pathname, basename));
       setQuery(new URLSearchParams(window.location.search));
+      setHash(window.location.hash || '');
     };
 
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    syncFromWindow();
+    window.addEventListener('popstate', syncFromWindow);
+    return () => window.removeEventListener('popstate', syncFromWindow);
   }, [basename]);
 
   const contextValue: RouterContextValue = {
     currentPath,
+    basename,
     navigate,
     goBack,
     replace,
-    params,
+    params: matchedParams,
     query,
+    hash,
   };
 
   const renderContent = () => {

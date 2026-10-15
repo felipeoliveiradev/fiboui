@@ -2,10 +2,12 @@ import React, { ReactElement } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { ProviderWrapper } from '../../core/StateWrapper';
 import { PluginManager } from '../../core/plugin/PluginManager';
+import { buildChild, normalizeFiboChildren } from '../../core/children';
+import type { FiboChild, FiboChildren } from '../../core/types';
 
 interface LayoutBarConfig {
   fixed?: boolean;
-  children: React.ReactNode[];
+  children: FiboChildren;
 }
 
 interface ScaffoldConfig {
@@ -129,84 +131,47 @@ class ScaffoldBuilder extends FiboBuilder {
     return this;
   }
 
-  headerBar(config: React.ReactNode | LayoutBarConfig): this {
-    if (this._isLayoutBarConfig(config)) {
-      const children = Array.isArray(config.children) ? config.children : [config.children];
-      const processedChildren = children.map(child =>
-        (child as any).build ? (child as any).build() : child
-      );
-      this._headerBar = {
-        content: React.createElement(React.Fragment, null, processedChildren),
-        fixed: config.fixed ?? false
-      };
-    } else {
-      this._headerBar = {
-        content: (config as any).build ? (config as any).build() : config,
-        fixed: false
-      };
-    }
+  headerBar(config: FiboChild | LayoutBarConfig): this {
+    this._headerBar = this._normalizeBar(config);
     return this;
   }
 
-  footerBar(config: React.ReactNode | LayoutBarConfig): this {
-    if (this._isLayoutBarConfig(config)) {
-      const children = Array.isArray(config.children) ? config.children : [config.children];
-      const processedChildren = children.map(child =>
-        (child as any).build ? (child as any).build() : child
-      );
-      this._footerBar = {
-        content: React.createElement(React.Fragment, null, processedChildren),
-        fixed: config.fixed ?? false
-      };
-    } else {
-      this._footerBar = {
-        content: (config as any).build ? (config as any).build() : config,
-        fixed: false
-      };
-    }
+  footerBar(config: FiboChild | LayoutBarConfig): this {
+    this._footerBar = this._normalizeBar(config);
     return this;
   }
 
-  sideBarLeft(config: React.ReactNode | LayoutBarConfig): this {
-    if (this._isLayoutBarConfig(config)) {
-      const children = Array.isArray(config.children) ? config.children : [config.children];
-      const processedChildren = children.map(child =>
-        (child as any).build ? (child as any).build() : child
-      );
-      this._sideBarLeft = {
-        content: React.createElement(React.Fragment, null, processedChildren),
-        fixed: config.fixed ?? false
-      };
-    } else {
-      this._sideBarLeft = {
-        content: (config as any).build ? (config as any).build() : config,
-        fixed: false
-      };
-    }
+  sideBarLeft(config: FiboChild | LayoutBarConfig): this {
+    this._sideBarLeft = this._normalizeBar(config);
     return this;
   }
 
-  sideBarRight(config: React.ReactNode | LayoutBarConfig): this {
-    if (this._isLayoutBarConfig(config)) {
-      const children = Array.isArray(config.children) ? config.children : [config.children];
-      const processedChildren = children.map(child =>
-        (child as any).build ? (child as any).build() : child
-      );
-      this._sideBarRight = {
-        content: React.createElement(React.Fragment, null, processedChildren),
-        fixed: config.fixed ?? false
-      };
-    } else {
-      this._sideBarRight = {
-        content: (config as any).build ? (config as any).build() : config,
-        fixed: false
-      };
-    }
+  sideBarRight(config: FiboChild | LayoutBarConfig): this {
+    this._sideBarRight = this._normalizeBar(config);
     return this;
   }
 
-  private _isLayoutBarConfig(value: any): value is LayoutBarConfig {
-    return value && typeof value === 'object' && 'children' in value && !React.isValidElement(value);
+  private _normalizeBar(config: FiboChild | LayoutBarConfig): { content: React.ReactNode; fixed: boolean } {
+    if (this._isLayoutBarConfig(config)) {
+      return {
+        content: React.createElement(React.Fragment, null, ...normalizeFiboChildren(config.children)),
+        fixed: config.fixed ?? false
+      };
+    }
+    return {
+      content: buildChild(config),
+      fixed: false
+    };
+  }
+
+  private _isLayoutBarConfig(value: unknown): value is LayoutBarConfig {
+    if (!value || typeof value !== 'object' || React.isValidElement(value)) {
+      return false;
+    }
+    if ('build' in value && typeof (value as { build?: unknown }).build === 'function') {
+      return false;
+    }
+    return 'children' in value && !('type' in value);
   }
 
   build(): ReactElement {

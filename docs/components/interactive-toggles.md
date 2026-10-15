@@ -3,20 +3,20 @@ import { Checkbox } from '../../src/interactive/Checkbox'
 import { Switch } from '../../src/interactive/Switch'
 import { Box } from '../../src/structure/Box'
 
-const renderCheckboxes = () => 
+const renderCheckboxes = () =>
   Box().display('flex').flexDirection('column').gap('12px').children([
-    Checkbox().label('Unchecked').checked(false).onChange(() => {}).build(),
-    Checkbox().label('Checked').checked(true).onChange(() => {}).build(),
-    Checkbox().label('Indeterminate').checked(false).indeterminate(true).onChange(() => {}).build(),
-    Checkbox().label('Disabled').checked(false).disabled(true).build()
-  ]).build()
+    Checkbox().label('Unchecked').checked(false).onChange(() => {}),
+    Checkbox().label('Checked').checked(true).onChange(() => {}),
+    Checkbox().label('Indeterminate').checked(false).indeterminate(true).onChange(() => {}),
+    Checkbox().label('Disabled').checked(false).disabled(true)
+  ])
 
-const renderSwitches = () => 
+const renderSwitches = () =>
   Box().display('flex').flexDirection('column').gap('12px').children([
-    Switch().label('Off').checked(false).onChange(() => {}).build(),
-    Switch().label('On').checked(true).onChange(() => {}).build(),
-    Switch().label('Disabled').checked(false).disabled(true).build()
-  ]).build()
+    Switch().label('Off').checked(false).onChange(() => {}),
+    Switch().label('On').checked(true).onChange(() => {}),
+    Switch().label('Disabled').checked(false).disabled(true)
+  ])
 </script>
 
 # Checkbox & Switch
@@ -36,11 +36,11 @@ These components provide accessible, interactive controls for boolean states wit
 const [checked, setChecked] = useState(false)
 
 Box().display('flex').flexDirection('column').gap('12px').children([
-  Checkbox().label('Unchecked').checked(checked).onChange(setChecked).build(),
-  Checkbox().label('Checked').checked(true).build(),
-  Checkbox().label('Indeterminate').indeterminate(true).build(),
-  Checkbox().label('Disabled').checked(false).disabled(true).build()
-]).build()
+  Checkbox().label('Unchecked').checked(checked).onChange(setChecked),
+  Checkbox().label('Checked').checked(true),
+  Checkbox().label('Indeterminate').indeterminate(true),
+  Checkbox().label('Disabled').checked(false).disabled(true)
+])
 ```
 :::
 
@@ -73,10 +73,10 @@ Checkbox() → CheckboxBuilder
 const [enabled, setEnabled] = useState(false)
 
 Box().display('flex').flexDirection('column').gap('12px').children([
-  Switch().label('Off').checked(enabled).onChange(setEnabled).build(),
-  Switch().label('On').checked(true).build(),
-  Switch().label('Disabled').checked(false).disabled(true).build()
-]).build()
+  Switch().label('Off').checked(enabled).onChange(setEnabled),
+  Switch().label('On').checked(true),
+  Switch().label('Disabled').checked(false).disabled(true)
+])
 ```
 :::
 
@@ -101,18 +101,18 @@ Switch() → SwitchBuilder
 
 ```tsx
 Box().display('flex').flexDirection('column').gap('8px').children([
-  Checkbox().label('Accept terms and conditions').checked(accepted).onChange(setAccepted).build(),
-  Checkbox().label('Subscribe to newsletter').checked(subscribed).onChange(setSubscribed).build()
-]).build()
+  Checkbox().label('Accept terms and conditions').checked(accepted).onChange(setAccepted),
+  Checkbox().label('Subscribe to newsletter').checked(subscribed).onChange(setSubscribed)
+])
 ```
 
 ### Settings with Switches
 
 ```tsx
 Box().display('flex').flexDirection('column').gap('12px').children([
-  Switch().label('Enable notifications').checked(notifications).onChange(setNotifications).build(),
-  Switch().label('Dark mode').checked(darkMode).onChange(setDarkMode).build()
-]).build()
+  Switch().label('Enable notifications').checked(notifications).onChange(setNotifications),
+  Switch().label('Dark mode').checked(darkMode).onChange(setDarkMode)
+])
 ```
 
 ## See Also

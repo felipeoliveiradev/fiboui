@@ -9,17 +9,17 @@ const renderSelect = () => {
     { label: 'Option 2', value: '2' },
     { label: 'Option 3', value: '3' }
   ]
-  
+
   return Select()
     .label('Choose an option')
     .options(options)
     .value('2')
     .onChange(() => {})
     .maxWidth('400px')
-    .build()
+
 }
 
-const renderTextarea = () => 
+const renderTextarea = () =>
   Textarea()
     .label('Description')
     .placeholder('Enter your description...')
@@ -27,7 +27,7 @@ const renderTextarea = () =>
     .value('Sample text content...')
     .onChange(() => {})
     .maxWidth('400px')
-    .build()
+
 </script>
 
 # Select & Textarea
@@ -54,7 +54,7 @@ Select()
   .options(options)
   .value(value)
   .onChange(setValue)
-  .build()
+
 ```
 :::
 
@@ -95,7 +95,7 @@ Textarea()
   .rows(4)
   .value(value)
   .onChange(setValue)
-  .build()
+
 ```
 :::
 
@@ -129,7 +129,7 @@ Select()
   .multiple(true)
   .value(selectedTags)
   .onChange(setSelectedTags)
-  .build()
+
 ```
 
 ### Auto-Resize Textarea
@@ -141,7 +141,7 @@ Textarea()
   .resize('vertical')
   .value(comments)
   .onChange(setComments)
-  .build()
+
 ```
 
 ## See Also

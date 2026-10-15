@@ -17,7 +17,7 @@ Scaffold()
     MainContent(),
     Footer()
   ])
-  .build()
+
 ```
 
 ## Features
@@ -63,12 +63,12 @@ function App() {
         .flex('1')
         .padding('24px')
         .children(
-          Text('Welcome!').variant('h1').build()
+          Text('Welcome!').variant('h1')
         )
-        .build(),
+        ,
       Footer()
     ])
-    .build()
+
 }
 ```
 
@@ -87,7 +87,7 @@ Scaffold()
     analytics: analyticsService
   })
   .children([App()])
-  .build()
+
 ```
 
 ### E-commerce App
@@ -113,23 +113,23 @@ function EcommerceApp() {
           Row()
             .mainAxisAlignment('spaceBetween')
             .children([
-              Text('🛒 Shop').variant('h2').build(),
+              Text('🛒 Shop').variant('h2'),
               CartBadge()
             ])
-            .build()
+
         )
-        .build(),
+        ,
 
       // Main content
       Box()
         .flex('1')
         .children(ProductGrid())
-        .build(),
+        ,
 
       // Footer
       Footer()
     ])
-    .build()
+
 }
 ```
 
@@ -152,7 +152,7 @@ Scaffold()
         Sidebar()
           .width(260)
           .children(Navigation())
-          .build(),
+          ,
 
         // Main area
         Box()
@@ -163,11 +163,11 @@ Scaffold()
             DashboardHeader(),
             DashboardContent()
           ])
-          .build()
+
       ])
-      .build()
+
   ])
-  .build()
+
 ```
 
 ## Accessing Providers
@@ -187,9 +187,9 @@ function ThemedBox() {
     .consume('theme')
     .backgroundColor((theme) => theme.primary)
     .children(
-      Text('Themed!').build()
+      Text('Themed!')
     )
-    .build()
+
 }
 ```
 
@@ -208,15 +208,15 @@ function App() {
           Button()
             .text('Toggle Theme')
             .onClick(() => {
-              currentTheme.value = 
+              currentTheme.value =
                 currentTheme.value === lightTheme ? darkTheme : lightTheme
             })
-            .build()
+
         )
-        .build(),
+        ,
       Content()
     ])
-    .build()
+
 }
 ```
 
@@ -230,14 +230,14 @@ ReactDOM.render(
   Scaffold()
     .theme(theme)
     .children([App()])
-    .build(),
+    ,
   document.getElementById('root')
 )
 
 // ❌ Bad - Scaffold nested
 function App() {
   return Box().children([
-    Scaffold().children([...]).build()  // Don't nest Scaffold
+    Scaffold().children([...])  // Don't nest Scaffold
   ])
 }
 ```
@@ -254,8 +254,8 @@ Scaffold()
 
 
 Box().children([
-  Scaffold().theme(theme1).build(),
-  Scaffold().theme(theme2).build()  
+  Scaffold().theme(theme1),
+  Scaffold().theme(theme2)
 ])
 ```
 
@@ -273,8 +273,8 @@ Scaffold()
 
 Scaffold()
   .providers({
-    theme, user, cart, products, orders, 
-    shipping, payments, reviews, ...  
+    theme, user, cart, products, orders,
+    shipping, payments, reviews, ...
   })
 ```
 

@@ -1,7 +1,9 @@
 @import './core.css';
+@import './motion.css';
 @import './themes/material.css';
 @import './themes/cupertino.css';
 @import './themes/web.css';
+@import './themes/noir.css';
 
 @tailwind base;
 @tailwind components;
@@ -14,25 +16,25 @@
 
 .fibo-theme-material {
   
-  --fibo-primary: #1976d2; 
+  --fibo-primary: #6750A4;
   --fibo-on-primary: #FFFFFF;
-  --fibo-primary-container: #bbdefb;
-  --fibo-on-primary-container: #1976d2;
+  --fibo-primary-container: #EADDFF;
+  --fibo-on-primary-container: #21005D;
   
-  --fibo-secondary: #9c27b0;
+  --fibo-secondary: #625B71;
   --fibo-on-secondary: #FFFFFF;
   
   --fibo-tertiary: #7D5260;
   --fibo-on-tertiary: #FFFFFF;
 
-  --fibo-error: #d32f2f;
+  --fibo-error: #B3261E;
   --fibo-on-error: #FFFFFF;
   
-  --fibo-background: #FFFFFF;
-  --fibo-on-background: rgba(0, 0, 0, 0.87);
+  --fibo-background: #FFFBFE;
+  --fibo-on-background: #1C1B1F;
   
-  --fibo-surface: #FFFFFF;
-  --fibo-on-surface: rgba(0, 0, 0, 0.87);
+  --fibo-surface: #FFFBFE;
+  --fibo-on-surface: #1C1B1F;
   --fibo-surface-variant: #f5f5f5;
   --fibo-on-surface-variant: rgba(0, 0, 0, 0.6);
   

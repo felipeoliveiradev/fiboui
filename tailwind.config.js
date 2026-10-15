@@ -6,13 +6,13 @@ export default {
     extend: {
       colors: {
         material: {
-          primary: '#6200EE',
-          'primary-variant': '#3700B3',
-          secondary: '#03DAC6',
-          'secondary-variant': '#018786',
-          background: '#FFFFFF',
-          surface: '#FFFFFF',
-          error: '#B00020',
+          primary: '#6750A4',
+          'primary-variant': '#4F378B',
+          secondary: '#625B71',
+          'secondary-variant': '#4A4458',
+          background: '#FFFBFE',
+          surface: '#FFFBFE',
+          error: '#B3261E',
           'on-primary': '#FFFFFF',
           'on-secondary': '#000000',
           'on-background': '#000000',

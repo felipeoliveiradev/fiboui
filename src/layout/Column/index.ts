@@ -4,7 +4,8 @@ import { ChildrenProps, MainAxisAlignment, CrossAxisAlignment } from '../../core
 
 class ColumnBuilder extends FiboBuilder {
   private _mainAxisAlignment: MainAxisAlignment = 'start';
-  private _crossAxisAlignment: CrossAxisAlignment = 'start';
+  // Flutter Column / SwiftUI VStack default: center. Stretch is opt-in.
+  private _crossAxisAlignment: CrossAxisAlignment = 'center';
   private _spacing?: string | number;
   private _size?: 'small' | 'medium' | 'large';
 
@@ -55,7 +56,8 @@ class ColumnBuilder extends FiboBuilder {
       'fibo-column',
       'flex',
       'flex-col',
-      'w-full',
+      // min-w-0: allow shrink inside flex/grid so wide children (tables, nowrap) don't blow the track
+      this.isHug() ? 'w-auto self-auto' : 'w-full min-w-0',
       alignmentMap[this._mainAxisAlignment],
       crossAlignmentMap[this._crossAxisAlignment],
       this._size ? sizeMap[this._size] : '',

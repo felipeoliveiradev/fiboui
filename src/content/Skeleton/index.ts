@@ -16,6 +16,9 @@ const SkeletonInner = React.memo((props: any) => {
 
     return React.createElement('div', {
         className: [...baseClasses, className].filter(Boolean).join(' '),
+        role: 'status',
+        'aria-live': 'polite',
+        'aria-label': rest['aria-label'] || 'Loading',
         style: {
             width: width,
             height: height,

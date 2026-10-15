@@ -9,55 +9,55 @@ import { Skeleton } from '../../src/content/Skeleton'
 import { Spinner } from '../../src/content/Spinner'
 import { Text } from '../../src/content/Text'
 
-const renderAlert = () => 
+const renderAlert = () =>
   Box().flex().col().gap(4).children([
-    Alert().title('Info').message('This is an info alert').variant('info').build(),
-    Alert().title('Success').message('Operation successful').variant('success').build(),
-    Alert().title('Error').message('Something went wrong').variant('error').build()
-  ]).build()
+    Alert().title('Info').description('This is an info alert').intent('info'),
+    Alert().title('Success').description('Operation successful').intent('success'),
+    Alert().title('Error').description('Something went wrong').intent('error')
+  ])
 
-const renderAvatar = () => 
+const renderAvatar = () =>
   Box().flex().gap(4).children([
-    Avatar().src('https://i.pravatar.cc/100').size('sm').build(),
-    Avatar().src('https://i.pravatar.cc/100').size('md').build(),
-    Avatar().src('https://i.pravatar.cc/100').size('lg').build(),
-    Avatar().initials('FO').bg('blue-500').build()
-  ]).build()
+    Avatar().src('https://i.pravatar.cc/100').size('sm'),
+    Avatar().src('https://i.pravatar.cc/100').size('md'),
+    Avatar().src('https://i.pravatar.cc/100').size('lg'),
+    Avatar().initials('FO').bg('blue-500')
+  ])
 
-const renderBadge = () => 
+const renderBadge = () =>
   Box().flex().gap(2).children([
-    Badge().label('New').variant('info').build(),
-    Badge().label('Completed').variant('success').build(),
-    Badge().label('Failed').variant('error').build()
-  ]).build()
+    Badge().text('New').variant('accent').intent('info'),
+    Badge().text('Completed').variant('neutral').intent('success'),
+    Badge().text('Failed').variant('solid').intent('error')
+  ])
 
-const renderProgress = () => 
+const renderProgress = () =>
   Box().flex().col().gap(4).w('full').children([
-    Progress().value(30).build(),
-    Progress().value(75).variant('success').build()
-  ]).build()
+    Progress().value(30),
+    Progress().value(75).variant('success')
+  ])
 
-const renderSkeleton = () => 
+const renderSkeleton = () =>
   Box().flex().col().gap(2).w('300px').children([
-    Skeleton().variant('text').h(20).build(),
-    Skeleton().variant('rect').h(100).build(),
-    Skeleton().variant('circle').size(50).build()
-  ]).build()
+    Skeleton().variant('text').h(20),
+    Skeleton().variant('rect').h(100),
+    Skeleton().variant('circle').size(50)
+  ])
 
-const renderSpinner = () => 
+const renderSpinner = () =>
   Box().flex().gap(4).children([
-    Spinner().size('sm').build(),
-    Spinner().size('md').build(),
-    Spinner().size('lg').build()
-  ]).build()
+    Spinner().size('sm'),
+    Spinner().size('md'),
+    Spinner().size('lg')
+  ])
 
-const renderText = () => 
+const renderText = () =>
   Box().flex().col().gap(2).children([
-    Text('Heading 1').variant('h1').build(),
-    Text('Heading 2').variant('h2').build(),
-    Text('Body Text').variant('body').build(),
-    Text('Caption Text').variant('caption').color('gray-500').build()
-  ]).build()
+    Text('Heading 1').variant('h1'),
+    Text('Heading 2').variant('h2'),
+    Text('Body Text').variant('body'),
+    Text('Caption Text').variant('caption').color('gray-500')
+  ])
 </script>
 
 # Content Components

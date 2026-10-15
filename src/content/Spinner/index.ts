@@ -21,6 +21,9 @@ const SpinnerInner = React.memo((props: any) => {
     const containerProps = {
         className: `fibo-spinner ${className}`,
         style: { width: pixelSize, height: pixelSize, ...style },
+        role: 'status',
+        'aria-live': 'polite',
+        'aria-label': props['aria-label'] || 'Loading',
         ...rest
     };
 

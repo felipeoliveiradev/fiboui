@@ -131,7 +131,7 @@ class PathBuilder extends ShapeBuilder {
 
     return React.createElement(
       'g',
-      { key: `path-group-${Math.random()}` },
+      { key: this._className || 'path-group' },
       groupChildren
     );
   }

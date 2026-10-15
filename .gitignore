@@ -1,6 +1,33 @@
 node_modules
-
-
-
+coverage
 dist
 boilerplate
+test-results
+playwright-report
+
+# secrets / local credentials
+.env
+.env.*
+!.env.example
+.npmrc
+!.npmrc.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+auth.json
+.secrets/
+
+# generated
+docs/.vitepress/cache
+docs/.vitepress/dist
+.next
+examples/ssr-fixtures/test-results
+examples/ssr-fixtures/playwright-report
+.cache
+/*.tgz

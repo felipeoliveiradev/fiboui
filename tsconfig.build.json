@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "boilerplate",
+    "tests",
+    "src/demo.tsx",
+    "src/cli",
+    "src/test"
+  ]
+}

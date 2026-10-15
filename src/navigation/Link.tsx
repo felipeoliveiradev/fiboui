@@ -1,5 +1,5 @@
 import React, { MouseEvent, ReactNode } from 'react';
-import { useNavigate } from './RouterContext';
+import { useNavigate, useRouter, useRouterOptional } from './RouterContext';
 
 interface LinkProps {
   to: string;
@@ -21,6 +21,10 @@ export const Link: React.FC<LinkProps> = ({
   onClick,
 }) => {
   const navigate = useNavigate();
+  const router = useRouterOptional();
+  const href = to.startsWith('http') || to.startsWith('//') || to.startsWith('#')
+    ? to
+    : `${router?.basename ?? ''}${to}`;
 
   const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
 
@@ -39,7 +43,7 @@ export const Link: React.FC<LinkProps> = ({
 
   return (
     <a
-      href={to}
+      href={href}
       onClick={handleClick}
       className={className}
       style={style}
@@ -65,7 +69,7 @@ export const NavLink: React.FC<NavLinkProps> = ({
   exact = false,
   ...props
 }) => {
-  const currentPath = window.location.pathname;
+  const { currentPath } = useRouter();
 
   const isActive = exact
     ? currentPath === to

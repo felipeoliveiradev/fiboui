@@ -17,11 +17,13 @@ export interface Route {
 
 export interface RouterContextValue {
   currentPath: string;
+  basename: string;
   navigate: (path: string, options?: NavigateOptions) => void;
   goBack: () => void;
   replace: (path: string) => void;
   params: Record<string, string>;
   query: URLSearchParams;
+  hash: string;
 }
 
 export interface NavigateOptions {
@@ -37,6 +39,10 @@ export function useRouter(): RouterContextValue {
     throw new Error('useRouter must be used within a Router');
   }
   return context;
+}
+
+export function useRouterOptional(): RouterContextValue | null {
+  return useContext(RouterContext);
 }
 
 export function useNavigate() {
@@ -55,10 +61,11 @@ export function useQuery(): URLSearchParams {
 }
 
 export function useLocation() {
-  const { currentPath } = useRouter();
+  const { currentPath, query, hash } = useRouter();
+  const search = query?.toString?.() ?? '';
   return {
     pathname: currentPath,
-    search: window.location.search,
-    hash: window.location.hash,
+    search: search ? `?${search}` : '',
+    hash: hash ?? '',
   };
 }
