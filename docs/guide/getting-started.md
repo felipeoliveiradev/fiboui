@@ -19,23 +19,20 @@ ESM-only (`import`, no `require`). Next.js App Router files that call builders n
 
 ## Quick Start
 
-Wrap your application in the `FiboThemeProvider` and start building.
+Apply a theme fluently (or wrap with `FiboThemeProvider`). See [Theming](./theming.md).
 
 ```tsx
 import 'fiboui/style.css';
-import { FiboThemeProvider, Box, Text, Button } from 'fiboui';
+import { Box, Text, Button } from 'fiboui';
 
 function App() {
-  return (
-    <FiboThemeProvider>
-      {
-        Box().p(4).children([
-            Text("Hello World").variant("h1"),
-            Button("Click Me").onPress(() => alert("Hi!"))
-        ])
-      }
-    </FiboThemeProvider>
-  );
+  return Box()
+    .theme('web')
+    .p(4)
+    .children([
+      Text('Hello World').variant('h1'),
+      Button('Click Me').onPress(() => alert('Hi!')),
+    ]);
 }
 ```
 

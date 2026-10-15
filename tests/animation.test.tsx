@@ -313,13 +313,13 @@ describe('Presence + Button.onHover + hooks', () => {
 });
 
 describe('Text variant scale', () => {
-  it('variant h1 sets the heading tag and a visible rem scale', () => {
+  it('variant h1 sets the heading tag and theme CSS vars with rem fallbacks', () => {
     render(Text('Hero').variant('h1'));
     const el = screen.getByText('Hero');
     expect(el.tagName).toBe('H1');
     expect(el.className).toMatch(/fibo-text-h1/);
-    expect(el.style.fontSize).toBe('2.25rem');
-    expect(el.style.fontWeight).toBe('700');
+    expect(el.style.fontSize).toBe('var(--fibo-text-h1-size, 2.25rem)');
+    expect(el.style.fontWeight).toBe('var(--fibo-text-h1-weight, 700)');
   });
 
   it('variant caption is smaller than h1 and user style wins', () => {
@@ -329,7 +329,9 @@ describe('Text variant scale', () => {
         Text('Note').variant('caption').style({ fontSize: '20px' }).id('c'),
       ])
     );
-    expect((document.getElementById('h') as HTMLElement).style.fontSize).toBe('2.25rem');
+    expect((document.getElementById('h') as HTMLElement).style.fontSize).toBe(
+      'var(--fibo-text-h1-size, 2.25rem)',
+    );
     const caption = document.getElementById('c') as HTMLElement;
     expect(caption.tagName).toBe('SPAN');
     expect(caption.style.fontSize).toBe('20px');

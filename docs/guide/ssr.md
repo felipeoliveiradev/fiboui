@@ -71,7 +71,7 @@ export default function Page() {
 }
 ```
 
-`FiboThemeProvider` writes CSS variables into a `<style>` in the tree (and a wrapper class) so the first paint matches SSR. It also updates `document.documentElement` **after mount**.
+`FiboThemeProvider` (and fluent `.theme(...)`) stamp `fibo-theme-*` plus CSS variables as **inline style on the wrapper** so the first paint matches SSR. No `document.documentElement` write — vars inherit like Flutter/SwiftUI environment.
 
 ## Vite SSR
 
@@ -135,7 +135,7 @@ The first client render uses those props (default path `/`). After mount it sync
 | `Presence` / `usePrefersReducedMotion()` | `false` (no `matchMedia`) | real `prefers-reduced-motion` |
 | `.reveal()` / `.onScroll()` | markup without `.fibo-inview` | IntersectionObserver |
 | `.scrollProgress()` / `useScrollProgress()` | `--fibo-progress` unset / `0` | scroll listeners |
-| `FiboThemeProvider` | wrapper class + `:root` vars in tree | also `documentElement` |
+| `FiboThemeProvider` / `.theme()` | wrapper class + inline `--fibo-*` vars | same (no documentElement) |
 | `Router` | `initialPath` or `/` | `window.location` |
 | `useViewportWidth()` | `1024` | `innerWidth` |
 | `useId()` on inputs | React SSR id | same |

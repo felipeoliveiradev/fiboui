@@ -22,25 +22,13 @@ import {
 } from './motionCss';
 import { Reveal } from './Reveal';
 import { ScrollProgress } from './ScrollProgress';
-
-interface ThemeColors {
-  primary?: string;
-  onPrimary?: string;
-  secondary?: string;
-  onSecondary?: string;
-  background?: string;
-  onBackground?: string;
-  surface?: string;
-  onSurface?: string;
-  error?: string;
-  [key: string]: string | undefined;
-}
-
-interface ThemeConfig {
-  colors?: ThemeColors;
-  colorScheme?: ThemeColors;
-  [key: string]: unknown;
-}
+import type { FiboTheme } from '../theme/types';
+import {
+  resolveTheme,
+  themeClassName,
+  themeToInlineStyle,
+  type ThemeInput,
+} from '../theme/themeData';
 
 /** Typical sticky header height used when `.sticky(0)` / `.sticky(true)` has no size. */
 const DEFAULT_STICKY_OFFSET_PX = 64;
@@ -60,7 +48,8 @@ export abstract class FiboBuilder {
   protected _classNames: string[] = [];
   protected _children: ReactNode[] = [];
 
-  protected _theme?: ThemeConfig;
+  /** Resolved theme for this subtree (SwiftUI Environment / Flutter Theme). */
+  protected _theme?: FiboTheme;
   protected _state: Map<string, any> = new Map();
   protected _providers: Map<string, any> = new Map();
   protected _observers: Set<Observable<any>> = new Set();
@@ -1222,8 +1211,21 @@ export abstract class FiboBuilder {
     );
   }
 
-  theme(themeConfig: ThemeConfig): this {
-    this._theme = themeConfig;
+  /**
+   * Apply a theme to this node and descendants (CSS vars inherit).
+   * Fluent: `.theme("noir")` | `.theme(noirTheme)` | `.theme(extendTheme(webTheme, {…}))`.
+   * SSR-safe: class + inline vars on first paint (no useEffect).
+   */
+  theme(input: ThemeInput): this {
+    const resolved = resolveTheme(input);
+    this._theme = resolved;
+    this.addClassName(themeClassName(resolved));
+    return this;
+  }
+
+  /** Prefer dark/light system chrome for native controls under this subtree. */
+  colorScheme(scheme: 'light' | 'dark' | 'light dark'): this {
+    this._style = { ...this._style, colorScheme: scheme };
     return this;
   }
 
@@ -1414,29 +1416,14 @@ export abstract class FiboBuilder {
     let finalStyle = { ...this._style, ...this._cssStyles };
 
     if (this._theme) {
-
-      const themeColors = this._theme.colors || this._theme.colorScheme;
-
-      if (themeColors) {
-
-        const styleAny = finalStyle as any;
-
-        if (themeColors.primary) styleAny['--fibo-primary'] = themeColors.primary;
-        if (themeColors.onPrimary) styleAny['--fibo-on-primary'] = themeColors.onPrimary;
-
-        if (themeColors.secondary) styleAny['--fibo-secondary'] = themeColors.secondary;
-        if (themeColors.onSecondary) styleAny['--fibo-on-secondary'] = themeColors.onSecondary;
-
-        if (themeColors.background) {
-          styleAny['--fibo-background'] = themeColors.background;
-        }
-        if (themeColors.onBackground) styleAny['--fibo-on-background'] = themeColors.onBackground;
-
-        if (themeColors.surface) styleAny['--fibo-surface'] = themeColors.surface;
-        if (themeColors.onSurface) styleAny['--fibo-on-surface'] = themeColors.onSurface;
-
-        if (themeColors.error) styleAny['--fibo-error'] = themeColors.error;
-      }
+      finalStyle = {
+        ...themeToInlineStyle(this._theme),
+        ...finalStyle,
+        backgroundColor:
+          finalStyle.backgroundColor ?? this._theme.colors.background,
+        color: finalStyle.color ?? this._theme.colors.onBackground,
+        fontFamily: finalStyle.fontFamily ?? this._theme.fontFamily,
+      };
     }
 
     // Breakpoints compile to CSS `@media` via `.media()` / `.responsive()` — not inline style.

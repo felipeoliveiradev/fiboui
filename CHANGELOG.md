@@ -4,6 +4,23 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-10-15
+
+### Added
+
+- **Fluent theme engine** — `ThemeData`-style API mirrored in CSS vars (Flutter / SwiftUI mental model):
+  - Preset **`noir`** (obsidian editorial) + `noirTheme`
+  - `.theme("noir" | FiboTheme)` on any builder — class + inline CSS vars on **first paint** (SSR-safe)
+  - `extendTheme` / `copyWithTheme`, `resolveTheme`, `themeToCssVars` / `themeToInlineStyle` / `themeClassName`
+  - `FiboThemeProvider({ theme: "noir" })` no longer paints via `documentElement` `useEffect`
+- **Text** reads `var(--fibo-text-*-*)` from the active theme (fallbacks when no theme)
+- **Button** ghost / text / soft / outline use `var(--fibo-*)` instead of gray Tailwind hardcodes
+
+### Changed
+
+- `FiboThemeName` includes `'noir'`
+- Theme CSS: `src/styles/themes/noir.css` in `@layer fibo.theme`
+
 ## [2.2.4] - 2026-10-15
 
 ### Added

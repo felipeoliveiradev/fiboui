@@ -2,6 +2,8 @@ export * from './types';
 export * from './material';
 export * from './cupertino';
 export * from './web';
+export * from './noir';
+export * from './themeData';
 export * from './provider';
 
 export * from './colorEnums';

@@ -1,4 +1,4 @@
-# FiboUI v2.2.4
+# FiboUI v2.3.0
 
 **A Flutter & SwiftUI-inspired React UI framework featuring a fluent builder API and fine-grained reactivity.**
 
@@ -11,7 +11,7 @@ FiboUI brings chainable builders to React. Compose screens with `Column()`, `Row
 - **Assembly pattern** — factories return builders for endless chaining.
 - **Zero-build children** — pass builders to `.children()`; they build implicitly. Typed methods (`.onPress`, `.id`, `.spacing`, `.children`) stay assignable as children.
 - **Fine-grained reactivity** — `signal()`, `computed()`, `createStore()`, `.bindSignal()`, `.observer()`.
-- **Multi-theme** — Material, Cupertino, and Web tokens with CSS variables.
+- **Fluent themes** — `.theme("noir" \| "web" \| …)` / `extendTheme` / `FiboThemeProvider` — CSS vars SSR-safe (Flutter / SwiftUI model). Presets: Material, Cupertino, Web, **Noir**.
 - **Type-safe** — TypeScript builders; `FiboChild` / `FiboChildren` describe child slots.
 - **Media queries** — `Box().padding(8).md({ padding: 16 }).lg({ padding: 24 })` compiles to CSS `@media`. `.responsive({ mobile, tablet, desktop })` still works (JS).
 - **CSS motion & scroll** — `Box().animate('fadeIn').ease('spring')`, `.onScroll('fadeIn')`, `.stagger(80)`, `.scrollProgress()`, `Presence(open).enter('fadeIn').exit('fadeOut')`. Default path is CSS (no rAF). See `docs/guide/animation.md`.

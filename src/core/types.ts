@@ -15,7 +15,7 @@ export type FiboChild = ReactNode | Buildable;
 /** Value accepted by `.children()`: one child, a list, or a lazy factory. */
 export type FiboChildren = FiboChild | FiboChild[] | (() => FiboChild | FiboChild[]);
 
-export type FiboThemeName = 'material' | 'cupertino' | 'web';
+export type FiboThemeName = 'material' | 'cupertino' | 'web' | 'noir';
 
 export interface ResponsiveStyles {
   mobile?: CSSProperties;

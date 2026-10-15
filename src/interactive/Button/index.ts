@@ -48,20 +48,21 @@ const ButtonInner = React.memo((props: any) => {
   if (variant === 'ghost') {
     variantClass = inverse
       ? 'bg-transparent text-white shadow-none border border-transparent'
-      : 'bg-transparent text-gray-600 shadow-none border border-transparent hover:bg-gray-100';
+      : 'bg-transparent text-[var(--fibo-on-surface)] shadow-none border border-transparent hover:bg-[color-mix(in_srgb,var(--fibo-on-surface)_8%,transparent)]';
   }
   else if (variant === 'text') {
     variantClass = inverse
       ? 'bg-transparent text-white shadow-none border-none px-2'
-      : 'bg-transparent text-gray-600 shadow-none border-none px-2 hover:bg-gray-100';
+      : 'bg-transparent text-[var(--fibo-on-surface)] shadow-none border-none px-2 hover:bg-[color-mix(in_srgb,var(--fibo-on-surface)_8%,transparent)]';
   }
   else if (variant === 'soft') {
-    variantClass = 'bg-indigo-50 text-indigo-600 shadow-none border-none hover:bg-indigo-100';
+    variantClass =
+      'bg-[color-mix(in_srgb,var(--fibo-primary)_12%,transparent)] text-[var(--fibo-primary)] shadow-none border-none hover:bg-[color-mix(in_srgb,var(--fibo-primary)_18%,transparent)]';
   }
   else if (variant === 'outline' || variant === 'outlined') {
     variantClass = inverse
       ? 'bg-black text-white shadow-none border border-[#3b3b3b]'
-      : 'bg-transparent border-[1.5px] border-gray-200 text-gray-700 shadow-none hover:bg-gray-50';
+      : 'bg-transparent border-[1.5px] border-[var(--fibo-outline,rgba(0,0,0,0.12))] text-[var(--fibo-on-surface)] shadow-none hover:bg-[color-mix(in_srgb,var(--fibo-on-surface)_6%,transparent)]';
   }
   else if (variant === 'solid') {
     variantClass = inverse

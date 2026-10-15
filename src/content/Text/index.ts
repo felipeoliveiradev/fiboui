@@ -3,17 +3,69 @@ import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps, TextType } from '../../core/types';
 import { FineGrainText } from '../../core/FineGrain';
 
-/** Default rem scale so `.variant('h1')` is visible without a theme class or Tailwind preflight. */
+/**
+ * Theme-aware defaults: CSS vars from `.theme()` / `fibo-theme-*` (SwiftUI Environment /
+ * Flutter TextTheme). Fallbacks keep text readable with no theme mounted.
+ */
 export const TEXT_VARIANT_STYLE: Record<TextType, CSSProperties> = {
-  h1: { fontSize: '2.25rem', fontWeight: 700, letterSpacing: '-0.025em', lineHeight: 1.2 },
-  h2: { fontSize: '1.875rem', fontWeight: 700, letterSpacing: '-0.025em', lineHeight: 1.25 },
-  h3: { fontSize: '1.5rem', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.3 },
-  h4: { fontSize: '1.25rem', fontWeight: 600, lineHeight: 1.35 },
-  h5: { fontSize: '1.125rem', fontWeight: 600, lineHeight: 1.4 },
-  h6: { fontSize: '1rem', fontWeight: 600, lineHeight: 1.45 },
-  body: { fontSize: '1rem', fontWeight: 400, lineHeight: 1.5 },
-  caption: { fontSize: '0.875rem', fontWeight: 400, lineHeight: 1.4 },
-  label: { fontSize: '0.875rem', fontWeight: 500, lineHeight: 1.4 },
+  h1: {
+    fontSize: 'var(--fibo-text-h1-size, 2.25rem)',
+    fontWeight: 'var(--fibo-text-h1-weight, 700)' as unknown as number,
+    letterSpacing: 'var(--fibo-text-h1-tracking, -0.025em)',
+    lineHeight: 'var(--fibo-text-h1-height, 1.2)',
+    color: 'var(--fibo-text-h1-color, inherit)',
+  },
+  h2: {
+    fontSize: 'var(--fibo-text-h2-size, 1.875rem)',
+    fontWeight: 'var(--fibo-text-h2-weight, 700)' as unknown as number,
+    letterSpacing: 'var(--fibo-text-h2-tracking, -0.025em)',
+    lineHeight: 'var(--fibo-text-h2-height, 1.25)',
+    color: 'var(--fibo-text-h2-color, inherit)',
+  },
+  h3: {
+    fontSize: 'var(--fibo-text-h3-size, 1.5rem)',
+    fontWeight: 'var(--fibo-text-h3-weight, 600)' as unknown as number,
+    letterSpacing: 'var(--fibo-text-h3-tracking, -0.02em)',
+    lineHeight: 'var(--fibo-text-h3-height, 1.3)',
+    color: 'var(--fibo-text-h3-color, inherit)',
+  },
+  h4: {
+    fontSize: 'var(--fibo-text-h4-size, 1.25rem)',
+    fontWeight: 'var(--fibo-text-h4-weight, 600)' as unknown as number,
+    lineHeight: 'var(--fibo-text-h4-height, 1.35)',
+    color: 'var(--fibo-text-h4-color, inherit)',
+  },
+  h5: {
+    fontSize: 'var(--fibo-text-h5-size, 1.125rem)',
+    fontWeight: 'var(--fibo-text-h5-weight, 600)' as unknown as number,
+    lineHeight: 'var(--fibo-text-h5-height, 1.4)',
+    color: 'var(--fibo-text-h5-color, inherit)',
+  },
+  h6: {
+    fontSize: 'var(--fibo-text-h6-size, 1rem)',
+    fontWeight: 'var(--fibo-text-h6-weight, 600)' as unknown as number,
+    lineHeight: 'var(--fibo-text-h6-height, 1.45)',
+    color: 'var(--fibo-text-h6-color, inherit)',
+  },
+  body: {
+    fontSize: 'var(--fibo-text-body-size, 1rem)',
+    fontWeight: 'var(--fibo-text-body-weight, 400)' as unknown as number,
+    lineHeight: 'var(--fibo-text-body-height, 1.5)',
+    color: 'var(--fibo-text-body-color, inherit)',
+  },
+  caption: {
+    fontSize: 'var(--fibo-text-caption-size, 0.875rem)',
+    fontWeight: 'var(--fibo-text-caption-weight, 400)' as unknown as number,
+    lineHeight: 'var(--fibo-text-caption-height, 1.4)',
+    color: 'var(--fibo-text-caption-color, inherit)',
+  },
+  label: {
+    fontSize: 'var(--fibo-text-label-size, 0.875rem)',
+    fontWeight: 'var(--fibo-text-label-weight, 500)' as unknown as number,
+    letterSpacing: 'var(--fibo-text-label-tracking, 0.01em)',
+    lineHeight: 'var(--fibo-text-label-height, 1.4)',
+    color: 'var(--fibo-text-label-color, inherit)',
+  },
 };
 
 function textStyle(type: TextType, extra?: CSSProperties): CSSProperties {

@@ -30,6 +30,7 @@ describe('theme CSS', () => {
     for (const rel of [
       'src/styles/themes/material.css',
       'src/styles/themes/cupertino.css',
+      'src/styles/themes/noir.css',
       'src/styles/base.css',
       'src/styles/core.css',
     ]) {
@@ -37,4 +38,15 @@ describe('theme CSS', () => {
       assertCssDeclarationsAreInRules(readFileSync(file, 'utf8'), rel);
     }
   });
+
+  it('noir theme sheet exposes dark editorial tokens', () => {
+    const source = readFileSync(
+      resolve(__dirname, '../src/styles/themes/noir.css'),
+      'utf8',
+    );
+    expect(source).toContain('.fibo-theme-noir');
+    expect(source).toContain('--fibo-text-h1-size');
+    expect(source).toContain('color-scheme: dark');
+  });
 });
+
