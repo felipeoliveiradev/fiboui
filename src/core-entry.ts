@@ -53,7 +53,7 @@ export {
 export type { InteractionEffectName } from './core/interactionEffects';
 export { FIBO_INTERACTION_FX_CSS } from './core/interactionFxCss';
 export { ensureInteractionFxCss } from './core/ensureInteractionFx';
-export { MotionStyles, FiboStyles, getMotionCss, getCss, getStyleTag } from './core/styleManager';
+export { MotionStyles, FiboStyles, getMotionCss, getCss, getStyleTag, endSsrRequest } from './core/styleManager';
 export { FiboApp, FiboAppBuilder } from './core/FiboApp';
 export { mount, Fibo, toElement } from './core/mount';
 export { ValueBuilder } from './core/builder';

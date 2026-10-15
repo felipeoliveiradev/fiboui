@@ -1,4 +1,4 @@
-# FiboUI v2.4.2
+# FiboUI v2.4.3
 
 **A Flutter & SwiftUI-inspired React UI framework featuring a fluent builder API and fine-grained reactivity.**
 

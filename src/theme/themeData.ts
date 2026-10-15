@@ -115,6 +115,19 @@ export function themeToCssVars(theme: FiboTheme): Record<string, string> {
   if (c.onError) vars['--fibo-on-error'] = c.onError;
   if (c.outline) vars['--fibo-outline'] = c.outline;
 
+  // M3 container aliases so `.bg('primary-container')` / Button `tonal` resolve
+  // under runtime themes (noir / extendTheme) that only define core palette.
+  vars['--fibo-primary-container'] = c.primaryVariant ?? c.primary;
+  vars['--fibo-on-primary-container'] = c.onPrimary;
+  vars['--fibo-secondary-container'] = c.secondaryVariant ?? c.secondary;
+  vars['--fibo-on-secondary-container'] = c.onSecondary;
+  vars['--fibo-tertiary'] = c.secondary;
+  vars['--fibo-on-tertiary'] = c.onSecondary;
+  vars['--fibo-tertiary-container'] = c.secondaryVariant ?? c.secondary;
+  vars['--fibo-on-tertiary-container'] = c.onSecondary;
+  vars['--fibo-surface-variant'] = c.surface;
+  vars['--fibo-on-surface-variant'] = c.onSurface;
+
   (Object.keys(theme.typography) as (keyof ThemeTypography)[]).forEach((key) => {
     const t = theme.typography[key];
     const p = textVarPrefix(key);

@@ -10,6 +10,16 @@ const VIRTUALIZATION_THRESHOLD = 100;
 const DEFAULT_ITEM_HEIGHT = 60;
 const OVERSCAN = 5;
 
+/** Append !important to each declaration so hover beats inline row styles. */
+function withImportant(css: string): string {
+  return css
+    .split(';')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((decl) => (/\s!important\s*$/i.test(decl) ? decl : `${decl} !important`))
+    .join('; ');
+}
+
 const ListInner = React.memo((props: any) => {
   const {
     items,
@@ -169,15 +179,15 @@ const ListInner = React.memo((props: any) => {
     let css = '';
 
     if (customItemHover) {
-      css += `.fibo-list-item-custom-hover:hover { ${customItemHover} }\n`;
+      css += `.fibo-list-item-custom-hover:hover { ${withImportant(customItemHover)} }\n`;
     }
 
     if (customItemActive) {
-      css += `.fibo-list-item-custom-active:active { ${customItemActive} }\n`;
+      css += `.fibo-list-item-custom-active:active { ${withImportant(customItemActive)} }\n`;
     }
 
     if (customItemFocus) {
-      css += `.fibo-list-item-custom-focus:focus { ${customItemFocus} }\n`;
+      css += `.fibo-list-item-custom-focus:focus { ${withImportant(customItemFocus)} }\n`;
     }
 
     styleElement.textContent = css;
@@ -201,8 +211,8 @@ const ListInner = React.memo((props: any) => {
     default: {
       padding: '12px 16px',
       borderBottom: separator ? '1px solid #F3F4F6' : 'none',
-      backgroundColor: 'transparent',
-      transition: 'background-color 0.2s'
+      // Transparent via class, not inline — so Tailwind / itemHover bg can win.
+      transition: 'background-color 0.2s ease-out'
     },
     card: {
       padding: '16px',
@@ -210,13 +220,13 @@ const ListInner = React.memo((props: any) => {
       borderRadius: '16px',
       boxShadow: '0 2px 8px -2px rgba(0,0,0,0.05)',
       border: '1px solid #F3F4F6',
-      transition: 'transform 0.2s, box-shadow 0.2s'
+      transform: 'translate3d(0, 0, 0)',
+      transition: 'transform 0.2s ease-out, box-shadow 0.2s ease-out'
     },
     floating: {
       padding: '8px 12px',
       borderRadius: '12px',
-      backgroundColor: 'transparent',
-      transition: 'background-color 0.2s'
+      transition: 'background-color 0.2s ease-out, box-shadow 0.2s ease-out'
     }
   };
 

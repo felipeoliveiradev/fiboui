@@ -105,7 +105,8 @@ const ButtonInner = React.memo((props: any) => {
     'fibo-button',
     `inline-flex items-center justify-center whitespace-nowrap`,
     skipWeightClass ? '' : 'font-semibold',
-    quiet ? '' : 'active:scale-[0.96] transform transition-all duration-200 ease-out',
+    // Resting scale(1) so active:scale eases instead of snapping from none.
+    quiet ? '' : 'scale-100 active:scale-[0.96] transform transition-transform duration-200 ease-out',
     disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
     variant === 'raw' || skipSizeClass ? '' : sizeClasses[size as ButtonSize],
     variant === 'raw' || skipShapeClass ? '' : shapeClass,

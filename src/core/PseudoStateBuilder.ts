@@ -50,8 +50,10 @@ export class PseudoStateBuilder {
     this.parentBuilder.addClassName(
       interactionEffectTriggerClass(this.pseudoState, this.isGroup),
     );
+    // Omit `transform` from prepareSmooth so we do not stamp resting translate3d —
+    // bob/hang/buzz keyframes start off-identity and would jump. Still transition
+    // transform via ensureEffectTransition for nudge/grow/float presets.
     this.parentBuilder.prepareSmoothInteraction([
-      'transform',
       'opacity',
       'box-shadow',
       'background-color',
@@ -59,6 +61,7 @@ export class PseudoStateBuilder {
       'color',
       'border-radius',
     ]);
+    this.parentBuilder.ensureEffectTransition(['transform']);
     return this;
   }
 

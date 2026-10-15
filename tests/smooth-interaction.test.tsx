@@ -16,6 +16,10 @@ describe('smoothInteraction helpers', () => {
     );
     // Regression: joining props then appending duration once makes only the last prop animate.
     expect(formatCssTransition(['a', 'b'], 200, 'ease')).not.toBe('a, b 200ms ease');
+    // Comma-string overload must split too.
+    expect(formatCssTransition('transform, opacity', 240, 'ease-out')).toBe(
+      'transform 240ms ease-out, opacity 240ms ease-out',
+    );
   });
 
   it('promotes background/border shorthands to longhands', () => {

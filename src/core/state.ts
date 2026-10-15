@@ -156,12 +156,26 @@ export class Signal<T> implements Subscribable<T> {
     this.effects.delete(effect);
   }
 
-  private notify() {
-    const effectsToRun = Array.from(this.effects);
-    const listenersToRun = Array.from(this.listeners);
+  private _notifyDepth = 0;
 
-    effectsToRun.forEach(e => e.trigger());
-    listenersToRun.forEach(l => l(this._value));
+  private notify() {
+    // Guard against effect(() => { n.value = n.value + 1 }) stack overflow.
+    if (this._notifyDepth > 32) {
+      if (typeof console !== 'undefined') {
+        console.error('[fiboui] Signal update loop detected — aborting notify');
+      }
+      return;
+    }
+    this._notifyDepth += 1;
+    try {
+      const effectsToRun = Array.from(this.effects);
+      const listenersToRun = Array.from(this.listeners);
+
+      effectsToRun.forEach((e) => e.trigger());
+      listenersToRun.forEach((l) => l(this._value));
+    } finally {
+      this._notifyDepth -= 1;
+    }
   }
 }
 
@@ -216,12 +230,25 @@ export class ComputedSignal<T> implements Subscribable<T> {
     this.effects.delete(effect);
   }
 
-  private notify() {
-    const effectsToRun = Array.from(this.effects);
-    const listenersToRun = Array.from(this.listeners);
+  private _notifyDepth = 0;
 
-    effectsToRun.forEach(e => e.trigger());
-    listenersToRun.forEach(l => l(this._value));
+  private notify() {
+    if (this._notifyDepth > 32) {
+      if (typeof console !== 'undefined') {
+        console.error('[fiboui] ComputedSignal update loop detected — aborting notify');
+      }
+      return;
+    }
+    this._notifyDepth += 1;
+    try {
+      const effectsToRun = Array.from(this.effects);
+      const listenersToRun = Array.from(this.listeners);
+
+      effectsToRun.forEach((e) => e.trigger());
+      listenersToRun.forEach((l) => l(this._value));
+    } finally {
+      this._notifyDepth -= 1;
+    }
   }
 }
 

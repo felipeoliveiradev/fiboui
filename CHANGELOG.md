@@ -4,6 +4,23 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.4.3] - 2026-10-15
+
+### Fixed
+
+- **Transition comma-strings** — `.transition('transform, opacity', 240)` now splits properties before formatting (same snap bug as 2.4.2 array path).
+- **`groupFocus()`** — stamps `fibo-fx-on-group-focus-within` (sheet never had `-group-focus`).
+- **Reveal** — `scrollTimeline('view')` no longer forces `.fibo-inview` on mount; IO always drives visibility. `--fibo-dur` / `--fibo-ease` / `--fibo-delay` copy to the Reveal wrapper.
+- **`.animate()` + `.hover()`** — auto interaction transitions still apply when a motion class is present.
+- **`.effect()`** — no longer stamps resting `translate3d(0,0,0)` (broke bob/hang/buzz).
+- **FX keyframes** — bob/hang/buzz/icon-* start at identity so loops do not jump.
+- **Theme** — `themeToCssVars` emits M3 container aliases; `.bg('success'|'warning'|'info')` resolve.
+- **List `itemHover`** — declarations use `!important`; default rows no longer pin transparent inline bg.
+- **Button press** — resting `scale-100` so `active:scale` eases.
+- **Signal notify** — depth guard against synchronous update loops.
+- **SSR** — `getStyleTag()` resets the StyleManager after snapshot; new `endSsrRequest()`.
+- **Subpath `exports`** — removed misleading `types` pointing at the full `index.d.ts` (`fiboui/core` no longer type-claims `Button`).
+
 ## [2.4.2] - 2026-10-15
 
 ### Fixed

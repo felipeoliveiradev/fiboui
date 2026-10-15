@@ -1,6 +1,5 @@
-import React, { ReactNode, useEffect, useRef } from 'react';
+import React, { CSSProperties, ReactNode, useEffect, useRef } from 'react';
 import { ensureMotionCss } from './styleManager';
-import { supportsViewTimeline } from './scroll';
 
 export interface RevealProps {
   preset?: string;
@@ -8,7 +7,10 @@ export interface RevealProps {
   rootMargin?: string;
   threshold?: number;
   forceMotion?: boolean;
+  /** @deprecated Ignored — view-timeline never skips IO (was forcing fibo-inview on load). */
   preferTimeline?: boolean;
+  /** CSS vars (`--fibo-dur`, `--fibo-ease`, `--fibo-delay`) for the reveal wrapper. */
+  style?: CSSProperties;
   children?: ReactNode;
 }
 
@@ -19,7 +21,7 @@ export function Reveal({
   rootMargin = '0px 0px -8% 0px',
   threshold = 0.12,
   forceMotion = false,
-  preferTimeline = false,
+  style,
   children,
 }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
@@ -28,10 +30,6 @@ export function Reveal({
     ensureMotionCss();
     const node = ref.current;
     if (!node) return;
-    if (preferTimeline && supportsViewTimeline()) {
-      node.classList.add('fibo-inview');
-      return;
-    }
     if (typeof IntersectionObserver === 'undefined') {
       node.classList.add('fibo-inview');
       return;
@@ -51,7 +49,7 @@ export function Reveal({
     );
     io.observe(node);
     return () => io.disconnect();
-  }, [once, rootMargin, threshold, preferTimeline]);
+  }, [once, rootMargin, threshold]);
 
   const className = [
     'fibo-reveal',
@@ -63,5 +61,9 @@ export function Reveal({
     .filter(Boolean)
     .join(' ');
 
-  return React.createElement('div', { ref, className, 'data-fibo-reveal': preset }, children);
+  return React.createElement(
+    'div',
+    { ref, className, style, 'data-fibo-reveal': preset },
+    children,
+  );
 }
