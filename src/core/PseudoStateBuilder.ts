@@ -8,6 +8,17 @@ import {
   type InteractionEffectName,
 } from './interactionEffects';
 import { ensureInteractionFxCss } from './ensureInteractionFx';
+import { toTranslate3d } from './smoothInteraction';
+
+const SMOOTH_PROPS: Record<string, string[]> = {
+  'background-color': ['background-color'],
+  'border-color': ['border-color'],
+  color: ['color'],
+  opacity: ['opacity'],
+  transform: ['transform'],
+  'box-shadow': ['box-shadow'],
+  'border-radius': ['border-radius'],
+};
 
 export class PseudoStateBuilder {
   private pseudoState: string;
@@ -39,7 +50,7 @@ export class PseudoStateBuilder {
     this.parentBuilder.addClassName(
       interactionEffectTriggerClass(this.pseudoState, this.isGroup),
     );
-    this.parentBuilder.ensureEffectTransition([
+    this.parentBuilder.prepareSmoothInteraction([
       'transform',
       'opacity',
       'box-shadow',
@@ -82,14 +93,12 @@ export class PseudoStateBuilder {
   }
 
   translateX(value: number | string): this {
-    const finalValue = typeof value === 'number' ? `${value}px` : value;
-    this.transforms.set('translateX', `translateX(${finalValue})`);
+    this.transforms.set('translateX', toTranslate3d('x', value));
     return this.flushTransform();
   }
 
   translateY(value: number | string): this {
-    const finalValue = typeof value === 'number' ? `${value}px` : value;
-    this.transforms.set('translateY', `translateY(${finalValue})`);
+    this.transforms.set('translateY', toTranslate3d('y', value));
     return this.flushTransform();
   }
 
@@ -166,6 +175,10 @@ export class PseudoStateBuilder {
   }
 
   private set(property: string, value: string): this {
+    const smooth = SMOOTH_PROPS[property];
+    if (smooth) {
+      this.parentBuilder.prepareSmoothInteraction(smooth);
+    }
     const className = _styleManager.registerPseudo(this.pseudoState, property, value, this.isGroup);
     this.parentBuilder.addClassName(className);
     return this;

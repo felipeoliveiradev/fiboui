@@ -96,7 +96,8 @@ export const FIBO_INTERACTION_FX_CSS = `
 
 .fibo-fx {
   -webkit-tap-highlight-color: transparent;
-  transform: perspective(1px) translateZ(0);
+  /* Do NOT set a resting transform — hover/active replace transform and would jump. */
+  backface-visibility: hidden;
   box-shadow: 0 0 1px rgba(0,0,0,0);
 }
 .fibo-fx[class*="fibo-fx-sweep"],
@@ -391,7 +392,7 @@ export const FIBO_INTERACTION_FX_CSS = `
 .group:active .fibo-fx-backward.fibo-fx-on-group-active,
 .group:focus-within .fibo-fx-backward.fibo-fx-on-group-focus-within { transform:translateX(-8px); }
 
-.fibo-fx-nudge { transition-duration:.2s;transition-property:transform;transition-timing-function:ease-out; }
+.fibo-fx-nudge { transition-duration:.24s;transition-property:transform;transition-timing-function:ease-out; }
 .fibo-fx-nudge.fibo-fx-on-hover:hover,
 .fibo-fx-nudge.fibo-fx-on-active:active,
 .fibo-fx-nudge.fibo-fx-on-focus:focus,
@@ -399,7 +400,7 @@ export const FIBO_INTERACTION_FX_CSS = `
 .fibo-fx-nudge.fibo-fx-on-focus-within:focus-within,
 .group:hover .fibo-fx-nudge.fibo-fx-on-group-hover,
 .group:active .fibo-fx-nudge.fibo-fx-on-group-active,
-.group:focus-within .fibo-fx-nudge.fibo-fx-on-group-focus-within { transform:translateX(3px); }
+.group:focus-within .fibo-fx-nudge.fibo-fx-on-group-focus-within { transform:translate3d(3px,0,0); }
 
 .fibo-fx-fade { transition-duration:.3s;transition-property:background-color,color,opacity; }
 .fibo-fx-fade.fibo-fx-on-hover:hover,
