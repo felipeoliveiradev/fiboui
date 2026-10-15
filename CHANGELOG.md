@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.4.4] - 2026-10-15
+
+### Changed
+
+- **Docs / package metadata** — polished README with live demos; `homepage` → [fiboui.vercel.app](https://fiboui.vercel.app); store demo link [fiboui-store.vercel.app](https://fiboui-store.vercel.app).
+
 ## [2.4.3] - 2026-10-15
 
 ### Fixed
