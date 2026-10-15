@@ -7,6 +7,7 @@ const repo = path.resolve(dir, '../../..');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ['fiboui'],
+  outputFileTracingRoot: repo,
   experimental: { externalDir: true },
   webpack: (config) => {
     config.resolve.alias.fiboui = path.join(repo, 'dist/index.js');

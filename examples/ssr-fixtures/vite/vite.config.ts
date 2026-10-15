@@ -10,10 +10,10 @@ export default defineConfig({
   root: dir,
   plugins: [react()],
   resolve: {
-    alias: {
-      fiboui: path.join(repo, 'dist/index.js'),
-      'fiboui/style.css': path.join(repo, 'dist/style.css'),
-    },
+    alias: [
+      { find: 'fiboui/style.css', replacement: path.join(repo, 'dist/style.css') },
+      { find: 'fiboui', replacement: path.join(repo, 'dist/index.js') },
+    ],
   },
   ssr: {
     noExternal: ['fiboui'],

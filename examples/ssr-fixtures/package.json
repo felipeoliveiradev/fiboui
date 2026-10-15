@@ -9,6 +9,9 @@
     "start:next": "next start ./next -p 3015",
     "test:e2e": "playwright test"
   },
+  "dependencies": {
+    "fiboui": "file:../.."
+  },
   "devDependencies": {
     "@playwright/test": "^1.51.0",
     "@vitejs/plugin-react": "^4.3.4",

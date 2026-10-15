@@ -1,6 +1,6 @@
 import { createElement } from 'react';
 import { hydrateRoot } from 'react-dom/client';
-import 'fiboui/style.css';
+import '../../../dist/style.css';
 import { App } from '../shared/App';
 
 const root = document.getElementById('root');
