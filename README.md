@@ -16,7 +16,7 @@ There is no JSX — the function return **is** the view.
 
 <br />
 
-<img src="./docs/brand/banner.svg" width="960" alt="FiboUI — Fluent React UI. There is no JSX." />
+<img src="./docs/brand/banner.png" width="960" alt="FiboUI — Fluent React UI. There is no JSX." />
 
 </div>
 
@@ -89,7 +89,7 @@ Same tree. Method calls instead of tags. Layout, theme, motion, and reactivity s
 
 ## Runtime flow
 
-<img src="./docs/brand/flow-runtime.svg" width="960" alt="Factory → fluent chain → children → React element → mount" />
+<img src="./docs/brand/flow-runtime.png" width="960" alt="Factory → fluent chain → children → React element → mount" />
 
 ```mermaid
 flowchart LR
@@ -112,7 +112,7 @@ Return them. Nest them. **Skip `.build()`.**
 
 ## Signal flow
 
-<img src="./docs/brand/flow-signals.svg" width="960" alt="signal → bindSignal → function children → UI" />
+<img src="./docs/brand/flow-signals.png" width="960" alt="signal → bindSignal → function children → UI" />
 
 ```tsx
 import { Box, Button, Text, signal } from 'fiboui'
@@ -147,7 +147,7 @@ sequenceDiagram
 
 ## Package architecture
 
-<img src="./docs/brand/flow-architecture.svg" width="960" alt="App over layout/content/structure/theme/reactivity over core" />
+<img src="./docs/brand/flow-architecture.png" width="960" alt="App over layout/content/structure/theme/reactivity over core" />
 
 ```mermaid
 flowchart TB
