@@ -25,7 +25,7 @@ describe('library bundle', () => {
 describe('package exports / sideEffects', () => {
   it('is ESM-only with subpath exports and no src/ pack', () => {
     expect(pkg.type).toBe('module');
-    expect(pkg.version).toBe('2.2.3');
+    expect(pkg.version).toBe('2.2.4');
     expect(pkg.main).toBe('./dist/index.js');
     expect(pkg.module).toBe('./dist/index.js');
     expect(pkg.types).toBe('./dist/index.d.ts');
@@ -44,7 +44,22 @@ describe('package exports / sideEffects', () => {
     expect(pkg.peerDependencies.react).toBe('>=18.0.0');
     expect(pkg.repository.url).toBe('https://github.com/felipeoliveiradev/fiboui');
     const readme = readFileSync(resolve(__dirname, '../README.md'), 'utf8');
-    expect(readme).toMatch(/^# FiboUI v2\.2\.3\b/m);
+    expect(readme).toMatch(/^# FiboUI v2\.2\.4\b/m);
+  });
+
+  it('2.2.4 CHANGELOG keeps open + aliases without break', () => {
+    const log = readFileSync(resolve(__dirname, '../CHANGELOG.md'), 'utf8');
+    const start = log.indexOf('## [2.2.4]');
+    const end = log.indexOf('## [2.2.3]');
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    const section = log.slice(start, end);
+    expect(section).toContain('writeClipboard');
+    expect(section).toContain('bindHotkeys');
+    expect(section).toContain('open(url)');
+    expect(section).toContain('openExternal');
+    expect(section).toContain('goHash(id)');
+    expect(section).toContain('scrollTo');
   });
 
   it('2.2.3 CHANGELOG names ScrollController and Reveal carousel fix', () => {
@@ -166,7 +181,7 @@ describe('package exports / sideEffects', () => {
       `node --input-type=commonjs -p 'require("./package.json").version'`,
       { encoding: 'utf8', cwd: resolve(__dirname, '..') }
     ).trim();
-    expect(version).toBe('2.2.3');
+    expect(version).toBe('2.2.4');
   });
 
   it('npm-version-check.sh treats a missing version as exists=false (exit 0)', () => {
@@ -189,12 +204,12 @@ describe('package exports / sideEffects', () => {
     expect(out).toMatch(/already on npm/);
   });
 
-  it('npm-version-check.sh reads 2.2.3 from package.json and does not die on E404', () => {
+  it('npm-version-check.sh reads 2.2.4 from package.json and does not die on E404', () => {
     const out = execSync('bash scripts/npm-version-check.sh', {
       encoding: 'utf8',
       cwd: resolve(__dirname, '..'),
     });
-    expect(out).toMatch(/version=2\.2\.3/);
+    expect(out).toMatch(/version=2\.2\.4/);
     expect(out).toMatch(/exists=(true|false)/);
   });
 });

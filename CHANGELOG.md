@@ -4,6 +4,20 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.2.4] - 2026-10-15
+
+### Added
+
+- Gaps that did not exist as package exports:
+  - `open(url)` — canonical; `openExternal` kept as alias (site name, no break)
+  - `goHash(id)` — thin wrapper over `scrollTo(id, { hash: true })` (site name, no break)
+  - `writeClipboard(text)`
+  - `bindHotkeys([{ key, metaOrCtrl, run, when }])`
+
+### Changed
+
+- **`scrollTo(id, { hash: true })`** — optional hash update; bare ids via `getElementById`.
+
 ## [2.2.3] - 2026-10-15
 
 ### Added

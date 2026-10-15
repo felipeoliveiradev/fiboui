@@ -1,9 +1,33 @@
+export type ScrollToOptions = {
+  behavior?: ScrollBehavior;
+  block?: ScrollLogicalPosition;
+  /** Also set `location.hash` (in-page anchor navigation). */
+  hash?: boolean;
+};
+
+/**
+ * Smooth-scroll to an element id / selector / Element.
+ * Pass `hash: true` to update the URL hash (replaces the old site-only `goHash`).
+ */
 export function scrollTo(
   target: string | Element,
-  options?: { behavior?: ScrollBehavior; block?: ScrollLogicalPosition }
+  options?: ScrollToOptions,
 ): void {
   if (typeof document === 'undefined') return;
-  const el = typeof target === 'string' ? document.querySelector(target) : target;
+
+  const raw = typeof target === 'string' ? target : null;
+  const id = raw?.replace(/^#/, '') ?? null;
+
+  if (options?.hash && id && typeof window !== 'undefined') {
+    window.location.hash = id;
+  }
+
+  const el =
+    typeof target === 'string'
+      ? document.getElementById(target.replace(/^#/, '')) ??
+        document.querySelector(target.startsWith('#') ? target : `#${target}`) ??
+        document.querySelector(target)
+      : target;
   if (!el) return;
   el.scrollIntoView({
     behavior: options?.behavior ?? 'smooth',
