@@ -3,7 +3,12 @@ export function scrollTo(
   options?: { behavior?: ScrollBehavior; block?: ScrollLogicalPosition }
 ): void {
   if (typeof document === 'undefined') return;
-  const el = typeof target === 'string' ? document.querySelector(target) : target;
+  const el =
+    typeof target === 'string'
+      ? document.getElementById(target.replace(/^#/, '')) ??
+        document.querySelector(target.startsWith('#') ? target : `#${target}`) ??
+        document.querySelector(target)
+      : target;
   if (!el) return;
   el.scrollIntoView({
     behavior: options?.behavior ?? 'smooth',

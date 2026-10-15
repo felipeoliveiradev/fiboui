@@ -52,6 +52,14 @@ export { Reveal } from './core/Reveal';
 export type { RevealProps } from './core/Reveal';
 export { ScrollProgress } from './core/ScrollProgress';
 export { scrollTo, startViewTransition, supportsViewTimeline, supportsScrollTimeline } from './core/scroll';
+export {
+  writeClipboard,
+  openUrl,
+  goHash,
+  bindHotkeys,
+  delay,
+} from './core/platform';
+export type { HotkeyChord } from './core/platform';
 export { springEase, resolveCssEase } from './core/easing';
 export type { SpringOptions } from './core/easing';
 export { MOTION_PRESETS, normalizePreset, FIBO_MOTION_CSS } from './core/motionCss';

@@ -4,6 +4,21 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.2.4] - 2026-10-15
+
+### Added
+
+- **Platform facade** — apps should not touch `window` / `document` / `navigator` directly:
+  - `writeClipboard(text)`
+  - `openUrl(url)`
+  - `goHash(id)` (hash + smooth scroll)
+  - `bindHotkeys([{ key, metaOrCtrl, run, when }])`
+  - `delay(ms, fn)` (cancellable)
+
+### Fixed
+
+- **`scrollTo(id)`** resolves bare ids (`"architecture"`) via `getElementById`, not only CSS selectors.
+
 ## [2.2.3] - 2026-10-15
 
 ### Added
