@@ -8,14 +8,14 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
-- **Platform facade** — apps should not touch `window` / `document` / `navigator` directly:
-  - `writeClipboard(text)` / `bindHotkeys` / `delay` (new)
-  - `open(url)` + alias `openExternal` (lifts site helper into the package)
-  - `goHash(id)` — sets hash then calls existing `scrollTo()`
+- **Only gaps that did not exist yet** (no duplicates of `scrollTo` / router):
+  - `writeClipboard(text)`
+  - `openExternal(url)` — wraps `window.open`
+  - `bindHotkeys([{ key, metaOrCtrl, run, when }])`
 
-### Fixed
+### Changed
 
-- **`scrollTo(id)`** resolves bare ids (`"architecture"`) via `getElementById`, not only CSS selectors.
+- **`scrollTo(id, { hash: true })`** — replaces ad-hoc `goHash`; sets `location.hash` then scrolls. Bare ids resolve via `getElementById`.
 
 ## [2.2.3] - 2026-10-15
 

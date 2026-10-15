@@ -47,7 +47,7 @@ describe('package exports / sideEffects', () => {
     expect(readme).toMatch(/^# FiboUI v2\.2\.4\b/m);
   });
 
-  it('2.2.4 CHANGELOG names platform facade APIs', () => {
+  it('2.2.4 CHANGELOG names only new platform gaps', () => {
     const log = readFileSync(resolve(__dirname, '../CHANGELOG.md'), 'utf8');
     const start = log.indexOf('## [2.2.4]');
     const end = log.indexOf('## [2.2.3]');
@@ -56,8 +56,10 @@ describe('package exports / sideEffects', () => {
     const section = log.slice(start, end);
     expect(section).toContain('writeClipboard');
     expect(section).toContain('bindHotkeys');
-    expect(section).toContain('goHash');
     expect(section).toContain('openExternal');
+    expect(section).toContain('scrollTo');
+    expect(section).toContain('hash: true');
+    expect(section).not.toContain('goHash(id)');
   });
 
   it('2.2.3 CHANGELOG names ScrollController and Reveal carousel fix', () => {

@@ -1,12 +1,8 @@
-import { scrollTo } from './scroll';
-
 /**
- * Thin browser facade. Prefer these over raw `window` / `document` / `navigator`.
- *
- * Already existed elsewhere in fiboui:
- * - `scrollTo(id)` — in-page scroll (this module’s `goHash` only adds `location.hash`)
- *
- * Site already used the names `goHash` / `openExternal` — same names here.
+ * Browser helpers that did NOT exist in fiboui before.
+ * Do not re-wrap APIs that already live elsewhere:
+ * - in-page scroll / hash → `scrollTo(id, { hash: true })` in `scroll.ts`
+ * - route changes → `useNavigate()` / `Link`
  */
 
 /** Write text to the system clipboard. Returns false if unavailable. */
@@ -20,11 +16,8 @@ export async function writeClipboard(text: string): Promise<boolean> {
   }
 }
 
-/**
- * Open a URL (default: new tab + noopener).
- * Same role as the site helper formerly named `openExternal`.
- */
-export function open(
+/** Open a URL (default: new tab + noopener). Replaces raw `window.open`. */
+export function openExternal(
   url: string,
   options?: { target?: '_blank' | '_self'; features?: string },
 ): void {
@@ -33,27 +26,6 @@ export function open(
   const features =
     options?.features ?? (target === '_blank' ? 'noopener,noreferrer' : undefined);
   window.open(url, target, features);
-}
-
-/** Alias — matches the name already used in the fibogrid site (`openExternal`). */
-export const openExternal = open;
-
-/**
- * In-page hash jump: sets `location.hash` then calls existing `scrollTo()`.
- * Accepts `"architecture"` or `"#architecture"`.
- */
-export function goHash(
-  id: string,
-  options?: { behavior?: ScrollBehavior; block?: ScrollLogicalPosition },
-): void {
-  if (typeof window === 'undefined') return;
-  const hash = id.startsWith('#') ? id.slice(1) : id;
-  if (!hash) return;
-  window.location.hash = hash;
-  scrollTo(hash, {
-    behavior: options?.behavior ?? 'smooth',
-    block: options?.block ?? 'start',
-  });
 }
 
 export type HotkeyChord = {
@@ -98,11 +70,4 @@ export function bindHotkeys(chords: HotkeyChord[]): () => void {
 
   window.addEventListener('keydown', onKeyDown);
   return () => window.removeEventListener('keydown', onKeyDown);
-}
-
-/** Cancellable timer. Prefer this over raw `setTimeout` in apps. */
-export function delay(ms: number, fn: () => void): () => void {
-  if (typeof window === 'undefined') return () => undefined;
-  const id = window.setTimeout(fn, ms);
-  return () => window.clearTimeout(id);
 }

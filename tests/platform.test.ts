@@ -1,14 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import {
-  bindHotkeys,
-  delay,
-  goHash,
-  open,
-  openExternal,
-  writeClipboard,
-} from '../src/core/platform';
+import { bindHotkeys, openExternal, writeClipboard } from '../src/core/platform';
+import { scrollTo } from '../src/core/scroll';
 
-describe('platform facade', () => {
+describe('platform facade (only what scrollTo does not cover)', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
@@ -23,28 +17,22 @@ describe('platform facade', () => {
     expect(writeText).toHaveBeenCalledWith('hi');
   });
 
-  it('open / openExternal wrap window.open', () => {
+  it('openExternal wraps window.open', () => {
     const spy = vi.spyOn(window, 'open').mockReturnValue(null);
-    open('https://example.com');
-    openExternal('https://npmjs.com');
+    openExternal('https://example.com');
     expect(spy).toHaveBeenCalledWith(
       'https://example.com',
       '_blank',
       'noopener,noreferrer',
     );
-    expect(spy).toHaveBeenCalledWith(
-      'https://npmjs.com',
-      '_blank',
-      'noopener,noreferrer',
-    );
   });
 
-  it('goHash sets location.hash and scrolls', () => {
+  it('scrollTo({ hash: true }) sets location.hash and scrolls', () => {
     const el = document.createElement('div');
     el.id = 'architecture';
     el.scrollIntoView = vi.fn();
     document.body.appendChild(el);
-    goHash('architecture');
+    scrollTo('architecture', { hash: true });
     expect(window.location.hash).toBe('#architecture');
     expect(el.scrollIntoView).toHaveBeenCalled();
     el.remove();
@@ -58,16 +46,5 @@ describe('platform facade', () => {
     );
     expect(run).toHaveBeenCalledTimes(1);
     unbind();
-  });
-
-  it('delay schedules and can cancel', () => {
-    vi.useFakeTimers();
-    const fn = vi.fn();
-    const cancel = delay(100, fn);
-    vi.advanceTimersByTime(50);
-    cancel();
-    vi.advanceTimersByTime(100);
-    expect(fn).not.toHaveBeenCalled();
-    vi.useRealTimers();
   });
 });
