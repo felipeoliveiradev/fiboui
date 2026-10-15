@@ -4,9 +4,9 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
-## [2.2.1] - Unreleased
+## [2.2.1] - 2026-10-15
 
-Patch: SSR / hydration. Package version stays **2.2.0** until this is approved and published.
+Patch: SSR / hydration.
 
 ### Fixed
 
