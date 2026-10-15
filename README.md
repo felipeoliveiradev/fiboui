@@ -11,31 +11,49 @@
 
 # FiboUI
 
-**Fluent React UI.** Flutter & SwiftUI energy — chainable builders, signals, themes.
+**Fluent React UI** — Flutter & SwiftUI energy for the web.  
+Chainable builders · fine-grained signals · CSS-first motion · typed themes.
 
-Builders **are** React elements. Return them from functions. Skip `.build()`. Prefer the fluent API — no JSX tags.
+Builders **are** React elements. Return them. Nest them. Skip `.build()`.
 
 <br />
 
 [![npm](https://img.shields.io/npm/v/fiboui?style=flat-square&color=ff2d8a)](https://www.npmjs.com/package/fiboui)
-[![license](https://img.shields.io/npm/l/fiboui?style=flat-square)](./LICENSE)
+[![downloads](https://img.shields.io/npm/dm/fiboui?style=flat-square&color=c8ff00&labelColor=0a0a0a)](https://www.npmjs.com/package/fiboui)
+[![license](https://img.shields.io/badge/license-MIT-0a0a0a?style=flat-square)](https://github.com/felipeoliveiradev/fiboui)
 [![site](https://img.shields.io/badge/site-fiboui.vercel.app-0a0a0a?style=flat-square)](https://fiboui.vercel.app)
 [![store](https://img.shields.io/badge/demo-fiboui--store-c8ff00?style=flat-square&labelColor=0a0a0a)](https://fiboui-store.vercel.app)
-
-**Live**
-[`fiboui.vercel.app`](https://fiboui.vercel.app)
-·
-**Store demo**
-[`fiboui-store.vercel.app`](https://fiboui-store.vercel.app)
-·
-**npm**
-[`fiboui`](https://www.npmjs.com/package/fiboui)
 
 ```bash
 npm install fiboui
 ```
 
+[Site](https://fiboui.vercel.app) · [Store demo](https://fiboui-store.vercel.app) · [npm](https://www.npmjs.com/package/fiboui)
+
 </div>
+
+---
+
+## JSX vs FiboUI
+
+```tsx
+// JSX
+<div className="flex flex-col gap-3 p-6">
+  <h1>Hello</h1>
+  <button onClick={onShip}>Ship it</button>
+</div>
+
+// FiboUI
+Column()
+  .gap(12)
+  .padding(24)
+  .children([
+    Text('Hello').variant('h1'),
+    Button('Ship it').onPress(onShip),
+  ])
+```
+
+Same tree. Method calls instead of tags. Layout, theme, motion, and reactivity stay on the builder.
 
 ---
 
@@ -74,7 +92,8 @@ mount('#root', App)
 **Required:** import `'fiboui/style.css'` once — the JS entry does not load CSS.  
 ESM-only (`import`, no `require`). Peer deps: **React 18 or 19**.
 
-Next.js App Router: files that **call** builders must be Client Components (`'use client'`).
+Next.js App Router: files that **call** builders must be Client Components (`'use client'`).  
+Migrating from 1.x → [MIGRATION.md](./MIGRATION.md).
 
 ---
 
@@ -114,7 +133,7 @@ Box()
   ])
 ```
 
-### Themes & motion
+### Themes, motion, responsive
 
 ```tsx
 Box()
@@ -122,11 +141,7 @@ Box()
   .animate('fadeIn')
   .ease('spring')
   .hover((h) => h.effect('sweepToRight'))
-```
 
-Responsive:
-
-```tsx
 Box().padding(8).md({ padding: 16 }).lg({ padding: 24 })
 ```
 
@@ -149,18 +164,17 @@ Column().crossAxisAlignment('stretch')
 
 | | |
 | :--- | :--- |
-| **[fiboui.vercel.app](https://fiboui.vercel.app)** | Marketing site — builders, signals, theme, motion, media |
+| **[fiboui.vercel.app](https://fiboui.vercel.app)** | Marketing site — builders, signals, theme, motion |
 | **[fiboui-store.vercel.app](https://fiboui-store.vercel.app)** | Full retail demo — catalog → bag → checkout |
 
-Both are built **only** with FiboUI fluent builders.
+Both are built **only** with FiboUI fluent builders — no JSX in the product UI.
 
 ---
 
 ## Docs & contributing
 
-- Migration from 1.x → [MIGRATION.md](./MIGRATION.md)
 - Contributing & release → [CONTRIBUTING.md](./CONTRIBUTING.md)
-- Animation guide → `docs/guide/animation.md`
+- Animation guide → [`docs/guide/animation.md`](./docs/guide/animation.md)
 
 Publishing is automated on **`main`** (GitHub Actions + `NPM_TOKEN`). Prefer not to `npm publish` locally.
 
