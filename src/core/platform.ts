@@ -1,8 +1,9 @@
+import { scrollTo } from './scroll';
+
 /**
- * Browser helpers that did NOT exist in fiboui before.
- * Do not re-wrap APIs that already live elsewhere:
- * - in-page scroll / hash → `scrollTo(id, { hash: true })` in `scroll.ts`
- * - route changes → `useNavigate()` / `Link`
+ * Browser helpers that did not exist as package exports before.
+ * Prefer extending existing APIs (`scrollTo`) over inventing parallel ones.
+ * Keep stable names the site already used (`goHash`, `openExternal`) as aliases.
  */
 
 /** Write text to the system clipboard. Returns false if unavailable. */
@@ -16,8 +17,8 @@ export async function writeClipboard(text: string): Promise<boolean> {
   }
 }
 
-/** Open a URL (default: new tab + noopener). Replaces raw `window.open`. */
-export function openExternal(
+/** Open a URL (default: new tab + noopener). Canonical name. */
+export function open(
   url: string,
   options?: { target?: '_blank' | '_self'; features?: string },
 ): void {
@@ -26,6 +27,24 @@ export function openExternal(
   const features =
     options?.features ?? (target === '_blank' ? 'noopener,noreferrer' : undefined);
   window.open(url, target, features);
+}
+
+/** Alias — name the fibogrid site already used. Do not remove (no break). */
+export const openExternal = open;
+
+/**
+ * In-page hash jump. Name the site already used.
+ * Implementation = existing `scrollTo(id, { hash: true })` (no parallel logic).
+ */
+export function goHash(
+  id: string,
+  options?: { behavior?: ScrollBehavior; block?: ScrollLogicalPosition },
+): void {
+  scrollTo(id, {
+    behavior: options?.behavior ?? 'smooth',
+    block: options?.block ?? 'start',
+    hash: true,
+  });
 }
 
 export type HotkeyChord = {

@@ -8,14 +8,15 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
-- **Only gaps that did not exist yet** (no duplicates of `scrollTo` / router):
+- Gaps that did not exist as package exports:
+  - `open(url)` — canonical; `openExternal` kept as alias (site name, no break)
+  - `goHash(id)` — thin wrapper over `scrollTo(id, { hash: true })` (site name, no break)
   - `writeClipboard(text)`
-  - `openExternal(url)` — wraps `window.open`
   - `bindHotkeys([{ key, metaOrCtrl, run, when }])`
 
 ### Changed
 
-- **`scrollTo(id, { hash: true })`** — replaces ad-hoc `goHash`; sets `location.hash` then scrolls. Bare ids resolve via `getElementById`.
+- **`scrollTo(id, { hash: true })`** — optional hash update; bare ids via `getElementById`.
 
 ## [2.2.3] - 2026-10-15
 

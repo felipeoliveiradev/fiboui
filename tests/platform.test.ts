@@ -1,8 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { bindHotkeys, openExternal, writeClipboard } from '../src/core/platform';
-import { scrollTo } from '../src/core/scroll';
+import {
+  bindHotkeys,
+  goHash,
+  open,
+  openExternal,
+  writeClipboard,
+} from '../src/core/platform';
 
-describe('platform facade (only what scrollTo does not cover)', () => {
+describe('platform facade', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
@@ -17,9 +22,10 @@ describe('platform facade (only what scrollTo does not cover)', () => {
     expect(writeText).toHaveBeenCalledWith('hi');
   });
 
-  it('openExternal wraps window.open', () => {
+  it('open is canonical; openExternal is the same function (no break)', () => {
+    expect(openExternal).toBe(open);
     const spy = vi.spyOn(window, 'open').mockReturnValue(null);
-    openExternal('https://example.com');
+    open('https://example.com');
     expect(spy).toHaveBeenCalledWith(
       'https://example.com',
       '_blank',
@@ -27,12 +33,12 @@ describe('platform facade (only what scrollTo does not cover)', () => {
     );
   });
 
-  it('scrollTo({ hash: true }) sets location.hash and scrolls', () => {
+  it('goHash delegates to scrollTo({ hash: true })', () => {
     const el = document.createElement('div');
     el.id = 'architecture';
     el.scrollIntoView = vi.fn();
     document.body.appendChild(el);
-    scrollTo('architecture', { hash: true });
+    goHash('architecture');
     expect(window.location.hash).toBe('#architecture');
     expect(el.scrollIntoView).toHaveBeenCalled();
     el.remove();
