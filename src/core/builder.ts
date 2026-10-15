@@ -62,6 +62,9 @@ export abstract class FiboBuilder {
   protected _transforms: string[] = [];
 
   protected _transitionClass?: string;
+  /** True while transition class was auto-managed for hover/effect presets (expandable). */
+  protected _autoEffectTransition = false;
+  protected _effectTransitionProps: string[] = [];
   protected _motionClass?: string;
   protected _staggerMs?: number;
   protected _reveal?: { preset: string; once?: boolean; rootMargin?: string; threshold?: number };
@@ -896,6 +899,10 @@ export abstract class FiboBuilder {
     easing?: string,
     delay?: number
   ): this {
+    // Explicit `.transition(...)` owns the transition — effect presets must not expand it.
+    this._autoEffectTransition = false;
+    this._effectTransitionProps = [];
+
     // If only one argument and it's a string with spaces, treat as CSS string
     if (typeof valueOrProperties === 'string' && duration === undefined) {
       this.replaceTransitionClass(_styleManager.register('transition', valueOrProperties));
@@ -972,6 +979,8 @@ export abstract class FiboBuilder {
    * Apply the built transition to the element
    */
   protected _applyTransition(): void {
+    this._autoEffectTransition = false;
+    this._effectTransitionProps = [];
     const props = this._transitionProperties.join(', ');
     const duration = `${this._transitionDuration}ms`;
     const easing = this._transitionEasing;
@@ -1093,6 +1102,52 @@ export abstract class FiboBuilder {
     return this;
   }
 
+  /**
+   * Shortcut: `.hover(h => h.effect(name))`.
+   * Named interaction effect on `:hover` (forward, float, grow, nudge, …).
+   */
+  hoverEffect(name: string): this {
+    return this.hover((h) => {
+      h.effect(name);
+    });
+  }
+
+  /**
+   * Shortcut: `.press(p => p.effect(name))` (maps to `:active`).
+   */
+  pressEffect(name: string): this {
+    return this.press((p) => {
+      p.effect(name);
+    });
+  }
+
+  /**
+   * Shortcut: `.focus(f => f.effect(name))`.
+   */
+  focusEffect(name: string): this {
+    return this.focus((f) => {
+      f.effect(name);
+    });
+  }
+
+  /**
+   * Shortcut: `.active(a => a.effect(name))`.
+   */
+  activeEffect(name: string): this {
+    return this.active((a) => {
+      a.effect(name);
+    });
+  }
+
+  /**
+   * Shortcut: `.groupHover(h => h.effect(name))`.
+   */
+  groupHoverEffect(name: string): this {
+    return this.groupHover((h) => {
+      h.effect(name);
+    });
+  }
+
   focusVisible(): PseudoStateBuilder;
   focusVisible(callback: PseudoStateFn): this;
   focusVisible(callback?: PseudoStateFn): this | PseudoStateBuilder {
@@ -1202,12 +1257,38 @@ export abstract class FiboBuilder {
   }
 
   protected ensureInteractiveTransition(): void {
-    if (this._transitionClass || this._motionClass) return;
+    // Broad enough for compose (bg/border) + effect presets (shadow/transform).
+    this.ensureEffectTransition([
+      'transform',
+      'opacity',
+      'box-shadow',
+      'background-color',
+      'border-color',
+    ]);
+  }
+
+  /**
+   * Ensure the base element transitions the properties an interaction effect needs.
+   * Expands an auto-managed transition; no-ops if the caller set `.transition(...)`
+   * explicitly or a motion animation class is present.
+   * @internal Used by PseudoStateBuilder.effect() and hover/press shortcuts.
+   */
+  ensureEffectTransition(properties: string[]): void {
+    if (this._motionClass) return;
+    if (this._transitionClass && !this._autoEffectTransition) return;
+
+    const merged = new Set(this._effectTransitionProps);
+    for (const p of properties) merged.add(p);
+    // Always keep transform/opacity so press/hover scale remains smooth.
+    merged.add('transform');
+    merged.add('opacity');
+    this._effectTransitionProps = [...merged];
+    this._autoEffectTransition = true;
     this.replaceTransitionClass(
       _styleManager.register(
         'transition',
-        `transform ${this._transitionDuration}ms ${this._transitionEasing}, opacity ${this._transitionDuration}ms ${this._transitionEasing}`
-      )
+        `${this._effectTransitionProps.join(', ')} ${this._transitionDuration}ms ${this._transitionEasing}`,
+      ),
     );
   }
 

@@ -1,6 +1,13 @@
 import { _styleManager } from './styleManager';
 import type { FiboBuilder } from './builder';
 import { resolveCssEase } from './easing';
+import {
+  interactionEffectClass,
+  interactionEffectTriggerClass,
+  normalizeInteractionEffect,
+  type InteractionEffectName,
+} from './interactionEffects';
+import { ensureInteractionFxCss } from './ensureInteractionFx';
 
 export class PseudoStateBuilder {
   private pseudoState: string;
@@ -17,6 +24,31 @@ export class PseudoStateBuilder {
     this.pseudoState = pseudoState;
     this.parentBuilder = parentBuilder;
     this.isGroup = isGroup;
+  }
+
+  /**
+   * Apply a named interaction effect (full Hover.css–inspired catalog).
+   * Works on any pseudo trigger — hover, press/active, focus, groupHover, etc.
+   * Stamps CSS classes; sheet is fiboui-owned (not a Hover.css vendor).
+   */
+  effect(name: InteractionEffectName | string): this {
+    const id = normalizeInteractionEffect(name);
+    ensureInteractionFxCss();
+    this.parentBuilder.addClassName('fibo-fx');
+    this.parentBuilder.addClassName(interactionEffectClass(id));
+    this.parentBuilder.addClassName(
+      interactionEffectTriggerClass(this.pseudoState, this.isGroup),
+    );
+    this.parentBuilder.ensureEffectTransition([
+      'transform',
+      'opacity',
+      'box-shadow',
+      'background-color',
+      'border-color',
+      'color',
+      'border-radius',
+    ]);
+    return this;
   }
 
   bg(color: string): this {
