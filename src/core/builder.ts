@@ -30,6 +30,7 @@ import {
   type ThemeInput,
 } from '../theme/themeData';
 import {
+  formatCssTransition,
   promoteSurfaceLonghandsInStyle,
   withRestTransform,
 } from './smoothInteraction';
@@ -919,12 +920,16 @@ export abstract class FiboBuilder {
       return this;
     }
 
-    const props = Array.isArray(valueOrProperties) ? valueOrProperties.join(', ') : valueOrProperties;
-    const dur = `${duration || this._transitionDuration}ms`;
+    const props = Array.isArray(valueOrProperties)
+      ? valueOrProperties
+      : [valueOrProperties as string];
     const ease = resolveCssEase(easing || this._transitionEasing);
-    const del = delay ? `${delay}ms` : '0ms';
-
-    this.replaceTransitionClass(_styleManager.register('transition', `${props} ${dur} ${ease} ${del}`));
+    this.replaceTransitionClass(
+      _styleManager.register(
+        'transition',
+        formatCssTransition(props, duration || this._transitionDuration, ease, delay || 0),
+      ),
+    );
     return this;
   }
 
@@ -991,11 +996,17 @@ export abstract class FiboBuilder {
   protected _applyTransition(): void {
     this._autoEffectTransition = false;
     this._effectTransitionProps = [];
-    const props = this._transitionProperties.join(', ');
-    const duration = `${this._transitionDuration}ms`;
-    const easing = this._transitionEasing;
-    const delay = this._transitionDelay > 0 ? `${this._transitionDelay}ms` : '0ms';
-    this.replaceTransitionClass(_styleManager.register('transition', `${props} ${duration} ${easing} ${delay}`));
+    this.replaceTransitionClass(
+      _styleManager.register(
+        'transition',
+        formatCssTransition(
+          this._transitionProperties,
+          this._transitionDuration,
+          this._transitionEasing,
+          this._transitionDelay,
+        ),
+      ),
+    );
   }
 
   private replaceTransitionClass(cls: string): void {
@@ -1334,7 +1345,7 @@ export abstract class FiboBuilder {
     this.replaceTransitionClass(
       _styleManager.register(
         'transition',
-        `${this._effectTransitionProps.join(', ')} ${duration}ms ${easing}`,
+        formatCssTransition(this._effectTransitionProps, duration, easing),
       ),
     );
   }
