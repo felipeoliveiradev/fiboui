@@ -1,6 +1,14 @@
 import { FIBO_MOTION_CSS } from './motionCss';
 import React, { ReactElement } from 'react';
 
+export function hashKey(input: string): string {
+  let h = 5381;
+  for (let i = 0; i < input.length; i += 1) {
+    h = ((h << 5) + h) ^ input.charCodeAt(i);
+  }
+  return (h >>> 0).toString(36);
+}
+
 export class StyleManager {
   private static instance: StyleManager;
   private sheet: HTMLStyleElement | null = null;
@@ -9,11 +17,7 @@ export class StyleManager {
   private defaultsReady = false;
 
   private constructor() {
-    if (typeof document !== 'undefined') {
-      this.sheet = document.createElement('style');
-      this.sheet.id = 'fibo-dynamic-styles';
-      document.head.appendChild(this.sheet);
-    }
+    this.attachSheet();
     this.ensureDefaults();
   }
 
@@ -24,8 +28,36 @@ export class StyleManager {
     return StyleManager.instance;
   }
 
+  /** Test-only: empty cache/sheet so a simulated client starts cold. */
+  public reset(): void {
+    this.cache.clear();
+    this.extras = [];
+    this.defaultsReady = false;
+    this.sheet = null;
+    this.attachSheet();
+    this.ensureDefaults();
+  }
+
+  public static resetForTests(): void {
+    StyleManager.getInstance().reset();
+  }
+
+  private attachSheet(): void {
+    if (typeof document === 'undefined') return;
+    const existing = document.getElementById('fibo-dynamic-styles') as HTMLStyleElement | null;
+    if (existing) {
+      this.sheet = existing;
+      this.defaultsReady = true;
+      return;
+    }
+    this.sheet = document.createElement('style');
+    this.sheet.id = 'fibo-dynamic-styles';
+    this.sheet.setAttribute('data-fibo', '1');
+    document.head.appendChild(this.sheet);
+  }
+
   /**
-   * CSS `@media` rule, deduped. Used by `.media()` / `.md()` — not JS resize.
+   * CSS `@media` rule, deduped. Used by `.media()` / `.md()` / `.responsive()` — not JS resize.
    */
   public registerMedia(query: string, property: string, value: string): string {
     const key = `@media ${query}|${property}:${value}`;
@@ -50,13 +82,8 @@ export class StyleManager {
 
   public getCss(): string {
     this.ensureDefaults();
-    const fromSheet =
-      this.sheet?.sheet
-        ? Array.from(this.sheet.sheet.cssRules)
-            .map((r) => r.cssText)
-            .join('\n')
-        : '';
-    return [FIBO_MOTION_CSS, ...this.extras, fromSheet].filter(Boolean).join('\n');
+    const rules = [...this.extras].sort();
+    return [FIBO_MOTION_CSS, ...rules].filter(Boolean).join('\n');
   }
 
   public registerKeyframes(id: string, from: string, to: string): string {
@@ -70,7 +97,11 @@ export class StyleManager {
   }
 
   private insert(rule: string, track = true): void {
+    if (track && this.extras.includes(rule)) return;
     if (track) this.extras.push(rule);
+    if (this.sheet && this.sheet.textContent?.includes(rule)) {
+      return;
+    }
     if (this.sheet && this.sheet.sheet) {
       try {
         this.sheet.sheet.insertRule(rule, this.sheet.sheet.cssRules.length);
@@ -106,7 +137,6 @@ export class StyleManager {
 
     const safeValue = value.replace(/[^a-zA-Z0-9-]/g, '_');
     const className = `fibo-${property}-${safeValue}`;
-
     const rule = `.${className} { ${property}: ${value} !important; }`;
 
     this.insert(rule);
@@ -114,59 +144,73 @@ export class StyleManager {
     return className;
   }
 
+  /**
+   * One class per (pseudo, property, value). Same rules → same class on server and client.
+   * Order-independent: each declaration hashes on its own.
+   */
   public registerPseudo(
-    baseClassName: string,
     pseudoState: string,
     property: string,
-    value: string
+    value: string,
+    isGroup = false
   ): string {
-    const key = `${baseClassName}:${pseudoState}:${property}:${value}`;
+    const key = `${isGroup ? 'group:' : ''}${pseudoState}:${property}:${value}`;
     if (this.cache.has(key)) {
-      return baseClassName;
+      return this.cache.get(key)!;
     }
 
-    const rule = `.${baseClassName}:${pseudoState} { ${property}: ${value} !important; }`;
+    const className = `fibo-ps-${hashKey(key)}`;
+    const rule = isGroup
+      ? `.group:${pseudoState} .${className} { ${property}: ${value} !important; }`
+      : `.${className}:${pseudoState} { ${property}: ${value} !important; }`;
 
     this.insert(rule);
-    this.cache.set(key, baseClassName);
-    return baseClassName;
+    this.cache.set(key, className);
+    return className;
   }
 
   public registerGroupPseudo(
-    baseClassName: string,
+    _baseClassName: string,
     pseudoState: string,
     property: string,
     value: string
   ): string {
-    const key = `group:${baseClassName}:${pseudoState}:${property}:${value}`;
-    if (this.cache.has(key)) {
-      return baseClassName;
-    }
-
-    const rule = `.group:${pseudoState} .${baseClassName} { ${property}: ${value} !important; }`;
-
-    this.insert(rule);
-    this.cache.set(key, baseClassName);
-    return baseClassName;
+    return this.registerPseudo(pseudoState, property, value, true);
   }
-}
-
-function hashKey(input: string): string {
-  let h = 5381;
-  for (let i = 0; i < input.length; i += 1) {
-    h = ((h << 5) + h) ^ input.charCodeAt(i);
-  }
-  return (h >>> 0).toString(36);
 }
 
 export const _styleManager = StyleManager.getInstance();
 
 export function ensureMotionCss(): void {
-  _styleManager.ensureDefaults();
+  StyleManager.getInstance().ensureDefaults();
 }
 
 export function getMotionCss(): string {
-  return _styleManager.getCss();
+  return StyleManager.getInstance().getCss();
+}
+
+export function getCss(): string {
+  return StyleManager.getInstance().getCss();
+}
+
+/** `<style id="fibo-dynamic-styles">` HTML. Call **after** `renderToString` so rules are collected. */
+export function getStyleTag(): string {
+  const css = getCss().replace(/<\/style/gi, '<\\/style');
+  return `<style id="fibo-dynamic-styles" data-fibo="1">${css}</style>`;
+}
+
+/**
+ * Inject collected CSS into a document. Place as a **later sibling** of the app
+ * so registrations from children run first during SSR.
+ */
+export function FiboStyles(): ReactElement {
+  ensureMotionCss();
+  return React.createElement('style', {
+    id: 'fibo-dynamic-styles',
+    'data-fibo': '1',
+    suppressHydrationWarning: true,
+    dangerouslySetInnerHTML: { __html: getCss() },
+  });
 }
 
 export function MotionStyles(): ReactElement {

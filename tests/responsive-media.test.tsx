@@ -67,7 +67,7 @@ describe('builder .media() / .md()', () => {
     expect(matches.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('works on Text and keeps .responsive() JS path', () => {
+  it('works on Text and compiles .responsive() to CSS media queries', () => {
     const { container } = render(
       Text('Hi').id('t').md({ fontSize: '2rem' }).responsive({
         mobile: { color: 'red' },
@@ -75,6 +75,9 @@ describe('builder .media() / .md()', () => {
       })
     );
     expect((container.querySelector('#t') as HTMLElement).className).toMatch(/fibo-mq-/);
+    const css = injectedCss();
+    expect(css).toMatch(/max-width:\s*767px/);
+    expect(css).toMatch(/min-width:\s*1024px/);
     expect(applyResponsiveStyles({ color: 'black' }, {
       mobile: { color: 'red' },
       tablet: { color: 'green' },

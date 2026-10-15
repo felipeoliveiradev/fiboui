@@ -1,6 +1,9 @@
 let sequence = 0;
 
-/** Deterministic client-safe ids (no `Math.random()` remounts). */
+/**
+ * Sequential ids for tests / SVG leftovers. Do not use for class names or
+ * React keys — those must hash from content so SSR and the client match.
+ */
 export function nextStableId(prefix: string): string {
   sequence += 1;
   return `${prefix}-${sequence}`;

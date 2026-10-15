@@ -22,6 +22,22 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  ssr-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm --prefix examples/ssr-fixtures install
+      - run: npx --prefix examples/ssr-fixtures playwright install --with-deps chromium
+      - run: npm --prefix examples/ssr-fixtures run test:e2e
+        env:
+          CI: true
+
   gitleaks:
     runs-on: ubuntu-latest
     steps:

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useSyncExternalStore } from 'react';
 
 export interface TransitionConfig {
   duration?: number;
@@ -154,23 +154,24 @@ export function useStagger(count: number, delayBetween: number = 50): number[] {
   return Array.from({ length: count }, (_, i) => i * delayBetween);
 }
 
+function subscribeReducedMotion(onChange: () => void): () => void {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return () => undefined;
+  }
+  const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+  mq.addEventListener('change', onChange);
+  return () => mq.removeEventListener('change', onChange);
+}
+
 export function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(() =>
-    typeof window !== 'undefined' &&
-    typeof window.matchMedia === 'function' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  return useSyncExternalStore(
+    subscribeReducedMotion,
+    () =>
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    () => false
   );
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const onChange = () => setReduced(mq.matches);
-    onChange();
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
-  }, []);
-
-  return reduced;
 }
 
 /** Scroll position 0–1. Uses `scroll` / `resize` listeners — not rAF. */

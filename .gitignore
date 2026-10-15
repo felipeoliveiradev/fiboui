@@ -26,5 +26,8 @@ auth.json
 # generated
 docs/.vitepress/cache
 docs/.vitepress/dist
+.next
+examples/ssr-fixtures/test-results
+examples/ssr-fixtures/playwright-report
 .cache
 /*.tgz

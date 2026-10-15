@@ -20,6 +20,33 @@ export function buildChild(child: unknown): ReactNode {
   return child as ReactNode;
 }
 
+/**
+ * True when React can use `child.key` as a list key.
+ * Unset Fibo builders expose a fluent `.key()` function — that must not be
+ * stringified into a duplicate key (`"" + fn` is the same for every builder).
+ */
+export function isUsableReactKey(key: unknown): key is string | number {
+  return typeof key === 'string' || typeof key === 'number';
+}
+
+export function reactListKey(child: ReactNode, index: number): string | number {
+  if (React.isValidElement(child) && isUsableReactKey(child.key) && child.key !== '') {
+    return child.key;
+  }
+  return `.$fibo-${index}`;
+}
+
+/** Clone with a string/number key so list wrappers never inherit a fluent `.key` function. */
+export function withListKey(child: ReactNode, index: number): ReactNode {
+  if (!React.isValidElement(child)) {
+    return child;
+  }
+  if (isUsableReactKey(child.key) && child.key !== '') {
+    return child;
+  }
+  return React.cloneElement(child, { key: reactListKey(child, index) });
+}
+
 export function normalizeFiboChildren(children: FiboChildren | undefined | null): ReactNode[] {
   if (children === undefined || children === null) {
     return [];
@@ -28,5 +55,5 @@ export function normalizeFiboChildren(children: FiboChildren | undefined | null)
     ? (children as () => FiboChild | FiboChild[])()
     : children;
   const arr = Array.isArray(raw) ? raw : [raw];
-  return arr.map(buildChild);
+  return arr.map((item, index) => withListKey(buildChild(item), index));
 }

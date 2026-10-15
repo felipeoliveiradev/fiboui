@@ -1,9 +1,9 @@
 import React from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
-import { nextStableId } from '../../core/ids';
+import { hashKey } from '../../core/styleManager';
 
 class LinearGradientBuilder extends FiboBuilder {
-  private _id: string = nextStableId('gradient');
+  private _id?: string;
   private _colors: string[] = ['#000', '#fff'];
   private _stops?: number[];
   private _angle: number = 0;
@@ -11,6 +11,11 @@ class LinearGradientBuilder extends FiboBuilder {
   id(value: string): this {
     this._id = value;
     return this;
+  }
+
+  private gradientId(): string {
+    if (this._id) return this._id;
+    return `gradient-${hashKey(JSON.stringify({ c: this._colors, s: this._stops, a: this._angle }))}`;
   }
 
   colors(colors: string[]): this {
@@ -47,10 +52,11 @@ class LinearGradientBuilder extends FiboBuilder {
     const coords = this.angleToCoords();
     const stops = this._stops || this._colors.map((_, i) => i / (this._colors.length - 1));
 
+    const gid = this.gradientId();
     const gradientElement = React.createElement(
       'linearGradient',
       {
-        id: this._id,
+        id: gid,
         ...coords
       },
       this._colors.map((color, i) =>
@@ -62,7 +68,7 @@ class LinearGradientBuilder extends FiboBuilder {
       )
     );
 
-    return { element: gradientElement, id: this._id };
+    return { element: gradientElement, id: gid };
   }
 }
 

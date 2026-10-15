@@ -61,9 +61,24 @@ export function FiboThemeProvider({
     setTheme: setThemeName,
   };
 
+  const vars = [
+    `--fibo-primary:${theme.colors.primary}`,
+    `--fibo-secondary:${theme.colors.secondary}`,
+    `--fibo-background:${theme.colors.background}`,
+    `--fibo-surface:${theme.colors.surface}`,
+    `--fibo-error:${theme.colors.error}`,
+    `--fibo-font-family:${theme.fontFamily}`,
+  ].join(';');
+
   return (
     <FiboThemeContext.Provider value={value}>
-      {children}
+      <div className={`fibo-theme-${themeName}`} data-fibo-theme={themeName}>
+        <style
+          data-fibo-theme-vars="1"
+          dangerouslySetInnerHTML={{ __html: `:root{${vars}}` }}
+        />
+        {children}
+      </div>
     </FiboThemeContext.Provider>
   );
 }

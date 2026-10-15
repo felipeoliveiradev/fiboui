@@ -3,16 +3,14 @@ import { FiboChild, FiboChildren, ResponsiveStyles } from './types';
 import { BreakpointKey, toMediaQuery } from './breakpoints';
 import { BindableSignal, Observable, Signal } from './state';
 import { Observer, SignalWrapper, ObserverWrapper, StateWrapper, ProviderWrapper } from './StateWrapper';
-import { normalizeFiboChildren } from './children';
+import { isUsableReactKey, normalizeFiboChildren } from './children';
 import clsx from 'clsx';
-import { _styleManager } from './styleManager';
+import { _styleManager, MotionStyles, ensureMotionCss } from './styleManager';
 import { cssToTailwind } from '@metagptx/css-to-tailwind';
 import { GestureBuilder } from './gestures/GestureBuilders';
 import { AnimationOptions } from './animations';
 import { AnimatedWrapper } from './AnimatedWrapper';
 import { PseudoStateBuilder } from './PseudoStateBuilder';
-import { ResponsiveWrapper } from './ResponsiveWrapper';
-import { nextStableId } from './ids';
 import { resolveCssEase, springEase, type SpringOptions } from './easing';
 import {
   CustomMotion,
@@ -24,7 +22,6 @@ import {
 } from './motionCss';
 import { Reveal } from './Reveal';
 import { ScrollProgress } from './ScrollProgress';
-import { MotionStyles, ensureMotionCss } from './styleManager';
 
 interface ThemeColors {
   primary?: string;
@@ -62,7 +59,6 @@ export abstract class FiboBuilder {
   protected _cssStyles: CSSProperties = {};
   protected _classNames: string[] = [];
   protected _children: ReactNode[] = [];
-  protected _responsive?: ResponsiveStyles;
 
   protected _theme?: ThemeConfig;
   protected _state: Map<string, any> = new Map();
@@ -76,7 +72,6 @@ export abstract class FiboBuilder {
   protected _animatedProps = new Map<string, Signal<any>>();
   protected _transforms: string[] = [];
 
-  protected _pseudoStateClassName?: string;
   protected _transitionClass?: string;
   protected _motionClass?: string;
   protected _staggerMs?: number;
@@ -129,12 +124,25 @@ export abstract class FiboBuilder {
     return this;
   }
 
+  /** Stamp a class onto the host. Used by PseudoStateBuilder (hashed `:hover` etc.). */
+  addClassName(name: string): this {
+    if (name && !this._classNames.includes(name)) {
+      this._classNames.push(name);
+    }
+    return this;
+  }
+
   /**
-   * React list key. After this is called, React reads the key as a string.
+   * React list key. After this is called, React reads the key as a string
+   * on both the builder element and the inner host wrapper.
    * Builders are valid elements — you do not need `.build()`.
    */
   key(value: string | number): this {
     this._props.key = value;
+    const stamped = (this as any).__fiboElementProps;
+    if (stamped && typeof stamped === 'object') {
+      (this as any).__fiboElementProps = { ...stamped, key: String(value) };
+    }
     return this;
   }
 
@@ -515,8 +523,15 @@ export abstract class FiboBuilder {
     return this;
   }
 
+  /**
+   * Breakpoint styles compiled to CSS `@media` (same engine as `.md()`).
+   * Tiers stay mutually exclusive: mobile `<768`, tablet `768–1023`, desktop `≥1024`.
+   * No `window.innerWidth` — hydrate-safe.
+   */
   responsive(styles: ResponsiveStyles): this {
-    this._responsive = styles;
+    this.registerMediaStyles('(max-width: 767px)', styles.mobile);
+    this.registerMediaStyles('(min-width: 768px) and (max-width: 1023px)', styles.tablet);
+    this.registerMediaStyles('(min-width: 1024px)', styles.desktop);
     return this;
   }
 
@@ -526,7 +541,12 @@ export abstract class FiboBuilder {
    * @example Box().padding(8).media('md', { padding: 16 }).media('(prefers-color-scheme: dark)', { backgroundColor: '#111' })
    */
   media(query: BreakpointKey | string, styles: CSSProperties): this {
-    const mq = toMediaQuery(query);
+    this.registerMediaStyles(toMediaQuery(query), styles);
+    return this;
+  }
+
+  private registerMediaStyles(mq: string, styles?: CSSProperties): void {
+    if (!styles) return;
     const unitless = new Set([
       'opacity', 'zIndex', 'z-index', 'flex', 'flexGrow', 'flexShrink',
       'order', 'fontWeight', 'lineHeight',
@@ -540,7 +560,6 @@ export abstract class FiboBuilder {
           : String(raw);
       this._classNames.push(_styleManager.registerMedia(mq, prop, value));
     }
-    return this;
   }
 
   sm(styles: CSSProperties): this {
@@ -1088,8 +1107,7 @@ export abstract class FiboBuilder {
   focusVisible(): PseudoStateBuilder;
   focusVisible(callback: PseudoStateFn): this;
   focusVisible(callback?: PseudoStateFn): this | PseudoStateBuilder {
-    const className = this.getPseudoStateClassName();
-    const builder = new PseudoStateBuilder(className, 'focus-visible', this);
+    const builder = new PseudoStateBuilder('focus-visible', this);
     if (callback) {
       callback(builder);
       return this;
@@ -1209,21 +1227,11 @@ export abstract class FiboBuilder {
     return this;
   }
 
-  private getPseudoStateClassName(): string {
-    if (!this._pseudoStateClassName) {
-
-      this._pseudoStateClassName = nextStableId('fibo-pseudo');
-      this._classNames.push(this._pseudoStateClassName);
-    }
-    return this._pseudoStateClassName;
-  }
-
   hover(): PseudoStateBuilder;
   hover(callback: PseudoStateFn): this;
   hover(callback?: PseudoStateFn): this | PseudoStateBuilder {
     this.ensureInteractiveTransition();
-    const className = this.getPseudoStateClassName();
-    const builder = new PseudoStateBuilder(className, 'hover', this);
+    const builder = new PseudoStateBuilder('hover', this);
 
     if (callback) {
       callback(builder);
@@ -1236,8 +1244,7 @@ export abstract class FiboBuilder {
   focus(): PseudoStateBuilder;
   focus(callback: PseudoStateFn): this;
   focus(callback?: PseudoStateFn): this | PseudoStateBuilder {
-    const className = this.getPseudoStateClassName();
-    const builder = new PseudoStateBuilder(className, 'focus', this);
+    const builder = new PseudoStateBuilder('focus', this);
 
     if (callback) {
       callback(builder);
@@ -1250,8 +1257,7 @@ export abstract class FiboBuilder {
   active(): PseudoStateBuilder;
   active(callback: PseudoStateFn): this;
   active(callback?: PseudoStateFn): this | PseudoStateBuilder {
-    const className = this.getPseudoStateClassName();
-    const builder = new PseudoStateBuilder(className, 'active', this);
+    const builder = new PseudoStateBuilder('active', this);
 
     if (callback) {
       callback(builder);
@@ -1264,8 +1270,7 @@ export abstract class FiboBuilder {
   visited(): PseudoStateBuilder;
   visited(callback: PseudoStateFn): this;
   visited(callback?: PseudoStateFn): this | PseudoStateBuilder {
-    const className = this.getPseudoStateClassName();
-    const builder = new PseudoStateBuilder(className, 'visited', this);
+    const builder = new PseudoStateBuilder('visited', this);
 
     if (callback) {
       callback(builder);
@@ -1278,8 +1283,7 @@ export abstract class FiboBuilder {
   disabledState(): PseudoStateBuilder;
   disabledState(callback: PseudoStateFn): this;
   disabledState(callback?: PseudoStateFn): this | PseudoStateBuilder {
-    const className = this.getPseudoStateClassName();
-    const builder = new PseudoStateBuilder(className, 'disabled', this);
+    const builder = new PseudoStateBuilder('disabled', this);
 
     if (callback) {
       callback(builder);
@@ -1292,8 +1296,7 @@ export abstract class FiboBuilder {
   focusWithin(): PseudoStateBuilder;
   focusWithin(callback: PseudoStateFn): this;
   focusWithin(callback?: PseudoStateFn): this | PseudoStateBuilder {
-    const className = this.getPseudoStateClassName();
-    const builder = new PseudoStateBuilder(className, 'focus-within', this);
+    const builder = new PseudoStateBuilder('focus-within', this);
 
     if (callback) {
       callback(builder);
@@ -1306,8 +1309,7 @@ export abstract class FiboBuilder {
   firstChild(): PseudoStateBuilder;
   firstChild(callback: PseudoStateFn): this;
   firstChild(callback?: PseudoStateFn): this | PseudoStateBuilder {
-    const className = this.getPseudoStateClassName();
-    const builder = new PseudoStateBuilder(className, 'first-child', this);
+    const builder = new PseudoStateBuilder('first-child', this);
 
     if (callback) {
       callback(builder);
@@ -1320,8 +1322,7 @@ export abstract class FiboBuilder {
   lastChild(): PseudoStateBuilder;
   lastChild(callback: PseudoStateFn): this;
   lastChild(callback?: PseudoStateFn): this | PseudoStateBuilder {
-    const className = this.getPseudoStateClassName();
-    const builder = new PseudoStateBuilder(className, 'last-child', this);
+    const builder = new PseudoStateBuilder('last-child', this);
 
     if (callback) {
       callback(builder);
@@ -1334,8 +1335,7 @@ export abstract class FiboBuilder {
   groupHover(): PseudoStateBuilder;
   groupHover(callback: PseudoStateFn): this;
   groupHover(callback?: PseudoStateFn): this | PseudoStateBuilder {
-    const className = this.getPseudoStateClassName();
-    const builder = new PseudoStateBuilder(className, 'hover', this, true);
+    const builder = new PseudoStateBuilder('hover', this, true);
 
     if (callback) {
       callback(builder);
@@ -1348,8 +1348,7 @@ export abstract class FiboBuilder {
   groupFocus(): PseudoStateBuilder;
   groupFocus(callback: PseudoStateFn): this;
   groupFocus(callback?: PseudoStateFn): this | PseudoStateBuilder {
-    const className = this.getPseudoStateClassName();
-    const builder = new PseudoStateBuilder(className, 'focus', this, true);
+    const builder = new PseudoStateBuilder('focus', this, true);
 
     if (callback) {
       callback(builder);
@@ -1362,8 +1361,7 @@ export abstract class FiboBuilder {
   groupActive(): PseudoStateBuilder;
   groupActive(callback: PseudoStateFn): this;
   groupActive(callback?: PseudoStateFn): this | PseudoStateBuilder {
-    const className = this.getPseudoStateClassName();
-    const builder = new PseudoStateBuilder(className, 'active', this, true);
+    const builder = new PseudoStateBuilder('active', this, true);
 
     if (callback) {
       callback(builder);
@@ -1376,8 +1374,7 @@ export abstract class FiboBuilder {
   groupFocusWithin(): PseudoStateBuilder;
   groupFocusWithin(callback: PseudoStateFn): this;
   groupFocusWithin(callback?: PseudoStateFn): this | PseudoStateBuilder {
-    const className = this.getPseudoStateClassName();
-    const builder = new PseudoStateBuilder(className, 'focus-within', this, true);
+    const builder = new PseudoStateBuilder('focus-within', this, true);
 
     if (callback) {
       callback(builder);
@@ -1442,8 +1439,7 @@ export abstract class FiboBuilder {
       }
     }
 
-    // Breakpoints are applied at render time by ResponsiveWrapper so tablet/desktop
-    // update on resize. getStyle() keeps the base (SSR-safe) snapshot.
+    // Breakpoints compile to CSS `@media` via `.media()` / `.responsive()` — not inline style.
 
     if (this._transforms.length > 0) {
       const existingTransform = finalStyle.transform || '';
@@ -1470,7 +1466,10 @@ export abstract class FiboBuilder {
       React.createElement(
         'span',
         {
-          key: React.isValidElement(child) && child.key != null ? child.key : `fibo-stagger-${index}`,
+          key:
+            React.isValidElement(child) && isUsableReactKey(child.key)
+              ? child.key
+              : `fibo-stagger-${index}`,
           className: 'fibo-stagger-item',
           style: { ['--fibo-i' as string]: String(index) },
         },
@@ -1504,12 +1503,19 @@ const REACT_ELEMENT_FIELDS = new Set<PropertyKey>([
   '_debugInfo',
 ]);
 
+function listKeyOf(target: FiboBuilder): string | number | undefined {
+  const key = (target as any)._props?.key;
+  if (key == null || key === '') return undefined;
+  return key;
+}
+
 function assembleBuilder(target: FiboBuilder): ReactElement {
   const isObserver = (target as any)._isObserver;
   const signals = (target as any)._signals as Set<BindableSignal<any>> | undefined;
   const observers = (target as any)._observers;
   const state = (target as any)._state;
   const providers = (target as any)._providers;
+  const listKey = listKeyOf(target);
 
   const assemble = () => {
     let element = target.build();
@@ -1518,6 +1524,7 @@ function assembleBuilder(target: FiboBuilder): ReactElement {
     const animationConfig = (target as any)._animationConfig;
     if (animatedProps && animatedProps.size > 0) {
       element = React.createElement(AnimatedWrapper, {
+        key: listKey,
         animatedProps,
         animationConfig,
         children: element
@@ -1529,6 +1536,7 @@ function assembleBuilder(target: FiboBuilder): ReactElement {
       | undefined;
     if (reveal) {
       element = React.createElement(Reveal, {
+        key: listKey,
         preset: reveal.preset,
         once: reveal.once,
         rootMargin: reveal.rootMargin,
@@ -1540,24 +1548,21 @@ function assembleBuilder(target: FiboBuilder): ReactElement {
     }
 
     if ((target as any)._scrollProgress) {
-      element = React.createElement(ScrollProgress, { children: element });
+      element = React.createElement(ScrollProgress, { key: listKey, children: element });
     }
 
     if ((target as any)._usesCssMotion) {
-      element = React.createElement(React.Fragment, null, React.createElement(MotionStyles), element);
+      element = React.createElement(
+        React.Fragment,
+        { key: listKey },
+        React.createElement(MotionStyles),
+        element
+      );
     }
 
     const gesture = (target as any)._gesture;
     if (gesture) {
       element = gesture.wrap(element);
-    }
-
-    const responsive = (target as any)._responsive as ResponsiveStyles | undefined;
-    if (responsive) {
-      element = React.createElement(ResponsiveWrapper, {
-        responsive,
-        children: element
-      });
     }
 
     return element;
@@ -1569,7 +1574,7 @@ function assembleBuilder(target: FiboBuilder): ReactElement {
 
   const observed = isObserver
     ? React.createElement(Observer, {
-        key: (target as any)._props.key,
+        key: listKey,
         children: assemble
       })
     : null;
@@ -1580,12 +1585,13 @@ function assembleBuilder(target: FiboBuilder): ReactElement {
 
   if (hasState && signals && signals.size > 0) {
     tree = React.createElement(SignalWrapper, {
-      key: (target as any)._props.key,
+      key: listKey,
       signals,
       children: rebuild
     });
   } else if (hasState && observers && observers.size > 0) {
     tree = React.createElement(ObserverWrapper, {
+      key: listKey,
       observables: observers,
       children: rebuild
     });
@@ -1593,6 +1599,7 @@ function assembleBuilder(target: FiboBuilder): ReactElement {
 
   if (hasState && state && state.size > 0) {
     tree = React.createElement(StateWrapper, {
+      key: listKey,
       stateMap: state,
       children: tree
     });
@@ -1600,6 +1607,7 @@ function assembleBuilder(target: FiboBuilder): ReactElement {
 
   if (hasState && providers && providers.size > 0) {
     tree = React.createElement(ProviderWrapper, {
+      key: listKey,
       providers: providers,
       children: tree
     });
@@ -1665,35 +1673,35 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
         if (prop === 'key') {
           const stored = (target as any)._props?.key;
           if (stored != null && stored !== '') {
-            return typeof stored === 'number' ? String(stored) : stored;
+            return String(stored);
           }
+          // Fluent `.key(id)` when unset. Parents stamp string keys via
+          // `normalizeFiboChildren` so React never stringifies this function.
           if (!(target as any).__fiboKeyFn) {
-            const auto = nextStableId('fibo');
             const fluent = (value: string | number) => {
               target.key(value);
               return receiver;
             };
-            fluent.toString = () => auto;
-            fluent.valueOf = () => auto;
             (target as any).__fiboKeyFn = fluent;
-            (target as any).__fiboAutoKey = auto;
           }
           return (target as any).__fiboKeyFn;
         }
 
         if (prop === 'props') {
+          const storedKey = (target as any)._props?.key;
+          const reactProps = {
+            ...((target as any).__fiboElementProps ?? {}),
+            ...(storedKey != null && storedKey !== '' ? { key: String(storedKey) } : {}),
+          };
           const method = Object.getPrototypeOf(target).props;
           if (typeof method === 'function') {
             const fluent = (extra: Record<string, any>) => {
               method.call(target, extra);
               return receiver;
             };
-            // React reads element.props as the object passed to `type`.
-            // FiboElement ignores it; expose empty props for spread/DEV checks
-            // while keeping .props({...}) callable.
-            return Object.assign(fluent, (target as any).__fiboElementProps ?? {});
+            return Object.assign(fluent, reactProps);
           }
-          return (target as any).__fiboElementProps ?? {};
+          return reactProps;
         }
 
         if (REACT_ELEMENT_FIELDS.has(prop)) {

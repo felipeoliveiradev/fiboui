@@ -1,5 +1,6 @@
 import React, { ReactElement } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
+import { reactListKey } from '../../core/children';
 import { BaseProps } from '../../core/types';
 
 type GridVariant = 'standard' | 'masonry' | 'bento';
@@ -76,7 +77,7 @@ const GridInner = React.memo((props: any) => {
             }
             const span = pattern[index % pattern.length];
             return React.createElement('div', {
-                key: React.isValidElement(child) && child.key != null ? child.key : index,
+                key: reactListKey(child, index),
                 style: { gridColumn: `span ${span.col}`, gridRow: `span ${span.row}` }
             }, child);
         }));
@@ -100,8 +101,11 @@ const GridInner = React.memo((props: any) => {
                 ...style
             },
             ...rest
-        }, React.Children.map(children, child =>
-            React.createElement('div', { className: 'break-inside-avoid mb-4' }, child)
+        }, React.Children.map(children, (child, index) =>
+            React.createElement('div', {
+                key: reactListKey(child, index),
+                className: 'break-inside-avoid mb-4'
+            }, child)
         ));
     }
 

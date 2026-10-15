@@ -56,7 +56,7 @@ export { springEase, resolveCssEase } from './core/easing';
 export type { SpringOptions } from './core/easing';
 export { MOTION_PRESETS, normalizePreset, FIBO_MOTION_CSS } from './core/motionCss';
 export type { MotionPreset, CustomMotion } from './core/motionCss';
-export { MotionStyles, getMotionCss, ensureMotionCss } from './core/styleManager';
+export { MotionStyles, FiboStyles, getMotionCss, ensureMotionCss, getCss, getStyleTag } from './core/styleManager';
 export { FIBO_BREAKPOINTS, toMediaQuery } from './core/breakpoints';
 export type { BreakpointKey } from './core/breakpoints';
 export { useViewportWidth } from './core/ResponsiveWrapper';
