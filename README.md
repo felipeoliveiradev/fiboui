@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/brand/logo.svg" width="88" alt="FiboUI logo" />
+<img src="./docs/brand/logo.svg" width="88" alt="FiboUI logo" />
 
 # FiboUI
 
@@ -16,7 +16,7 @@ There is no JSX — the function return **is** the view.
 
 <br />
 
-<img src="docs/brand/banner.svg" width="100%" alt="FiboUI — Fluent React UI. There is no JSX." />
+<img src="./docs/brand/banner.svg" width="960" alt="FiboUI — Fluent React UI. There is no JSX." />
 
 </div>
 
@@ -28,7 +28,7 @@ There is no JSX — the function return **is** the view.
 
 | Marketing site | Store demo |
 | :---: | :---: |
-| [![FiboUI site](docs/brand/site-hero.png)](https://fiboui.vercel.app) | [![Fibo Store](docs/brand/store-hero.png)](https://fiboui-store.vercel.app) |
+| [![FiboUI site](./docs/brand/site-hero.png)](https://fiboui.vercel.app) | [![Fibo Store](./docs/brand/store-hero.png)](https://fiboui-store.vercel.app) |
 | [**fiboui.vercel.app**](https://fiboui.vercel.app) | [**fiboui-store.vercel.app**](https://fiboui-store.vercel.app) |
 
 Both ships are built **only** with FiboUI fluent builders — no JSX in the product UI.
@@ -89,7 +89,7 @@ Same tree. Method calls instead of tags. Layout, theme, motion, and reactivity s
 
 ## Runtime flow
 
-<img src="docs/brand/flow-runtime.svg" width="100%" alt="Factory → fluent chain → children → React element → mount" />
+<img src="./docs/brand/flow-runtime.svg" width="960" alt="Factory → fluent chain → children → React element → mount" />
 
 ```mermaid
 flowchart LR
@@ -112,7 +112,7 @@ Return them. Nest them. **Skip `.build()`.**
 
 ## Signal flow
 
-<img src="docs/brand/flow-signals.svg" width="100%" alt="signal → bindSignal → function children → UI" />
+<img src="./docs/brand/flow-signals.svg" width="960" alt="signal → bindSignal → function children → UI" />
 
 ```tsx
 import { Box, Button, Text, signal } from 'fiboui'
@@ -147,7 +147,7 @@ sequenceDiagram
 
 ## Package architecture
 
-<img src="docs/brand/flow-architecture.svg" width="100%" alt="App over layout/content/structure/theme/reactivity over core" />
+<img src="./docs/brand/flow-architecture.svg" width="960" alt="App over layout/content/structure/theme/reactivity over core" />
 
 ```mermaid
 flowchart TB
@@ -213,7 +213,7 @@ Column().crossAxisAlignment('stretch')
 
 <div align="center">
 
-<img src="docs/brand/logo-lockup.svg" width="280" alt="FiboUI lockup" />
+<img src="./docs/brand/logo-lockup.svg" width="280" alt="FiboUI lockup" />
 
 <br /><br />
 
@@ -224,7 +224,7 @@ Column().crossAxisAlignment('stretch')
 | **Pink** | `#ff2d8a` | energy |
 | **Lime** | `#c8ff00` | mark / CTA |
 
-<img src="docs/brand/fibonacci.svg" width="220" alt="Fibonacci spiral" />
+<img src="./docs/brand/fibonacci.svg" width="220" alt="Fibonacci spiral" />
 
 **Tailored to each request** · **Attention to detail**
 
@@ -247,7 +247,7 @@ Publishing is automated on **`main`** (GitHub Actions + `NPM_TOKEN`). Prefer not
 
 <div align="center">
 
-<img src="docs/brand/logo-mark.svg" width="48" alt="" />
+<img src="./docs/brand/logo-mark.svg" width="48" alt="" />
 
 <br /><br />
 
