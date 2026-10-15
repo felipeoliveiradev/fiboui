@@ -9,6 +9,7 @@ All notable changes to this project are documented in this file.
 ### Fixed
 
 - **Interaction effects smoothness** — `.fibo-fx` no longer sets a resting `transform` (perspective/translateZ). Hover/active transforms were replacing the whole matrix and felt jumpy (e.g. `nudge` on cards). `nudge` now uses `translate3d` + 240ms ease-out.
+- **`.hover()` / `.press()` surface easing** — inline `background` / `border` shorthands are promoted to `backgroundColor` / `borderColor` longhands so pseudo longhands can interpolate; hover `translateX/Y` emit `translate3d` and stamp a resting `translate3d(0,0,0)` only when a transform is set; auto interaction transitions default to 240ms `ease-out`.
 
 ## [2.4.0] - 2026-10-15
 

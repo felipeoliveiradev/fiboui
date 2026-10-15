@@ -132,7 +132,9 @@ describe('duration stacking + hover compose', () => {
         .children('card')
     );
     const css = injectedCss();
-    expect(css).toMatch(/scale\(1\.05\).*translateY\(-4px\)|translateY\(-4px\).*scale\(1\.05\)/);
+    expect(css).toMatch(
+      /scale\(1\.05\).*translate3d\(0,\s*-4px,\s*0\)|translate3d\(0,\s*-4px,\s*0\).*scale\(1\.05\)/,
+    );
   });
 });
 

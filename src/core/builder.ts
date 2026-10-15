@@ -29,6 +29,10 @@ import {
   themeToInlineStyle,
   type ThemeInput,
 } from '../theme/themeData';
+import {
+  promoteSurfaceLonghandsInStyle,
+  withRestTransform,
+} from './smoothInteraction';
 
 /** Typical sticky header height used when `.sticky(0)` / `.sticky(true)` has no size. */
 const DEFAULT_STICKY_OFFSET_PX = 64;
@@ -65,6 +69,12 @@ export abstract class FiboBuilder {
   /** True while transition class was auto-managed for hover/effect presets (expandable). */
   protected _autoEffectTransition = false;
   protected _effectTransitionProps: string[] = [];
+  /**
+   * When true, getStyle() promotes background/border shorthands to longhands and
+   * (optionally) stamps a resting translate3d so pseudo transforms ease cleanly.
+   */
+  protected _smoothSurface = false;
+  protected _smoothNeedsRestTransform = false;
   protected _motionClass?: string;
   protected _staggerMs?: number;
   protected _reveal?: { preset: string; once?: boolean; rootMargin?: string; threshold?: number };
@@ -1257,7 +1267,10 @@ export abstract class FiboBuilder {
   }
 
   protected ensureInteractiveTransition(): void {
-    // Broad enough for compose (bg/border) + effect presets (shadow/transform).
+    // Promote surface shorthands + transition list. Resting translate3d is only
+    // stamped when a pseudo actually sets `transform` (see prepareSmoothInteraction).
+    this._smoothSurface = true;
+    this.promoteSurfaceLonghands();
     this.ensureEffectTransition([
       'transform',
       'opacity',
@@ -1265,6 +1278,35 @@ export abstract class FiboBuilder {
       'background-color',
       'border-color',
     ]);
+  }
+
+  /**
+   * Prepare resting styles + transition so pseudo-state longhands (bg/border/transform)
+   * interpolate instead of snapping. Safe to call repeatedly from PseudoStateBuilder.
+   * @internal
+   */
+  prepareSmoothInteraction(properties: string[]): void {
+    this._smoothSurface = true;
+    if (properties.some((p) => p === 'transform')) {
+      this._smoothNeedsRestTransform = true;
+    }
+    this.promoteSurfaceLonghands();
+    if (this._smoothNeedsRestTransform) {
+      this.ensureRestTransform();
+    }
+    this.ensureEffectTransition(properties);
+  }
+
+  /** @internal Convert inline background/border shorthands → longhands. */
+  promoteSurfaceLonghands(): void {
+    this._style = promoteSurfaceLonghandsInStyle(this._style);
+    this._cssStyles = promoteSurfaceLonghandsInStyle(this._cssStyles);
+  }
+
+  /** @internal Stamp translate3d(0,0,0) when no resting transform exists. */
+  ensureRestTransform(): void {
+    const style = withRestTransform(this._style);
+    if (style !== this._style) this._style = style;
   }
 
   /**
@@ -1284,10 +1326,15 @@ export abstract class FiboBuilder {
     merged.add('opacity');
     this._effectTransitionProps = [...merged];
     this._autoEffectTransition = true;
+    // Interactive defaults: ease-out feels less "snappy" than ease-in-out on hover.
+    const easing =
+      this._transitionEasing === 'ease-in-out' ? 'ease-out' : this._transitionEasing;
+    const duration =
+      this._transitionDuration === 200 ? 240 : this._transitionDuration;
     this.replaceTransitionClass(
       _styleManager.register(
         'transition',
-        `${this._effectTransitionProps.join(', ')} ${this._transitionDuration}ms ${this._transitionEasing}`,
+        `${this._effectTransitionProps.join(', ')} ${duration}ms ${easing}`,
       ),
     );
   }
@@ -1495,6 +1542,14 @@ export abstract class FiboBuilder {
 
   protected getStyle(): CSSProperties {
     let finalStyle = { ...this._style, ...this._cssStyles };
+
+    // Late `.style()` after `.hover()` still needs longhands + rest transform.
+    if (this._smoothSurface) {
+      finalStyle = promoteSurfaceLonghandsInStyle(finalStyle);
+      if (this._smoothNeedsRestTransform) {
+        finalStyle = withRestTransform(finalStyle);
+      }
+    }
 
     if (this._theme) {
       finalStyle = {
