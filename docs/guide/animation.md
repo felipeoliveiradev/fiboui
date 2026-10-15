@@ -81,6 +81,22 @@ items.map((item) => Card().key(item.id).hover((h) => h.scale(1.03)).children(ite
 
 `Button.onHover(fn)` fires on `mouseenter` (see [Button](/components/interactive-button)).
 
+## Interaction effect presets
+
+Named effects are **state-agnostic** — the same catalog works on hover, press, focus, active, or groupHover. Names mirror [Hover.css](https://ianlunn.github.io/Hover/) categories (2D, background, icons, border, shadow, bubbles, curls); the CSS is **owned by fiboui** (not a vendor dump — Hover.css v2+ is not free for commercial toolkits).
+
+```tsx
+Box()
+  .hover((h) => h.effect('nudge').bg('var(--card-hover)').borderColor('var(--border-mid)'))
+  .press((p) => p.effect('shrink'))
+  .focus((f) => f.effect('glow'))
+
+Box().hoverEffect('sweepToRight').pressEffect('shrink')
+Box().hoverEffect('bubbleTop').props({ 'data-fibo-bubble': 'Hello' })
+```
+
+Full list: `INTERACTION_EFFECTS` (~100+). Kebab / `hvr-*` aliases work (`sweep-to-right`, `hvr-float`). Sheet injects on first `.effect()` — also available as `FIBO_INTERACTION_FX_CSS` for SSR.
+
 ## Spring
 
 `.ease('spring')` / `.spring({ stiffness, damping, mass })` become CSS `linear(...)`. stiffness/damping are no longer ignored.

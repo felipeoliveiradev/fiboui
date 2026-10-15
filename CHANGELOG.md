@@ -4,6 +4,22 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-10-15
+
+### Added
+
+- **Full interaction effect catalog** (Hover.css–inspired names, **fiboui-owned CSS** — not a vendor of Hover.css; commercial-safe for use inside the toolkit):
+  - **2D** — grow, shrink, pulse, pulseGrow/Shrink, push, pop, bounceIn/Out, rotate, growRotate, float, sink, bob, hang, skew*, wobble*, buzz*, forward, backward, nudge
+  - **Background** — fade, backPulse, sweep/bounce/radial/rectangle/shutter variants
+  - **Icons** — iconBack/Forward/Up/Down/Spin/Drop/Fade/FloatAway/… (motion on the host)
+  - **Border** — borderFade, hollow, trim, ripple*, outline*, roundCorners, underline/overline*
+  - **Shadow** — shadowGrow/Float/Glow/Radial, boxShadowOutset/Inset, lift, glow
+  - **Bubbles** — bubble*/bubbleFloat* (`data-fibo-bubble="Tip"`)
+  - **Curls** — curlTopLeft/Right, curlBottomLeft/Right
+  - State-agnostic: `.hover(h => h.effect("sweepToRight"))`, `.pressEffect("shrink")`, `.focusEffect("glow")`
+  - Shortcuts: `.hoverEffect()` / `.pressEffect()` / `.focusEffect()` / `.activeEffect()` / `.groupHoverEffect()`
+  - Kebab + `hvr-*` aliases; exports `INTERACTION_EFFECTS`, `FIBO_INTERACTION_FX_CSS`
+
 ## [2.3.0] - 2026-10-15
 
 ### Added
