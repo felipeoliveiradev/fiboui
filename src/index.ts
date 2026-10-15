@@ -73,10 +73,12 @@ export type { MotionPreset, CustomMotion } from './core/motionCss';
 export {
   INTERACTION_EFFECTS,
   normalizeInteractionEffect,
-  getInteractionEffect,
-  applyInteractionEffect,
+  interactionEffectClass,
+  interactionEffectKebab,
 } from './core/interactionEffects';
-export type { InteractionEffectName, InteractionEffectDef } from './core/interactionEffects';
+export type { InteractionEffectName } from './core/interactionEffects';
+export { FIBO_INTERACTION_FX_CSS } from './core/interactionFxCss';
+export { ensureInteractionFxCss } from './core/ensureInteractionFx';
 export { MotionStyles, FiboStyles, getMotionCss, ensureMotionCss, getCss, getStyleTag } from './core/styleManager';
 export { FIBO_BREAKPOINTS, toMediaQuery } from './core/breakpoints';
 export type { BreakpointKey } from './core/breakpoints';

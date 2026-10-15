@@ -80,6 +80,17 @@ export class StyleManager {
     }
   }
 
+  /**
+   * Append a large static CSS blob once (keyed). Used by interaction-effect presets.
+   * Tracked in `extras` so `getCss()` / SSR style tags include it after first use.
+   */
+  public injectExtra(css: string, key: string): void {
+    const cacheKey = `extra:${key}`;
+    if (this.cache.has(cacheKey)) return;
+    this.cache.set(cacheKey, key);
+    this.insert(css, true);
+  }
+
   public getCss(): string {
     this.ensureDefaults();
     const rules = [...this.extras].sort();

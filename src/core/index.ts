@@ -10,6 +10,8 @@ export * from './animationHooks';
 export * from './easing';
 export * from './motionCss';
 export * from './interactionEffects';
+export { FIBO_INTERACTION_FX_CSS } from './interactionFxCss';
+export { ensureInteractionFxCss } from './ensureInteractionFx';
 export * from './Presence';
 export * from './Reveal';
 export * from './ScrollProgress';
