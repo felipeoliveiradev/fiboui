@@ -1,51 +1,50 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 280" role="img" aria-label="FiboUI runtime flow">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 280" width="960" height="280" role="img" aria-label="FiboUI runtime flow">
   <rect width="960" height="280" fill="#0a0a0a"/>
 
   <text x="32" y="36"
-    font-family="Geist, Helvetica Neue, Helvetica, Arial, sans-serif"
+    font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
     font-size="11" font-weight="700" letter-spacing="0.2em"
     fill="#c8ff00">RUNTIME FLOW</text>
 
-  <!-- Nodes -->
-  <g font-family="Geist, Helvetica Neue, Helvetica, Arial, sans-serif">
-    <!-- 1 Factory -->
+  <g font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
     <rect x="32" y="80" width="150" height="88" fill="#141414" stroke="#ffffff" stroke-opacity="0.2"/>
     <text x="107" y="118" text-anchor="middle" font-size="13" font-weight="800" fill="#ffffff">Column()</text>
     <text x="107" y="142" text-anchor="middle" font-size="11" fill="#9a9a9a">factory</text>
 
-    <!-- 2 Chain -->
     <rect x="222" y="80" width="150" height="88" fill="#141414" stroke="#ff2d8a" stroke-width="1.5"/>
     <text x="297" y="118" text-anchor="middle" font-size="13" font-weight="800" fill="#ff2d8a">.gap().pad()</text>
     <text x="297" y="142" text-anchor="middle" font-size="11" fill="#9a9a9a">fluent chain</text>
 
-    <!-- 3 Children -->
     <rect x="412" y="80" width="150" height="88" fill="#141414" stroke="#c8ff00" stroke-width="1.5"/>
     <text x="487" y="118" text-anchor="middle" font-size="13" font-weight="800" fill="#c8ff00">.children()</text>
     <text x="487" y="142" text-anchor="middle" font-size="11" fill="#9a9a9a">zero-build</text>
 
-    <!-- 4 Element -->
     <rect x="602" y="80" width="150" height="88" fill="#141414" stroke="#ffffff" stroke-opacity="0.2"/>
     <text x="677" y="118" text-anchor="middle" font-size="13" font-weight="800" fill="#ffffff">React element</text>
     <text x="677" y="142" text-anchor="middle" font-size="11" fill="#9a9a9a">no .build()</text>
 
-    <!-- 5 Mount -->
     <rect x="792" y="80" width="136" height="88" fill="#c8ff00"/>
     <text x="860" y="118" text-anchor="middle" font-size="13" font-weight="800" fill="#0a0a0a">mount()</text>
     <text x="860" y="142" text-anchor="middle" font-size="11" fill="#0a0a0a">DOM</text>
   </g>
 
-  <!-- Arrows -->
   <g stroke="#ffffff" stroke-width="1.5" fill="none" stroke-opacity="0.5">
-    <path d="M182 124 H222" marker-end="url(#arrow)"/>
-    <path d="M372 124 H412"/>
-    <path d="M562 124 H602"/>
-    <path d="M752 124 H792"/>
+    <path d="M182 124 H214"/>
+    <path d="M372 124 H404"/>
+    <path d="M562 124 H594"/>
+    <path d="M752 124 H784"/>
+  </g>
+  <g fill="#ffffff" fill-opacity="0.5">
+    <polygon points="214,118 222,124 214,130"/>
+    <polygon points="404,118 412,124 404,130"/>
+    <polygon points="594,118 602,124 594,130"/>
+    <polygon points="784,118 792,124 784,130"/>
   </g>
 
   <text x="32" y="230"
-    font-family="Geist, Helvetica Neue, Helvetica, Arial, sans-serif"
+    font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
     font-size="14" font-weight="600" fill="#ffffff">The return value is the view.</text>
   <text x="32" y="252"
-    font-family="Geist, Helvetica Neue, Helvetica, Arial, sans-serif"
-    font-size="12" fill="#9a9a9a">Builders are valid React elements  nest them, return them, skip .build().</text>
+    font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+    font-size="12" fill="#9a9a9a">Builders are valid React elements - nest them, return them, skip .build().</text>
 </svg>
