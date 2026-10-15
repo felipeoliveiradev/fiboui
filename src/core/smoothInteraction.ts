@@ -14,7 +14,10 @@ export function formatCssTransition(
   easing: string,
   delayMs = 0,
 ): string {
+  // Split "transform, opacity" so callers who pass a comma-string still get
+  // per-property duration (otherwise only the last token animates).
   const list = (Array.isArray(properties) ? properties : [properties])
+    .flatMap((p) => String(p).split(','))
     .map((p) => p.trim())
     .filter(Boolean);
   if (list.length === 0) list.push('all');

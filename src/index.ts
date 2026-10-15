@@ -79,7 +79,7 @@ export {
 export type { InteractionEffectName } from './core/interactionEffects';
 export { FIBO_INTERACTION_FX_CSS } from './core/interactionFxCss';
 export { ensureInteractionFxCss } from './core/ensureInteractionFx';
-export { MotionStyles, FiboStyles, getMotionCss, ensureMotionCss, getCss, getStyleTag } from './core/styleManager';
+export { MotionStyles, FiboStyles, getMotionCss, ensureMotionCss, getCss, getStyleTag, endSsrRequest } from './core/styleManager';
 export { FIBO_BREAKPOINTS, toMediaQuery } from './core/breakpoints';
 export type { BreakpointKey } from './core/breakpoints';
 export { useViewportWidth } from './core/ResponsiveWrapper';

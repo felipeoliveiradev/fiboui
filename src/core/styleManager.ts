@@ -207,7 +207,20 @@ export function getCss(): string {
 /** `<style id="fibo-dynamic-styles">` HTML. Call **after** `renderToString` so rules are collected. */
 export function getStyleTag(): string {
   const css = getCss().replace(/<\/style/gi, '<\\/style');
-  return `<style id="fibo-dynamic-styles" data-fibo="1">${css}</style>`;
+  const tag = `<style id="fibo-dynamic-styles" data-fibo="1">${css}</style>`;
+  // Vite SSR: snapshot then clear so the next request does not inherit rules.
+  if (typeof document === 'undefined') {
+    StyleManager.resetForTests();
+  }
+  return tag;
+}
+
+/**
+ * Reset the StyleManager singleton between SSR requests (Next.js / custom servers).
+ * Call after the response CSS has been captured when using `<FiboStyles />` mid-tree.
+ */
+export function endSsrRequest(): void {
+  StyleManager.resetForTests();
 }
 
 /**

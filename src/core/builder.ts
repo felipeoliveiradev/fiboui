@@ -390,6 +390,7 @@ export abstract class FiboBuilder {
       'secondary', 'on-secondary', 'secondary-container', 'on-secondary-container',
       'tertiary', 'on-tertiary', 'tertiary-container', 'on-tertiary-container',
       'error', 'on-error',
+      'success', 'warning', 'info',
       'background', 'on-background',
       'surface', 'on-surface', 'surface-variant', 'on-surface-variant',
       'outline',
@@ -939,9 +940,11 @@ export abstract class FiboBuilder {
    */
   duration(ms: number): this {
     this._transitionDuration = ms;
-    if (this._motionClass) {
+    // Reveal / motion wrappers read --fibo-dur on the outer node; stamp whenever
+    // CSS motion or scroll-reveal is in play (not only `.animate()`).
+    if (this._motionClass || this._reveal || this._usesCssMotion) {
       (this._style as Record<string, string>)['--fibo-dur'] = `${ms}ms`;
-      return this;
+      if (this._motionClass) return this;
     }
     this._applyTransition();
     return this;
@@ -953,9 +956,9 @@ export abstract class FiboBuilder {
    */
   easing(value: 'linear' | 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out' | 'spring' | string): this {
     this._transitionEasing = resolveCssEase(value);
-    if (this._motionClass) {
+    if (this._motionClass || this._reveal || this._usesCssMotion) {
       (this._style as Record<string, string>)['--fibo-ease'] = this._transitionEasing;
-      return this;
+      if (this._motionClass) return this;
     }
     this._applyTransition();
     return this;
@@ -972,9 +975,9 @@ export abstract class FiboBuilder {
    */
   delay(ms: number): this {
     this._transitionDelay = ms;
-    if (this._motionClass) {
+    if (this._motionClass || this._reveal || this._usesCssMotion) {
       (this._style as Record<string, string>)['--fibo-delay'] = `${ms}ms`;
-      return this;
+      if (this._motionClass) return this;
     }
     this._applyTransition();
     return this;
@@ -1327,7 +1330,8 @@ export abstract class FiboBuilder {
    * @internal Used by PseudoStateBuilder.effect() and hover/press shortcuts.
    */
   ensureEffectTransition(properties: string[]): void {
-    if (this._motionClass) return;
+    // Allow hover/press transitions even when `.animate()` set a motion class —
+    // CSS animation and transition can coexist on different properties.
     if (this._transitionClass && !this._autoEffectTransition) return;
 
     const merged = new Set(this._effectTransitionProps);
@@ -1385,6 +1389,7 @@ export abstract class FiboBuilder {
   focus(): PseudoStateBuilder;
   focus(callback: PseudoStateFn): this;
   focus(callback?: PseudoStateFn): this | PseudoStateBuilder {
+    this.ensureInteractiveTransition();
     const builder = new PseudoStateBuilder('focus', this);
 
     if (callback) {
@@ -1398,6 +1403,7 @@ export abstract class FiboBuilder {
   active(): PseudoStateBuilder;
   active(callback: PseudoStateFn): this;
   active(callback?: PseudoStateFn): this | PseudoStateBuilder {
+    this.ensureInteractiveTransition();
     const builder = new PseudoStateBuilder('active', this);
 
     if (callback) {
@@ -1489,7 +1495,8 @@ export abstract class FiboBuilder {
   groupFocus(): PseudoStateBuilder;
   groupFocus(callback: PseudoStateFn): this;
   groupFocus(callback?: PseudoStateFn): this | PseudoStateBuilder {
-    const builder = new PseudoStateBuilder('focus', this, true);
+    // FX sheet only defines `.fibo-fx-on-group-focus-within` (not `-group-focus`).
+    const builder = new PseudoStateBuilder('focus-within', this, true);
 
     if (callback) {
       callback(builder);
@@ -1669,6 +1676,11 @@ function assembleBuilder(target: FiboBuilder): ReactElement {
       | { preset: string; once?: boolean; rootMargin?: string; threshold?: number }
       | undefined;
     if (reveal) {
+      const hostStyle = ((target as any)._style || {}) as Record<string, string>;
+      const revealStyle: Record<string, string> = {};
+      for (const key of ['--fibo-dur', '--fibo-ease', '--fibo-delay', '--fibo-stagger', '--fibo-from']) {
+        if (hostStyle[key] != null) revealStyle[key] = hostStyle[key];
+      }
       element = React.createElement(Reveal, {
         key: listKey,
         preset: reveal.preset,
@@ -1676,7 +1688,7 @@ function assembleBuilder(target: FiboBuilder): ReactElement {
         rootMargin: reveal.rootMargin,
         threshold: reveal.threshold,
         forceMotion: (target as any)._reducedMotion === 'never',
-        preferTimeline: (target as any)._classNames?.includes('fibo-view-timeline'),
+        style: Object.keys(revealStyle).length > 0 ? revealStyle : undefined,
         children: element,
       });
     }

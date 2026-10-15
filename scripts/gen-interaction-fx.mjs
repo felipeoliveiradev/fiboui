@@ -62,10 +62,10 @@ const KEYFRAMES = `
   100% { transform: scale(0); opacity: 0; }
 }
 @keyframes fibo-fx-bob {
-  0% { transform: translateY(-8px); } 50% { transform: translateY(-4px); } 100% { transform: translateY(-8px); }
+  0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); }
 }
 @keyframes fibo-fx-hang {
-  0% { transform: translateY(8px); } 50% { transform: translateY(4px); } 100% { transform: translateY(8px); }
+  0%,100% { transform: translateY(0); } 50% { transform: translateY(8px); }
 }
 @keyframes fibo-fx-wobble-h {
   16.65% { transform: translateX(8px); } 33.3% { transform: translateX(-6px); }
@@ -104,8 +104,9 @@ const KEYFRAMES = `
   83.25% { transform: skew(-2deg); } 100% { transform: skew(0); }
 }
 @keyframes fibo-fx-buzz {
-  50% { transform: translateX(3px) rotate(2deg); }
-  100% { transform: translateX(-3px) rotate(-2deg); }
+  0%,100% { transform: translateX(0) rotate(0); }
+  25% { transform: translateX(3px) rotate(2deg); }
+  75% { transform: translateX(-3px) rotate(-2deg); }
 }
 @keyframes fibo-fx-buzz-out {
   10% { transform: translateX(3px) rotate(2deg); }
@@ -120,14 +121,15 @@ const KEYFRAMES = `
   100% { opacity: 1; transform: translateY(0); }
 }
 @keyframes fibo-fx-icon-bob {
-  0%,100% { transform: translateY(-6px); } 50% { transform: translateY(-2px); }
+  0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); }
 }
 @keyframes fibo-fx-icon-hang {
-  0%,100% { transform: translateY(6px); } 50% { transform: translateY(2px); }
+  0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); }
 }
 @keyframes fibo-fx-icon-buzz {
-  50% { transform: translateX(3px) rotate(2deg); }
-  100% { transform: translateX(-3px) rotate(-2deg); }
+  0%,100% { transform: translateX(0) rotate(0); }
+  25% { transform: translateX(3px) rotate(2deg); }
+  75% { transform: translateX(-3px) rotate(-2deg); }
 }
 @keyframes fibo-fx-back-pulse {
   50% { background-color: rgba(127,127,127,0.25); }
