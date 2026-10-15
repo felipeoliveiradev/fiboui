@@ -18,8 +18,9 @@ interface SidebarInnerProps {
 const SidebarInner = React.memo((props: SidebarInnerProps) => {
     const { width = 260, collapsed, className, style, children, ...rest } = props;
     const router = useRouterOptional();
-    const currentPath = router?.currentPath
-      ?? (typeof window !== 'undefined' ? window.location.pathname : '');
+    // Never read `window` during render — server would be '' and the client
+    // the real path (hydration mismatch). Pass a Router or accept ''.
+    const currentPath = router?.currentPath ?? '';
 
     const currentWidth = collapsed ? 80 : width;
     const pluginItems = PluginManager.getInstance().getSidebarItems();

@@ -4,6 +4,25 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.2.1] - Unreleased
+
+Patch: SSR / hydration. Package version stays **2.2.0** until this is approved and published.
+
+### Fixed
+
+- **`.hover()` / `.active()` / `.press()` / `.focusRing()` class names** were `fibo-pseudo-N` from a module counter. Server, client, and HMR disagreed. Classes are now `fibo-ps-<hash>` of each CSS declaration (deduped, order-independent).
+- **StyleManager SSR** — `getCss()` / `getStyleTag()` / `<FiboStyles />` emit collected rules after `renderToString`. The client reuses `#fibo-dynamic-styles` (`data-fibo`) so hover CSS does not flash.
+- **`.responsive()`** read `window.innerWidth` (server always 1024). It now compiles to CSS `@media` like `.md()` / `.media()`. API unchanged.
+- **List keys** — the FiboElement wrapper did not expose `.key()` as a React string key (`Gt` in the minified bundle). `.key(id)` is a string on the element and inner host. `.children([...])` stamps index keys so unkeyed Grid/Column arrays do not share a fluent-function key.
+- **`usePrefersReducedMotion` / Presence** used `matchMedia` during render. Now `useSyncExternalStore` with server snapshot `false`.
+- **`FiboThemeProvider`** wrote vars only in `useEffect` (FOUC / mismatch). Vars + `fibo-theme-*` class render in the tree; `documentElement` still updates after mount.
+- **LinearGradient** ids are hashed from stops/colors/angle, not a sequence.
+- **`Router` / `useLocation` / `Sidebar`** no longer read `window.location` during render. Pass `initialPath` / `initialSearch` / `initialHash` for SSR; first client render matches, then window after mount.
+
+### Added
+
+- Docs: [SSR / hydration](./docs/guide/ssr.md). Fixtures: `examples/ssr-fixtures` (Vite SSR + Next.js App Router) with Playwright.
+
 ## [2.2.0] - 2026-10-14
 
 Easy CSS media queries (**#8**), security scan (**#4**), and CSS motion / scroll / Presence on the existing builders (**#9**). No `fiboui/motion` subpath.

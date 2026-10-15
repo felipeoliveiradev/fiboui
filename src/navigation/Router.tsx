@@ -9,8 +9,31 @@ interface RouterProps {
   fallback?: React.ComponentType;
   loading?: ReactNode;
   basename?: string;
+  /** Request path for SSR. First client render uses this (or `/`), then window after mount. */
+  initialPath?: string;
+  /** Request search string (`?a=1` or `a=1`) for SSR. */
+  initialSearch?: string;
+  /** Request hash (`#section` or `section`) for SSR. */
+  initialHash?: string;
   errorBoundary?: ReactNode | ((error: Error, errorInfo: ErrorInfo) => ReactNode);
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
+}
+
+function stripBasename(path: string, basename: string): string {
+  if (basename && path.startsWith(basename)) {
+    return path.slice(basename.length) || '/';
+  }
+  return path || '/';
+}
+
+function normalizeSearch(search: string | undefined): string {
+  if (!search) return '';
+  return search.startsWith('?') ? search.slice(1) : search;
+}
+
+function normalizeHash(hash: string | undefined): string {
+  if (!hash) return '';
+  return hash.startsWith('#') ? hash : `#${hash}`;
 }
 
 export const CurrentRouteContext = createContext<Route | null>(null);
@@ -24,17 +47,15 @@ export const Router: React.FC<RouterProps> = ({
   fallback: FallbackComponent,
   loading,
   basename = '',
+  initialPath = '/',
+  initialSearch = '',
+  initialHash = '',
   errorBoundary,
   onError
 }) => {
-  const [currentPath, setCurrentPath] = useState(() => {
-    if (typeof window === 'undefined') return '/';
-    return window.location.pathname.replace(basename, '') || '/';
-  });
-
-  const [query, setQuery] = useState(() =>
-    typeof window === 'undefined' ? new URLSearchParams() : new URLSearchParams(window.location.search)
-  );
+  const [currentPath, setCurrentPath] = useState(() => stripBasename(initialPath, basename));
+  const [query, setQuery] = useState(() => new URLSearchParams(normalizeSearch(initialSearch)));
+  const [hash, setHash] = useState(() => normalizeHash(initialHash));
 
   const { route, params: matchedParams } = findMatchingRoute(routes, currentPath);
   const routeRef = React.useRef(route);
@@ -95,14 +116,17 @@ export const Router: React.FC<RouterProps> = ({
   }, [navigate]);
 
   useEffect(() => {
-    const handlePopState = () => {
-      const newPath = window.location.pathname.replace(basename, '') || '/';
-      setCurrentPath(newPath);
+    if (typeof window === 'undefined') return;
+
+    const syncFromWindow = () => {
+      setCurrentPath(stripBasename(window.location.pathname, basename));
       setQuery(new URLSearchParams(window.location.search));
+      setHash(window.location.hash || '');
     };
 
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    syncFromWindow();
+    window.addEventListener('popstate', syncFromWindow);
+    return () => window.removeEventListener('popstate', syncFromWindow);
   }, [basename]);
 
   const contextValue: RouterContextValue = {
@@ -113,6 +137,7 @@ export const Router: React.FC<RouterProps> = ({
     replace,
     params: matchedParams,
     query,
+    hash,
   };
 
   const renderContent = () => {

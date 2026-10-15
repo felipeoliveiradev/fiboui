@@ -23,6 +23,7 @@ export interface RouterContextValue {
   replace: (path: string) => void;
   params: Record<string, string>;
   query: URLSearchParams;
+  hash: string;
 }
 
 export interface NavigateOptions {
@@ -60,10 +61,11 @@ export function useQuery(): URLSearchParams {
 }
 
 export function useLocation() {
-  const { currentPath } = useRouter();
+  const { currentPath, query, hash } = useRouter();
+  const search = query?.toString?.() ?? '';
   return {
     pathname: currentPath,
-    search: typeof window !== 'undefined' ? window.location.search : '',
-    hash: typeof window !== 'undefined' ? window.location.hash : '',
+    search: search ? `?${search}` : '',
+    hash: hash ?? '',
   };
 }

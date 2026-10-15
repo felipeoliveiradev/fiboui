@@ -3,7 +3,6 @@ import type { FiboBuilder } from './builder';
 import { resolveCssEase } from './easing';
 
 export class PseudoStateBuilder {
-  private baseClassName: string;
   private pseudoState: string;
   private parentBuilder: FiboBuilder;
   private isGroup: boolean;
@@ -14,8 +13,7 @@ export class PseudoStateBuilder {
   private transitionProperties: string[] = ['all'];
   private transforms = new Map<string, string>();
 
-  constructor(baseClassName: string, pseudoState: string, parentBuilder: FiboBuilder, isGroup: boolean = false) {
-    this.baseClassName = baseClassName;
+  constructor(pseudoState: string, parentBuilder: FiboBuilder, isGroup: boolean = false) {
     this.pseudoState = pseudoState;
     this.parentBuilder = parentBuilder;
     this.isGroup = isGroup;
@@ -136,11 +134,8 @@ export class PseudoStateBuilder {
   }
 
   private set(property: string, value: string): this {
-    if (this.isGroup) {
-      _styleManager.registerGroupPseudo(this.baseClassName, this.pseudoState, property, value);
-    } else {
-      _styleManager.registerPseudo(this.baseClassName, this.pseudoState, property, value);
-    }
+    const className = _styleManager.registerPseudo(this.pseudoState, property, value, this.isGroup);
+    this.parentBuilder.addClassName(className);
     return this;
   }
 

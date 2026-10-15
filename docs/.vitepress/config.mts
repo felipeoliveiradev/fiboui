@@ -23,6 +23,7 @@ export default defineConfig({
           { text: 'State Management', link: '/guide/state-management' },
           { text: 'Theming System', link: '/guide/theming' },
           { text: 'Responsive / media queries', link: '/guide/responsive' },
+          { text: 'SSR / hydration', link: '/guide/ssr' },
           { text: 'Animation', link: '/guide/animation' },
           { text: 'Scroll', link: '/guide/scroll' }
         ]

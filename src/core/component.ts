@@ -22,12 +22,10 @@ export function applyResponsiveStyles(
 ): React.CSSProperties {
   if (!responsive) return baseStyle;
 
-  const viewport =
-    width ?? (typeof window !== 'undefined' ? window.innerWidth : undefined);
-
-  if (viewport === undefined) {
+  if (width === undefined) {
     return baseStyle;
   }
+  const viewport = width;
 
   let finalStyle = { ...baseStyle };
 

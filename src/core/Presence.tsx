@@ -1,4 +1,4 @@
-import React, { ReactElement, ReactNode, useEffect, useState } from 'react';
+import React, { ReactElement, ReactNode, useEffect, useState, useSyncExternalStore } from 'react';
 import type { MotionPreset } from './motionCss';
 import { ensureMotionCss } from './styleManager';
 import { normalizePreset } from './motionCss';
@@ -31,12 +31,25 @@ export function isPresenceProps(value: unknown): value is PresenceProps {
   return Object.prototype.hasOwnProperty.call(value, 'show');
 }
 
+function subscribeReducedMotion(onChange: () => void): () => void {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return () => undefined;
+  }
+  const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+  mq.addEventListener('change', onChange);
+  return () => mq.removeEventListener('change', onChange);
+}
+
 function prefersReducedMotion(): boolean {
   return (
     typeof window !== 'undefined' &&
     typeof window.matchMedia === 'function' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
   );
+}
+
+function useHydrateSafeReducedMotion(): boolean {
+  return useSyncExternalStore(subscribeReducedMotion, prefersReducedMotion, () => false);
 }
 
 function resolveShow(show: PresenceShow): boolean {
@@ -70,7 +83,7 @@ export function PresenceHost({
   const visible = useShow(show);
   const [mounted, setMounted] = useState(visible);
   const [phase, setPhase] = useState<'enter' | 'idle' | 'exit'>(visible ? 'enter' : 'idle');
-  const reduce = reducedMotion !== 'never' && prefersReducedMotion();
+  const reduce = reducedMotion !== 'never' && useHydrateSafeReducedMotion();
 
   useEffect(() => {
     ensureMotionCss();

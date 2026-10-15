@@ -25,7 +25,11 @@ export function ResponsiveWrapper({ responsive, children }: ResponsiveWrapperPro
   return cloneElement(children, { style: merged });
 }
 
-/** Current viewport width; SSR snapshot is 1024 (desktop). */
+/**
+ * Current viewport width. Hydration uses 1024 (desktop) so the first client
+ * render matches SSR; the real width arrives after mount.
+ * Prefer `.md()` / `.responsive()` (CSS `@media`) over this hook.
+ */
 export function useViewportWidth(): number {
   return useSyncExternalStore(subscribeViewport, getViewportWidth, () => 1024);
 }
