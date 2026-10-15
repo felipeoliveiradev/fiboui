@@ -1,220 +1,177 @@
-# FiboUI v2.4.3
+<div align="center">
 
-**A Flutter & SwiftUI-inspired React UI framework featuring a fluent builder API and fine-grained reactivity.**
+```
+ ███████╗██╗██████╗  ██████╗ ██╗   ██╗██╗
+ ██╔════╝██║██╔══██╗██╔═══██╗██║   ██║██║
+ █████╗  ██║██████╔╝██║   ██║██║   ██║██║
+ ██╔══╝  ██║██╔══██╗██║   ██║██║   ██║██║
+ ██║     ██║██████╔╝╚██████╔╝╚██████╔╝██║
+ ╚═╝     ╚═╝╚═════╝  ╚═════╝  ╚═════╝ ╚═╝
+```
 
-FiboUI brings chainable builders to React. Compose screens with `Column()`, `Row()`, `Button()`, and `signal()`. Builders **are** React elements — return them from functions and skip `.build()`. Prefer the fluent API (no JSX tags).
+# FiboUI
 
----
+**Fluent React UI.** Flutter & SwiftUI energy — chainable builders, signals, themes.
 
-## Features
+Builders **are** React elements. Return them from functions. Skip `.build()`. Prefer the fluent API — no JSX tags.
 
-- **Assembly pattern** — factories return builders for endless chaining.
-- **Zero-build children** — pass builders to `.children()`; they build implicitly. Typed methods (`.onPress`, `.id`, `.spacing`, `.children`) stay assignable as children.
-- **Fine-grained reactivity** — `signal()`, `computed()`, `createStore()`, `.bindSignal()`, `.observer()`.
-- **Fluent themes** — `.theme("noir" \| "web" \| …)` / `extendTheme` / `FiboThemeProvider` — CSS vars SSR-safe (Flutter / SwiftUI model). Presets: Material, Cupertino, Web, **Noir**.
-- **Type-safe** — TypeScript builders; `FiboChild` / `FiboChildren` describe child slots.
-- **Media queries** — `Box().padding(8).md({ padding: 16 }).lg({ padding: 24 })` compiles to CSS `@media`. `.responsive({ mobile, tablet, desktop })` still works (JS).
-- **CSS motion & scroll** — `Box().animate('fadeIn').ease('spring')`, `.onScroll('fadeIn')`, `.stagger(80)`, `.scrollProgress()`, `Presence(open).enter('fadeIn').exit('fadeOut')`. Default path is CSS (no rAF). See `docs/guide/animation.md`.
-- **Interaction effects** — full Hover.css–inspired catalog (2D, background sweeps, borders, shadows, bubbles, curls) as fiboui-owned CSS. Any trigger: `.hover(h => h.effect("sweepToRight"))`, `.pressEffect("shrink")`, `.hoverEffect("float")`.
+<br />
 
----
+[![npm](https://img.shields.io/npm/v/fiboui?style=flat-square&color=ff2d8a)](https://www.npmjs.com/package/fiboui)
+[![license](https://img.shields.io/npm/l/fiboui?style=flat-square)](./LICENSE)
+[![site](https://img.shields.io/badge/site-fiboui.vercel.app-0a0a0a?style=flat-square)](https://fiboui.vercel.app)
+[![store](https://img.shields.io/badge/demo-fiboui--store-c8ff00?style=flat-square&labelColor=0a0a0a)](https://fiboui-store.vercel.app)
 
-## Installation
+**Live**
+[`fiboui.vercel.app`](https://fiboui.vercel.app)
+·
+**Store demo**
+[`fiboui-store.vercel.app`](https://fiboui-store.vercel.app)
+·
+**npm**
+[`fiboui`](https://www.npmjs.com/package/fiboui)
 
 ```bash
 npm install fiboui
 ```
 
-Import the stylesheet once in your entry file:
-
-```tsx
-import 'fiboui/style.css';
-```
-
-**Required.** The JS entry does not load CSS. ESM-only (`import`, no `require`). See [MIGRATION.md](./MIGRATION.md) if you used 1.x snapshots.
-
-Peer dependencies: React 18 or 19.
-
-Next.js App Router: files that **call** builders (`Button()`, `Column()`, …) must be Client Components (`'use client'`). FiboUI uses hooks and context; it is not an RSC factory API. Import `'fiboui/style.css'` from a layout or the client entry.
-
-## Releasing
-
-Publishing is automated. The owner must add an **`NPM_TOKEN`** automation secret in the GitHub repo settings. Release branch is **`main`**. See [CONTRIBUTING.md](./CONTRIBUTING.md).
-
-Do not run `npm publish` locally. The `Publish` workflow runs on GitHub Release and on push to `main`: install, typecheck, test, build, then `npm publish --provenance --access public` only if that version is not already on npm. After a successful `main` publish it opens GitHub Release `vX.Y.Z` with the matching CHANGELOG section as notes.
+</div>
 
 ---
 
-## The assembly pattern
+## Why FiboUI
 
-### Components as builders
+| | |
+| :--- | :--- |
+| **Assembly pattern** | Factories return builders for endless chaining |
+| **Zero-build children** | Pass builders to `.children()` — they finalize implicitly |
+| **Signals** | `signal()`, `computed()`, `.bindSignal()`, `.observer()` |
+| **Themes** | `.theme("noir")` · `extendTheme` · Material / Cupertino / Web / Noir |
+| **Motion** | `.animate('fadeIn')` · `.onScroll` · `.hoverEffect` · CSS-first |
+| **Type-safe** | TypeScript builders · `FiboChild` / `FiboChildren` |
+
+---
+
+## Quick start
 
 ```tsx
-import { Card, Text } from 'fiboui';
+import 'fiboui/style.css'
+import { Button, Column, Text, mount } from 'fiboui'
+
+function App() {
+  return Column()
+    .gap(12)
+    .padding(24)
+    .children([
+      Text('Hello FiboUI').variant('h1'),
+      Button('Ship it').onPress(() => undefined),
+    ])
+}
+
+mount('#root', App)
+```
+
+**Required:** import `'fiboui/style.css'` once — the JS entry does not load CSS.  
+ESM-only (`import`, no `require`). Peer deps: **React 18 or 19**.
+
+Next.js App Router: files that **call** builders must be Client Components (`'use client'`).
+
+---
+
+## Taste of the API
+
+### Builders (no `.build()`)
+
+```tsx
+import { Card, Text } from 'fiboui'
 
 function Hello() {
   return Card()
-    .className('p-8')
-    .style({ backgroundColor: '#111' })
-    .children([Text('Hello')]);
+    .padding(32)
+    .bg('#111')
+    .children([Text('Hello').variant('h2')])
 }
 ```
 
-### No `.build()`
-
-Builders are valid React elements (`isValidElement(Button('Go'))`). Return them from functions, nest them in `.children()`, or pass them as `React.createElement` arguments. `.build()` still exists and is deprecated.
-
-The event API on `Button` is **`.onPress`** (not `onClick`). `FiboBuilder.onClick` still exists for raw DOM handlers on any builder.
-
-```tsx
-import { Button, Column, Text } from 'fiboui';
-
-function App() {
-  return Column().children([
-    Text('Title').variant('h1'),
-    Button('Action').onPress(() => undefined),
-  ]);
-}
-```
-
----
-
-## Reactivity & state
+`Button` uses **`.onPress`** (not `onClick`).
 
 ### Signals
 
-`.bindSignal(sig)` subscribes the builder and **re-assembles** when the signal changes. Read the signal inside a **function child** (or `Text(() => ...)`) so the new value is picked up. Interpolating `sig.value` into a string at construction time is a one-shot snapshot.
+`.bindSignal(sig)` re-assembles when the signal changes. Read values inside a **function child**:
 
 ```tsx
-import { Box, Button, Text, signal } from 'fiboui';
+import { Box, Button, Text, signal } from 'fiboui'
 
-const count = signal(0);
+const count = signal(0)
 
 Box()
   .bindSignal(count)
   .children(() => [
     Text(`Count: ${count.value}`),
     Button('+').onPress(() => {
-      count.value += 1;
+      count.value += 1
     }),
-  ]);
+  ])
 ```
 
-`useSignal(count)` and `.observer()` with a function child also work. Signal subscriptions unsubscribe on unmount and are Safe for React 18/19 StrictMode (`useSyncExternalStore`). Signals are in-memory and client-only — do not rely on them during SSR.
-
-`computed(() => ...)` is lazy: the first `.value` read attaches the internal effect. Read it (or `.bindSignal`) so updates notify.
-
-Two store APIs exist: `createStore()` + `useReactiveStore(store)`, and the `@Store()` decorator + `useStore(StoreClass)` (the package-root `useStore`). Builder `.state(key, initial)` is runtime-updatable via `useBuilderState(key)`.
-
-### Global store
+### Themes & motion
 
 ```tsx
-import { Box, Text, createStore } from 'fiboui';
-
-const store = createStore({ theme: 'dark', user: 'John' });
-
 Box()
-  .observer()
-  .children(() => Text(store.getState().user));
+  .theme('noir')
+  .animate('fadeIn')
+  .ease('spring')
+  .hover((h) => h.effect('sweepToRight'))
+```
+
+Responsive:
+
+```tsx
+Box().padding(8).md({ padding: 16 }).lg({ padding: 24 })
 ```
 
 ---
 
 ## Layout notes
 
-### Column + Row (`spaceBetween`)
-
-Flutter `Column` defaults to `CrossAxisAlignment.center`. SwiftUI `VStack` defaults to `.center`. FiboUI **2.0 matches that: `crossAxisAlignment('center')`.**
-
-**Row uses `align-self: stretch`** so `spaceBetween` still fills the Column width under a centered cross axis.
-
-To stretch every child (Flutter `CrossAxisAlignment.stretch`):
+FiboUI **2.x** matches Flutter / SwiftUI: `Column` defaults to `crossAxisAlignment('center')`.  
+`Row` uses `align-self: stretch` so `spaceBetween` still fills width.
 
 ```tsx
-Column().crossAxisAlignment('stretch');
+Column().crossAxisAlignment('stretch')
 ```
+
+`Scaffold` uses `headerBar`, `footerBar`, `sideBarLeft`, `sideBarRight`.
 
 ---
 
-## Scaffold & layout shells
+## Live demos
 
-`Scaffold` uses `headerBar`, `footerBar`, `sideBarLeft`, and `sideBarRight`. `DashboardLayout` uses `header` and `sidebar`.
+| | |
+| :--- | :--- |
+| **[fiboui.vercel.app](https://fiboui.vercel.app)** | Marketing site — builders, signals, theme, motion, media |
+| **[fiboui-store.vercel.app](https://fiboui-store.vercel.app)** | Full retail demo — catalog → bag → checkout |
 
-```tsx
-import { Header, Scaffold, Sidebar, Text } from 'fiboui';
-
-Scaffold()
-  .headerBar(
-    Header()
-      .height(80)
-      .className('px-6 bg-white shadow-sm')
-      .children([Text('App Title').variant('h2')])
-  )
-  .sideBarLeft(
-    Sidebar().width(240).children([Text('Home'), Text('Settings')])
-  )
-  .children([Text('Welcome to the main content area.')]);
-```
+Both are built **only** with FiboUI fluent builders.
 
 ---
 
-## Example: reactive product grid
+## Docs & contributing
 
-```tsx
-import {
-  Badge,
-  Box,
-  Button,
-  Card,
-  Grid,
-  Row,
-  Text,
-  computed,
-  createStore,
-} from 'fiboui';
+- Migration from 1.x → [MIGRATION.md](./MIGRATION.md)
+- Contributing & release → [CONTRIBUTING.md](./CONTRIBUTING.md)
+- Animation guide → `docs/guide/animation.md`
 
-const appStore = createStore({
-  cart: [] as { id: string; name: string; price: number; quantity: number }[],
-  products: [
-    { id: '1', name: 'MacBook Pro', price: 2499 },
-    { id: '2', name: 'iPhone 15', price: 999 },
-  ],
-});
-
-const cartTotal = computed(() => {
-  const cart = appStore.getState().cart;
-  return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-});
-
-export function ShopHeader() {
-  return Box()
-    .observer()
-    .children(() => [
-      Row().children([
-        Text(`Total: $${cartTotal.value.toFixed(2)}`).bindSignal(cartTotal),
-        Badge().text(String(appStore.getState().cart.length)),
-      ]),
-      Grid()
-        .columns(2)
-        .gap('md')
-        .children(
-          appStore.getState().products.map((product) =>
-            Card().children([
-              Text(product.name).weight('bold'),
-              Button(`Add $${product.price}`).onPress(() => {
-                appStore.setState((s) => ({
-                  cart: [...s.cart, { ...product, quantity: 1 }],
-                }));
-              }),
-            ])
-          )
-        ),
-    ]);
-}
-```
+Publishing is automated on **`main`** (GitHub Actions + `NPM_TOKEN`). Prefer not to `npm publish` locally.
 
 ---
 
-## License
+<div align="center">
+
+**Wear the return.**
 
 MIT © 2025–2026 FiboUI
+
+[Site](https://fiboui.vercel.app) · [Store](https://fiboui-store.vercel.app) · [npm](https://www.npmjs.com/package/fiboui) · [GitHub](https://github.com/felipeoliveiradev/fiboui)
+
+</div>
