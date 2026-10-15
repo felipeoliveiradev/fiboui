@@ -17,7 +17,14 @@ export const TEXT_VARIANT_STYLE: Record<TextType, CSSProperties> = {
 };
 
 function textStyle(type: TextType, extra?: CSSProperties): CSSProperties {
-  return { margin: 0, ...TEXT_VARIANT_STYLE[type], ...extra };
+  return {
+    margin: 0,
+    overflowWrap: 'anywhere',
+    wordBreak: 'break-word',
+    maxWidth: '100%',
+    ...TEXT_VARIANT_STYLE[type],
+    ...extra,
+  };
 }
 
 const TextInner = React.memo((props: any) => {
@@ -38,7 +45,7 @@ const TextInner = React.memo((props: any) => {
   return React.createElement(
     elementMap[type as TextType],
     {
-      className: `fibo-text fibo-text-${type} ${className}`,
+      className: `fibo-text fibo-text-${type} min-w-0 ${className}`,
       style: textStyle(type as TextType, style),
       ...rest,
     },
@@ -103,7 +110,7 @@ class TextBuilder extends FiboBuilder {
       return React.createElement(FineGrainText, {
         compute,
         as: elementMap[this._type],
-        className: `fibo-text fibo-text-${this._type} ${this.getClassName()}`,
+        className: `fibo-text fibo-text-${this._type} min-w-0 ${this.getClassName()}`,
         style: textStyle(this._type, this.getStyle()),
         ...this._props
       });

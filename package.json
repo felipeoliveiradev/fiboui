@@ -1,6 +1,6 @@
 {
   "name": "fiboui",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "A Flutter/SwiftUI-inspired React UI framework with builder pattern and theme system",
   "type": "module",
   "main": "./dist/index.js",
