@@ -1,0 +1,144 @@
+/* Site extras — hero motion uses fiboui springs, not CSS transitions. */
+
+/* ── Fibo Store: dark retail skin over fiboui defaults ── */
+.shop-skin .fibo-banner {
+  border: none !important;
+  border-radius: 0 !important;
+  background: #ff2d8a !important;
+  color: #fff !important;
+  padding: 12px 18px !important;
+}
+.shop-skin .fibo-banner h4,
+.shop-skin .fibo-banner p {
+  color: inherit !important;
+  opacity: 1 !important;
+}
+.shop-skin .fibo-banner h4 {
+  font-size: 11px !important;
+  letter-spacing: 0.14em !important;
+  font-weight: 800 !important;
+}
+.shop-skin .fibo-banner p {
+  font-size: 12px !important;
+  letter-spacing: 0.04em !important;
+  opacity: 0.85 !important;
+}
+
+.shop-skin .fibo-card {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: #0a0a0a !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  padding: 22px !important;
+  color: #fff !important;
+  transition: border-color 200ms ease, transform 200ms ease !important;
+}
+.shop-skin .fibo-card:hover {
+  border-color: rgba(255, 45, 138, 0.55) !important;
+}
+.shop-skin .fibo-card h3 {
+  color: rgba(255, 255, 255, 0.45) !important;
+  font-size: 10px !important;
+  letter-spacing: 0.14em !important;
+}
+.shop-skin .fibo-card p.font-bold,
+.shop-skin .fibo-card .text-3xl {
+  color: #fff !important;
+  font-size: 2rem !important;
+  letter-spacing: -0.04em !important;
+}
+.shop-skin .fibo-card p.text-xs {
+  color: #9a9a9a !important;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+}
+
+.shop-skin .fibo-tags .fibo-tag {
+  border-radius: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  background: transparent !important;
+  color: #9a9a9a !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  padding: 6px 10px !important;
+}
+
+.shop-skin .fibo-textfield-container {
+  border-radius: 0 !important;
+  background: #080808 !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  min-height: 48px !important;
+  height: 48px !important;
+}
+.shop-skin .fibo-textfield-container:focus-within {
+  border-color: #ff2d8a !important;
+}
+.shop-skin .fibo-textfield-input {
+  color: #fff !important;
+  font-size: 14px !important;
+  letter-spacing: 0.02em !important;
+}
+.shop-skin .fibo-textfield-input::placeholder {
+  color: #9a9a9a !important;
+}
+
+.shop-skin .fibo-label {
+  color: #9a9a9a !important;
+  font-size: 10px !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+}
+
+.shop-skin header.sticky {
+  background: rgba(0, 0, 0, 0.92) !important;
+  backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16) !important;
+}
+
+.shop-skin [class*='rounded-xl'][class*='border-gray'],
+.shop-skin .border-gray-200 {
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  border-radius: 0 !important;
+  background: #0a0a0a !important;
+}
+.shop-skin .hover\:bg-gray-50:hover {
+  background: #121212 !important;
+}
+.shop-skin .text-gray-400,
+.shop-skin .text-gray-600 {
+  color: #9a9a9a !important;
+}
+
+.shop-skin .fibo-radio-group label,
+.shop-skin .fibo-radio-group {
+  color: #fff !important;
+}
+
+.shop-product-card {
+  transition: border-color 220ms ease, background-color 220ms ease !important;
+}
+.shop-product-card:hover .shop-product-art-panel {
+  transform: scale(1.03);
+}
+.shop-product-art-panel {
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.shop-cat-tile {
+  transition: border-color 200ms ease, background-color 200ms ease, transform 200ms ease !important;
+}
+.shop-cat-tile:hover {
+  transform: translateY(-2px);
+}
+
+.shop-skin .fibo-alert,
+.shop-skin [class*='fibo-alert'] {
+  border-radius: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  background: #0e0e0e !important;
+}
+.shop-skin .fibo-progress,
+.shop-skin [class*='progress'] {
+  border-radius: 0 !important;
+}
