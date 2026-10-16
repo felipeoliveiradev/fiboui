@@ -187,8 +187,8 @@ body {
   transition: background-color var(--fibo-transition-normal), color var(--fibo-transition-normal);
 }
 
-/* `.resetStyle()` — chrome off. Layout (display, flex, width, gap) stays.
-   Fluent `.px()` / `.bg()` / `.border()` register !important classes, so they win after this. */
+/* `.resetStyle()` — every CSS property on the host and its descendants
+   goes back to the browser default. Styles chained after it win again. */
 .fibo-reset,
 .fibo-reset *,
 .fibo-theme-material .fibo-reset,
@@ -199,19 +199,6 @@ body {
 .fibo-theme-cupertino .fibo-reset *,
 .fibo-theme-noir .fibo-reset,
 .fibo-theme-noir .fibo-reset * {
-  padding: 0;
-  border-style: none;
-  border-width: 0;
-  border-radius: 0;
-  background-color: transparent;
-  background-image: none;
-  box-shadow: none;
-  outline: none;
-  min-height: 0;
-  height: auto;
-  font-size: inherit;
-  font-weight: inherit;
-  letter-spacing: normal;
-  text-transform: none;
-  color: inherit;
+  all: unset;
+  box-sizing: border-box;
 }

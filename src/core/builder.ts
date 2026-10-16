@@ -92,8 +92,8 @@ export abstract class FiboBuilder {
   protected _hug = false;
 
   /**
-   * Drop the built-in chrome (padding, border, fill, radius, shadow, fixed height, type size).
-   * Layout (flex, width, gap) stays. Chain `.style()`, `.px()`, `.border()` after this to put back only what you want.
+   * Unset every CSS property on this component and what it renders inside.
+   * Chain `.style()`, `.px()`, `.flex()` and the rest after this to put back only what you want.
    */
   protected _resetStyle = false;
 

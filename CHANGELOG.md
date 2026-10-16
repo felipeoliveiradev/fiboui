@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.6.3] - 2026-10-16
+
+### Changed
+
+- **`.resetStyle()`** — unsets every CSS property on the component and its contents, including flex, width, gap, and type. Chain any style after it to put back only what you want.
+
 ## [2.6.2] - 2026-10-16
 
 ### Added
