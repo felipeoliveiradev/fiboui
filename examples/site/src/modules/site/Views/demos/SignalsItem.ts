@@ -1,26 +1,19 @@
-import type { PseudoStateBuilder } from 'fiboui/core'
-import { Column, Row } from 'fiboui/layout'
-import { Box } from 'fiboui/structure'
-import { Text } from 'fiboui/content'
-import { Button } from 'fiboui/interactive'
-import { chalk, line, muted, pink } from '../../theme'
+import type { ListEntity, PseudoStateBuilder } from 'fiboui'
+import { Column, Row, Box, Text, Button } from 'fiboui'
+import { chalk, muted, pink } from '../../theme'
 import { point } from '../ui'
 import { removeTodo, toggleTodo, type Todo } from './SignalsViewModel'
 
-export function todoRow(item: Todo, last: boolean) {
+export function todoRow(item: ListEntity<Todo>) {
   return Row()
-    .key(item.id)
+    .key(item._id)
     .width('100%')
     .gap(12)
-    .padding('12px 0')
     .crossAxisAlignment('center')
-    .css({
-      borderBottom: last ? 'none' : line,
-    })
     .children([
       point(
         Button('')
-          .key(`check-${item.id}`)
+          .key(`check-${item._id}`)
           .variant('raw')
           .width(22)
           .height(22)
@@ -33,7 +26,7 @@ export function todoRow(item: Todo, last: boolean) {
             if (!item.done) state.borderColor(pink)
           })
           .pressEffect('shrink')
-          .onPress(() => toggleTodo(item.id)),
+          .onPress(() => toggleTodo(item._id)),
       ).children(
         item.done
           ? [
@@ -55,9 +48,7 @@ export function todoRow(item: Todo, last: boolean) {
             .fontWeight(700)
             .letterSpacing('0.02em')
             .color(item.done ? muted : chalk)
-            .css({
-              textDecoration: item.done ? 'line-through' : 'none',
-            }),
+            .textDecoration(item.done ? 'line-through' : 'none'),
           Text(item.done ? 'Done' : 'Open')
             .fontSize(9)
             .letterSpacing('0.14em')
@@ -66,7 +57,7 @@ export function todoRow(item: Todo, last: boolean) {
         ]),
       point(
         Button('✕')
-          .key(`rm-${item.id}`)
+          .key(`rm-${item._id}`)
           .variant('raw')
           .width(32)
           .height(32)
@@ -81,7 +72,7 @@ export function todoRow(item: Todo, last: boolean) {
             state.color(chalk).bg('rgba(255,45,138,0.25)')
           })
           .pressEffect('shrink')
-          .onPress(() => removeTodo(item.id)),
+          .onPress(() => removeTodo(item._id)),
       ),
     ])
 }

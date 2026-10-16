@@ -1,9 +1,7 @@
-import { Column, Row } from 'fiboui/layout'
-import { Box } from 'fiboui/structure'
-import { Text } from 'fiboui/content'
-import { Button } from 'fiboui/interactive'
+import { Column, Row, Box, Text, Button } from 'fiboui'
 import { chalk, lime } from '../theme'
-import { go, point } from './ui'
+import { navigate } from '../route'
+import { point } from './ui'
 
 export function logoMark(unit = 9, light = chalk) {
   const side = unit * 2 + 1
@@ -35,7 +33,7 @@ export function logoLockup() {
       .flexShrink('0')
       .justifyContent('flex-start')
       .alignItems('center')
-      .onPress(() => go('#root')),
+      .onPress(() => navigate('home')),
   ).children([
     Row()
       .hug()

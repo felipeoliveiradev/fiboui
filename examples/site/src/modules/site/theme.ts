@@ -1,4 +1,4 @@
-import { extendTheme, noirTheme } from 'fiboui/theme'
+import { extendTheme, noirTheme } from 'fiboui'
 
 export const ink = '#0a0a0a'
 export const paper = '#ffffff'

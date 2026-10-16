@@ -1,5 +1,4 @@
-import { Column, Container } from 'fiboui/layout'
-import { Box } from 'fiboui/structure'
+import { Column, Container, Box } from 'fiboui'
 import { ink } from '../../theme'
 import { CatalogView } from './CatalogView'
 import { CartView } from './CartView'

@@ -1,10 +1,5 @@
-import type { FiboChild, PseudoStateBuilder } from 'fiboui/core'
-import { scrollTo } from 'fiboui/core'
-import { openExternal } from 'fiboui'
-import { Column, Row } from 'fiboui/layout'
-import { Box } from 'fiboui/structure'
-import { Text } from 'fiboui/content'
-import { Button } from 'fiboui/interactive'
+import type { FiboChild, PseudoStateBuilder } from 'fiboui'
+import { scrollTo, openExternal, Column, Row, Box, Text, Button } from 'fiboui'
 import { closeMenu } from '../state'
 import { ink, muted, red } from '../theme'
 

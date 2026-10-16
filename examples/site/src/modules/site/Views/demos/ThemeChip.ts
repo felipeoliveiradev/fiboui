@@ -1,7 +1,4 @@
-import { Row } from 'fiboui/layout'
-import { Box } from 'fiboui/structure'
-import { Text } from 'fiboui/content'
-import { Button } from 'fiboui/interactive'
+import { Row, Box, Text, Button } from 'fiboui'
 import { chalk, muted, pink } from '../../theme'
 import { tones, type Tone } from './ThemeConstants'
 import { accent, selectTone } from './ThemeViewModel'

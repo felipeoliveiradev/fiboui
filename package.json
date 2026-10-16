@@ -1,6 +1,6 @@
 {
   "name": "fiboui",
-  "version": "2.5.0",
+  "version": "2.6.1",
   "description": "Flutter/SwiftUI-inspired React UI — fluent builders, signals, and themes. https://fiboui.vercel.app",
   "type": "module",
   "main": "./dist/index.js",

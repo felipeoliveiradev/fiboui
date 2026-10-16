@@ -1,5 +1,4 @@
-import { signal } from 'fiboui/core'
-import { bindHotkeys, writeClipboard } from 'fiboui'
+import { signal, bindHotkeys, writeClipboard } from 'fiboui'
 
 export const menuOpen = signal(false)
 export const nyc = signal('')

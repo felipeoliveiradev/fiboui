@@ -1,5 +1,5 @@
-import type { PseudoStateBuilder } from 'fiboui/core'
-import { Button } from 'fiboui/interactive'
+import type { PseudoStateBuilder } from 'fiboui'
+import { Button } from 'fiboui'
 import { chalk, pink } from '../../theme'
 import type { ButtonKind } from './BuildersConstants'
 

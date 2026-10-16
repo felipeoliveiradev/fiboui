@@ -1,6 +1,4 @@
-import { Column, Row } from 'fiboui/layout'
-import { Box } from 'fiboui/structure'
-import { Text } from 'fiboui/content'
+import { Column, Row, Box, Text } from 'fiboui'
 import { chalk, lime, line, muted, pink } from '../../theme'
 import { actions, caption, eyebrow, facts, title } from './BuildersConstants'
 import { variantButton } from './BuildersButton'
@@ -47,9 +45,7 @@ export function BuildersView() {
               .flex('1')
               .gap(6)
               .padding('0 14px')
-              .css({
-                borderLeft: index === 0 ? 'none' : line,
-              })
+              .borderLeft(index === 0 ? 'none' : line)
               .children([
                 Text(fact.label)
                   .fontSize(9)

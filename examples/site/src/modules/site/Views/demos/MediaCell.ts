@@ -1,6 +1,4 @@
-import { Column, Row } from 'fiboui/layout'
-import { Box } from 'fiboui/structure'
-import { Text } from 'fiboui/content'
+import { Column, Row, Box, Text } from 'fiboui'
 import { chalk, lime, muted, pink } from '../../theme'
 
 const line = '1px solid rgba(255,255,255,0.16)'

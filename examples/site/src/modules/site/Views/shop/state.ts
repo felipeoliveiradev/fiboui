@@ -1,4 +1,4 @@
-import { signal } from 'fiboui/core'
+import { listSignal, signal } from 'fiboui'
 import { productById, products } from './data'
 
 export type ShopScreen = 'catalog' | 'product' | 'cart' | 'checkout' | 'success'
@@ -20,16 +20,12 @@ export const query = signal('')
 export const sortBy = signal<SortBy>('featured')
 export const saleOnly = signal(false)
 export const gridMode = signal<GridMode>('standard')
-export const cart = signal<CartLine[]>([])
+export const cart = listSignal<CartLine>([])
 export const selectedSize = signal('M')
 export const selectedQty = signal(1)
 export const shipMethod = signal<ShipMethod>('standard')
 
-/** Form fields — TextField/Textarea own these; do not bindSignal them on a parent that remounts inputs. */
-export const checkoutName = signal('')
-export const checkoutEmail = signal('')
-export const checkoutAddress = signal('')
-export const orderNote = signal('')
+/** Set from the checkout form on submit. Fields themselves stay uncontrolled. */
 export const newsletter = signal(true)
 export const orderId = signal('')
 
@@ -102,13 +98,11 @@ export function addToCart() {
   const size = selectedSize.value
   const qty = selectedQty.value
   const key = lineKey(id, size)
-  const existing = cart.value.find((line) => line.key === key)
+  const existing = cart.find((line) => line.key === key)
   if (existing) {
-    cart.value = cart.value.map((line) =>
-      line.key === key ? { ...line, qty: Math.min(9, line.qty + qty) } : line,
-    )
+    cart.update(existing._id, { qty: Math.min(9, existing.qty + qty) })
   } else {
-    cart.value = [...cart.value, { key, productId: id, size, qty }]
+    cart.add({ key, productId: id, size, qty })
   }
 }
 
@@ -117,17 +111,15 @@ export function setLineQty(key: string, qty: number) {
     removeLine(key)
     return
   }
-  cart.value = cart.value.map((line) =>
-    line.key === key ? { ...line, qty: Math.min(9, qty) } : line,
-  )
+  cart.update((line) => line.key === key, { qty: Math.min(9, qty) })
 }
 
 export function removeLine(key: string) {
-  cart.value = cart.value.filter((line) => line.key !== key)
+  cart.remove((line) => line.key === key)
 }
 
 export function clearCart() {
-  cart.value = []
+  cart.clear()
 }
 
 export function cartCount() {
@@ -176,22 +168,16 @@ export function catalogProducts() {
   return list
 }
 
-export function placeOrder() {
-  const name = checkoutName.value.trim()
-  const email = checkoutEmail.value.trim()
-  const address = checkoutAddress.value.trim()
-  if (!name || !email || !address || cart.value.length === 0) return false
+export function placeOrder(drops: boolean) {
+  if (cart.value.length === 0) return false
+  newsletter.value = drops
   orderId.value = `FB-${Date.now().toString(36).toUpperCase()}`
-  cart.value = []
+  cart.clear()
   screen.value = 'success'
   return true
 }
 
 export function resetShop() {
-  checkoutName.value = ''
-  checkoutEmail.value = ''
-  checkoutAddress.value = ''
-  orderNote.value = ''
   newsletter.value = true
   orderId.value = ''
   openCatalog()

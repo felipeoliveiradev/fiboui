@@ -31,3 +31,4 @@ examples/ssr-fixtures/test-results
 examples/ssr-fixtures/playwright-report
 .cache
 /*.tgz
+.vercel

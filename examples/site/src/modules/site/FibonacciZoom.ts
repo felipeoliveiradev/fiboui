@@ -7,7 +7,7 @@
  */
 
 import { createElement } from 'react'
-import { Box } from 'fiboui/structure'
+import { Box } from 'fiboui'
 
 /** CodePen uses 1.027/frame — slower for a calmer hero loop */
 const GROW = 1.008

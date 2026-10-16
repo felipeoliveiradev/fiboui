@@ -1,67 +1,95 @@
-# FiboUI for Cursor / VS Code
+# FiboUI
 
-Makes fluent FiboUI trees easier to navigate — the same job Flutter’s Dart theme does with nesting guides and closing labels.
+Editor support for [FiboUI](https://fiboui.vercel.app) fluent builders in VS Code and Cursor. It adds closing labels, Enter indent for chains, lineage marks on `.children` blocks, factory and chain-method completions, snippets, and the **FiboUI Noir** dark theme.
+
+Works in TypeScript, TSX, JavaScript, and JSX.
 
 ## Features
 
-| Feature | What you get |
-|---------|----------------|
-| **Closing labels** | Grey `// Column` / `// List` / `// Form` after multi-line fluent closes (Dart-style) — `.children` / `.items` blocks **and** chain ends like `List().…itemHover(…)` |
-| **Auto-indent** | Enter in fluent chains keeps continuation indent and nests inside `.children` / callbacks |
-| **Lineage guides** | Coloured left border on multi-line `.children([…])` blocks |
-| **Autocomplete** | Factories (`Column`, `Row`, …) + chain methods (`.children`, `.padding`, …) |
-| **Snippets** | `fcol`, `frow`, `fscaffold`, `fbox`, `fcard`, `fbtn`, `ftxt`, `fch`, … |
-| **Theme** | **FiboUI Noir** — dark canvas with strong multi-colour indent + bracket guides |
+**Closing labels.** After the last `)` of a multi-line fluent chain, a grey italic decoration reads `// Column` (or the factory / method name). The label sits at the end of the chain, not beside the opening call. Color is `#71717A`, italic. Single-line chains such as `Box().height(8)` stay unlabeled.
 
-## Install (Cursor)
+Labels cover:
 
-From the fiboui repo:
+- Multi-line `.children([ … ])` and `.items([ … ])` closes, named after the chain root (`Column`, `List`, `Form`, …).
+- A factory plus `.method(…)` links when the last `)` is on a different line from the factory (`// List` at the end of `List().variant(…).itemHover(…)`).
+- A multi-line method argument that is not the chain end (for example `// itemStyle`).
 
-```bash
-# symlink into Cursor extensions (dev)
-ln -sfn "$(pwd)/extensions/vscode-fiboui" \
-  "$HOME/.cursor/extensions/felipeoliveiradev.fiboui-0.1.0"
+**Auto-indent.** With `fiboui.autoIndent` on, Enter inside a fluent chain adjusts the next line (continuation dots, children/items arrays, and `itemStyle` / `itemHover` callbacks).
+
+**Lineage guides.** A left-edge mark on each multi-line `.children([ … ])` block. Toggle with **FiboUI: Toggle Lineage Guides**.
+
+**Autocomplete.** Two completion kinds:
+
+- PascalCase **factories** (`Column`, `Row`, `Button`, …) as class items, when the file imports `fiboui`.
+- **Chain methods** after `.` (`.children`, `.padding`, …) as method items, when the file imports `fiboui` or the caret is already in a builder chain.
+
+There is no separate function completion kind.
+
+**Snippets.** Prefixes in `snippets/fiboui.json` for the same four languages.
+
+**Theme.** **FiboUI Noir** (`vs-dark`). Indent guides and bracket-pair guides are one gray (`#3F3F46`). The active guide is teal (`#4EC9B0`).
+
+## Install from the Marketplace
+
+After the extension is published:
+
+```text
+ext install felipeoliveiradev.fiboui
 ```
 
-Then **Developer: Reload Window**.
+Or open Extensions and search for **FiboUI**.
 
-Or open the folder and press F5 (“Run Extension”) for an Extension Development Host.
+A gallery screenshot of the editor is not included in this package. After **Developer: Reload Window**, capture one from a fluent `.tsx` file if you want it on the Marketplace page.
 
-### Theme
+## Theme
 
-Command Palette → **Preferences: Color Theme** → **FiboUI Noir**.
+1. Command Palette → **Preferences: Color Theme** → **FiboUI Noir**.
+2. Command Palette → **Developer: Reload Window**.
 
-Recommended with the theme (already hinted via defaults for TS/TSX):
-
-- Sticky Scroll on
-- Indentation guides on
-- Bracket pair colorization + guides on
+Language defaults for TS, TSX, JS, and JSX turn on full auto-indent, indentation guides, and bracket-pair guides. TypeScript and TSX also turn on sticky scroll.
 
 ## Settings
 
-| Setting | Default | |
-|---------|---------|---|
-| `fiboui.closingLabels` | `true` | Closing `// Name` labels |
-| `fiboui.closingLabels.minDepth` | `1` | Min nesting before labels show |
+| Setting | Default | What it does |
+|---------|---------|----------------|
+| `fiboui.closingLabels` | `true` | Grey italic `// Name` after multi-line fluent closes |
+| `fiboui.closingLabels.minDepth` | `1` | Minimum nesting depth before a label is shown |
 | `fiboui.autoIndent` | `true` | Enter adjusts indent in fluent chains |
-| `fiboui.lineageGuides` | `true` | `.children` block borders |
-| `fiboui.completions` | `true` | Factory / chain completions |
+| `fiboui.lineageGuides` | `true` | Left-edge marks on multi-line `.children([ … ])` blocks |
+| `fiboui.completions` | `true` | Factory and chain-method suggestions |
 
 Commands: **FiboUI: Toggle Closing Labels**, **FiboUI: Toggle Lineage Guides**.
 
-### Auto-indent
+## Snippets
 
-When `fiboui.autoIndent` is on, pressing **Enter** in TS/TSX/JS/JSX adjusts the new line for fluent builders:
+| Prefix | Inserts |
+|--------|---------|
+| `fcol` | `Column()` with alignment, spacing, and `.children([ … ])` |
+| `frow` | `Row()` with alignment and `.children([ … ])` |
+| `fscaffold` | `Scaffold()` with `headerBar` and `.children([ … ])` |
+| `fbox` | `Box().padding(…).children([ … ])` |
+| `fcard` | `Card()` with padding, a `Text`, and `.children` |
+| `fcenter` | `Center().children([ … ])` |
+| `fbtn` | `Button()` with `variant` and `onPress` |
+| `ftxt` | `Text(…).fontSize(…)` |
+| `ffield` | `TextField()` with `placeholder` and `onChange` |
+| `ftile` | `ListTile()` with title, subtitle, chevron, and `onPress` |
+| `fscroll` | `ScrollView().children([ … ])` |
+| `fch` | `.children([ … ])` |
 
-| Previous line ends with… | New line indent |
-|--------------------------|-----------------|
-| `.children([` / `.items([` | +1 level (inside the array) |
-| `Factory()` (e.g. `Column()`) | +1 level (continuation for `.method`) |
-| `  .gap(12)` (chain line) | same level (next `.method`) |
-| `.itemStyle((s) =>` / `.itemHover((h) =>` | +1 level (callback body) |
-| `.method(` (unclosed) | +1 level (inside args) |
+Each prefix also accepts a longer alias where one exists (`fibocolumn`, `fiborow`, `fiboscaffold`, `fibobox`, `fibocard`, `fibobutton`, `fibotext`, `fibotextfield`, `fibolisttile`, `fibochildren`).
 
-Example after a few Enters:
+## Auto-indent
+
+When `fiboui.autoIndent` is on, Enter in TS, TSX, JS, or JSX adjusts the new line:
+
+| Previous line ends with | New line indent |
+|-------------------------|-----------------|
+| `.children([` or `.items([` | +1 level (inside the array) |
+| `Factory()` (for example `Column()`), and the next line is empty or starts with `.` | +1 level (continuation for `.method`) |
+| A chain line such as `.gap(12)`, and the next line is empty or starts with `.` | Same level (next `.method`) |
+| `.itemStyle((s) =>` or `.itemHover((h) =>` | +1 level (callback body) |
+| An unclosed `.method(` | +1 level (inside the arguments) |
 
 ```ts
 Column()
@@ -72,26 +100,22 @@ Column()
       .children([
 ```
 
-Language defaults also set `editor.autoIndent: "full"` for TS/TSX/JS/JSX so bracket indent for `()` / `[]` stays on.
+Language defaults also set `editor.autoIndent` to `full` so bracket indent for `()` and `[]` stays on.
 
-## Snippets
+## Local development install
 
-Type in a `.tsx` / `.ts` file:
+From the fiboui repo, symlink this folder into Cursor (or VS Code) extensions:
 
-- `fcol` → `Column().children([…])`
-- `frow` → `Row().children([…])`
-- `fscaffold` → `Scaffold()…`
-- `fch` → `.children([…])`
+```bash
+ln -sfn "$(pwd)/extensions/vscode-fiboui" \
+  "$HOME/.cursor/extensions/felipeoliveiradev.fiboui-0.1.0"
+```
 
-## Notes
+Then **Developer: Reload Window**.
 
-- Closing labels only appear on **multi-line** fluent closes (avoids noise on `Box().height(8)`). That includes multi-line `.children([…])` / `.items([…])`, whole Factory chains that span lines (`List().variant(…).itemHover(…)`), and multi-line chain method callbacks (e.g. `// itemStyle`).
-- Completions activate when the file imports `fiboui` or the caret is inside a builder-looking chain.
-- True L-shaped Flutter “tree guides” are painted by the Dart analyzer; this extension approximates that with indent guides + lineage borders + labels. Good enough for fluent TS without a custom language server.
+Or open `extensions/vscode-fiboui` and press F5 (**Run Extension**) to launch an Extension Development Host.
 
-## Develop
-
-Pure JS — no build step. Edit `src/`, reload the window.
+The extension is plain JavaScript. There is no build step. Edit `src/` and reload the window.
 
 ```bash
 node src/closingLabels.test.js

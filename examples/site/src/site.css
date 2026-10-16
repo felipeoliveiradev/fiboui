@@ -1,5 +1,59 @@
 /* Site extras — hero motion uses fiboui springs, not CSS transitions. */
 
+/* Signals todo: same hairline as the old rows, none under the last item. */
+.signals-todo > *:last-child {
+  border-bottom: none !important;
+}
+
+/* Playground editor: typed glyphs stay invisible so the FiboUI highlight shows through. */
+.play-code,
+.play-code textarea {
+  height: 100%;
+  margin: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+.play-code textarea {
+  color: #f4f4f5;
+  -webkit-text-fill-color: transparent;
+  caret-color: #f4f4f5;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 22px;
+  padding: 0 16px 0 48px;
+  resize: none;
+  white-space: pre;
+  overflow: auto;
+}
+.play-code textarea::selection {
+  background: rgba(78, 201, 176, 0.28);
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+.play-highlight {
+  padding-top: 0;
+}
+.play-suggest {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  line-height: 22px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.36);
+}
+.play-suggest::-webkit-scrollbar {
+  width: 10px;
+}
+.play-suggest::-webkit-scrollbar-thumb {
+  background: #6e6e78;
+}
+@media (max-width: 800px) {
+  .play-split {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+    height: calc(100vh - 48px);
+  }
+}
+
 /* ── Fibo Store: dark retail skin over fiboui defaults ── */
 .shop-skin .fibo-banner {
   border: none !important;
@@ -141,4 +195,15 @@
 .shop-skin .fibo-progress,
 .shop-skin [class*='progress'] {
   border-radius: 0 !important;
+}
+
+/* Published TextField locks the host at 56px, so the error paints under the next control. */
+.fibo-textfield-container.h-14:has(.fibo-field-error:not([style*='display: none'])) {
+  margin-bottom: 1.25rem;
+}
+.fibo-textfield-container.h-14 .fibo-field-error {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1;
 }

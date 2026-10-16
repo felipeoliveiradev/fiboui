@@ -256,9 +256,15 @@ class ButtonBuilder extends FiboBuilder {
   }
 
   /**
-   * HTML button type. Named `htmlType` because builders already expose React's
-   * element `.type` (stampRenderable) — that property must stay the component.
+   * HTML button type. `.type('submit')` is what people write inside a Form.
+   * React still reads `element.type` as the component: a string sets this,
+   * a props object renders the button.
    */
+  type(value: 'button' | 'submit' | 'reset'): this {
+    this._htmlType = value;
+    return this;
+  }
+
   htmlType(value: 'button' | 'submit' | 'reset'): this {
     this._htmlType = value;
     return this;

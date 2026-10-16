@@ -1,5 +1,4 @@
-import { Column, Row } from 'fiboui/layout'
-import { Text } from 'fiboui/content'
+import { Column, Row, Text } from 'fiboui'
 
 const mono = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace'
 const keyword =

@@ -1,4 +1,4 @@
-import { signal } from 'fiboui/core'
+import { signal } from 'fiboui'
 import type { Tone } from './ThemeConstants'
 
 export const accent = signal<Tone>('pink')

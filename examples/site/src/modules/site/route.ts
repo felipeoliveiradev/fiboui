@@ -1,16 +1,18 @@
-import { signal } from 'fiboui/core'
+import { signal } from 'fiboui'
 
-export type AppRoute = 'home' | 'shop'
+export type AppRoute = 'home' | 'shop' | 'play'
 
 function pathToRoute(path: string): AppRoute {
   const clean = path.replace(/\/+$/, '') || '/'
-  return clean === '/shop' ? 'shop' : 'home'
+  if (clean === '/shop') return 'shop'
+  if (clean === '/play') return 'play'
+  return 'home'
 }
 
 export const route = signal<AppRoute>(pathToRoute(window.location.pathname))
 
 export function navigate(to: AppRoute) {
-  const path = to === 'shop' ? '/shop' : '/'
+  const path = to === 'shop' ? '/shop' : to === 'play' ? '/play' : '/'
   if (window.location.pathname !== path) {
     window.history.pushState({}, '', path)
   }

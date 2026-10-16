@@ -39,6 +39,7 @@ const TextFieldInner = React.memo((props: any) => {
   const {
     containerClass,
     containerStyle,
+    fieldClass,
     label,
     error,
     mask,
@@ -150,7 +151,10 @@ const TextFieldInner = React.memo((props: any) => {
   return React.createElement(
     'div',
     { className: containerClass, style: containerStyle },
-    React.createElement('div', { className: 'relative w-full h-full flex items-center' }, [
+    React.createElement(
+      'div',
+      { className: fieldClass || 'relative w-full h-14 flex items-center' },
+      [
       leadingIcon &&
         React.createElement(
           'div',
@@ -237,6 +241,7 @@ const TextFieldInner = React.memo((props: any) => {
       {
         id: props.name ? `fibo-err-${props.name}` : undefined,
         className: 'fibo-field-error text-[var(--fibo-error,#b91c1c)] text-xs mt-1 ml-1',
+        role: 'alert',
         style: { display: error ? '' : 'none' },
       },
       error || ''
@@ -352,19 +357,23 @@ class TextFieldBuilder extends FiboBuilder {
   }
 
   build(): ReactElement {
-    let baseClasses = 'fibo-textfield-container w-full h-14 relative';
+    let fieldClasses = 'relative w-full h-14 flex items-center';
 
     if (this._variant === 'outlined') {
-      baseClasses += ' border border-[var(--fibo-outline)] rounded-[4px] bg-transparent';
+      fieldClasses += ' border border-[var(--fibo-outline)] rounded-[4px] bg-transparent';
     } else {
-      baseClasses +=
+      fieldClasses +=
         ' bg-[var(--fibo-surface-variant)] rounded-t-[4px] border-b border-[var(--fibo-outline)]';
     }
 
-    const containerClass = twMerge(baseClasses, ...this._classNames);
+    const containerClass = twMerge(
+      'fibo-textfield-container w-full flex flex-col',
+      ...this._classNames
+    );
 
     const props = {
       containerClass,
+      fieldClass: fieldClasses,
       containerStyle: this.getStyle(),
       label: this._label,
       error: this._error,

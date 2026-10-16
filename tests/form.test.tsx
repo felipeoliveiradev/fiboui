@@ -176,6 +176,41 @@ describe('Form', () => {
     expect(screen.queryByText('Need title')).toBeNull()
   })
 
+  it('flexDirection(row) overrides the default column', () => {
+    render(
+      Form()
+        .flexDirection('row')
+        .children([
+          TextField().name('title').placeholder('RowTitle'),
+          Button('Save').submit(),
+        ])
+        .build() as any
+    )
+    const form = screen.getByPlaceholderText('RowTitle').closest('form')!
+    expect(form.style.flexDirection).toBe('row')
+  })
+
+  it('align, justify, wrap and gap land on the form style', () => {
+    render(
+      Form()
+        .flexDirection('row')
+        .alignItems('center')
+        .justifyContent('between')
+        .flexWrap('wrap')
+        .gap(8)
+        .children([
+          TextField().name('title').placeholder('AxisTitle'),
+          Button('Save').submit(),
+        ])
+        .build() as any
+    )
+    const form = screen.getByPlaceholderText('AxisTitle').closest('form')!
+    expect(form.style.alignItems).toBe('center')
+    expect(form.style.justifyContent).toBe('space-between')
+    expect(form.style.flexWrap).toBe('wrap')
+    expect(form.style.gap).toBe('8px')
+  })
+
   it('FormControl.set toggles checkbox checked from string values', () => {
     const form = document.createElement('form')
     const box = document.createElement('input')

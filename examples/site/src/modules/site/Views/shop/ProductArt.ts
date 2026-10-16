@@ -1,6 +1,4 @@
-import { Column, Row } from 'fiboui/layout'
-import { Box } from 'fiboui/structure'
-import { Text } from 'fiboui/content'
+import { Column, Row, Box, Text } from 'fiboui'
 import { chalk, muted } from '../../theme'
 import { inkOn, type Product } from './data'
 

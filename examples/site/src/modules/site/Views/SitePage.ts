@@ -1,5 +1,4 @@
-import { FiboStyles, MotionStyles } from 'fiboui/core'
-import { Box } from 'fiboui/structure'
+import { FiboStyles, MotionStyles, Box } from 'fiboui'
 import { menuOpen } from '../state'
 import { face, siteTheme } from '../theme'
 import { Home } from './Home'

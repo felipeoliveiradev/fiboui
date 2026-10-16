@@ -1,10 +1,25 @@
 {
   "name": "fiboui",
   "displayName": "FiboUI",
-  "description": "Cursor/VS Code support for FiboUI fluent builders — closing labels, auto-indent, autocomplete, snippets, and a Noir theme with strong nesting guides.",
+  "description": "VS Code and Cursor support for FiboUI fluent builders: closing labels, auto-indent, lineage guides, factory and chain autocomplete, snippets, and the FiboUI Noir theme.",
   "version": "0.1.0",
   "publisher": "felipeoliveiradev",
   "license": "MIT",
+  "icon": "images/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/felipeoliveiradev/fiboui.git"
+  },
+  "homepage": "https://fiboui.vercel.app",
+  "bugs": {
+    "url": "https://github.com/felipeoliveiradev/fiboui/issues"
+  },
+  "qna": "marketplace",
+  "markdown": "github",
+  "galleryBanner": {
+    "color": "#09090B",
+    "theme": "dark"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -16,10 +31,15 @@
   ],
   "keywords": [
     "fiboui",
-    "flutter",
+    "fluent",
     "builder",
-    "react",
-    "closing labels"
+    "typescript",
+    "javascript",
+    "snippets",
+    "theme",
+    "noir",
+    "closing labels",
+    "auto indent"
   ],
   "activationEvents": [
     "onLanguage:typescript",

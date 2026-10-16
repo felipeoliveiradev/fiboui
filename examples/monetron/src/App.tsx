@@ -1,8 +1,4 @@
-import { signal, computed } from 'fiboui/core';
-import { Column, Row } from 'fiboui/layout';
-import { Text, Avatar, Progress } from 'fiboui/content';
-import { Button } from 'fiboui/interactive';
-import { Box, ListTile } from 'fiboui/structure';
+import { signal, computed, Column, Row, Text, Avatar, Progress, Button, Box, ListTile } from 'fiboui';
 import * as I from './icons';
 
 export const started = signal(false);

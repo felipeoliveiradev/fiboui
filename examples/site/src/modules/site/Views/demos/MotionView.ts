@@ -1,6 +1,4 @@
-import { Column } from 'fiboui/layout'
-import { Box } from 'fiboui/structure'
-import { Text } from 'fiboui/content'
+import { Column, Box, Text } from 'fiboui'
 import { lime, line } from '../../theme'
 import { staggerMs, tiles } from './MotionConstants'
 import { motionTile } from './MotionTile'

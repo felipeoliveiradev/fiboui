@@ -1,7 +1,4 @@
-import { Column, Row } from 'fiboui/layout'
-import { Box } from 'fiboui/structure'
-import { Text, Label } from 'fiboui/content'
-import { TextField } from 'fiboui/interactive'
+import { Column, Row, Box, Text, Label, TextField } from 'fiboui'
 import { chalk, line, muted, pink } from '../../theme'
 import { query } from './state'
 

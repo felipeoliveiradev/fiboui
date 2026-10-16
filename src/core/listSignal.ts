@@ -57,22 +57,72 @@ function applyPatch<T extends object>(
   return { ...item, ...rest, _id: item._id };
 }
 
+function itemMatches<T extends object>(
+  item: ListEntity<T>,
+  query: string,
+  keys?: (keyof T)[]
+): boolean {
+  const record = item as Record<string, unknown>;
+  const fields =
+    keys && keys.length > 0
+      ? keys.map((k) => record[k as string])
+      : Object.entries(record)
+          .filter(([k]) => k !== '_id')
+          .map(([, v]) => v);
+  return fields.some((v) => {
+    if (v == null) return false;
+    if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
+      return String(v).toLowerCase().includes(query);
+    }
+    return false;
+  });
+}
+
 /**
  * Reactive list — auto-stamps a UUID `_id` on every object.
  * Use `_id` for update/remove/find; your domain fields stay free of ids.
+ *
+ * `view('ship')` shows a subset. The full list stays in memory, so
+ * `view('')` shows every item again. `add` always writes to the full list.
  *
  * ```ts
  * const todos = listSignal<{ title: string }>([])
  * todos.add({ title: 'Ship' })              // → { title: 'Ship', _id: '…' }
  * todos.update(todo._id, { title: 'Done' })
+ * todos.view('done')
+ * todos.view('')
  * todos.remove(todo._id)
  * ```
  */
 export class ListSignal<T extends object> extends Signal<ListEntity<T>[]> {
   private _$length?: ComputedSignal<number>;
+  /** Full list. `.value` is this array, or a filtered slice while `view` is set. */
+  private _source: ListEntity<T>[];
+  private _query = '';
+  private _keys?: (keyof T)[];
 
   constructor(initial: Array<T | ListEntity<T>> = []) {
-    super((Array.isArray(initial) ? initial : []).map((item) => ensureListId(item)));
+    const source = (Array.isArray(initial) ? initial : []).map((item) => ensureListId(item));
+    super(source);
+    this._source = source;
+  }
+
+  override get value(): ListEntity<T>[] {
+    return super.value;
+  }
+
+  /** Replaces the full list, then reapplies the current view. */
+  override set value(next: ListEntity<T>[]) {
+    this._source = next.map((item) => ensureListId(item));
+    this.publish();
+  }
+
+  /** Push the visible rows. An empty query shows `_source` itself. */
+  private publish() {
+    const view = this._query
+      ? this._source.filter((item) => itemMatches(item, this._query, this._keys))
+      : this._source;
+    super.value = view;
   }
 
   get length(): number {
@@ -104,16 +154,16 @@ export class ListSignal<T extends object> extends Signal<ListEntity<T>[]> {
     return this;
   }
 
-  /** Append items — each gets `_id` if not already set. */
+  /** Append items — each gets `_id` if not already set. Writes the full list. */
   add(...items: Array<T | ListEntity<T>>): this {
     if (items.length === 0) return this;
-    this.value = [...this.value, ...items.map((item) => ensureListId(item))];
+    this.value = [...this._source, ...items.map((item) => ensureListId(item))];
     return this;
   }
 
-  /** Insert at index (clamped). */
+  /** Insert at index (clamped) in the full list. */
   insert(index: number, item: T | ListEntity<T>): this {
-    const next = [...this.value];
+    const next = [...this._source];
     const i = Math.max(0, Math.min(index, next.length));
     next.splice(i, 0, ensureListId(item));
     this.value = next;
@@ -129,7 +179,7 @@ export class ListSignal<T extends object> extends Signal<ListEntity<T>[]> {
     patch: Partial<T> | ((item: ListEntity<T>) => T | ListEntity<T>)
   ): this {
     let changed = false;
-    const next = this.value.map((item, index) => {
+    const next = this._source.map((item, index) => {
       if (!matchItem(item, index, matcher)) return item;
       changed = true;
       return applyPatch(item, patch);
@@ -140,10 +190,10 @@ export class ListSignal<T extends object> extends Signal<ListEntity<T>[]> {
 
   /** Replace the first match (keeps original `_id` unless `item` already has one). */
   replace(matcher: ListMatcher<ListEntity<T>>, item: T | ListEntity<T>): this {
-    const idx = this.value.findIndex((it, i) => matchItem(it, i, matcher));
+    const idx = this._source.findIndex((it, i) => matchItem(it, i, matcher));
     if (idx < 0) return this;
-    const prev = this.value[idx];
-    const next = [...this.value];
+    const prev = this._source[idx];
+    const next = [...this._source];
     next[idx] = hasOwnId(item as object)
       ? (item as ListEntity<T>)
       : ({ ...(item as object), _id: prev._id } as ListEntity<T>);
@@ -153,8 +203,8 @@ export class ListSignal<T extends object> extends Signal<ListEntity<T>[]> {
 
   /** Remove by `_id` / `id` / predicate. Alias: `delete`. */
   remove(matcher: ListMatcher<ListEntity<T>>): this {
-    const next = this.value.filter((item, index) => !matchItem(item, index, matcher));
-    if (next.length !== this.value.length) {
+    const next = this._source.filter((item, index) => !matchItem(item, index, matcher));
+    if (next.length !== this._source.length) {
       this.value = next;
     }
     return this;
@@ -165,41 +215,38 @@ export class ListSignal<T extends object> extends Signal<ListEntity<T>[]> {
   }
 
   find(matcher: ListMatcher<ListEntity<T>>): ListEntity<T> | undefined {
-    return this.value.find((item, index) => matchItem(item, index, matcher));
+    return this._source.find((item, index) => matchItem(item, index, matcher));
   }
 
+  /**
+   * Show only rows that match `query`. The full list stays stored.
+   * `view('')` or `view()` shows every item again.
+   * `keys` limits the match to those fields (`['text']`).
+   */
+  view(query = '', keys?: (keyof T)[]): this {
+    this._query = query.trim().toLowerCase();
+    this._keys = keys;
+    this.publish();
+    return this;
+  }
+
+  /** One-shot search. Does not change what `.value` shows. */
   search(query: string, keys?: (keyof T)[]): ListEntity<T>[] {
     const q = query.trim().toLowerCase();
-    if (!q) return [...this.value];
-
-    return this.value.filter((item) => {
-      const record = item as Record<string, unknown>;
-      const fields =
-        keys && keys.length > 0
-          ? keys.map((k) => record[k as string])
-          : Object.entries(record)
-              .filter(([k]) => k !== '_id')
-              .map(([, v]) => v);
-      return fields.some((v) => {
-        if (v == null) return false;
-        if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
-          return String(v).toLowerCase().includes(q);
-        }
-        return false;
-      });
-    });
+    if (!q) return [...this._source];
+    return this._source.filter((item) => itemMatches(item, q, keys));
   }
 
   filter(predicate: (item: ListEntity<T>, index: number) => boolean): ListEntity<T>[] {
-    return this.value.filter(predicate);
+    return this._source.filter(predicate);
   }
 
   map<U>(fn: (item: ListEntity<T>, index: number) => U): U[] {
-    return this.value.map(fn);
+    return this._source.map(fn);
   }
 
   move(from: number, to: number): this {
-    const list = [...this.value];
+    const list = [...this._source];
     if (from < 0 || from >= list.length) return this;
     const target = Math.max(0, Math.min(to, list.length - 1));
     if (from === target) return this;

@@ -1,20 +1,12 @@
-import type { PseudoStateBuilder, Signal } from 'fiboui/core'
-import { Column, Row } from 'fiboui/layout'
-import { Box } from 'fiboui/structure'
-import { Label, Text } from 'fiboui/content'
-import { Button, Checkbox, RadioGroup, TextField } from 'fiboui/interactive'
+import type { PseudoStateBuilder } from 'fiboui'
+import { Column, Row, Box, Label, Text, Form, email, minLength, required, Button, Checkbox, RadioGroup, TextField } from 'fiboui'
 import { chalk, lime, line, muted, pink } from '../../theme'
 import { point } from '../ui'
 import { freeShipFrom, money, productById } from './data'
 import {
   cart,
   cartTotal,
-  checkoutAddress,
-  checkoutEmail,
-  checkoutName,
-  newsletter,
   openCart,
-  orderNote,
   placeOrder,
   setShipMethod,
   shipMethod,
@@ -70,21 +62,28 @@ export function CheckoutView() {
         .gap(28)
         .lg({ gridTemplateColumns: '1.15fr 0.85fr', gap: '40px', alignItems: 'start' })
         .children([
-          Column()
+          Form()
             .width('100%')
             .gap(14)
-            .crossAxisAlignment('stretch')
+            .validation({
+              name: [required('Name is required'), minLength(2, 'At least 2 characters')],
+              email: [required('Email is required'), email('Enter a valid email')],
+              address: [required('Address is required'), minLength(8, 'Add a full address')],
+            })
+            .beforeSubmit(() => cart.value.length > 0)
+            .onSubmit((values) => {
+              placeOrder(values.newsletter === 'on')
+            })
             .children([
               Label('Full name').required().fontSize(10).letterSpacing('0.14em').textTransform('uppercase').color(muted),
-              shopField(checkoutName, 'Alex Builder'),
+              shopField('name', 'Alex Builder'),
               Label('Email').required().fontSize(10).letterSpacing('0.14em').textTransform('uppercase').color(muted),
-              shopField(checkoutEmail, 'alex@studio.dev'),
+              shopField('email', 'alex@studio.dev'),
               Label('Shipping address').required().fontSize(10).letterSpacing('0.14em').textTransform('uppercase').color(muted),
-              shopField(checkoutAddress, 'Street, city, country, postal code'),
+              shopField('address', 'Street, city, country, postal code'),
               Label('Order note').fontSize(10).letterSpacing('0.14em').textTransform('uppercase').color(muted),
-              // Textarea is string-controlled (no Signal) — use TextField signal binding so typing does not remount/stick.
               TextField()
-                .value(orderNote)
+                .name('note')
                 .placeholder('Gift message, delivery notes…')
                 .variant('outlined')
                 .width('100%')
@@ -92,7 +91,7 @@ export function CheckoutView() {
                 .bg('#080808')
                 .color(chalk)
                 .borderRadius('0')
-                .css({ border: line, borderRadius: '0' }),
+                .border(line),
               Column()
                 .gap(8)
                 .children([
@@ -115,18 +114,13 @@ export function CheckoutView() {
                         .onChange((value) => setShipMethod(value as 'standard' | 'express')),
                     ]),
                 ]),
-              Box()
-                .bindSignal(newsletter)
-                .children(() => [
-                  Checkbox()
-                    .checked(newsletter.value)
-                    .label('Email me drops and restocks')
-                    .onChange((checked) => {
-                      newsletter.value = checked
-                    }),
-                ]),
+              Checkbox()
+                .name('newsletter')
+                .checked(true)
+                .label('Email me drops and restocks'),
               point(
                 Button('Place order')
+                  .submit()
                   .variant('raw')
                   .width('100%')
                   .height(54)
@@ -142,9 +136,6 @@ export function CheckoutView() {
                     state.bg('#ffffff').color('#000000')
                   })
                   .pressEffect('shrink')
-                  .onPress(() => {
-                    placeOrder()
-                  }),
               ),
               Text('Demo checkout — no card is charged. Fill required fields to place the order.')
                 .fontSize(12)
@@ -160,9 +151,9 @@ export function CheckoutView() {
     ])
 }
 
-function shopField(value: Signal<string>, placeholder: string) {
+function shopField(name: string, placeholder: string) {
   return TextField()
-    .value(value)
+    .name(name)
     .placeholder(placeholder)
     .variant('outlined')
     .width('100%')
@@ -170,10 +161,7 @@ function shopField(value: Signal<string>, placeholder: string) {
     .bg('#080808')
     .color(chalk)
     .borderRadius('0')
-    .css({
-      border: line,
-      borderRadius: '0',
-    })
+    .border(line)
 }
 
 function orderSummary() {

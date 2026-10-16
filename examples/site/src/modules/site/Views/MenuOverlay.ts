@@ -1,7 +1,5 @@
-import type { PseudoStateBuilder } from 'fiboui/core'
-import { Column, Row } from 'fiboui/layout'
-import { Box } from 'fiboui/structure'
-import { Button } from 'fiboui/interactive'
+import type { PseudoStateBuilder } from 'fiboui'
+import { Column, Row, Box, Button } from 'fiboui'
 import { navigate } from '../route'
 import { closeMenu, menuOpen, setChapter } from '../state'
 import { chalk, pink } from '../theme'
@@ -11,6 +9,7 @@ import { go, point } from './ui'
 const items = [
   ['Home', 'root'],
   ['Work', 'work'],
+  ['Play', 'play'],
   ['Shop', 'shop'],
   ['Why', 'why'],
   ['Start', 'contact'],
@@ -104,11 +103,12 @@ function menuItem(label: string, id: string, index: number) {
       })
       .onPress(() => {
         closeMenu()
-        if (id === 'root') go('#root')
+        if (id === 'root') navigate('home')
         else if (id === 'why') go('#switch')
         else if (id === 'contact') go('#contact')
         else if (id === 'work') go('#work')
         else if (id === 'shop') navigate('shop')
+        else if (id === 'play') navigate('play')
         else {
           setChapter(id as 'builders')
           go('#work')

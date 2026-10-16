@@ -185,14 +185,41 @@ export abstract class FiboBuilder {
     return this;
   }
 
-  flexDirection(direction: 'row' | 'column'): this {
-    this._classNames.push(`flex-${direction}`);
+  /** Inline layout wins over a host that hardcodes flex on the element (Form, Scaffold). */
+  protected layoutStyle(patch: CSSProperties): this {
+    this._style = { ...this._style, ...patch };
     return this;
   }
 
-  alignItems(alignment: 'start' | 'center' | 'end' | 'stretch'): this {
-    this._classNames.push(`items-${alignment}`);
-    return this;
+  flexDirection(direction: 'row' | 'column'): this {
+    return this.layoutStyle({ flexDirection: direction });
+  }
+
+  alignItems(alignment: 'start' | 'center' | 'end' | 'stretch' | 'baseline'): this {
+    const map: Record<string, CSSProperties['alignItems']> = {
+      start: 'flex-start',
+      center: 'center',
+      end: 'flex-end',
+      stretch: 'stretch',
+      baseline: 'baseline',
+    };
+    return this.layoutStyle({ alignItems: map[alignment] });
+  }
+
+  alignSelf(alignment: 'start' | 'center' | 'end' | 'stretch' | 'baseline' | 'auto'): this {
+    const map: Record<string, CSSProperties['alignSelf']> = {
+      auto: 'auto',
+      start: 'flex-start',
+      center: 'center',
+      end: 'flex-end',
+      stretch: 'stretch',
+      baseline: 'baseline',
+    };
+    return this.layoutStyle({ alignSelf: map[alignment] });
+  }
+
+  flexWrap(wrap: 'wrap' | 'nowrap' | 'wrap-reverse'): this {
+    return this.layoutStyle({ flexWrap: wrap });
   }
 
   /**
@@ -214,110 +241,101 @@ export abstract class FiboBuilder {
       | 'spaceAround'
       | 'spaceEvenly'
   ): this {
-    const map: Record<string, string> = {
-      start: 'justify-start',
-      center: 'justify-center',
-      end: 'justify-end',
-      between: 'justify-between',
-      around: 'justify-around',
-      evenly: 'justify-evenly',
-      'space-between': 'justify-between',
-      'space-around': 'justify-around',
-      'space-evenly': 'justify-evenly',
-      spaceBetween: 'justify-between',
-      spaceAround: 'justify-around',
-      spaceEvenly: 'justify-evenly',
+    const map: Record<string, CSSProperties['justifyContent']> = {
+      start: 'flex-start',
+      center: 'center',
+      end: 'flex-end',
+      between: 'space-between',
+      around: 'space-around',
+      evenly: 'space-evenly',
+      'space-between': 'space-between',
+      'space-around': 'space-around',
+      'space-evenly': 'space-evenly',
+      spaceBetween: 'space-between',
+      spaceAround: 'space-around',
+      spaceEvenly: 'space-evenly',
     };
-    this._classNames.push(map[justify] ?? `justify-${justify}`);
-    return this;
+    return this.layoutStyle({ justifyContent: map[justify] ?? (justify as CSSProperties['justifyContent']) });
   }
 
   flex(value?: number | string): this {
-    this._classNames.push('flex');
-    if (value !== undefined) {
-      if (typeof value === 'number') {
-        const cls = _styleManager.register('flex', String(value));
-        this._classNames.push(cls);
-      } else if (typeof value === 'string') {
-        this._classNames.push(`flex-${value}`);
-      }
-    }
-    return this;
+    const tokens: Record<string, string> = {
+      '1': '1 1 0%',
+      auto: '1 1 auto',
+      initial: '0 1 auto',
+      none: 'none',
+    };
+    const flex =
+      value === undefined
+        ? undefined
+        : typeof value === 'number'
+          ? String(value)
+          : (tokens[value] ?? value);
+    return this.layoutStyle({ display: 'flex', ...(flex !== undefined ? { flex } : {}) });
   }
 
   grid(): this {
-    this._classNames.push('grid');
-    return this;
+    return this.layoutStyle({ display: 'grid' });
   }
 
   inlineFlex(): this {
-    this._classNames.push('inline-flex');
-    return this;
+    return this.layoutStyle({ display: 'inline-flex' });
   }
 
   inlineGrid(): this {
-    this._classNames.push('inline-grid');
-    return this;
+    return this.layoutStyle({ display: 'inline-grid' });
   }
 
   block(): this {
-    this._classNames.push('block');
-    return this;
+    return this.layoutStyle({ display: 'block' });
   }
 
   inlineBlock(): this {
-    this._classNames.push('inline-block');
-    return this;
+    return this.layoutStyle({ display: 'inline-block' });
   }
 
   hidden(): this {
-    this._classNames.push('hidden');
-    return this;
+    return this.layoutStyle({ display: 'none' });
   }
 
   center(): this {
-    this._classNames.push('flex', 'items-center', 'justify-center');
-    return this;
+    return this.layoutStyle({
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    });
   }
 
   centerX(): this {
-    this._classNames.push('flex', 'justify-center');
-    return this;
+    return this.layoutStyle({ display: 'flex', justifyContent: 'center' });
   }
 
   centerY(): this {
-    this._classNames.push('flex', 'items-center');
-    return this;
+    return this.layoutStyle({ display: 'flex', alignItems: 'center' });
   }
 
   spaceBetween(): this {
-    this._classNames.push('justify-between');
-    return this;
+    return this.layoutStyle({ justifyContent: 'space-between' });
   }
 
   spaceAround(): this {
-    this._classNames.push('justify-around');
-    return this;
+    return this.layoutStyle({ justifyContent: 'space-around' });
   }
 
   spaceEvenly(): this {
-    this._classNames.push('justify-evenly');
-    return this;
+    return this.layoutStyle({ justifyContent: 'space-evenly' });
   }
 
   fill(): this {
-    this._classNames.push('w-full', 'h-full');
-    return this;
+    return this.layoutStyle({ width: '100%', height: '100%' });
   }
 
   fillWidth(): this {
-    this._classNames.push('w-full');
-    return this;
+    return this.layoutStyle({ width: '100%' });
   }
 
   fillHeight(): this {
-    this._classNames.push('h-full');
-    return this;
+    return this.layoutStyle({ height: '100%' });
   }
 
   square(size: number | string): this {
@@ -693,18 +711,12 @@ export abstract class FiboBuilder {
   }
 
   gap(value: string | number): this {
-    if (typeof value === 'number') {
-      const cls = _styleManager.register('gap', `${value}px`);
-      this._classNames.push(cls);
-    }
-    else if (typeof value === 'string' && value.startsWith('gap-')) {
+    if (typeof value === 'string' && value.startsWith('gap-')) {
       this._classNames.push(value);
+      return this;
     }
-    else {
-      const cls = _styleManager.register('gap', value);
-      this._classNames.push(cls);
-    }
-    return this;
+    const gap = typeof value === 'number' ? `${value}px` : value;
+    return this.layoutStyle({ gap });
   }
 
   clean(): this {

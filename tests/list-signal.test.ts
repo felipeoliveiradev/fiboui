@@ -38,6 +38,21 @@ describe('listSignal', () => {
     expect(todos.value[0]).toEqual({ title: 'B', _id: 'fixed' })
   })
 
+  it('keeps the full list while a view is active', () => {
+    const todos = listSignal<Todo>([])
+    todos.add({ title: 'Ship' }, { title: 'Docs' })
+
+    todos.view('ship', ['title'])
+    expect(todos.value.map((t) => t.title)).toEqual(['Ship'])
+    expect(todos.map((t) => t.title)).toEqual(['Ship', 'Docs'])
+
+    todos.add({ title: 'Readme' })
+    expect(todos.value.map((t) => t.title)).toEqual(['Ship'])
+
+    todos.view('')
+    expect(todos.value.map((t) => t.title)).toEqual(['Ship', 'Docs', 'Readme'])
+  })
+
   it('notifies subscribers on mutation', () => {
     const list = listSignal<{ n: number }>([{ n: 1 }])
     const seen: number[] = []

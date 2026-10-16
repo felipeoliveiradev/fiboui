@@ -1,4 +1,4 @@
-import { signal } from 'fiboui/core'
+import { signal } from 'fiboui'
 
 export type Width = 'small' | 'medium' | 'large'
 

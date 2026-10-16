@@ -4,6 +4,28 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.6.1] - 2026-10-16
+
+### Added
+
+- **Layout on every builder** — `flexDirection`, `alignItems`, `alignSelf`, `flexWrap`, `justifyContent`, `flex`, `grid`, `inlineFlex`, `inlineGrid`, `block`, `inlineBlock`, `hidden`, `center`, `centerX`, `centerY`, `spaceBetween`, `spaceAround`, `spaceEvenly`, `fill`, `fillWidth`, `fillHeight`, and a numeric `gap` write inline style. They work on `Form` and the other builders directly.
+- **Chain methods** — `borderBottom`, `fontWeight`, `maxHeight`, `pointerEvents`, `textTransform`, and `zIndex`.
+
+### Fixed
+
+- **Spacer** — a bare `Spacer()` grows (`flex: 1 1 0%`, stretched). `.height()` and `.width()` stay fixed. `.flex(n)` sets the grow factor and does not turn the spacer into a flex container.
+
+## [2.6.0] - 2026-10-16
+
+### Added
+
+- **`listSignal.view(query, keys?)`** — filters what `.value` shows and keeps the full list in memory. `view('')` shows every item again. `add` / `update` / `remove` always write the full list.
+
+### Fixed
+
+- **TextField** — the error message sits under the 56px field instead of being painted over by the next control.
+- **Button** — `.type('submit' | 'reset' | 'button')` sets the HTML button type.
+
 ## [2.5.0] - 2026-10-16
 
 ### Added

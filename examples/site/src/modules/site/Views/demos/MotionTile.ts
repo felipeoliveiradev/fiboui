@@ -1,7 +1,5 @@
-import type { PseudoStateBuilder } from 'fiboui/core'
-import { Column, Row } from 'fiboui/layout'
-import { Box } from 'fiboui/structure'
-import { Text } from 'fiboui/content'
+import type { PseudoStateBuilder } from 'fiboui'
+import { Column, Row, Box, Text } from 'fiboui'
 import { chalk, line } from '../../theme'
 import type { MotionTileSpec } from './MotionConstants'
 
