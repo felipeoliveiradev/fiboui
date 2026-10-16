@@ -9,7 +9,7 @@ import {
 } from './interactionEffects';
 import { ensureInteractionFxCss } from './ensureInteractionFx';
 import { formatCssTransition, toTranslate3d } from './smoothInteraction';
-import { camelToKebab, logicalLonghands, normalizeCssValue } from './cssFluent';
+import { camelToKebab, logicalLonghands, normalizeCssValue, type LogicalAxes } from './cssFluent';
 
 const SMOOTH_PROPS: Record<string, string[]> = {
   'background-color': ['background-color'],
@@ -20,6 +20,14 @@ const SMOOTH_PROPS: Record<string, string[]> = {
   'box-shadow': ['box-shadow'],
   'border-radius': ['border-radius'],
 };
+
+/**
+ * The constructor returns a proxy that accepts any CSS method.
+ * Declare the axes plus `boxShadow` (the class method is `.shadow()`).
+ */
+export interface PseudoStateBuilder extends LogicalAxes {
+  boxShadow(value: string | number): this;
+}
 
 export class PseudoStateBuilder {
   private pseudoState: string;

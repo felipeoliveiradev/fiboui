@@ -43,6 +43,6 @@ describe('listSignal', () => {
     const seen: number[] = []
     list.subscribe((v) => seen.push(v.length))
     list.add({ n: 2 })
-    expect(seen.at(-1)).toBe(2)
+    expect(seen[seen.length - 1]).toBe(2)
   })
 })

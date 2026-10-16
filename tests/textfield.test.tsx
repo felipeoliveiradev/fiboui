@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import React from 'react'
 import { TextField } from '../src/interactive/TextField'
 import { Signal } from '../src/core/state'
 

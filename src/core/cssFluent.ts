@@ -52,7 +52,7 @@ export function kebabToCamel(prop: string): string {
  * Names that are not CSS properties (Flutter / RN / Tailwind-ish).
  * Each expands to real longhands so they work on every builder, itemStyle and :hover.
  */
-const LOGICAL_CSS: Record<string, string[]> = {
+const LOGICAL_CSS = {
   paddingHorizontal: ['paddingLeft', 'paddingRight'],
   paddingVertical: ['paddingTop', 'paddingBottom'],
   paddingX: ['paddingLeft', 'paddingRight'],
@@ -83,10 +83,50 @@ const LOGICAL_CSS: Record<string, string[]> = {
   insetY: ['top', 'bottom'],
   gapX: ['columnGap'],
   gapY: ['rowGap'],
-};
+} as const;
+
+export type LogicalCssName = keyof typeof LOGICAL_CSS;
+
+/**
+ * Fluent axes (`paddingHorizontal`, `borderHorizontal`, …).
+ * `this` keeps the chain typed without a circular alias.
+ */
+export interface LogicalAxes {
+  paddingHorizontal(value: string | number): this;
+  paddingVertical(value: string | number): this;
+  paddingX(value: string | number): this;
+  paddingY(value: string | number): this;
+  px(value: string | number): this;
+  py(value: string | number): this;
+  marginHorizontal(value: string | number): this;
+  marginVertical(value: string | number): this;
+  marginX(value: string | number): this;
+  marginY(value: string | number): this;
+  mx(value: string | number): this;
+  my(value: string | number): this;
+  borderHorizontal(value: string | number): this;
+  borderVertical(value: string | number): this;
+  borderX(value: string | number): this;
+  borderY(value: string | number): this;
+  borderWidthHorizontal(value: string | number): this;
+  borderWidthVertical(value: string | number): this;
+  borderColorHorizontal(value: string | number): this;
+  borderColorVertical(value: string | number): this;
+  roundedTop(value: string | number): this;
+  roundedBottom(value: string | number): this;
+  roundedLeft(value: string | number): this;
+  roundedRight(value: string | number): this;
+  insetHorizontal(value: string | number): this;
+  insetVertical(value: string | number): this;
+  insetX(value: string | number): this;
+  insetY(value: string | number): this;
+  gapX(value: string | number): this;
+  gapY(value: string | number): this;
+}
 
 export function logicalLonghands(method: string): string[] | null {
-  return LOGICAL_CSS[method] ?? null;
+  const hit = (LOGICAL_CSS as Record<string, readonly string[] | undefined>)[method];
+  return hit ? [...hit] : null;
 }
 
 /**
@@ -117,10 +157,11 @@ export type CssFluentMethods = {
   style(extra: CSSProperties): CssFluentProxy;
 };
 
-export type CssFluentProxy = CssFluentMethods & {
-  toStyle(): CSSProperties;
-  toCSSString(): string;
-};
+export type CssFluentProxy = CssFluentMethods &
+  LogicalAxes & {
+    toStyle(): CSSProperties;
+    toCSSString(): string;
+  };
 
 type CssFluentHost = {
   setProp(prop: string, value: string | number): void;
