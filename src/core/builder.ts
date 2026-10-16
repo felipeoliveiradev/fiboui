@@ -35,7 +35,7 @@ import {
   promoteSurfaceLonghandsInStyle,
   withRestTransform,
 } from './smoothInteraction';
-import { camelToKebab, logicalLonghands, normalizeCssValue } from './cssFluent';
+import { camelToKebab, logicalLonghands, normalizeCssValue, type LogicalAxes } from './cssFluent';
 
 
 /** Typical sticky header height used when `.sticky(0)` / `.sticky(true)` has no size. */
@@ -1833,9 +1833,10 @@ type KnownKeys<T> = {
   [K in keyof T]: string extends K ? never : number extends K ? never : K
 } extends { [_ in keyof T]: infer U } ? U : never;
 
-type StyleBuilder<T> = T & {
-  [K in KnownKeys<CSSProperties>]-?: (value: CSSProperties[K]) => StyleBuilder<T>;
-} & ReactElement;
+type StyleBuilder<T> = T &
+  LogicalAxes & {
+    [K in KnownKeys<CSSProperties>]-?: (value: CSSProperties[K]) => StyleBuilder<T>;
+  } & ReactElement;
 
 export function createBuilder<T extends FiboBuilder, Args extends any[]>(
   BuilderClass: new (...args: Args) => T
