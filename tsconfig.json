@@ -30,6 +30,9 @@
     "paths": {
       "@/*": [
         "src/*"
+      ],
+      "fiboui": [
+        "./src/index.ts"
       ]
     }
   },
