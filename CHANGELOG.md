@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.6.4] - 2026-10-16
+
+### Fixed
+
+- **Reset field** — a `resetStyle()` field hugs its text, so `borderBottom` sits on the letters instead of the bottom of the parent. The input fills the field, and its height follows `.lineHeight()`.
+- **Form row** — `.flexDirection('row')` centers the controls on the line.
+
 ## [2.6.3] - 2026-10-16
 
 ### Changed

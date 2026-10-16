@@ -138,7 +138,9 @@ const TextFieldInner = React.memo((props: any) => {
     className: bare
       ? 'fibo-textfield-input w-full bg-transparent outline-none'
       : 'fibo-textfield-input w-full h-full bg-transparent outline-none py-2.5 text-sm',
-    style: { paddingLeft, paddingRight },
+    style: bare
+      ? { padding: 0, display: 'block', width: '100%', height: '1lh', lineHeight: 'inherit' }
+      : { paddingLeft, paddingRight },
     type: effectiveType,
     onChange: handleChange,
     onBlur: handleBlur,
@@ -156,7 +158,10 @@ const TextFieldInner = React.memo((props: any) => {
     { className: containerClass, style: containerStyle },
     React.createElement(
       'div',
-      { className: fieldClass || 'relative w-full h-14 flex items-center' },
+      {
+        className: fieldClass || 'relative w-full h-14 flex items-center',
+        style: bare ? { display: 'block', width: '100%' } : undefined,
+      },
       [
       leadingIcon &&
         React.createElement(
@@ -382,7 +387,9 @@ class TextFieldBuilder extends FiboBuilder {
       containerClass,
       fieldClass: fieldClasses,
       bare: this.isReset(),
-      containerStyle: this.getStyle(),
+      containerStyle: this.isReset()
+        ? { height: 'fit-content', ...this.getStyle() }
+        : this.getStyle(),
       label: this._label,
       error: this._error,
       leadingIcon: this._leadingIcon,

@@ -207,3 +207,41 @@
   left: 0;
   z-index: 1;
 }
+
+/* Same rules as the library reset. The site loads published CSS, so these
+   stay until that CSS ships. */
+.fibo-reset,
+.fibo-theme-material .fibo-reset,
+.fibo-theme-web .fibo-reset,
+.fibo-theme-cupertino .fibo-reset,
+.fibo-theme-noir .fibo-reset {
+  height: fit-content;
+}
+.fibo-reset input,
+.fibo-reset textarea,
+.fibo-reset select,
+.fibo-theme-material .fibo-reset input,
+.fibo-theme-material .fibo-reset textarea,
+.fibo-theme-material .fibo-reset select,
+.fibo-theme-web .fibo-reset input,
+.fibo-theme-web .fibo-reset textarea,
+.fibo-theme-web .fibo-reset select,
+.fibo-theme-cupertino .fibo-reset input,
+.fibo-theme-cupertino .fibo-reset textarea,
+.fibo-theme-cupertino .fibo-reset select,
+.fibo-theme-noir .fibo-reset input,
+.fibo-theme-noir .fibo-reset textarea,
+.fibo-theme-noir .fibo-reset select {
+  display: block;
+  width: 100%;
+  height: 1lh;
+  line-height: inherit;
+  padding: 0;
+}
+.fibo-reset button,
+.fibo-theme-material .fibo-reset button,
+.fibo-theme-web .fibo-reset button,
+.fibo-theme-cupertino .fibo-reset button,
+.fibo-theme-noir .fibo-reset button {
+  display: block;
+}

@@ -4,7 +4,7 @@ import { TopBar } from '../NavBar'
 import { codeField, codeHighlight, codeStatus, showCode } from './editor'
 import { codeSuggest } from './suggest'
 import { buttonExample, formExample, helloExample } from './examples'
-import { output, runPreview } from './state'
+import { output, reactCode, runPreview, showReact } from './state'
 import { scheme, typeScale } from './scheme'
 
 const hairline = `1px solid ${scheme.outlineVariant}`
@@ -83,8 +83,18 @@ function samples(): FiboChild {
       sample('Hello', helloExample),
       sample('Button', buttonExample),
       sample('Form', formExample),
-      Button('Run')
+      Button('React')
         .marginLeft('auto')
+        .height(28)
+        .paddingHorizontal(12)
+        .bg(scheme.surfaceContainerHigh)
+        .color(scheme.onSurface)
+        .border(`1px solid ${scheme.outline}`)
+        .rounded(6)
+        .fontSize(typeScale.labelMedium.fontSize)
+        .fontWeight(typeScale.labelMedium.fontWeight)
+        .onPress(() => showReact()),
+      Button('Run')
         .height(28)
         .paddingHorizontal(14)
         .bg(scheme.primary)
@@ -134,6 +144,7 @@ function previewPane(): FiboChild {
       Box()
         .width('100%')
         .flex('1')
+        .flexDirection('column')
         .minHeight(0)
         .overflow('auto')
         .bindSignal(output)
@@ -149,5 +160,64 @@ function previewPane(): FiboChild {
           }
           return [node as FiboChild]
         }),
+      reactPane(),
     ])
+}
+
+function reactPane(): FiboChild {
+  return Box()
+    .width('100%')
+    .bindSignal(reactCode)
+    .children(() => {
+      const code = reactCode.value
+      if (!code) return []
+      return [
+        Column()
+          .width('100%')
+          .height('45vh')
+          .minHeight(0)
+          .bg(scheme.surfaceContainerLowest)
+          .borderTop(hairline)
+          .children([
+            Row()
+              .height(36)
+              .padding('0 12px')
+              .alignItems('center')
+              .borderBottom(hairline)
+              .children([
+                Text('React')
+                  .color(scheme.onSurfaceVariant)
+                  .fontSize(typeScale.labelSmall.fontSize)
+                  .fontWeight(typeScale.labelSmall.fontWeight)
+                  .letterSpacing(typeScale.labelSmall.letterSpacing)
+                  .textTransform('uppercase'),
+                Button('Close')
+                  .marginLeft('auto')
+                  .height(24)
+                  .paddingHorizontal(10)
+                  .bg(scheme.surfaceContainerHigh)
+                  .color(scheme.onSurface)
+                  .border(`1px solid ${scheme.outline}`)
+                  .rounded(6)
+                  .fontSize(typeScale.labelSmall.fontSize)
+                  .onPress(() => {
+                    reactCode.value = null
+                  }),
+              ]),
+            Box()
+              .width('100%')
+              .flex('1')
+              .minHeight(0)
+              .overflow('auto')
+              .padding(16)
+              .children(
+                Text(code)
+                  .color(scheme.onSurface)
+                  .fontSize(13)
+                  .fontFamily('ui-monospace, SFMono-Regular, Menlo, Consolas, monospace')
+                  .css({ whiteSpace: 'pre' }),
+              ),
+          ]),
+      ]
+    })
 }

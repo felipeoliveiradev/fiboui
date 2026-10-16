@@ -25,8 +25,11 @@ describe('TextField (uncontrolled)', () => {
   it('resetStyle drops the built-in padding, border, and height', () => {
     render(TextField().placeholder('Bare').resetStyle().build() as any)
     const input = screen.getByPlaceholderText('Bare') as HTMLInputElement
-    expect(input.style.paddingLeft).toBe('0px')
-    expect(input.style.paddingRight).toBe('0px')
+    expect(input.style.padding).toBe('0px')
+    expect(input.style.height).toBe('1lh')
+    expect(input.style.lineHeight).toBe('inherit')
+    expect(input.style.width).toBe('100%')
+    expect(input.style.display).toBe('block')
     expect(input.className).not.toContain('py-2.5')
     const field = input.parentElement
     expect(field?.className).not.toContain('border-b')

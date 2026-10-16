@@ -286,10 +286,14 @@ const FormInner = React.memo((props: {
     ...rest
   } = props;
 
+  const direction = style?.flexDirection ?? 'column';
   const mergedStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
     width: '100%',
+    ...(direction === 'row' || direction === 'row-reverse'
+      ? { alignItems: 'center' }
+      : null),
     ...(gap != null
       ? { gap: typeof gap === 'number' ? `${gap}px` : gap }
       : null),

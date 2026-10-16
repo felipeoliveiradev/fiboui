@@ -5,8 +5,11 @@ import { fileURLToPath } from 'node:url'
 export default defineConfig(({ command }) => ({
   plugins: [react()],
   css: { postcss: { plugins: [] } },
-  server: { port: 4176, strictPort: true },
-  preview: { port: 4176, strictPort: true },
+  server: { host: true, port: 4176, strictPort: true },
+  preview: { host: true, port: 4176, strictPort: true },
+  optimizeDeps: {
+    exclude: ['fiboui'],
+  },
   resolve: {
     dedupe: ['react', 'react-dom'],
     alias:
