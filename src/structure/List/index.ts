@@ -1,10 +1,60 @@
-import React, { ReactElement, ReactNode, useRef, useState, useLayoutEffect, useEffect } from 'react';
+'use client';
+
+import React, {
+  CSSProperties,
+  ReactElement,
+  ReactNode,
+  useRef,
+  useState,
+  useLayoutEffect,
+  useEffect,
+} from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
-import { BaseProps } from '../../core/types';
+import { buildChild } from '../../core/children';
+import { BaseProps, FiboChildren } from '../../core/types';
+import type { BindableSignal } from '../../core/state';
 import { Box } from '../Box';
-import { ListItemPseudoStateBuilder } from './ListItemPseudoStateBuilder';
+import {
+  ListItemPseudoStateBuilder,
+  createListItemPseudoStateBuilder,
+} from './ListItemPseudoStateBuilder';
+import {
+  ListItemStyleBuilder,
+  createListItemStyleBuilder,
+} from './ListItemStyleBuilder';
+import type { CssFluentProxy } from '../../core/cssFluent';
 
 type ListVariant = 'default' | 'card' | 'floating';
+
+/** Render list row: custom renderItem, else builders/elements/primitives as-is. */
+function isListSource<T>(value: unknown): value is BindableSignal<T[]> {
+  return (
+    value != null &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    typeof (value as BindableSignal<T[]>).subscribe === 'function' &&
+    'value' in (value as object)
+  );
+}
+
+function listItemKey(item: unknown, index: number): string {
+  if (item != null && typeof item === 'object' && '_id' in (item as object)) {
+    const id = (item as { _id?: unknown })._id;
+    if (id != null && id !== '') return String(id);
+  }
+  return `item-${index}`;
+}
+
+function resolveListItem<T>(
+  item: T,
+  index: number,
+  renderItem?: (item: T, index: number) => ReactNode
+): ReactNode {
+  if (renderItem) {
+    return buildChild(renderItem(item, index));
+  }
+  return buildChild(item);
+}
 
 const VIRTUALIZATION_THRESHOLD = 100;
 const DEFAULT_ITEM_HEIGHT = 60;
@@ -36,8 +86,15 @@ const ListInner = React.memo((props: any) => {
     direction = 'vertical',
     customItemHover,
     customItemActive,
-    customItemFocus
+    customItemFocus,
+    itemStyle: itemStyleProp,
   } = props;
+
+  const reactId = React.useId();
+  // useId() may include colons (e.g. `:r1:`) — invalid / awkward in CSS selectors & HTML ids.
+  const listInstanceId = reactId.replace(/:/g, '');
+  const listScopeClass = `fibo-list-${listInstanceId}`;
+  const styleElementId = `fibo-list-custom-styles-${listInstanceId}`;
 
   const [scrollOffset, setScrollOffset] = useState(0);
   const [layoutVersion, setLayoutVersion] = useState(0);
@@ -167,35 +224,38 @@ const ListInner = React.memo((props: any) => {
     if (typeof document === 'undefined') return;
     if (!customItemHover && !customItemActive && !customItemFocus) return;
 
-    const styleId = 'fibo-list-custom-styles';
-    let styleElement = document.getElementById(styleId) as HTMLStyleElement;
+    let styleElement = document.getElementById(styleElementId) as HTMLStyleElement | null;
 
     if (!styleElement) {
       styleElement = document.createElement('style');
-      styleElement.id = styleId;
+      styleElement.id = styleElementId;
       document.head.appendChild(styleElement);
     }
 
     let css = '';
+    const scope = `.${listScopeClass}`;
 
     if (customItemHover) {
-      css += `.fibo-list-item-custom-hover:hover { ${withImportant(customItemHover)} }\n`;
+      css += `${scope} .fibo-list-item-custom-hover:hover { ${withImportant(customItemHover)} }\n`;
     }
 
     if (customItemActive) {
-      css += `.fibo-list-item-custom-active:active { ${withImportant(customItemActive)} }\n`;
+      css += `${scope} .fibo-list-item-custom-active:active { ${withImportant(customItemActive)} }\n`;
     }
 
     if (customItemFocus) {
-      css += `.fibo-list-item-custom-focus:focus { ${withImportant(customItemFocus)} }\n`;
+      // Items are divs without tabIndex — :focus never matches; :focus-within
+      // covers focus on nested focusable content (links, buttons, inputs).
+      css += `${scope} .fibo-list-item-custom-focus:focus-within { ${withImportant(customItemFocus)} }\n`;
     }
 
     styleElement.textContent = css;
 
     return () => {
-
+      const el = document.getElementById(styleElementId);
+      if (el) el.remove();
     };
-  }, [customItemHover, customItemActive, customItemFocus]);
+  }, [customItemHover, customItemActive, customItemFocus, listScopeClass, styleElementId]);
 
   const variantStyles: Record<ListVariant, any> = {
     default: { gap: '0px' },
@@ -203,31 +263,38 @@ const ListInner = React.memo((props: any) => {
     floating: { gap: '8px' }
   };
 
-  const itemContainerStyles: Record<ListVariant, any> = resetItemStyles ? {
-    default: {},
-    card: {},
-    floating: {}
-  } : {
-    default: {
-      padding: '12px 16px',
-      borderBottom: separator ? '1px solid #F3F4F6' : 'none',
-      // Transparent via class, not inline — so Tailwind / itemHover bg can win.
-      transition: 'background-color 0.2s ease-out'
-    },
-    card: {
-      padding: '16px',
-      backgroundColor: '#fff',
-      borderRadius: '16px',
-      boxShadow: '0 2px 8px -2px rgba(0,0,0,0.05)',
-      border: '1px solid #F3F4F6',
-      transform: 'translate3d(0, 0, 0)',
-      transition: 'transform 0.2s ease-out, box-shadow 0.2s ease-out'
-    },
-    floating: {
-      padding: '8px 12px',
-      borderRadius: '12px',
-      transition: 'background-color 0.2s ease-out, box-shadow 0.2s ease-out'
-    }
+  const itemStyleOverlay: CSSProperties = itemStyleProp || {};
+
+  const baseItemContainerStyles: Record<ListVariant, CSSProperties> = resetItemStyles
+    ? { default: {}, card: {}, floating: {} }
+    : {
+        default: {
+          padding: '12px 16px',
+          borderBottom: separator ? '1px solid #F3F4F6' : 'none',
+          // Transparent via class, not inline — so Tailwind / itemHover bg can win.
+          transition: 'background-color 0.2s ease-out',
+        },
+        card: {
+          padding: '16px',
+          backgroundColor: '#fff',
+          borderRadius: '16px',
+          boxShadow: '0 2px 8px -2px rgba(0,0,0,0.05)',
+          border: '1px solid #F3F4F6',
+          transform: 'translate3d(0, 0, 0)',
+          transition: 'transform 0.2s ease-out, box-shadow 0.2s ease-out',
+        },
+        floating: {
+          padding: '8px 12px',
+          borderRadius: '12px',
+          transition: 'background-color 0.2s ease-out, box-shadow 0.2s ease-out',
+        },
+      };
+
+  // Variant defaults + universal itemStyle (SwiftUI listRow* / Flutter ListTileTheme).
+  const itemContainerStyles: Record<ListVariant, CSSProperties> = {
+    default: { ...baseItemContainerStyles.default, ...itemStyleOverlay },
+    card: { ...baseItemContainerStyles.card, ...itemStyleOverlay },
+    floating: { ...baseItemContainerStyles.floating, ...itemStyleOverlay },
   };
 
   const customItemClasses: string[] = [];
@@ -251,7 +318,7 @@ const ListInner = React.memo((props: any) => {
       'div',
       {
         ref: containerRef,
-        className: `fibo-list fibo-list-virtualized ${className || ''}`,
+        className: `fibo-list fibo-list-virtualized ${listScopeClass} ${className || ''}`,
         style: {
           height: isHorizontal ? undefined : `${containerHeight}px`,
           width: isHorizontal ? `${containerHeight}px` : undefined,
@@ -289,7 +356,7 @@ const ListInner = React.memo((props: any) => {
         },
         visibleItems.map((item: any, i: number) => {
           const actualIndex = startIndex + i;
-          const renderedItem = renderItem ? renderItem(item, actualIndex) : null;
+          const renderedItem = resolveListItem(item, actualIndex, renderItem);
 
           return React.cloneElement(
             Box()
@@ -298,7 +365,7 @@ const ListInner = React.memo((props: any) => {
               .children(renderedItem)
               .build() as React.ReactElement,
             {
-              key: `item-${actualIndex}`,
+              key: listItemKey(item, actualIndex),
               ref: (el: HTMLDivElement | null) => {
                 if (el) {
                   itemRefs.current.set(actualIndex, el);
@@ -323,7 +390,7 @@ const ListInner = React.memo((props: any) => {
 
   return Box()
     .className(className)
-    .classNames(['flex', direction === 'horizontal' ? 'flex-row' : 'flex-col', 'w-full'])
+    .classNames(['fibo-list', listScopeClass, 'flex', direction === 'horizontal' ? 'flex-row' : 'flex-col', 'w-full'])
     .style({
       ...variantStyles[variant as ListVariant],
       ...style
@@ -335,11 +402,9 @@ const ListInner = React.memo((props: any) => {
             Box()
               .style(itemContainerStyles[variant as ListVariant])
               .classNames(variantClasses[variant as ListVariant])
-              .children(
-                renderItem ? renderItem(item, index) : null
-              )
+              .children(resolveListItem(item, index, renderItem))
               .build(),
-            { key: `item-${index}` }
+            { key: listItemKey(item, index) }
           )
         ),
 
@@ -360,6 +425,8 @@ const ListInner = React.memo((props: any) => {
 
 class ListBuilder<T = any> extends FiboBuilder {
   private _items: T[] = [];
+  /** Live source (`listSignal` / `signal`). Read on each rebuild. */
+  private _source?: BindableSignal<T[]>;
   private _renderItem?: (item: T, index: number) => ReactNode;
   private _variant: ListVariant = 'default';
   private _separator: boolean = false;
@@ -372,12 +439,53 @@ class ListBuilder<T = any> extends FiboBuilder {
   private _customItemHover?: string;
   private _customItemActive?: string;
   private _customItemFocus?: string;
+  /** Universal row chrome — applies to every child wrapper. */
+  private _itemStyle?: CSSProperties;
 
-  items(items: T[]): this {
-    this._items = items;
+  /**
+   * Entries to show.
+   *
+   * - **UI mode** (same as `.children`): `List().items([ListTile()…, Text(…)])`
+   * - **Data mode**: `List().items(rows).renderItem((row) => ListTile().title(row.name))`
+   * - **Live list**: `List().items(listSignal).renderItem((row) => ListTile().title(row.title))`
+   */
+  items(items: T[] | FiboChildren | BindableSignal<T[]>): this {
+    if (isListSource<T>(items)) {
+      this._source = items;
+      this.bindSignal(items);
+      return this;
+    }
+    this._source = undefined;
+    return this.setListEntries(items);
+  }
+
+  /**
+   * UI mode — any builders / nodes (ListTile, Text, Row, …).
+   * Equivalent to `.items([...])` without `renderItem`.
+   */
+  children(children: FiboChildren): this {
+    return this.setListEntries(children);
+  }
+
+  /** Shared path so `.children` and `.items` stay interchangeable for UI. */
+  private setListEntries(entries: T[] | FiboChildren): this {
+    const raw =
+      typeof entries === 'function'
+        ? (entries as () => unknown)()
+        : entries;
+    const arr = (Array.isArray(raw) ? raw : [raw]).filter(
+      (x) => x !== undefined && x !== null && x !== false
+    );
+    this._items = arr as T[];
+    // Keep FiboBuilder._children aligned (devtools / processChildren).
+    super.children(arr as FiboChildren);
     return this;
   }
 
+  /**
+   * Map raw data from `.items(data)` → UI. Skip this when items are already
+   * ListTile / Text / builders (use `.children` or `.items` alone).
+   */
   renderItem(fn: (item: T, index: number) => ReactNode): this {
     this._renderItem = fn;
     return this;
@@ -428,9 +536,49 @@ class ListBuilder<T = any> extends FiboBuilder {
     return this;
   }
 
-  itemHover(callback: ((builder: ListItemPseudoStateBuilder) => void | ListItemPseudoStateBuilder) | string): this {
+  /**
+   * Universal row style (all children).
+   * SwiftUI: `listRowBackground` / `listRowInsets` · Flutter: `ListTileTheme`.
+   *
+   * ```ts
+   * List()
+   *   .itemStyle((s) => s.padding(14).bg('#fff').rounded(12))
+   *   .itemHover((h) => h.bg('#f3f4f6'))
+   *   .children([ListTile().title('A'), ListTile().title('B')])
+   * ```
+   */
+  itemStyle(
+    style:
+      | CSSProperties
+      | ((builder: ListItemStyleBuilder & CssFluentProxy) => void | ListItemStyleBuilder | CssFluentProxy)
+  ): this {
+    if (typeof style === 'function') {
+      const builder = createListItemStyleBuilder();
+      style(builder);
+      this._itemStyle = { ...this._itemStyle, ...builder.toStyle() };
+    } else {
+      this._itemStyle = { ...this._itemStyle, ...style };
+    }
+    return this;
+  }
+
+  /** SwiftUI `listRowBackground` — shorthand for `.itemStyle(s => s.bg(color))`. */
+  itemBackground(color: string): this {
+    return this.itemStyle((s) => s.bg(color));
+  }
+
+  /** SwiftUI `listRowInsets` — shorthand for `.itemStyle(s => s.insets(value))`. */
+  itemInsets(value: number | string): this {
+    return this.itemStyle((s) => s.insets(value));
+  }
+
+  itemHover(
+    callback:
+      | ((builder: ListItemPseudoStateBuilder & CssFluentProxy) => void | ListItemPseudoStateBuilder | CssFluentProxy)
+      | string
+  ): this {
     if (typeof callback === 'function') {
-      const builder = new ListItemPseudoStateBuilder();
+      const builder = createListItemPseudoStateBuilder();
       callback(builder);
       this._customItemHover = builder.toCSSString();
     } else {
@@ -439,9 +587,13 @@ class ListBuilder<T = any> extends FiboBuilder {
     return this;
   }
 
-  itemActive(callback: ((builder: ListItemPseudoStateBuilder) => void | ListItemPseudoStateBuilder) | string): this {
+  itemActive(
+    callback:
+      | ((builder: ListItemPseudoStateBuilder & CssFluentProxy) => void | ListItemPseudoStateBuilder | CssFluentProxy)
+      | string
+  ): this {
     if (typeof callback === 'function') {
-      const builder = new ListItemPseudoStateBuilder();
+      const builder = createListItemPseudoStateBuilder();
       callback(builder);
       this._customItemActive = builder.toCSSString();
     } else {
@@ -450,9 +602,13 @@ class ListBuilder<T = any> extends FiboBuilder {
     return this;
   }
 
-  itemFocus(callback: ((builder: ListItemPseudoStateBuilder) => void | ListItemPseudoStateBuilder) | string): this {
+  itemFocus(
+    callback:
+      | ((builder: ListItemPseudoStateBuilder & CssFluentProxy) => void | ListItemPseudoStateBuilder | CssFluentProxy)
+      | string
+  ): this {
     if (typeof callback === 'function') {
-      const builder = new ListItemPseudoStateBuilder();
+      const builder = createListItemPseudoStateBuilder();
       callback(builder);
       this._customItemFocus = builder.toCSSString();
     } else {
@@ -462,8 +618,9 @@ class ListBuilder<T = any> extends FiboBuilder {
   }
 
   build(): ReactElement {
+    const items = this._source ? this._source.value : this._items;
     const props = {
-      items: this._items,
+      items,
       renderItem: this._renderItem,
       variant: this._variant,
       separator: this._separator,
@@ -476,6 +633,7 @@ class ListBuilder<T = any> extends FiboBuilder {
       customItemHover: this._customItemHover,
       customItemActive: this._customItemActive,
       customItemFocus: this._customItemFocus,
+      itemStyle: this._itemStyle,
       className: this.getClassName(),
       style: this.getStyle()
     };
@@ -484,6 +642,7 @@ class ListBuilder<T = any> extends FiboBuilder {
 }
 
 export const List = createBuilder(ListBuilder);
+export { ListItemStyleBuilder } from './ListItemStyleBuilder';
 
 export interface ListProps<T = any> extends BaseProps {
   items: T[];
@@ -491,4 +650,5 @@ export interface ListProps<T = any> extends BaseProps {
   variant?: ListVariant;
   separator?: boolean;
   containerHeight?: number;
+  itemStyle?: CSSProperties;
 }

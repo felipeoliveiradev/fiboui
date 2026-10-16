@@ -132,7 +132,7 @@ TextField(value?: string) → TextFieldBuilder
 Creates a new `TextField` builder instance.
 
 **Parameters:**
-- `value` (optional): Initial input value
+- `value` (optional): Initial value, written as `defaultValue`. The field is uncontrolled, so typing does not re-render React.
 
 ## Properties
 
@@ -140,29 +140,33 @@ Creates a new `TextField` builder instance.
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.value(value)` | `string` | Sets the input value |
+| `.value(value)` | `string \| Signal<string>` | Initial value (`defaultValue`). A signal patches the DOM input and does not call `setState`. |
 | `.label(text)` | `string` | Sets the floating label text |
 | `.placeholder(text)` | `string` | Sets the placeholder text |
+| `.name(name)` | `string` | Name used by `Form` / `FormData` |
+| `.rules(...rules)` | `FieldRule[]` | Checks collected on submit. See [Form](/components/interactive-form). |
 
 ### Input Type
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.type(type)` | `'text' \| 'password' \| 'email' \| 'number' \| 'tel'` | Sets the input type |
-| `.mask(format)` | `string` | Sets input mask (use `9` for digits) |
+| `.props({ type })` | `'text' \| 'password' \| 'email' \| 'number' \| 'tel'` | DOM input type. `.type()` does not run: `type` is the React element field on every builder. |
+| `.mask(format)` | `string` | Mask written straight onto the input (`9` = digit) |
 
 ### State
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
 | `.disabled(disabled)` | `boolean` | Disables the input |
-| `.error(message)` | `string` | Shows error message below input |
+| `.error(message)` | `string` | Static error line under the input |
+| `.controlled(on)` | `boolean` | `true` keeps React `value` and re-renders on each change |
 
 ### Events
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.onChange(handler)` | `(value: string) => void` | Value change handler |
+| `.onChange(handler)` | `(value: string) => void` | Called on input. Does not by itself re-render the field. |
+| `.onCommit(handler)` | `(value: string) => void` | Called on blur |
 
 ### Inherited from FiboBuilder
 

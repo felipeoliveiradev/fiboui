@@ -1,7 +1,10 @@
+'use client';
+
 import React, { ReactElement, useState, useRef, useEffect, KeyboardEvent } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { twMerge } from 'tailwind-merge';
 import { BaseProps } from '../../core/types';
+import type { FieldRule } from '../Form/validators';
 
 interface Option {
   label: string;
@@ -20,6 +23,14 @@ interface SelectInnerProps {
   disabled?: boolean;
   multiple?: boolean;
   id?: string;
+  name?: string;
+  controlled?: boolean;
+  rules?: FieldRule[];
+}
+
+function serializeSelectValue(value: string | string[] | undefined): string {
+  if (Array.isArray(value)) return value.join(',');
+  return value ?? '';
 }
 
 const SelectInner = React.memo((props: SelectInnerProps) => {
@@ -29,6 +40,7 @@ const SelectInner = React.memo((props: SelectInnerProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const [highlighted, setHighlighted] = useState(0);
     const containerRef = useRef<HTMLDivElement>(null);
+    const hiddenRef = useRef<HTMLInputElement>(null);
 
     const {
         containerClass,
@@ -41,7 +53,16 @@ const SelectInner = React.memo((props: SelectInnerProps) => {
         onChange,
         disabled,
         multiple,
+        name,
+        controlled = false,
+        rules,
     } = props;
+
+    const [localValue, setLocalValue] = useState<string | string[]>(
+      () => value ?? (multiple ? [] : '')
+    );
+
+    const currentValue = controlled ? (value ?? (multiple ? [] : '')) : localValue;
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -53,42 +74,67 @@ const SelectInner = React.memo((props: SelectInnerProps) => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    useEffect(() => {
+        const input = hiddenRef.current;
+        if (!input) return;
+        if (rules) {
+            (input as unknown as { __fiboRules?: FieldRule[] }).__fiboRules = rules;
+        }
+        const host = input.closest('.fibo-textfield-container') as HTMLElement | null;
+        const span = host?.querySelector('.fibo-field-error') as HTMLElement | null;
+        if (host) {
+            (host as unknown as { __fiboShowError?: (msg: string | null) => void }).__fiboShowError = (
+                message
+            ) => {
+                if (!span) return;
+                span.textContent = message ?? '';
+                span.style.display = message ? '' : 'none';
+            };
+        }
+    }, [rules]);
+
     const isSelected = (val: string) => {
         if (multiple) {
-            return Array.isArray(value) && value.includes(val);
+            return Array.isArray(currentValue) && currentValue.includes(val);
         }
-        return value === val;
+        return currentValue === val;
     };
 
     let displayText = '';
     if (multiple) {
-        if (Array.isArray(value) && value.length > 0) {
+        if (Array.isArray(currentValue) && currentValue.length > 0) {
            displayText = options
-               .filter((opt) => value.includes(opt.value))
+               .filter((opt) => currentValue.includes(opt.value))
                .map((opt) => opt.label)
                .join(', ');
         }
     } else {
-        const selectedOption = options.find((opt) => opt.value === value);
+        const selectedOption = options.find((opt) => opt.value === currentValue);
         displayText = selectedOption ? selectedOption.label : '';
     }
 
     const handleSelect = (val: string) => {
         if (disabled) return;
 
+        let next: string | string[];
         if (multiple) {
-            const currentValues = Array.isArray(value) ? [...value] : [];
+            const currentValues = Array.isArray(currentValue) ? [...currentValue] : [];
             const index = currentValues.indexOf(val);
             if (index > -1) {
                 currentValues.splice(index, 1);
             } else {
                 currentValues.push(val);
             }
-            onChange?.(currentValues);
+            next = currentValues;
         } else {
-            onChange?.(val);
+            next = val;
             setIsOpen(false);
         }
+
+        if (!controlled) {
+            setLocalValue(next);
+        }
+        onChange?.(next);
     };
 
     const moveHighlight = (delta: number) => {
@@ -143,6 +189,16 @@ const SelectInner = React.memo((props: SelectInnerProps) => {
           style: containerStyle
       },
       React.createElement('div', { className: 'relative w-full h-full' }, [
+          name
+            ? React.createElement('input', {
+                key: 'hidden',
+                ref: hiddenRef,
+                type: 'hidden',
+                name,
+                value: serializeSelectValue(currentValue),
+              })
+            : null,
+
           React.createElement('button', {
               key: 'trigger',
               id: inputId,
@@ -208,10 +264,14 @@ const SelectInner = React.memo((props: SelectInnerProps) => {
           }))
       ]),
 
-      error && React.createElement(
+      React.createElement(
         'span',
-        { className: 'text-[var(--fibo-error)] text-xs mt-1 ml-1', role: 'alert' },
-        error
+        {
+          className: 'fibo-field-error text-[var(--fibo-error)] text-xs mt-1 ml-1',
+          style: { display: error ? '' : 'none' },
+          role: 'alert',
+        },
+        error || ''
       )
     );
 });
@@ -225,9 +285,21 @@ class SelectBuilder extends FiboBuilder {
   private _multiple: boolean = false;
   private _options: Option[] = [];
   private _onChange?: (value: string | string[]) => void;
+  private _name?: string;
+  private _controlled = false;
+  private _rules?: FieldRule[];
 
   value(val: string | string[]): this {
     this._value = val;
+    return this;
+  }
+
+  /**
+   * Force controlled selection from `.value()` / parent. Default keeps local
+   * selection state so FormData / display update without a parent re-render.
+   */
+  controlled(enabled: boolean = true): this {
+    this._controlled = enabled;
     return this;
   }
 
@@ -238,6 +310,12 @@ class SelectBuilder extends FiboBuilder {
 
   placeholder(val: string): this {
     this._placeholder = val;
+    return this;
+  }
+
+  /** HTML `name` — renders a hidden input so `Form` FormData includes the selection. */
+  name(val: string): this {
+    this._name = val;
     return this;
   }
 
@@ -261,6 +339,12 @@ class SelectBuilder extends FiboBuilder {
     return this;
   }
 
+  /** Rules collected by `Form` on submit (attached to the hidden named input). */
+  rules(...items: FieldRule[]): this {
+    this._rules = items;
+    return this;
+  }
+
   onChange(handler: (value: string | string[]) => void): this {
     this._onChange = handler;
     return this;
@@ -280,6 +364,9 @@ class SelectBuilder extends FiboBuilder {
         disabled: this._disabled,
         multiple: this._multiple,
         onChange: this._onChange,
+        name: this._name,
+        controlled: this._controlled,
+        rules: this._rules,
         ...(this._props as SelectInnerProps)
     };
 
@@ -296,4 +383,5 @@ export interface SelectProps extends BaseProps {
   multiple?: boolean;
   options: Option[];
   onChange?: (value: string | string[]) => void;
+  name?: string;
 }

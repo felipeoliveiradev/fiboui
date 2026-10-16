@@ -1,5 +1,3 @@
-'use client';
-
 export { FiboThemeProvider, useFiboTheme } from './theme/provider';
 export type { FiboThemeProviderProps } from './theme/provider';
 export { materialTheme } from './theme/material';

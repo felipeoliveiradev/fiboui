@@ -1,0 +1,128 @@
+{
+  "name": "fiboui",
+  "displayName": "FiboUI",
+  "description": "Cursor/VS Code support for FiboUI fluent builders — closing labels, auto-indent, autocomplete, snippets, and a Noir theme with strong nesting guides.",
+  "version": "0.1.0",
+  "publisher": "felipeoliveiradev",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Themes",
+    "Snippets",
+    "Programming Languages",
+    "Other"
+  ],
+  "keywords": [
+    "fiboui",
+    "flutter",
+    "builder",
+    "react",
+    "closing labels"
+  ],
+  "activationEvents": [
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact",
+    "onLanguage:javascript",
+    "onLanguage:javascriptreact"
+  ],
+  "main": "./src/extension.js",
+  "contributes": {
+    "themes": [
+      {
+        "label": "FiboUI Noir",
+        "uiTheme": "vs-dark",
+        "path": "./themes/fiboui-noir-color-theme.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "typescript",
+        "path": "./snippets/fiboui.json"
+      },
+      {
+        "language": "typescriptreact",
+        "path": "./snippets/fiboui.json"
+      },
+      {
+        "language": "javascript",
+        "path": "./snippets/fiboui.json"
+      },
+      {
+        "language": "javascriptreact",
+        "path": "./snippets/fiboui.json"
+      }
+    ],
+    "configuration": {
+      "title": "FiboUI",
+      "properties": {
+        "fiboui.closingLabels": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show Flutter-style closing labels after nested fluent builders (e.g. // Column)."
+        },
+        "fiboui.closingLabels.minDepth": {
+          "type": "number",
+          "default": 1,
+          "minimum": 0,
+          "description": "Only show closing labels when nesting depth is at least this value."
+        },
+        "fiboui.lineageGuides": {
+          "type": "boolean",
+          "default": true,
+          "description": "Draw subtle left-edge lineage marks on .children([ … ]) blocks."
+        },
+        "fiboui.completions": {
+          "type": "boolean",
+          "default": true,
+          "description": "Suggest FiboUI factories and chain methods while typing."
+        },
+        "fiboui.autoIndent": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-indent Enter in fluent FiboUI chains (continuation dots, children/items arrays, itemStyle/itemHover callbacks)."
+        }
+      }
+    },
+    "configurationDefaults": {
+      "[typescript]": {
+        "editor.autoIndent": "full",
+        "editor.stickyScroll.enabled": true,
+        "editor.guides.indentation": true,
+        "editor.guides.bracketPairs": true,
+        "editor.bracketPairColorization.enabled": true,
+        "editor.suggest.snippetsPreventQuickSuggestions": false
+      },
+      "[typescriptreact]": {
+        "editor.autoIndent": "full",
+        "editor.stickyScroll.enabled": true,
+        "editor.guides.indentation": true,
+        "editor.guides.bracketPairs": true,
+        "editor.bracketPairColorization.enabled": true
+      },
+      "[javascript]": {
+        "editor.autoIndent": "full",
+        "editor.guides.indentation": true,
+        "editor.guides.bracketPairs": true,
+        "editor.bracketPairColorization.enabled": true
+      },
+      "[javascriptreact]": {
+        "editor.autoIndent": "full",
+        "editor.guides.indentation": true,
+        "editor.guides.bracketPairs": true,
+        "editor.bracketPairColorization.enabled": true
+      }
+    },
+    "commands": [
+      {
+        "command": "fiboui.toggleClosingLabels",
+        "title": "FiboUI: Toggle Closing Labels"
+      },
+      {
+        "command": "fiboui.toggleLineageGuides",
+        "title": "FiboUI: Toggle Lineage Guides"
+      }
+    ]
+  }
+}

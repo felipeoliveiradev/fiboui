@@ -627,10 +627,34 @@ Creates a global store.
 - `.setState(updater)` - Update state
 - `.subscribe(listener)` - Subscribe to changes
 
+### listSignal()
+
+```typescript
+function listSignal<T>(initial?: T[]): ListSignal<T>
+```
+
+`collection` is the same function. Each item gets an `_id` (`crypto.randomUUID`) unless one is already set.
+
+**Methods:** `add`, `insert`, `set`, `update`, `remove` / `delete`, `find`, `search`, `clear`, `replace`, `filter`, `map`, `move`.
+
+`update` / `remove` / `find` match `_id`, then a domain `id`, then a predicate. `search` and `filter` return a plain array. Pass that array to `List` and it will not stay subscribed — pass the `listSignal` itself.
+
+```tsx
+const todos = listSignal<{ title: string }>([])
+todos.add({ title: 'Ship it' })
+
+List().items(todos).renderItem((todo) => ListTile().title(todo.title))
+Text(`Total todos: ${todos.$length}`)
+```
+
+`$length` is an interpolation token, not a number. `` `${todos.length}` `` freezes. `Text` auto-binds the signals whose markers appear in its string. `.bindSignal(other)` adds another. Nothing subscribes to every signal in the tree.
+
+In-place edits (`todos.value[0].title = 'x'`) do not notify. Assign through `update` / `set`.
+
 ### Builder Methods
 
 ```typescript
-// Bind a signal
+// Bind one signal. Only signals you pass are subscribed.
 .bindSignal(signal)
 
 // Observe an observable

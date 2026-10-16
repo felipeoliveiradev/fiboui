@@ -1,3 +1,5 @@
+'use client';
+
 import React, { ReactElement, ReactNode, useState } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps, FiboChild } from '../../core/types';

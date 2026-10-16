@@ -1,4 +1,4 @@
-# FiboUI v2.4.3
+# FiboUI v2.5.0
 
 **A Flutter & SwiftUI-inspired React UI framework featuring a fluent builder API and fine-grained reactivity.**
 
@@ -19,11 +19,23 @@ FiboUI brings chainable builders to React. Compose screens with `Column()`, `Row
 
 ---
 
+## Cursor / VS Code extension
+
+Fluent trees get Flutter-style **closing labels** (`// Column`), **lineage guides** on `.children([…])`, snippets (`fcol`, `frow`, …), chain autocomplete, and the **FiboUI Noir** colour theme.
+
+```bash
+ln -sfn "$(pwd)/extensions/vscode-fiboui" \
+  "$HOME/.cursor/extensions/felipeoliveiradev.fiboui-0.1.0"
+```
+
+Reload the window, then pick theme **FiboUI Noir**. Details: [`extensions/vscode-fiboui/README.md`](./extensions/vscode-fiboui/README.md).
+
 ## Installation
 
 ```bash
 npm install fiboui
 ```
+
 
 Import the stylesheet once in your entry file:
 
@@ -83,7 +95,9 @@ function App() {
 
 ### Signals
 
-`.bindSignal(sig)` subscribes the builder and **re-assembles** when the signal changes. Read the signal inside a **function child** (or `Text(() => ...)`) so the new value is picked up. Interpolating `sig.value` into a string at construction time is a one-shot snapshot.
+`.bindSignal(sig)` subscribes that builder to the signals you pass and re-assembles when they change. It does not watch every signal. Interpolating `sig.value` into a string at construction time is a snapshot.
+
+`` Text(`Total ${todos.$length}`) `` stays live: `listSignal` embeds a marker and `Text` subscribes only to those signals. `` `${todos.length}` `` is a plain number and freezes. `List().items(todos)` subscribes that list. Forms, validation, and `.submit()` are in [the Form guide](docs/components/interactive-form.md). The October 2026 audit of what still fails on other components is [docs/guide/audit-2026-10.md](docs/guide/audit-2026-10.md).
 
 ```tsx
 import { Box, Button, Text, signal } from 'fiboui';

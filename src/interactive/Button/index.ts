@@ -25,6 +25,7 @@ const ButtonInner = React.memo((props: any) => {
     expand,
     className,
     style,
+    type: htmlType = 'button',
     ...rest
   } = props;
 
@@ -149,8 +150,9 @@ const ButtonInner = React.memo((props: any) => {
             document.documentElement.classList.contains('fibo-theme-material') &&
             variant !== 'raw'
           ) {
+            const target = e.currentTarget;
             import('../../core/effects').then(({ createRipple }) => {
-              createRipple(e, e.currentTarget);
+              createRipple(e, target);
             });
           }
           onPress?.();
@@ -158,7 +160,7 @@ const ButtonInner = React.memo((props: any) => {
       },
       disabled: disabled,
       ...rest,
-      type: rest.type ?? 'button',
+      type: htmlType,
       style: userStyle,
     },
     ...childrenElements
@@ -178,6 +180,7 @@ class ButtonBuilder extends FiboBuilder {
   private _tone: ButtonTone = 'default';
   private _motion: ButtonMotion = 'default';
   private _expand = false;
+  private _htmlType: 'button' | 'submit' | 'reset' = 'button';
 
   constructor(text: string | (() => string) = '') {
     super();
@@ -252,6 +255,27 @@ class ButtonBuilder extends FiboBuilder {
     return this;
   }
 
+  /**
+   * HTML button type. Named `htmlType` because builders already expose React's
+   * element `.type` (stampRenderable) — that property must stay the component.
+   */
+  htmlType(value: 'button' | 'submit' | 'reset'): this {
+    this._htmlType = value;
+    return this;
+  }
+
+  /** Shortcut for `.htmlType('submit')` inside a `Form`. */
+  submit(): this {
+    this._htmlType = 'submit';
+    return this;
+  }
+
+  /** Shortcut for `.htmlType('reset')`. */
+  reset(): this {
+    this._htmlType = 'reset';
+    return this;
+  }
+
   build(): ReactElement {
     const builderClasses = this.getClassName();
     const finalText = typeof this._text === 'function' ? this._text() : this._text;
@@ -272,7 +296,8 @@ class ButtonBuilder extends FiboBuilder {
       className: builderClasses,
       style: this.getStyle(),
       children: this.processChildren(),
-      ...this._props
+      ...this._props,
+      type: this._htmlType,
     };
 
     return React.createElement(ButtonInner, props);

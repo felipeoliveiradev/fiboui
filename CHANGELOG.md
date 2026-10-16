@@ -4,6 +4,31 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-10-16
+
+### Added
+
+- **Form** — native submit, `beforeSubmit` / `onSubmit` / `afterSubmit`, and `FormControl.reset` / `set`.
+- **Validation** — `required`, `minLength`, `maxLength`, `email`, `pattern`, `min`, `max`, `rule`. `Form().validation().errorMode('field' | 'below' | 'manual')`. `TextField().rules()`.
+- **`listSignal`** — `add` / `insert` / `set` / `update` / `remove` / `find` / `search`, automatic `_id`, and `$length` for live `Text`.
+- **List** — `.items(listSignal)` plus `.itemStyle` / `.itemHover` / `.itemActive` / `.itemFocus` (CSS fluent proxy, logical padding and margin).
+- **Button** — `.submit()`, `.reset()`, `.htmlType()`. `.type()` remains the React element type.
+- **TextField** — uncontrolled by default. `.controlled(true)` opts into React state. `.onCommit` on blur. `.name()` for `FormData`.
+
+### Fixed
+
+- **Logical CSS** — `paddingHorizontal` and the other axis helpers on builders and on hover / focus / active. `boxShadow(0)` becomes `none` on the fluent proxy.
+- **`justifyContent('between')`** — also accepts `space-between` and `spaceBetween`.
+- **Text templates** — `` Text(`Total ${todos.$length}`) `` auto-binds the signals embedded in the string. Extra `.bindSignal` still registers more.
+- **`.type()`** — builder methods named `type` (TextField, Text, InputCard) run again; the React element stamp no longer swallows them.
+- **`shadow(0)`** — registers `box-shadow: none` instead of the `md` preset.
+- **Form** — `noValidate` by default, disabled fields are skipped, `/g` patterns don't alternate, errors set `aria-invalid` and clear while typing.
+- **Textarea, Checkbox, Switch, RadioGroup** — uncontrolled by default, with `.name()` so `FormData` sees them. `.controlled(true)` opts back into parent state.
+- **Select and Combobox** — `.name()` writes a hidden input for submit.
+- **List pseudo styles** — one stylesheet per list, focus uses `:focus-within`.
+- **Button ripple** — captures the button before the dynamic import.
+- **Editor** — closing labels on every multi-line fluent chain, and Enter auto-indent (`extensions/vscode-fiboui`).
+
 ## [2.4.3] - 2026-10-15
 
 ### Fixed

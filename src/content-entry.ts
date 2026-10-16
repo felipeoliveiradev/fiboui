@@ -1,5 +1,3 @@
-'use client';
-
 export { Avatar } from './content/Avatar';
 export { Badge } from './content/Badge';
 export { Text } from './content/Text';

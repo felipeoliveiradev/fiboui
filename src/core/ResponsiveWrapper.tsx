@@ -1,3 +1,5 @@
+'use client';
+
 import { CSSProperties, ReactElement, cloneElement, useSyncExternalStore } from 'react';
 import { ResponsiveStyles } from './types';
 import { applyResponsiveStyles } from './component';

@@ -1,3 +1,5 @@
+'use client';
+
 import { CSSProperties, ReactElement, cloneElement, useEffect, useState } from 'react';
 import { AnimationOptions } from './animations';
 import { resolveCssEase } from './easing';

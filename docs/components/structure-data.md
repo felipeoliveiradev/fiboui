@@ -69,12 +69,14 @@ List() → ListBuilder
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.items(items)` | `T[]` | Array of items to display |
-| `.renderItem(fn)` | `(item, index) => ReactNode` | Render function for each item |
+| `.items(items)` | `T[]` or `listSignal` | Rows. A list signal is subscribed (that signal only) and read on each rebuild. Data mode needs `.renderItem`. |
+| `.renderItem(fn)` | `(item, index) => ReactNode` | Render function for each item. Row key prefers `_id`. |
 | `.variant(variant)` | `'default' \| 'card' \| 'floating'` | Visual style |
-| `.separator(show)` | `boolean` | Show separators between items |
+| `.itemStyle(fn \| css)` | callback or style object | Row chrome. The callback is a CSS fluent proxy (`paddingHorizontal`, `boxShadow(0)` → `none`). |
+| `.itemHover(fn)` / `.itemActive(fn)` / `.itemFocus(fn)` | callback | Pseudo styles, injected with `!important`. One shared stylesheet for every list on the page. |
+| `.separator(show)` | `boolean` | Separators on the default variant only, and only when item styles were not reset |
 | `.onEndReached(handler)` | `() => void` | Infinite scroll callback |
-| `.loading(isLoading)` | `boolean` | Loading state |
+| `.loading(isLoading)` | `boolean` | Spinner inside the infinite-scroll sentinel. It does not paint a loader by itself. |
 
 ---
 

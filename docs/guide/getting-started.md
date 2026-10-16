@@ -15,7 +15,7 @@ Import the stylesheet once — the JS entry does not load CSS:
 import 'fiboui/style.css';
 ```
 
-ESM-only (`import`, no `require`). Next.js App Router files that call builders need `'use client'`. See [MIGRATION.md](../../MIGRATION.md). Builders are React elements — no `.build()`. Breakpoints: [Responsive](./responsive.md). SSR: [SSR / hydration](./ssr.md). Motion: [Animation](./animation.md) / [Scroll](./scroll.md).
+ESM-only (`import`, no `require`). Next.js App Router: static builders + `page()` work in Server Components (no `'use client'`) via the `react-server` export. Reactive APIs (`.observer()`, signals, Router) still need a Client Component. See [SSR / hydration](./ssr.md). Builders are React elements — no `.build()`. Breakpoints: [Responsive](./responsive.md). Motion: [Animation](./animation.md) / [Scroll](./scroll.md).
 
 ## Quick Start
 

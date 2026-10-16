@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect, useCallback, ReactNode, Suspense, createContext, useContext, ErrorInfo } from 'react';
 import { RouterContext, Route, NavigateOptions, RouterContextValue } from './RouterContext';
 import { findMatchingRoute } from './routeMatching';

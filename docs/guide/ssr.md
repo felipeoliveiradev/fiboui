@@ -50,26 +50,23 @@ Use **either** `getStyleTag()` **or** `<FiboStyles />`, not both (duplicate `#fi
 
 ## Next.js App Router (14 / 15)
 
-Builders use hooks — mark the page (or a child) with `'use client'`. Next still SSRs client components.
+**Zero JSX + no `'use client'` on the route.** App Router resolves `fiboui` via the `react-server` export (`dist/server.js`) — static builders with hook islands stubbed. Client bundles still ship `.observer()`, signals, Router, etc. under the default export.
 
-```tsx
-'use client';
-
+```ts
+// app/layout.tsx (Server) — base sheet once
 import 'fiboui/style.css';
-import { Box, FiboStyles, FiboThemeProvider, Text } from 'fiboui';
 
-export default function Page() {
-  return (
-    <FiboThemeProvider>
-      {Box().hover((h) => h.opacity(0.9)).responsive({
-        mobile: { padding: 8 },
-        desktop: { padding: 24 },
-      }).children(Text('Hi'))}
-      <FiboStyles />
-    </FiboThemeProvider>
-  );
-}
+// app/page.tsx — Server Component (no 'use client')
+import { page, Column, Text } from 'fiboui';
+
+export default page(() =>
+  Column().gap(12).children([Text('Hello')])
+);
 ```
+
+`page()` appends `FiboStyles` via `createElement` during RSC render. Or `withFiboStyles(Column()…)`.
+
+Next tip: `transpilePackages: ['fiboui']`. Prefer `npm i --install-links file:…` over a raw symlink (Turbopack). Reactive trees still need a Client Component boundary.
 
 `FiboThemeProvider` (and fluent `.theme(...)`) stamp `fibo-theme-*` plus CSS variables as **inline style on the wrapper** so the first paint matches SSR. No `document.documentElement` write — vars inherit like Flutter/SwiftUI environment.
 

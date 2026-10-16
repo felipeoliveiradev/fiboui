@@ -121,6 +121,9 @@ Creates a new `Button` builder instance.
 | `.onPress(handler)` | `() => void` | Press / click handler (preferred) |
 | `.onClick(handler)` | `(event: MouseEvent) => void` | Raw DOM click handler |
 | `.onHover(handler)` | `() => void` | `mouseenter` handler (does not receive the event) |
+| `.submit()` | — | `type="submit"`. Use this inside [Form](/components/interactive-form). |
+| `.reset()` | — | `type="reset"` |
+| `.htmlType(type)` | `'button' \| 'submit' \| 'reset'` | DOM `type`. `.type()` is the React component and does not set the attribute. |
 
 ### Inherited from FiboBuilder
 

@@ -30,6 +30,7 @@ export type ShadowConfig =
   | ShadowSize
   | ShadowPreset
   | string
+  | 0
   | null
   | [string, number?]
   | [ShadowDirection | string, ShadowSize | string]

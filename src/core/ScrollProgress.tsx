@@ -1,3 +1,5 @@
+'use client';
+
 import React, { ReactElement, useEffect, useRef } from 'react';
 import { ensureMotionCss } from './styleManager';
 import { supportsScrollTimeline } from './scroll';

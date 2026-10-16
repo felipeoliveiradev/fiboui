@@ -1,3 +1,5 @@
+'use client';
+
 import React, { ReactElement, ReactNode, useEffect, useState, useSyncExternalStore } from 'react';
 import type { MotionPreset } from './motionCss';
 import { ensureMotionCss } from './styleManager';

@@ -1,5 +1,3 @@
-'use client';
-
 export { Button } from './interactive/Button';
 export { TextField } from './interactive/TextField';
 export { Switch } from './interactive/Switch';

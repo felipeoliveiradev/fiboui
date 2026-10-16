@@ -39,7 +39,19 @@ export default defineConfig({
         id.startsWith('react/') ||
         id.startsWith('react-dom/'),
       output: {
-        banner: "'use client';",
+        // Keep hook islands in a dedicated chunk with 'use client' so App Router
+        // can call Column()/page() from Server Components (RSC). Static builders
+        // stay in chunks WITHOUT the directive.
+        manualChunks(id) {
+          const clientRe =
+            /StateWrapper|ValueBinder|AnimatedWrapper|Reveal\.tsx|ScrollProgress|Presence\.tsx|FineGrain|ReactivityRoot|ResponsiveWrapper|core\/hooks|animationHooks|Router\.tsx|RouterContext|Gesture\.tsx|structure\/List|structure\/Collapse|VirtualColumn|DashboardLayout|interactive\/Select|interactive\/Combobox|interactive\/Checkbox|interactive\/TextField|theme\/provider|theme\/useTheme/;
+          if (clientRe.test(id)) return 'client';
+        },
+        banner(chunk) {
+          return chunk.name === 'client' || chunk.fileName?.includes('client')
+            ? "'use client';\n"
+            : '';
+        },
         assetFileNames: (asset) => {
           if (asset.name && asset.name.endsWith('.css')) {
             return 'style.css';
