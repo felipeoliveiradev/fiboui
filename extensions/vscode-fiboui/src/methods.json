@@ -270,6 +270,7 @@
   "renderItem",
   "required",
   "reset",
+  "resetStyle",
   "resetItemStyles",
   "resizable",
   "resize",

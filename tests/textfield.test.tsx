@@ -22,6 +22,18 @@ describe('TextField (uncontrolled)', () => {
     expect(commit).toHaveBeenCalledWith('Ada')
   })
 
+  it('resetStyle drops the built-in padding, border, and height', () => {
+    render(TextField().placeholder('Bare').resetStyle().build() as any)
+    const input = screen.getByPlaceholderText('Bare') as HTMLInputElement
+    expect(input.style.paddingLeft).toBe('0px')
+    expect(input.style.paddingRight).toBe('0px')
+    expect(input.className).not.toContain('py-2.5')
+    const field = input.parentElement
+    expect(field?.className).not.toContain('border-b')
+    expect(field?.className).not.toContain('h-14')
+    expect(input.closest('.fibo-textfield-container')?.className).toContain('fibo-reset')
+  })
+
   it('Signal syncs without controlled value prop', () => {
     const email = new Signal('')
     render(TextField().value(email).placeholder('Mail').build() as any)

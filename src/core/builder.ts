@@ -91,6 +91,22 @@ export abstract class FiboBuilder {
   /** Shrink-wrap: skip the default `w-full` / `self-stretch` on Row and Column. */
   protected _hug = false;
 
+  /**
+   * Drop the built-in chrome (padding, border, fill, radius, shadow, fixed height, type size).
+   * Layout (flex, width, gap) stays. Chain `.style()`, `.px()`, `.border()` after this to put back only what you want.
+   */
+  protected _resetStyle = false;
+
+  resetStyle(): this {
+    this._resetStyle = true;
+    this.addClassName('fibo-reset');
+    return this;
+  }
+
+  protected isReset(): boolean {
+    return this._resetStyle;
+  }
+
   hug(): this {
     this._hug = true;
     return this;

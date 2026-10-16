@@ -27,7 +27,7 @@ const FN_NAMES = new Set([
 const LIST_NAMES = new Set(['children', 'items', 'columns'])
 const OBJ_NAMES = new Set(['validation', 'style', 'props', 'providers', 'provider', 'sm', 'md', 'lg', 'xl'])
 const EMPTY_NAMES = new Set([
-  'submit', 'reset', 'clean', 'focus', 'build', 'bindSignal',
+  'submit', 'reset', 'resetStyle', 'clean', 'focus', 'build', 'bindSignal',
   'hug', 'grid', 'inlineFlex', 'inlineGrid', 'block', 'inlineBlock',
   'center', 'centerX', 'centerY', 'spaceBetween', 'spaceAround', 'spaceEvenly',
   'fill', 'fillWidth', 'fillHeight', 'circle', 'scrollProgress', 'smoothScroll', 'group',

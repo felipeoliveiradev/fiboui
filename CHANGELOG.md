@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.6.2] - 2026-10-16
+
+### Added
+
+- **`.resetStyle()`** — on every builder. Drops padding, border, fill, radius, shadow, fixed height, and type size. Layout stays. Chain `.style()`, `.px()`, `.border()`, or `.bg()` after it.
+
 ## [2.6.1] - 2026-10-16
 
 ### Added

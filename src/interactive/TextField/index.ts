@@ -51,6 +51,7 @@ const TextFieldInner = React.memo((props: any) => {
     onCommit,
     leadingIcon,
     trailingIcon,
+    bare,
     ...inputRest
   } = props;
 
@@ -127,14 +128,16 @@ const TextFieldInner = React.memo((props: any) => {
     inputRest.onBlur?.(e);
   };
 
-  const paddingLeft = leadingIcon ? '2.75rem' : '1rem';
-  const paddingRight = trailingIcon || isPassword ? '2.75rem' : '1rem';
+  const paddingLeft = bare ? 0 : leadingIcon ? '2.75rem' : '1rem';
+  const paddingRight = bare ? 0 : trailingIcon || isPassword ? '2.75rem' : '1rem';
 
   const inputProps: Record<string, unknown> = {
     key: 'input',
     ref: inputRef,
     id: inputId,
-    className: 'fibo-textfield-input w-full h-full bg-transparent outline-none py-2.5 text-sm',
+    className: bare
+      ? 'fibo-textfield-input w-full bg-transparent outline-none'
+      : 'fibo-textfield-input w-full h-full bg-transparent outline-none py-2.5 text-sm',
     style: { paddingLeft, paddingRight },
     type: effectiveType,
     onChange: handleChange,
@@ -175,7 +178,7 @@ const TextFieldInner = React.memo((props: any) => {
             key: 'label',
             htmlFor: inputId,
             className: 'fibo-textfield-label',
-            style: { left: leadingIcon ? '2.75rem' : '1rem' },
+            style: { left: bare ? 0 : leadingIcon ? '2.75rem' : '1rem' },
           },
           label
         ),
@@ -357,13 +360,17 @@ class TextFieldBuilder extends FiboBuilder {
   }
 
   build(): ReactElement {
-    let fieldClasses = 'relative w-full h-14 flex items-center';
+    let fieldClasses = this.isReset()
+      ? 'relative w-full flex items-center'
+      : 'relative w-full h-14 flex items-center';
 
-    if (this._variant === 'outlined') {
-      fieldClasses += ' border border-[var(--fibo-outline)] rounded-[4px] bg-transparent';
-    } else {
-      fieldClasses +=
-        ' bg-[var(--fibo-surface-variant)] rounded-t-[4px] border-b border-[var(--fibo-outline)]';
+    if (!this.isReset()) {
+      if (this._variant === 'outlined') {
+        fieldClasses += ' border border-[var(--fibo-outline)] rounded-[4px] bg-transparent';
+      } else {
+        fieldClasses +=
+          ' bg-[var(--fibo-surface-variant)] rounded-t-[4px] border-b border-[var(--fibo-outline)]';
+      }
     }
 
     const containerClass = twMerge(
@@ -374,6 +381,7 @@ class TextFieldBuilder extends FiboBuilder {
     const props = {
       containerClass,
       fieldClass: fieldClasses,
+      bare: this.isReset(),
       containerStyle: this.getStyle(),
       label: this._label,
       error: this._error,
