@@ -2,6 +2,12 @@ import React, { CSSProperties, ReactElement } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps, TextType } from '../../core/types';
 import { FineGrainText } from '../../core/FineGrain';
+import type { BindableSignal } from '../../core/state';
+import {
+  collectInterpSignals,
+  hasInterpMarks,
+  resolveInterpString,
+} from '../../core/interpolate';
 
 /**
  * Theme-aware defaults: CSS vars from `.theme()` / `fibo-theme-*` (SwiftUI Environment /
@@ -115,6 +121,14 @@ class TextBuilder extends FiboBuilder {
   }
 
   text(value: string | (() => string)): this {
+    if (typeof value === 'string' && hasInterpMarks(value)) {
+      // Auto-bind markers from `$length` / `interp()`; extra `.bindSignal(x)` still OK.
+      this._text = () => resolveInterpString(value);
+      for (const sig of collectInterpSignals(value)) {
+        super.bindSignal(sig);
+      }
+      return this;
+    }
     this._text = value;
     return this;
   }
@@ -141,6 +155,26 @@ class TextBuilder extends FiboBuilder {
 
   muted(): this {
     this._style = { ...this._style, color: '#9a9a9a' };
+    return this;
+  }
+
+  /**
+   * Subscribe an extra signal (or override text with `format`).
+   * `$length` / `interp()` already auto-bind their own signals.
+   *
+   * ```ts
+   * Text(`Total: ${todos.$length}`).bindSignal(filter) // also rebuild when filter changes
+   * Text().bindSignal(todos, (list) => `Total: ${list.length}`)
+   * ```
+   */
+  bindSignal<T>(
+    signal: BindableSignal<T>,
+    format?: (value: T) => string
+  ): this {
+    super.bindSignal(signal);
+    if (format) {
+      this._text = () => format(signal.value);
+    }
     return this;
   }
 

@@ -37,6 +37,17 @@ Both ships are built **only** with FiboUI fluent builders — no JSX in the prod
 
 ---
 
+## Cursor / VS Code extension
+
+Fluent trees get Flutter-style **closing labels** (`// Column`, `// List`, `// Form`), **auto-indent** on Enter, **lineage guides** on `.children([…])`, snippets (`fcol`, `frow`, …), chain autocomplete, and the **FiboUI Noir** colour theme.
+
+```bash
+ln -sfn "$(pwd)/extensions/vscode-fiboui" \
+  "$HOME/.cursor/extensions/felipeoliveiradev.fiboui-0.1.0"
+```
+
+Reload the window, then pick theme **FiboUI Noir**. Details: [`extensions/vscode-fiboui/README.md`](./extensions/vscode-fiboui/README.md).
+
 ## Install
 
 ```bash
@@ -129,7 +140,7 @@ Box()
   ])
 ```
 
-`.bindSignal` re-assembles. Read `.value` inside a **function child** so updates are live.
+`.bindSignal` re-assembles. Read `.value` inside a **function child** so updates are live. `` Text(`Total ${todos.$length}`) `` stays live without a function child. Forms and validation: [Form](docs/components/interactive-form.md).
 
 ```mermaid
 sequenceDiagram

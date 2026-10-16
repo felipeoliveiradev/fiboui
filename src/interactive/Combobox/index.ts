@@ -1,7 +1,10 @@
+'use client';
+
 import React, { ReactElement, useState, useRef, useEffect, ChangeEvent, KeyboardEvent } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { twMerge } from 'tailwind-merge';
 import { BaseProps } from '../../core/types';
+import type { FieldRule } from '../Form/validators';
 
 interface Option {
   label: string;
@@ -21,6 +24,14 @@ interface ComboboxInnerProps {
   disabled?: boolean;
   multiple?: boolean;
   id?: string;
+  name?: string;
+  controlled?: boolean;
+  rules?: FieldRule[];
+}
+
+function serializeComboboxValue(value: string | string[] | undefined): string {
+  if (Array.isArray(value)) return value.join(',');
+  return value ?? '';
 }
 
 const ComboboxInner = React.memo((props: ComboboxInnerProps) => {
@@ -28,9 +39,13 @@ const ComboboxInner = React.memo((props: ComboboxInnerProps) => {
     const inputId = props.id || uniqueId;
     const listboxId = `${inputId}-listbox`;
     const [isOpen, setIsOpen] = useState(false);
+    // Search term stays controlled React state — needed for live filtering UI.
+    // Do not try to make the filter box uncontrolled; only the committed value
+    // participates in FormData via the hidden input below.
     const [searchTerm, setSearchTerm] = useState('');
     const [highlighted, setHighlighted] = useState(0);
     const containerRef = useRef<HTMLDivElement>(null);
+    const hiddenRef = useRef<HTMLInputElement>(null);
 
     const {
         containerClass,
@@ -44,16 +59,25 @@ const ComboboxInner = React.memo((props: ComboboxInnerProps) => {
         onAdd,
         disabled,
         multiple,
+        name,
+        controlled = false,
+        rules,
     } = props;
+
+    const [localValue, setLocalValue] = useState<string | string[]>(
+      () => value ?? (multiple ? [] : '')
+    );
+
+    const currentValue = controlled ? (value ?? (multiple ? [] : '')) : localValue;
 
     useEffect(() => {
         if (!multiple) {
-            const selected = options.find((o) => o.value === value);
+            const selected = options.find((o) => o.value === currentValue);
             if (selected && !isOpen && searchTerm !== selected.label) {
                 setSearchTerm(selected.label);
             }
         }
-    }, [value, options, isOpen, multiple]);
+    }, [currentValue, options, isOpen, multiple]);
 
     const filteredOptions = options.filter((opt) =>
         opt.label.toLowerCase().includes(searchTerm.toLowerCase())
@@ -68,7 +92,7 @@ const ComboboxInner = React.memo((props: ComboboxInnerProps) => {
             if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
                 setIsOpen(false);
                 if (!multiple) {
-                    const selected = options.find((o) => o.value === value);
+                    const selected = options.find((o) => o.value === currentValue);
                     setSearchTerm(selected ? selected.label : '');
                 } else {
                     setSearchTerm('');
@@ -77,27 +101,53 @@ const ComboboxInner = React.memo((props: ComboboxInnerProps) => {
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [value, options, multiple]);
+    }, [currentValue, options, multiple]);
+
+    useEffect(() => {
+        const input = hiddenRef.current;
+        if (!input) return;
+        if (rules) {
+            (input as unknown as { __fiboRules?: FieldRule[] }).__fiboRules = rules;
+        }
+        const host = input.closest('.fibo-textfield-container') as HTMLElement | null;
+        const span = host?.querySelector('.fibo-field-error') as HTMLElement | null;
+        if (host) {
+            (host as unknown as { __fiboShowError?: (msg: string | null) => void }).__fiboShowError = (
+                message
+            ) => {
+                if (!span) return;
+                span.textContent = message ?? '';
+                span.style.display = message ? '' : 'none';
+            };
+        }
+    }, [rules]);
+
+    const commitValue = (next: string | string[]) => {
+        if (!controlled) {
+            setLocalValue(next);
+        }
+        onChange?.(next);
+    };
 
     const handleSelect = (opt: Option) => {
         if (multiple) {
-             const currentValues = Array.isArray(value) ? [...value] : [];
+             const currentValues = Array.isArray(currentValue) ? [...currentValue] : [];
              if (!currentValues.includes(opt.value)) {
                  currentValues.push(opt.value);
-                 onChange?.(currentValues);
+                 commitValue(currentValues);
              }
              setSearchTerm('');
         } else {
             setSearchTerm(opt.label);
-            onChange?.(opt.value);
+            commitValue(opt.value);
             setIsOpen(false);
         }
     };
 
     const handleRemoveTag = (valToRemove: string) => {
-        if (multiple && Array.isArray(value)) {
-            const newValues = value.filter(v => v !== valToRemove);
-            onChange?.(newValues);
+        if (multiple && Array.isArray(currentValue)) {
+            const newValues = currentValue.filter(v => v !== valToRemove);
+            commitValue(newValues);
         }
     };
 
@@ -112,9 +162,9 @@ const ComboboxInner = React.memo((props: ComboboxInnerProps) => {
 
     const isSelected = (val: string) => {
         if (multiple) {
-            return Array.isArray(value) && value.includes(val);
+            return Array.isArray(currentValue) && currentValue.includes(val);
         }
-        return value === val;
+        return currentValue === val;
     };
 
     const onInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -155,12 +205,22 @@ const ComboboxInner = React.memo((props: ComboboxInnerProps) => {
           style: containerStyle
       },
       React.createElement('div', { className: 'relative w-full h-full' }, [
+          name
+            ? React.createElement('input', {
+                key: 'hidden',
+                ref: hiddenRef,
+                type: 'hidden',
+                name,
+                value: serializeComboboxValue(currentValue),
+              })
+            : null,
+
           React.createElement('div', {
               key: 'field',
               className: `fibo-textfield-input flex flex-wrap items-center gap-1 ${isOpen ? 'ring-2 ring-[var(--fibo-primary-container)] border-[var(--fibo-primary)]' : ''}`,
               style: { minHeight: '42px', padding: '4px 8px' }
           }, [
-              multiple && Array.isArray(value) && value.map((val: string) => {
+              multiple && Array.isArray(currentValue) && currentValue.map((val: string) => {
                   const opt = options.find((o) => o.value === val);
                   const labelStr = opt ? opt.label : val;
                   return React.createElement('span', {
@@ -187,7 +247,7 @@ const ComboboxInner = React.memo((props: ComboboxInnerProps) => {
                   'aria-activedescendant': isOpen && filteredOptions[highlighted] ? `${listboxId}-opt-${filteredOptions[highlighted].value}` : undefined,
                   className: 'bg-transparent outline-none flex-1 min-w-[60px] text-sm h-8',
                   value: searchTerm,
-                  placeholder: (multiple && Array.isArray(value) && value.length > 0) ? '' : (placeholder || ' '),
+                  placeholder: (multiple && Array.isArray(currentValue) && currentValue.length > 0) ? '' : (placeholder || ' '),
                   disabled: disabled,
                   onChange: (e: ChangeEvent<HTMLInputElement>) => {
                       setSearchTerm(e.target.value);
@@ -246,10 +306,14 @@ const ComboboxInner = React.memo((props: ComboboxInnerProps) => {
           ])
       ]),
 
-      error && React.createElement(
+      React.createElement(
         'span',
-        { className: 'text-[var(--fibo-error)] text-xs mt-1 ml-1', role: 'alert' },
-        error
+        {
+          className: 'fibo-field-error text-[var(--fibo-error)] text-xs mt-1 ml-1',
+          style: { display: error ? '' : 'none' },
+          role: 'alert',
+        },
+        error || ''
       )
     );
 });
@@ -264,9 +328,21 @@ class ComboboxBuilder extends FiboBuilder {
   private _options: Option[] = [];
   private _onChange?: (value: string | string[]) => void;
   private _onAdd?: (newLabel: string) => void;
+  private _name?: string;
+  private _controlled = false;
+  private _rules?: FieldRule[];
 
   value(val: string | string[]): this {
     this._value = val;
+    return this;
+  }
+
+  /**
+   * Force controlled committed value from `.value()` / parent. Default keeps
+   * local selection so FormData / tags update without a parent re-render.
+   */
+  controlled(enabled: boolean = true): this {
+    this._controlled = enabled;
     return this;
   }
 
@@ -277,6 +353,12 @@ class ComboboxBuilder extends FiboBuilder {
 
   placeholder(val: string): this {
     this._placeholder = val;
+    return this;
+  }
+
+  /** HTML `name` — renders a hidden input so `Form` FormData includes the committed value. */
+  name(val: string): this {
+    this._name = val;
     return this;
   }
 
@@ -297,6 +379,12 @@ class ComboboxBuilder extends FiboBuilder {
 
   error(val: string): this {
     this._error = val;
+    return this;
+  }
+
+  /** Rules collected by `Form` on submit (attached to the hidden named input). */
+  rules(...items: FieldRule[]): this {
+    this._rules = items;
     return this;
   }
 
@@ -325,6 +413,9 @@ class ComboboxBuilder extends FiboBuilder {
         multiple: this._multiple,
         onChange: this._onChange,
         onAdd: this._onAdd,
+        name: this._name,
+        controlled: this._controlled,
+        rules: this._rules,
         ...(this._props as ComboboxInnerProps)
     };
 
@@ -342,4 +433,5 @@ export interface ComboboxProps extends BaseProps {
   options: Option[];
   onChange?: (value: string | string[]) => void;
   onAdd?: (newLabel: string) => void;
+  name?: string;
 }

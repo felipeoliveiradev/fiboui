@@ -11,11 +11,15 @@ export function isBuildable(child: unknown): child is { build: () => ReactElemen
 }
 
 export function buildChild(child: unknown): ReactNode {
-  if (React.isValidElement(child)) {
-    return child;
-  }
+  // Prefer assemble() over treating stamped builders as opaque elements.
+  // Stamped proxies expose a fluent `.key` function when unset — Flight/RSC
+  // rejects that as "Functions cannot be passed to Client Components".
+  // Assembling yields host elements (div/p/…) with real string|null keys.
   if (isBuildable(child)) {
     return child.build();
+  }
+  if (React.isValidElement(child)) {
+    return child;
   }
   return child as ReactNode;
 }

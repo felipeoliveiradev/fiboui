@@ -1,3 +1,5 @@
+'use client';
+
 import React, { CSSProperties, useEffect, useRef } from 'react';
 import { BindableSignal, Effect, runInScope } from './state';
 import { useReactivityScope } from './ReactivityRoot';

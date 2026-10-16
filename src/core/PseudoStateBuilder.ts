@@ -9,6 +9,7 @@ import {
 } from './interactionEffects';
 import { ensureInteractionFxCss } from './ensureInteractionFx';
 import { formatCssTransition, toTranslate3d } from './smoothInteraction';
+import { camelToKebab, logicalLonghands, normalizeCssValue } from './cssFluent';
 
 const SMOOTH_PROPS: Record<string, string[]> = {
   'background-color': ['background-color'],
@@ -35,6 +36,34 @@ export class PseudoStateBuilder {
     this.pseudoState = pseudoState;
     this.parentBuilder = parentBuilder;
     this.isGroup = isGroup;
+
+    const self = this;
+    const proxy = new Proxy(this, {
+      get(target, prop, receiver) {
+        if (typeof prop !== 'string' || prop === 'constructor') {
+          return Reflect.get(target, prop, receiver);
+        }
+
+        if (prop in target) {
+          const val = Reflect.get(target, prop, receiver);
+          if (typeof val !== 'function') return val;
+          return (...args: unknown[]) => {
+            const result = (val as Function).apply(target, args);
+            return result === self ? proxy : result;
+          };
+        }
+
+        return (value: unknown) => {
+          const logical = logicalLonghands(prop);
+          const props = logical ?? [prop];
+          for (const name of props) {
+            self.set(camelToKebab(name), normalizeCssValue(name, value));
+          }
+          return proxy;
+        };
+      },
+    });
+    return proxy;
   }
 
   /**

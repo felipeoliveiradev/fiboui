@@ -1,3 +1,5 @@
+'use client';
+
 import { createContext, useContext, useState, useEffect, useRef, useCallback, useSyncExternalStore, ReactNode } from 'react';
 import { BindableSignal, Observable, Tracker, runInScope } from './state';
 import { useReactivityScope } from './ReactivityRoot';

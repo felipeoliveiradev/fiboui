@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useMemo, ReactNode } from 'react';
 import { PanRecognizer, PanCallback } from './Pan';
 

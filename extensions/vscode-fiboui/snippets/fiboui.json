@@ -1,0 +1,129 @@
+{
+  "FiboUI Column": {
+    "prefix": ["fcol", "fibocolumn"],
+    "body": [
+      "Column()",
+      "\t.crossAxisAlignment('${1:stretch}')",
+      "\t.spacing(${2:8})",
+      "\t.children([",
+      "\t\t$0",
+      "\t]);"
+    ],
+    "description": "FiboUI Column() fluent tree"
+  },
+  "FiboUI Row": {
+    "prefix": ["frow", "fiborow"],
+    "body": [
+      "Row()",
+      "\t.mainAxisAlignment('${1:spaceBetween}')",
+      "\t.crossAxisAlignment('${2:center}')",
+      "\t.children([",
+      "\t\t$0",
+      "\t]);"
+    ],
+    "description": "FiboUI Row() fluent tree"
+  },
+  "FiboUI Scaffold": {
+    "prefix": ["fscaffold", "fiboscaffold"],
+    "body": [
+      "Scaffold()",
+      "\t.headerBar(${1:null})",
+      "\t.children([",
+      "\t\t$0",
+      "\t]);"
+    ],
+    "description": "FiboUI Scaffold() shell"
+  },
+  "FiboUI Box": {
+    "prefix": ["fbox", "fibobox"],
+    "body": [
+      "Box()",
+      "\t.padding(${1:16})",
+      "\t.children([",
+      "\t\t$0",
+      "\t]);"
+    ],
+    "description": "FiboUI Box() container"
+  },
+  "FiboUI Card": {
+    "prefix": ["fcard", "fibocard"],
+    "body": [
+      "Card()",
+      "\t.padding(${1:16})",
+      "\t.children([",
+      "\t\tText('${2:Title}'),",
+      "\t\t$0",
+      "\t]);"
+    ],
+    "description": "FiboUI Card() with Text"
+  },
+  "FiboUI Center": {
+    "prefix": ["fcenter"],
+    "body": [
+      "Center()",
+      "\t.children([",
+      "\t\t$0",
+      "\t]);"
+    ],
+    "description": "FiboUI Center()"
+  },
+  "FiboUI Button": {
+    "prefix": ["fbtn", "fibobutton"],
+    "body": [
+      "Button('${1:Label}')",
+      "\t.variant('${2:solid}')",
+      "\t.onPress(() => {",
+      "\t\t$0",
+      "\t})"
+    ],
+    "description": "FiboUI Button() chain"
+  },
+  "FiboUI Text": {
+    "prefix": ["ftxt", "fibotext"],
+    "body": ["Text('${1:Hello}').fontSize(${2:14})$0"],
+    "description": "FiboUI Text()"
+  },
+  "FiboUI TextField": {
+    "prefix": ["ffield", "fibotextfield"],
+    "body": [
+      "TextField()",
+      "\t.placeholder('${1:Email}')",
+      "\t.onChange((v) => {",
+      "\t\t$0",
+      "\t})"
+    ],
+    "description": "FiboUI TextField()"
+  },
+  "FiboUI ListTile": {
+    "prefix": ["ftile", "fibolisttile"],
+    "body": [
+      "ListTile()",
+      "\t.title(Text('${1:Title}'))",
+      "\t.subtitle(Text('${2:Subtitle}'))",
+      "\t.chevron()",
+      "\t.onPress(() => {",
+      "\t\t$0",
+      "\t})"
+    ],
+    "description": "FiboUI ListTile()"
+  },
+  "FiboUI ScrollView": {
+    "prefix": ["fscroll"],
+    "body": [
+      "ScrollView()",
+      "\t.children([",
+      "\t\t$0",
+      "\t]);"
+    ],
+    "description": "FiboUI ScrollView()"
+  },
+  "FiboUI children block": {
+    "prefix": ["fch", "fibochildren"],
+    "body": [
+      ".children([",
+      "\t$0",
+      "])"
+    ],
+    "description": "FiboUI .children([…]) block"
+  }
+}

@@ -99,16 +99,16 @@ Creates a new `Box` builder instance. No arguments required.
 | :--- | :--- | :--- |
 | `.flexDirection(direction)` | `'row' \| 'column'` | Sets flex direction |
 | `.alignItems(alignment)` | `'start' \| 'center' \| 'end' \| 'stretch'` | Aligns flex items on cross axis |
-| `.justifyContent(justify)` | `'start' \| 'center' \| 'end' \| 'between' \| 'around' \| 'evenly'` | Aligns flex items on main axis |
+| `.justifyContent(justify)` | `'start' \| 'center' \| 'end' \| 'between' \| 'around' \| 'evenly'`, also `space-between`, `spaceBetween`, and the same forms for around / evenly | Main axis. `alignItems('space-between')` is not valid — that method is the cross axis only. |
 
 ### Spacing Helpers
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.paddingHorizontal(value)` | `string \| number` | Sets horizontal padding (Tailwind class) |
-| `.paddingVertical(value)` | `string \| number` | Sets vertical padding (Tailwind class) |
-| `.marginHorizontal(value)` | `string \| number` | Sets horizontal margin (Tailwind class) |
-| `.marginVertical(value)` | `string \| number` | Sets vertical margin (Tailwind class) |
+| `.paddingHorizontal(value)` / `.paddingX` / `.px` | `string \| number` | `padding-left` and `padding-right` (a number gets `px`). Same helpers exist on `.hover()`, `.focus()`, and `.active()`. |
+| `.paddingVertical(value)` / `.paddingY` / `.py` | `string \| number` | `padding-top` and `padding-bottom` |
+| `.marginHorizontal(value)` / `.marginX` / `.mx` | `string \| number` | `margin-left` and `margin-right` |
+| `.marginVertical(value)` / `.marginY` / `.my` | `string \| number` | `margin-top` and `margin-bottom` |
 
 ### Dynamic CSS Properties
 

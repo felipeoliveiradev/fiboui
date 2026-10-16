@@ -1,5 +1,3 @@
-'use client';
-
 export { Box } from './structure/Box';
 export { Card } from './structure/Card';
 export { List } from './structure/List';

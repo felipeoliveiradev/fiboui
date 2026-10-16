@@ -22,6 +22,7 @@ import {
 } from './motionCss';
 import { Reveal } from './Reveal';
 import { ScrollProgress } from './ScrollProgress';
+import { ValueBinder } from './ValueBinder';
 import type { FiboTheme } from '../theme/types';
 import {
   resolveTheme,
@@ -34,6 +35,8 @@ import {
   promoteSurfaceLonghandsInStyle,
   withRestTransform,
 } from './smoothInteraction';
+import { camelToKebab, logicalLonghands, normalizeCssValue } from './cssFluent';
+
 
 /** Typical sticky header height used when `.sticky(0)` / `.sticky(true)` has no size. */
 const DEFAULT_STICKY_OFFSET_PX = 64;
@@ -192,8 +195,40 @@ export abstract class FiboBuilder {
     return this;
   }
 
-  justifyContent(justify: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly'): this {
-    this._classNames.push(`justify-${justify}`);
+  /**
+   * Main-axis distribution. Accepts Tailwind shortcuts (`between`) and CSS/Flutter
+   * names (`space-between` / `spaceBetween`).
+   */
+  justifyContent(
+    justify:
+      | 'start'
+      | 'center'
+      | 'end'
+      | 'between'
+      | 'around'
+      | 'evenly'
+      | 'space-between'
+      | 'space-around'
+      | 'space-evenly'
+      | 'spaceBetween'
+      | 'spaceAround'
+      | 'spaceEvenly'
+  ): this {
+    const map: Record<string, string> = {
+      start: 'justify-start',
+      center: 'justify-center',
+      end: 'justify-end',
+      between: 'justify-between',
+      around: 'justify-around',
+      evenly: 'justify-evenly',
+      'space-between': 'justify-between',
+      'space-around': 'justify-around',
+      'space-evenly': 'justify-evenly',
+      spaceBetween: 'justify-between',
+      spaceAround: 'justify-around',
+      spaceEvenly: 'justify-evenly',
+    };
+    this._classNames.push(map[justify] ?? `justify-${justify}`);
     return this;
   }
 
@@ -404,7 +439,8 @@ export abstract class FiboBuilder {
   }
 
   shadow(config?: import('./shadowTypes').ShadowConfig): this {
-    if (config === null || config === 'none') {
+    // 0 / '0' are falsy-ish but must mean "no shadow", not the md default.
+    if (config === null || config === 'none' || config === 0 || config === '0') {
       const cls = _styleManager.register('box-shadow', 'none');
       this._classNames.push(cls);
       return this;
@@ -1821,8 +1857,8 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
           if (stored != null && stored !== '') {
             return String(stored);
           }
-          // Fluent `.key(id)` when unset. Parents stamp string keys via
-          // `normalizeFiboChildren` so React never stringifies this function.
+          // Fluent `.key(id)` when unset. Do not let this proxy reach Flight:
+          // `buildChild` / `normalizeFiboChildren` assemble to host elements first.
           if (!(target as any).__fiboKeyFn) {
             const fluent = (value: string | number) => {
               target.key(value);
@@ -1850,6 +1886,21 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
           return reactProps;
         }
 
+        // Builder methods named `type` (TextField, Text, InputCard) live on the
+        // prototype. The stamped React element `type` is an own property and would
+        // otherwise swallow `.type('email')` / `.type('h1')`. Prefer the method.
+        if (prop === 'type') {
+          const proto = Object.getPrototypeOf(target);
+          const method = proto != null ? Reflect.get(proto, 'type', receiver) : undefined;
+          if (typeof method === 'function') {
+            return (value: unknown) => {
+              method.call(target, value);
+              return receiver;
+            };
+          }
+          return Reflect.get(target, prop, receiver);
+        }
+
         if (REACT_ELEMENT_FIELDS.has(prop)) {
           return Reflect.get(target, prop, receiver);
         }
@@ -1859,15 +1910,13 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
         }
 
         return (value: any) => {
-          const cssProp = (prop as string).replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2').toLowerCase();
-
-          const unitlessProps = ['opacity', 'z-index', 'flex', 'flex-grow', 'flex-shrink', 'order', 'font-weight', 'line-height'];
-          const isUnitless = unitlessProps.includes(cssProp);
-
-          const finalValue = typeof value === 'number' && !isUnitless ? `${value}px` : String(value);
-
-          const cls = _styleManager.register(cssProp, finalValue);
-          target.className(cls);
+          const logical = logicalLonghands(prop as string);
+          const props = logical ?? [prop as string];
+          for (const name of props) {
+            const cssProp = camelToKebab(name);
+            const finalValue = normalizeCssValue(name, value);
+            target.className(_styleManager.register(cssProp, finalValue));
+          }
           return receiver;
         };
       },
@@ -1879,46 +1928,6 @@ interface SignalLike<T> {
   value: T;
   subscribe: (listener: (val: T) => void) => () => void;
 }
-
-const ValueBinderInner = <T>({
-  signal,
-  builder,
-  loading,
-  error
-}: {
-  signal: SignalLike<T>,
-  builder?: (val: T) => ReactNode,
-  loading?: () => ReactNode,
-  error?: (err: Error | unknown) => ReactNode
-}) => {
-  const value = React.useSyncExternalStore(
-    React.useCallback((callback) => {
-      if (signal.subscribe) {
-        return signal.subscribe(callback);
-      }
-      return () => { };
-    }, [signal]),
-    () => signal.value
-  );
-
-  const err = (value as any)?.error;
-  if (err && error) {
-    return error(err);
-  }
-
-  const isLoading = (value as any)?.isLoading || (value as any)?.loading;
-  if (isLoading === true && loading) {
-    return loading();
-  }
-
-  if (builder) {
-    return builder(value);
-  }
-
-  return null;
-};
-
-const ValueBinder = React.memo(ValueBinderInner) as typeof ValueBinderInner;
 
 export class FluentValueBuilder<T> {
   private _loading?: () => ReactNode;

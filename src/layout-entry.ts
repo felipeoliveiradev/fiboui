@@ -1,5 +1,3 @@
-'use client';
-
 export { Center } from './layout/Center';
 export { Column } from './layout/Column';
 export { Container } from './layout/Container';

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { CSSProperties, ReactNode, useEffect, useRef } from 'react';
 import { ensureMotionCss } from './styleManager';
 

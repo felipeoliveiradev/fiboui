@@ -1,3 +1,5 @@
+'use client';
+
 import { createContext, useContext, useRef, ReactNode } from 'react';
 import { createReactivityRoot, ReactivityScope } from './state';
 

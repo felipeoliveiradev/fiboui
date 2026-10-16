@@ -95,7 +95,9 @@ Text(content?: string) → TextBuilder
 Creates a new `Text` builder instance.
 
 **Parameters:**
-- `content` (optional): The text content to display
+- `content` (optional): The text to display
+
+A plain `` `Count: ${count.value}` `` is frozen at construction. `` `Total: ${todos.$length}` `` stays live: `$length` embeds a marker and `Text` subscribes only to the signals inside that string. Labels, `ListTile` titles, and `Button('…')` do not resolve those markers — put the live string in `Text`.
 
 ## Properties
 
@@ -104,7 +106,9 @@ Creates a new `Text` builder instance.
 | Method | Type | Description |
 | :--- | :--- | :--- |
 | `.content(text)` | `string` | Sets the text content |
-| `.variant(variant)` | `'h1' \| 'h2' \| 'h3' \| 'h4' \| 'body' \| 'caption'` | Sets typography variant |
+| `.variant(variant)` | `'h1' \| 'h2' \| 'h3' \| 'h4' \| 'body' \| 'caption'` | Typography variant. `.type('h1')` does not run (`type` is the React element field). |
+| `.bindSignal(signal)` | `Signal` | Re-render when that signal changes. Only signals you pass are subscribed. |
+| `.bindSignal(signal, format)` | `(value) => string` | Replaces the text with `format(signal.value)` |
 
 ### Styling
 
