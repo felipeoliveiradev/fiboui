@@ -29,6 +29,12 @@ All notable changes to this project are documented in this file.
 - **Button ripple** — captures the button before the dynamic import.
 - **Editor** — closing labels on every multi-line fluent chain, and Enter auto-indent (`extensions/vscode-fiboui`).
 
+## [2.4.4] - 2026-10-15
+
+### Changed
+
+- **Docs / package metadata** — polished README with live demos; `homepage` → [fiboui.vercel.app](https://fiboui.vercel.app); store demo link [fiboui-store.vercel.app](https://fiboui-store.vercel.app).
+
 ## [2.4.3] - 2026-10-15
 
 ### Fixed

@@ -1,7 +1,7 @@
 {
   "name": "fiboui",
   "version": "2.5.0",
-  "description": "A Flutter/SwiftUI-inspired React UI framework with builder pattern and theme system",
+  "description": "Flutter/SwiftUI-inspired React UI — fluent builders, signals, and themes. https://fiboui.vercel.app",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -86,7 +86,7 @@
   "bugs": {
     "url": "https://github.com/felipeoliveiradev/fiboui/issues"
   },
-  "homepage": "https://github.com/felipeoliveiradev/fiboui#readme",
+  "homepage": "https://fiboui.vercel.app",
   "peerDependencies": {
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
