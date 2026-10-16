@@ -8,9 +8,10 @@ export default defineConfig({
     react(),
   ],
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
+    alias: [
+      { find: '@', replacement: path.resolve(__dirname, './src') },
+      { find: /^fiboui$/, replacement: path.resolve(__dirname, './src/index.ts') },
+    ],
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
