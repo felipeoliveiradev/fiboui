@@ -1887,19 +1887,26 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
           return reactProps;
         }
 
-        // Builder methods named `type` (TextField, Text, InputCard) live on the
-        // prototype. The stamped React element `type` is an own property and would
-        // otherwise swallow `.type('email')` / `.type('h1')`. Prefer the method.
+        // React reads `element.type` and calls it with a props object.
+        // Users call `.type('email' | 'h1')`. One stable function does both:
+        // a string goes to the builder method; anything else renders the component.
         if (prop === 'type') {
+          const component = Reflect.get(target, prop);
           const proto = Object.getPrototypeOf(target);
-          const method = proto != null ? Reflect.get(proto, 'type', receiver) : undefined;
-          if (typeof method === 'function') {
-            return (value: unknown) => {
-              method.call(target, value);
-              return receiver;
+          const method = proto != null ? proto.type : undefined;
+          if (typeof method !== 'function' || typeof component !== 'function') {
+            return component;
+          }
+          if (!(target as any).__fiboType) {
+            (target as any).__fiboType = (value: unknown, second?: unknown) => {
+              if (typeof value === 'string' || typeof value === 'number') {
+                method.call(target, value);
+                return receiver;
+              }
+              return component(value, second);
             };
           }
-          return Reflect.get(target, prop, receiver);
+          return (target as any).__fiboType;
         }
 
         if (REACT_ELEMENT_FIELDS.has(prop)) {
