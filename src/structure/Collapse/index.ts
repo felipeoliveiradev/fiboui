@@ -2,7 +2,7 @@
 
 import React, { ReactElement, ReactNode, useState } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
-import { BaseProps, FiboChild } from '../../core/types';
+import { BaseProps, FiboChild, FiboChildren } from '../../core/types';
 import { buildChild } from '../../core/children';
 import { Box } from '../Box';
 import { Text } from '../../content/Text';
@@ -21,6 +21,14 @@ class CollapseBuilder extends FiboBuilder {
 
   content(value: FiboChild): this {
     this._content = buildChild(value);
+    return this;
+  }
+
+  /** Docs and fluent trees use `.children()`; keep it as the panel body. */
+  children(value: FiboChildren): this {
+    super.children(value);
+    const nodes = this.processChildren();
+    this._content = nodes.length <= 1 ? (nodes[0] ?? null) : nodes;
     return this;
   }
 
@@ -49,10 +57,11 @@ class CollapseBuilder extends FiboBuilder {
 
 interface CollapseBaseProps {
   builder: CollapseBuilder;
+  [key: string]: unknown;
 }
 
-const CollapseBase = React.memo(({ builder }: CollapseBaseProps) => {
-    const headerId = React.useId();
+const CollapseBase = React.memo(({ builder, ...rest }: CollapseBaseProps) => {
+    const headerId = `fibo-cl-${React.useId().replace(/:/g, '')}`;
     const contentId = `${headerId}-content`;
 
     const isControlled = builder._expanded !== undefined;
@@ -69,10 +78,13 @@ const CollapseBase = React.memo(({ builder }: CollapseBaseProps) => {
         }
     };
 
+    const { children: _children, ...hostRest } = rest;
+
     return Box()
         .classNames(['w-full', 'border', 'border-gray-200', 'rounded-xl', 'overflow-hidden', 'bg-white', 'transition-all', 'duration-300'])
         .className((builder as unknown as { getClassName(): string }).getClassName())
         .style((builder as unknown as { getStyle(): React.CSSProperties }).getStyle())
+        .props(hostRest)
         .children([
             React.createElement('button', {
                 key: 'header',
@@ -85,7 +97,11 @@ const CollapseBase = React.memo(({ builder }: CollapseBaseProps) => {
             }, [
                 React.createElement(React.Fragment, { key: 'title' },
                     typeof builder._title === 'string'
-                        ? Text(builder._title).fontWeight(600).fontSize(15).color("#1F2937").build()
+                        ? Text(builder._title)
+                            .fontWeight(600)
+                            .fontSize(15)
+                            .style({ color: 'inherit' })
+                            .build()
                         : builder._title
                 ),
                 React.createElement('span', {
@@ -100,6 +116,7 @@ const CollapseBase = React.memo(({ builder }: CollapseBaseProps) => {
             ]),
 
             Box()
+                .key('panel')
                 .props({
                     id: contentId,
                     role: 'region',
@@ -108,7 +125,7 @@ const CollapseBase = React.memo(({ builder }: CollapseBaseProps) => {
                 })
                 .classNames(['transition-all', 'duration-300', 'ease-in-out', 'overflow-hidden'])
                 .style({
-                    maxHeight: isOpen ? '500px' : '0px',
+                    maxHeight: isOpen ? undefined : '0px',
                     opacity: isOpen ? 1 : 0,
                 })
                 .children(

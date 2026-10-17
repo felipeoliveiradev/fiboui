@@ -1,5 +1,6 @@
 import { FIBO_MOTION_CSS } from './motionCss';
 import React, { ReactElement } from 'react';
+import { PluginManager } from './plugin/PluginManager';
 
 export function hashKey(input: string): string {
   let h = 5381;
@@ -9,8 +10,41 @@ export function hashKey(input: string): string {
   return (h >>> 0).toString(36);
 }
 
+function isThenable(value: unknown): value is Promise<unknown> {
+  return !!value && typeof (value as { then?: unknown }).then === 'function';
+}
+
+type SsrAls = {
+  getStore(): StyleManager | undefined;
+  run<R>(store: StyleManager, callback: () => R): R;
+};
+
+/** Node-only. Avoid a static `node:async_hooks` import so the client bundle stays browser-safe. */
+function createSsrAls(): SsrAls | null {
+  try {
+    const getBuiltin = (
+      globalThis as {
+        process?: {
+          getBuiltinModule?: (id: string) => {
+            AsyncLocalStorage?: new () => SsrAls;
+          };
+        };
+      }
+    ).process?.getBuiltinModule;
+    if (typeof getBuiltin !== 'function') return null;
+    const Ctor = getBuiltin('async_hooks')?.AsyncLocalStorage;
+    if (typeof Ctor !== 'function') return null;
+    return new Ctor();
+  } catch {
+    return null;
+  }
+}
+
+const ssrAls = createSsrAls();
+
 export class StyleManager {
   private static instance: StyleManager;
+  private static scopeStack: StyleManager[] = [];
   private sheet: HTMLStyleElement | null = null;
   private cache: Map<string, string> = new Map();
   private extras: string[] = [];
@@ -22,18 +56,70 @@ export class StyleManager {
   }
 
   public static getInstance(): StyleManager {
+    if (typeof document === 'undefined') {
+      const fromAls = ssrAls?.getStore();
+      if (fromAls) return fromAls;
+      const scoped = StyleManager.scopeStack[StyleManager.scopeStack.length - 1];
+      if (scoped) return scoped;
+    }
     if (!StyleManager.instance) {
       StyleManager.instance = new StyleManager();
     }
     return StyleManager.instance;
   }
 
-  /** Test-only: empty cache/sheet so a simulated client starts cold. */
+  /**
+   * Isolated manager for one SSR request. Client `getInstance()` is unchanged.
+   * Same request-local shape as `PluginManager.run()`; ALS so overlapping
+   * `renderToString` does not mix extras. Not a barrel export.
+   */
+  static run<T>(fn: () => T): T {
+    if (typeof document !== 'undefined') {
+      return fn();
+    }
+    const sm = new StyleManager();
+    if (ssrAls) {
+      return ssrAls.run(sm, fn);
+    }
+    StyleManager.scopeStack.push(sm);
+    let sync = true;
+    const release = () => {
+      const i = StyleManager.scopeStack.lastIndexOf(sm);
+      if (i >= 0) StyleManager.scopeStack.splice(i, 1);
+    };
+    try {
+      const result = fn();
+      if (isThenable(result)) {
+        sync = false;
+        return result.then(
+          (value) => {
+            release();
+            return value;
+          },
+          (err) => {
+            release();
+            throw err;
+          },
+        ) as T;
+      }
+      return result;
+    } finally {
+      if (sync) release();
+    }
+  }
+
+  /** Test-only / SSR: empty cache/sheet so the next client or request starts cold. */
   public reset(): void {
     this.cache.clear();
     this.extras = [];
     this.defaultsReady = false;
-    this.sheet = null;
+    if (this.sheet) {
+      this.sheet.textContent = '';
+      this.sheet.remove();
+      this.sheet = null;
+    } else if (typeof document !== 'undefined') {
+      document.getElementById('fibo-dynamic-styles')?.remove();
+    }
     this.attachSheet();
     this.ensureDefaults();
   }
@@ -44,16 +130,23 @@ export class StyleManager {
 
   private attachSheet(): void {
     if (typeof document === 'undefined') return;
+    if (this.sheet?.isConnected) return;
+
     const existing = document.getElementById('fibo-dynamic-styles') as HTMLStyleElement | null;
-    if (existing) {
+    if (existing?.isConnected) {
       this.sheet = existing;
-      this.defaultsReady = true;
+      this.defaultsReady = existing.textContent?.includes('fibo-fadeIn') ?? false;
       return;
     }
+
+    const parent = document.head ?? document.documentElement;
+    if (!parent) return;
+
     this.sheet = document.createElement('style');
     this.sheet.id = 'fibo-dynamic-styles';
     this.sheet.setAttribute('data-fibo', '1');
-    document.head.appendChild(this.sheet);
+    parent.appendChild(this.sheet);
+    this.defaultsReady = false;
   }
 
   /**
@@ -110,6 +203,10 @@ export class StyleManager {
   private insert(rule: string, track = true): void {
     if (track && this.extras.includes(rule)) return;
     if (track) this.extras.push(rule);
+    if (typeof document !== 'undefined' && !this.sheet?.isConnected) {
+      this.attachSheet();
+      this.ensureDefaults();
+    }
     if (this.sheet && this.sheet.textContent?.includes(rule)) {
       return;
     }
@@ -190,7 +287,19 @@ export class StyleManager {
   }
 }
 
-export const _styleManager = StyleManager.getInstance();
+/** Always the request-local (or process) instance — never a stale singleton capture. */
+export const _styleManager: StyleManager = new Proxy({} as StyleManager, {
+  get(_target, prop) {
+    const inst = StyleManager.getInstance();
+    const value = Reflect.get(inst, prop, inst) as unknown;
+    return typeof value === 'function' ? (value as (...args: unknown[]) => unknown).bind(inst) : value;
+  },
+});
+
+const origPluginRun = PluginManager.run.bind(PluginManager) as typeof PluginManager.run;
+PluginManager.run = function runWithStyleScope<T>(fn: () => T): T {
+  return StyleManager.run(() => origPluginRun(fn));
+};
 
 export function ensureMotionCss(): void {
   StyleManager.getInstance().ensureDefaults();
@@ -204,13 +313,18 @@ export function getCss(): string {
   return StyleManager.getInstance().getCss();
 }
 
+/** Neutralize `</style>` so user CSS cannot break out of a `<style>` tag (SSR HTML). */
+export function escapeStyleText(css: string): string {
+  return css.replace(/<\/style/gi, '<\\/style');
+}
+
 /** `<style id="fibo-dynamic-styles">` HTML. Call **after** `renderToString` so rules are collected. */
 export function getStyleTag(): string {
-  const css = getCss().replace(/<\/style/gi, '<\\/style');
+  const css = escapeStyleText(getCss());
   const tag = `<style id="fibo-dynamic-styles" data-fibo="1">${css}</style>`;
   // Vite SSR: snapshot then clear so the next request does not inherit rules.
   if (typeof document === 'undefined') {
-    StyleManager.resetForTests();
+    endSsrRequest();
   }
   return tag;
 }
@@ -221,6 +335,11 @@ export function getStyleTag(): string {
  */
 export function endSsrRequest(): void {
   StyleManager.resetForTests();
+  // Node SSR: drop plugins so the next request does not inherit them.
+  // Skip on the client — HMR / FiboApp uninstall-on-unmount owns that lifecycle.
+  if (typeof globalThis.window === 'undefined' || !globalThis.window) {
+    PluginManager.reset();
+  }
 }
 
 /**
@@ -229,11 +348,16 @@ export function endSsrRequest(): void {
  */
 export function FiboStyles(): ReactElement {
   ensureMotionCss();
+  const css = escapeStyleText(getCss());
+  // Snapshot-then-clear on the server so the next request does not inherit rules.
+  if (typeof document === 'undefined') {
+    endSsrRequest();
+  }
   return React.createElement('style', {
     id: 'fibo-dynamic-styles',
     'data-fibo': '1',
     suppressHydrationWarning: true,
-    dangerouslySetInnerHTML: { __html: getCss() },
+    dangerouslySetInnerHTML: { __html: css },
   });
 }
 
@@ -242,6 +366,6 @@ export function MotionStyles(): ReactElement {
   return React.createElement('style', {
     id: 'fibo-motion-presets',
     'data-fibo-motion': '1',
-    dangerouslySetInnerHTML: { __html: FIBO_MOTION_CSS },
+    dangerouslySetInnerHTML: { __html: escapeStyleText(FIBO_MOTION_CSS) },
   });
 }

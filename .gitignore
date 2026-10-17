@@ -32,3 +32,11 @@ examples/ssr-fixtures/playwright-report
 .cache
 /*.tgz
 .vercel
+
+# local agent indexes
+.claude-flow/
+.searchtunnel/
+.swarm/
+agentdb.rvf
+agentdb.rvf.lock
+ruvector.db

@@ -27,10 +27,7 @@
     "baseUrl": ".",
     "paths": {
       "fiboui": [
-        "../../src/index.ts"
-      ],
-      "fiboui/*": [
-        "../../src/*"
+        "../src/index.ts"
       ]
     }
   },

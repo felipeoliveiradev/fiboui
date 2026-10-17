@@ -1,11 +1,89 @@
-import React, { ReactElement } from 'react';
+import React, { ReactElement, ReactNode } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
-import { ChildrenProps, MainAxisAlignment, CrossAxisAlignment } from '../../core/types';
+import { ChildrenProps, FiboChildren, MainAxisAlignment, CrossAxisAlignment } from '../../core/types';
+import {
+  collectInterpSignals,
+  hasInterpMarks,
+  resolveInterpString,
+} from '../../core/interpolate';
+
+function bindInterp(host: FiboBuilder, text: string | undefined): void {
+  if (typeof text !== 'string' || !hasInterpMarks(text)) return;
+  for (const sig of collectInterpSignals(text)) {
+    host.bindSignal(sig);
+  }
+}
+
+function bindInterpTree(host: FiboBuilder, node: unknown): void {
+  if (typeof node === 'function') {
+    try {
+      bindInterpTree(host, (node as () => unknown)());
+    } catch {
+      /* factory may need mount */
+    }
+    return;
+  }
+  if (typeof node === 'string') {
+    bindInterp(host, node);
+    return;
+  }
+  if (Array.isArray(node)) {
+    for (const item of node) bindInterpTree(host, item);
+  }
+}
+
+function resolveInterpChild(child: ReactNode): ReactNode {
+  return typeof child === 'string' && hasInterpMarks(child)
+    ? resolveInterpString(child)
+    : child;
+}
+
+function hostNodes(
+  fromBuilder: ReactNode[],
+  props: Record<string, any>
+): { nodes: ReactNode[]; rest: Record<string, any> } {
+  const { children: propsChildren, ...rest } = props;
+  const source = propsChildren !== undefined ? propsChildren : fromBuilder;
+  const raw = source == null ? [] : Array.isArray(source) ? source : [source];
+  return { nodes: raw.map(resolveInterpChild), rest };
+}
+
+function mergeHostStyle(
+  host: React.CSSProperties,
+  extra: unknown
+): React.CSSProperties {
+  if (!extra || typeof extra !== 'object' || Array.isArray(extra)) return { ...host };
+  return { ...host, ...(extra as React.CSSProperties) };
+}
+
+function rowDirectionClass(dir: unknown): string {
+  if (dir === 'row-reverse') return 'flex-row-reverse';
+  if (dir === 'column') return 'flex-col';
+  if (dir === 'column-reverse') return 'flex-col-reverse';
+  return 'flex-row';
+}
+
+function rowWrapClass(wrap: unknown): string {
+  if (wrap === 'wrap') return 'flex-wrap';
+  if (wrap === 'wrap-reverse') return 'flex-wrap-reverse';
+  return '';
+}
 
 class RowBuilder extends FiboBuilder {
   private _mainAxisAlignment: MainAxisAlignment = 'start';
   private _crossAxisAlignment: CrossAxisAlignment = 'start';
-  private _spacing?: string | number;
+
+  children(children: FiboChildren): this {
+    bindInterpTree(this, children);
+    return super.children(children);
+  }
+
+  props(value: Record<string, any>): this {
+    if (value && 'children' in value) {
+      bindInterpTree(this, value.children);
+    }
+    return super.props(value);
+  }
 
   mainAxisAlignment(alignment: MainAxisAlignment): this {
     this._mainAxisAlignment = alignment;
@@ -14,12 +92,13 @@ class RowBuilder extends FiboBuilder {
 
   crossAxisAlignment(alignment: CrossAxisAlignment): this {
     this._crossAxisAlignment = alignment;
-    return this;
+    return this.alignItems(alignment);
   }
 
   spacing(value: string | number): this {
-    this._spacing = value;
-    return this;
+    if (typeof value === 'number') return this.gap(value);
+    if (value !== '' && !isNaN(Number(value))) return this.gap(Number(value));
+    return this.gap(value);
   }
 
   items(children: ReactElement[]): this {
@@ -44,43 +123,38 @@ class RowBuilder extends FiboBuilder {
       stretch: 'items-stretch',
     };
 
+    const { nodes, rest } = hostNodes(this.processChildren(), this._props);
+    const {
+      className: extraClass,
+      style: extraStyle,
+      dangerouslySetInnerHTML: _html,
+      ...dom
+    } = rest;
+    void _html;
+
+    const style = mergeHostStyle(this.getStyle(), extraStyle);
+
     const classes = [
       'fibo-row',
       'flex',
-      'flex-row',
+      rowDirectionClass(style.flexDirection),
+      rowWrapClass(style.flexWrap),
       // min-w-0: flex item can shrink below content intrinsic width (grid/flex overflow)
       this.isHug() ? 'w-auto self-auto shrink-0' : 'w-full min-w-0 self-stretch',
       alignmentMap[this._mainAxisAlignment],
       crossAlignmentMap[this._crossAxisAlignment],
       ...this._classNames,
     ];
-
-    const style = this.getStyle();
-
-    if (this._spacing) {
-      if (typeof this._spacing === 'number') {
-        style.gap = `${this._spacing}px`;
-      } else {
-
-        if (!isNaN(Number(this._spacing))) {
-          style.gap = `${Number(this._spacing) * 4}px`;
-        } else {
-          style.gap = this._spacing;
-        }
-      }
-    }
-
-    const className = classes.filter(Boolean).join(' ');
-    const children = this.processChildren();
+    const className = [...classes, extraClass].filter(Boolean).join(' ');
 
     return React.createElement(
       'div',
       {
-        className,
         style,
-        ...this._props,
+        ...dom,
+        className,
       },
-      ...children
+      ...nodes
     );
   }
 }

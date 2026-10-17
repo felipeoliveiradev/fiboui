@@ -1,5 +1,17 @@
-export const createRipple = (event: { clientX: number, clientY: number }, button: HTMLElement, color: string = 'rgba(255, 255, 255, 0.3)') => {
-  if (!button) return;
+export const createRipple = (
+  event: { clientX: number; clientY: number },
+  button: HTMLElement,
+  color: string = 'rgba(255, 255, 255, 0.3)',
+) => {
+  if (!button || typeof document === 'undefined') return;
+  if (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  ) {
+    return;
+  }
+
   const circle = document.createElement('span');
   const diameter = Math.max(button.clientWidth, button.clientHeight);
   const radius = diameter / 2;
@@ -19,7 +31,15 @@ export const createRipple = (event: { clientX: number, clientY: number }, button
   const rippleContainer = button.querySelector('.fibo-ripple-container') || button;
   rippleContainer.appendChild(circle);
 
-  setTimeout(() => {
+  let done = false;
+  const cleanup = () => {
+    if (done) return;
+    done = true;
+    window.clearTimeout(timer);
+    circle.removeEventListener('animationend', onEnd);
     circle.remove();
-  }, 600);
+  };
+  const onEnd = () => cleanup();
+  const timer = window.setTimeout(cleanup, 600);
+  circle.addEventListener('animationend', onEnd);
 };

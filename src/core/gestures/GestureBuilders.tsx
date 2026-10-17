@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
-import { PanRecognizer, PanCallback } from './Pan';
+import { PanCallback } from './Pan';
+import { usePanSession } from './Gesture';
 
 export abstract class GestureBuilder {
   abstract wrap(children: ReactNode): ReactNode;
@@ -112,49 +113,14 @@ interface DragGestureWrapperProps {
 }
 
 function DragGestureWrapper({ onStart, onUpdate, onEnd, children }: DragGestureWrapperProps) {
-  const recognizer = React.useMemo(() => new PanRecognizer({
-    onStart,
-    onUpdate,
-    onEnd
-  }), [onStart, onUpdate, onEnd]);
-
-  const handlePointerDown = (e: React.PointerEvent) => {
-    const target = e.currentTarget as HTMLElement;
-    target.setPointerCapture(e.pointerId);
-    recognizer.onPointerDown(e.nativeEvent);
-    e.stopPropagation();
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if ((e.currentTarget as HTMLElement).hasPointerCapture(e.pointerId)) {
-      recognizer.onPointerMove(e.nativeEvent);
-      e.stopPropagation();
-    }
-  };
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    const target = e.currentTarget as HTMLElement;
-    if (target.hasPointerCapture(e.pointerId)) {
-      target.releasePointerCapture(e.pointerId);
-    }
-    recognizer.onPointerUp(e.nativeEvent);
-    e.stopPropagation();
-  };
-
-  const handlePointerCancel = (e: React.PointerEvent) => {
-    const target = e.currentTarget as HTMLElement;
-    if (target.hasPointerCapture(e.pointerId)) {
-      target.releasePointerCapture(e.pointerId);
-    }
-    recognizer.onPointerCancel(e.nativeEvent);
-  };
+  const handlers = usePanSession({ onStart, onUpdate, onEnd });
 
   return (
     <div
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerCancel}
+      onPointerDown={handlers.onPointerDown}
+      onPointerMove={handlers.onPointerMove}
+      onPointerUp={handlers.onPointerUp}
+      onPointerCancel={handlers.onPointerCancel}
       style={{
         width: '100%',
         touchAction: 'none',
@@ -173,21 +139,110 @@ interface TapGestureWrapperProps {
   children: ReactNode;
 }
 
-function TapGestureWrapper({ onStart, onEnd, children }: TapGestureWrapperProps) {
-  const handlePointerDown = (e: React.PointerEvent) => {
-    onStart?.();
-    e.stopPropagation();
-  };
+function isTrackedPointer(pressed: boolean, tracked: number | undefined, pointerId: number | undefined) {
+  if (!pressed) return false;
+  if (tracked === undefined || pointerId === undefined) return true;
+  return pointerId === tracked;
+}
 
-  const handlePointerUp = (e: React.PointerEvent) => {
-    onEnd?.();
-    e.stopPropagation();
-  };
+function trySetPointerCapture(target: HTMLElement, pointerId: number) {
+  try {
+    target.setPointerCapture?.(pointerId);
+  } catch {
+    /* jsdom / InvalidStateError */
+  }
+}
+
+function tryReleasePointerCapture(target: HTMLElement | null, pointerId: number | undefined) {
+  if (!target || pointerId === undefined) return;
+  try {
+    if (target.hasPointerCapture?.(pointerId)) target.releasePointerCapture(pointerId);
+  } catch {
+    /* jsdom */
+  }
+}
+
+function TapGestureWrapper({ onStart, onEnd, children }: TapGestureWrapperProps) {
+  const callbacksRef = React.useRef({ onStart, onEnd });
+  callbacksRef.current = { onStart, onEnd };
+
+  const session = React.useMemo(() => {
+    const state = {
+      pressed: false,
+      attached: false,
+      pointerId: undefined as number | undefined,
+      host: null as HTMLElement | null,
+    };
+
+    const detachWindow = () => {
+      if (!state.attached) return;
+      state.attached = false;
+      if (typeof window === 'undefined') return;
+      window.removeEventListener('pointerup', onWindowUp);
+      window.removeEventListener('pointercancel', onWindowCancel);
+    };
+
+    const attachWindow = () => {
+      if (state.attached || typeof window === 'undefined') return;
+      state.attached = true;
+      window.addEventListener('pointerup', onWindowUp);
+      window.addEventListener('pointercancel', onWindowCancel);
+    };
+
+    const finish = () => {
+      if (!state.pressed) return;
+      detachWindow();
+      tryReleasePointerCapture(state.host, state.pointerId);
+      state.pressed = false;
+      state.pointerId = undefined;
+      state.host = null;
+      callbacksRef.current.onEnd?.();
+    };
+
+    const onWindowUp = (e: PointerEvent) => {
+      if (!isTrackedPointer(state.pressed, state.pointerId, e.pointerId)) return;
+      finish();
+    };
+
+    const onWindowCancel = (e: PointerEvent) => {
+      if (!isTrackedPointer(state.pressed, state.pointerId, e.pointerId)) return;
+      finish();
+    };
+
+    const onPointerDown = (e: React.PointerEvent) => {
+      if (state.pressed && !isTrackedPointer(state.pressed, state.pointerId, e.pointerId)) return;
+      const target = e.currentTarget as HTMLElement;
+      state.host = target;
+      state.pressed = true;
+      if (e.pointerId !== undefined) state.pointerId = e.pointerId;
+      trySetPointerCapture(target, e.pointerId);
+      callbacksRef.current.onStart?.();
+      attachWindow();
+      e.stopPropagation();
+    };
+
+    const onPointerUp = (e: React.PointerEvent) => {
+      if (!isTrackedPointer(state.pressed, state.pointerId, e.pointerId)) return;
+      finish();
+      e.stopPropagation();
+    };
+
+    const onPointerCancel = (e: React.PointerEvent) => {
+      if (!isTrackedPointer(state.pressed, state.pointerId, e.pointerId)) return;
+      finish();
+      e.stopPropagation();
+    };
+
+    return { onPointerDown, onPointerUp, onPointerCancel, dispose: finish };
+  }, []);
+
+  React.useEffect(() => session.dispose, [session]);
 
   return (
     <div
-      onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
+      onPointerDown={session.onPointerDown}
+      onPointerUp={session.onPointerUp}
+      onPointerCancel={session.onPointerCancel}
       style={{
         width: '100%',
         cursor: 'pointer',
@@ -208,20 +263,47 @@ interface LongPressGestureWrapperProps {
 }
 
 function LongPressGestureWrapper({ duration, onStart, onEnd, children }: LongPressGestureWrapperProps) {
-  const timerRef = React.useRef<number>();
+  const timerRef = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const pointerIdRef = React.useRef<number | undefined>(undefined);
+  const hostRef = React.useRef<HTMLElement | null>(null);
+  const pressedRef = React.useRef(false);
+  const callbacksRef = React.useRef({ onStart, onEnd, duration });
+  callbacksRef.current = { onStart, onEnd, duration };
+
+  const resetPress = React.useCallback(() => {
+    if (timerRef.current !== undefined) {
+      clearTimeout(timerRef.current);
+      timerRef.current = undefined;
+    }
+    tryReleasePointerCapture(hostRef.current, pointerIdRef.current);
+    pressedRef.current = false;
+    pointerIdRef.current = undefined;
+    hostRef.current = null;
+  }, []);
+
+  React.useEffect(() => resetPress, [resetPress]);
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    onStart?.();
-    timerRef.current = window.setTimeout(() => {
-      onEnd?.();
-    }, duration);
+    if (pressedRef.current && !isTrackedPointer(pressedRef.current, pointerIdRef.current, e.pointerId)) return;
+    const target = e.currentTarget as HTMLElement;
+    hostRef.current = target;
+    pressedRef.current = true;
+    if (e.pointerId !== undefined) pointerIdRef.current = e.pointerId;
+    trySetPointerCapture(target, e.pointerId);
+    if (timerRef.current !== undefined) {
+      clearTimeout(timerRef.current);
+    }
+    callbacksRef.current.onStart?.();
+    timerRef.current = setTimeout(() => {
+      timerRef.current = undefined;
+      callbacksRef.current.onEnd?.();
+    }, callbacksRef.current.duration);
     e.stopPropagation();
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-    }
+    if (!isTrackedPointer(pressedRef.current, pointerIdRef.current, e.pointerId)) return;
+    resetPress();
     e.stopPropagation();
   };
 

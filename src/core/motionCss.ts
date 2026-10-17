@@ -41,14 +41,46 @@ export function isCustomMotion(value: unknown): value is CustomMotion {
   return typeof rec.from === 'object' && rec.from !== null && typeof rec.to === 'object' && rec.to !== null;
 }
 
+const UNITLESS = new Set([
+  'opacity',
+  'zIndex',
+  'z-index',
+  'flex',
+  'flexGrow',
+  'flex-grow',
+  'flexShrink',
+  'flex-shrink',
+  'fontWeight',
+  'font-weight',
+  'lineHeight',
+  'line-height',
+  'order',
+  'zoom',
+  'scale',
+  'scaleX',
+  'scaleY',
+]);
+
+const ANGLE = new Set(['rotate', 'rotateX', 'rotateY', 'rotateZ']);
+
+const SAFE_PROP = /^-{0,2}[a-zA-Z_][\w-]*$/;
+
 export function cssDecls(obj: Record<string, string | number>): string {
-  const unitless = new Set(['opacity', 'zIndex', 'z-index', 'flex', 'fontWeight', 'lineHeight']);
   return Object.entries(obj)
     .map(([key, raw]) => {
       const prop = key.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
-      const value = typeof raw === 'number' && !unitless.has(key) ? `${raw}px` : String(raw);
+      if (!SAFE_PROP.test(prop)) return '';
+      if (typeof raw === 'number') {
+        if (!Number.isFinite(raw)) return '';
+        if (UNITLESS.has(key) || UNITLESS.has(prop)) return `${prop}: ${raw}`;
+        if (ANGLE.has(key) || ANGLE.has(prop)) return `${prop}: ${raw}deg`;
+        return `${prop}: ${raw}px`;
+      }
+      const value = String(raw);
+      if (/[{};]/.test(value)) return '';
       return `${prop}: ${value}`;
     })
+    .filter(Boolean)
     .join('; ');
 }
 
@@ -199,10 +231,21 @@ export const FIBO_MOTION_CSS = `
 
 @media (prefers-reduced-motion: reduce) {
   .fibo-anim:not(.fibo-motion-force),
-  .fibo-reveal:not(.fibo-motion-force),
+  .fibo-reveal:not(.fibo-motion-force) {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
   .fibo-scroll-progress:not(.fibo-motion-force) {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+@media (scripting: none) {
+  .fibo-reveal {
     opacity: 1 !important;
     transform: none !important;
     filter: none !important;

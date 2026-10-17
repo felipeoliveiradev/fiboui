@@ -49,6 +49,12 @@ describe('smoothInteraction helpers', () => {
     expect(withRestTransform({ transform: 'scale(1)' }).transform).toBe('scale(1)');
   });
 
+  it('treats transform none/empty as missing so hover does not jump', () => {
+    expect(withRestTransform({ transform: 'none' }).transform).toBe('translate3d(0, 0, 0)');
+    expect(withRestTransform({ transform: '  none  ' }).transform).toBe('translate3d(0, 0, 0)');
+    expect(withRestTransform({ transform: '   ' }).transform).toBe('translate3d(0, 0, 0)');
+  });
+
   it('builds translate3d axis helpers', () => {
     expect(toTranslate3d('x', 4)).toBe('translate3d(4px, 0, 0)');
     expect(toTranslate3d('y', '-6px')).toBe('translate3d(0, -6px, 0)');

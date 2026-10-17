@@ -1,23 +1,17 @@
-import { Signal, Store, container, SignalType } from 'fiboui';
+import { Store, signal } from 'fiboui';
 import { PerformanceService } from '../Services/PerformanceService';
 
 @Store()
 export class PerformanceViewModel {
-  // Signal properties - automatically converted to signals
-  @Signal(false)
-  isOnline!: SignalType<boolean>;
-
-  @Signal(0)
-  earnings!: SignalType<number>;
-
-  @Signal(0)
-  sheetY!: SignalType<number>;
+  isOnline = signal(false);
+  earnings = signal(0);
+  sheetY = signal(0);
 
   public service: PerformanceService;
   private updateInterval: number | null = null;
 
   constructor() {
-    this.service = container.resolve(PerformanceService);
+    this.service = new PerformanceService();
   }
 
   toggleOnlineStatus(): void {
@@ -31,6 +25,8 @@ export class PerformanceViewModel {
   }
 
   private startEarningsSimulation(): void {
+    this.stopEarningsSimulation();
+    if (typeof window === 'undefined') return;
     this.updateInterval = window.setInterval(() => {
       this.earnings.value = this.service.simulateEarningsUpdate(this.earnings.value);
     }, 2000);
@@ -53,5 +49,6 @@ export class PerformanceViewModel {
 
   dispose(): void {
     this.stopEarningsSimulation();
+    this.isOnline.value = false;
   }
 }

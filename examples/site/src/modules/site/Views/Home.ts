@@ -186,7 +186,7 @@ function shopBand() {
             .letterSpacing('0.16em')
             .textTransform('uppercase')
             .color(muted),
-          Text('Live product · fiboui-store.vercel.app')
+          Text('Live product · /shop')
             .fontSize(9)
             .letterSpacing('0.14em')
             .textTransform('uppercase')
@@ -213,7 +213,7 @@ function shopBand() {
                 .color(chalk)
                 .maxWidth(720),
               Text(
-                'A full store built only with FiboUI builders — catalog, bag, and checkout. Same kit. Separate product.',
+                'A full store built only with FiboUI builders — catalog, bag, and checkout. Same kit. Open it on this site.',
               )
                 .fontSize(15)
                 .lineHeight(1.45)
@@ -236,7 +236,7 @@ function shopBand() {
                   .hover((state: PseudoStateBuilder) => {
                     state.bg(pink).color(chalk)
                   })
-                  .onPress(() => open('https://fiboui-store.vercel.app')),
+                  .onPress(() => navigate('shop')),
               ),
             ]),
           Column()

@@ -10,7 +10,7 @@ const nextConfig = {
   outputFileTracingRoot: repo,
   experimental: { externalDir: true },
   webpack: (config) => {
-    config.resolve.alias.fiboui = path.join(repo, 'dist/index.js');
+    // Do not alias `fiboui` → dist/index.js: App Router must use the react-server export.
     config.resolve.alias['fiboui/style.css'] = path.join(repo, 'dist/style.css');
     return config;
   },

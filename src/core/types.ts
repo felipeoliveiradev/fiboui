@@ -1,9 +1,9 @@
-import { CSSProperties, ReactNode, ReactElement } from 'react';
+import { CSSProperties, ReactNode } from 'react';
 
 /** Any fluent builder that can produce a React element. */
 export type Buildable = {
   /** @deprecated Builders are React elements; `.build()` is optional. */
-  build(): ReactElement;
+  build(): ReactNode;
 };
 
 /**
@@ -13,7 +13,7 @@ export type Buildable = {
 export type FiboChild = ReactNode | Buildable;
 
 /** Value accepted by `.children()`: one child, a list, or a lazy factory. */
-export type FiboChildren = FiboChild | FiboChild[] | (() => FiboChild | FiboChild[]);
+export type FiboChildren = FiboChild | readonly FiboChild[] | (() => FiboChild | readonly FiboChild[]);
 
 export type FiboThemeName = 'material' | 'cupertino' | 'web' | 'noir';
 
@@ -31,8 +31,8 @@ export interface BaseProps {
 }
 
 export interface ChildrenProps extends BaseProps {
-  children?: ReactNode | ReactNode[];
-  child?: ReactNode;
+  children?: FiboChildren;
+  child?: FiboChild;
 }
 
 export type Alignment = 'start' | 'center' | 'end' | 'stretch';
@@ -72,6 +72,7 @@ export type ButtonVariant = 'elevated' | 'filled' | 'outlined' | 'text';
 
 export type StatusType = 'success' | 'warning' | 'error' | 'info';
 
-export interface FiboComponent<T = any> {
-  (props?: T): ReactElement;
+export interface FiboComponent<T = Record<string, never>> {
+  (props?: T): ReactNode;
+  displayName?: string;
 }

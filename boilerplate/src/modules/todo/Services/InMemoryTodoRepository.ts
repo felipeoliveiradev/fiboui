@@ -1,8 +1,6 @@
-import { Injectable } from 'fiboui';
 import { Todo } from '../Models/Todo';
 import { ITodoRepository } from './ITodoRepository';
 
-@Injectable({ singleton: true })
 export class InMemoryTodoRepository implements ITodoRepository {
     private _db: Todo[] = [
         { id: '1', text: 'Learn FiboUI Architecture', isCompleted: true, createdAt: new Date() },
@@ -11,7 +9,6 @@ export class InMemoryTodoRepository implements ITodoRepository {
     ];
 
     async getAll(): Promise<Todo[]> {
-
         return new Promise(resolve => setTimeout(() => resolve([...this._db]), 500));
     }
 

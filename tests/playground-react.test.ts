@@ -71,4 +71,8 @@ describe('playground react equivalent', () => {
     expect(jsx).toContain('<Text')
     expect(jsx).toContain('{item.text}')
   })
+
+  it('keeps Button.type as the HTML type prop', () => {
+    expect(toReact("return Button('Send').type('submit')")).toContain('type="submit"')
+  })
 })

@@ -42,7 +42,7 @@ const renderMultiple = () => {
 
 Searchable select with autocomplete and multi-select support.
 
-`Combobox` combines a text input with a dropdown list, allowing users to search and select from options or add new ones.
+`Combobox` combines a text input with a dropdown list, allowing users to search and select from options or add new ones. Uncontrolled by default. `.name()` writes hidden input(s) for `Form` / `FormData` (multi: one hidden per value → `string[]`). Enter only `preventDefault`s when the list is open **and** there is a highlight or `onAdd` to commit; otherwise the surrounding form submits. Use `.controlled(true)` when parent state must win.
 
 ## Live Examples
 
@@ -93,11 +93,14 @@ Combobox() → ComboboxBuilder
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.value(value)` | `string \| string[]` | Selected value(s) |
+| `.value(value)` | `string \| string[]` | Initial selection. Uncontrolled unless `.controlled(true)`. |
 | `.options(options)` | `Array<{label, value}>` | Available options |
 | `.onChange(handler)` | `(value) => void` | Change event handler |
 | `.label(text)` | `string` | Optional label |
 | `.placeholder(text)` | `string` | Placeholder text |
+| `.name(name)` | `string` | Hidden input(s) for `Form` / `FormData`. Multi-select: one hidden per selected value (same `name`) |
+| `.controlled(on)` | `boolean` | `true` keeps React `value` and re-renders on each change |
+| `.rules(...rules)` | `FieldRule[]` | Checks collected on submit. See [Form](/components/interactive-form). |
 | `.multiple(enabled)` | `boolean` | Enable multiple selection |
 | `.onAdd(handler)` | `(label: string) => void` | Handler for adding new options |
 | `.disabled(disabled)` | `boolean` | Disabled state |

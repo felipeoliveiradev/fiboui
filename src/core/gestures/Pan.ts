@@ -6,6 +6,8 @@ export class PanRecognizer extends GestureRecognizer {
   private startLocation: Offset = { x: 0, y: 0 };
   private lastLocation: Offset = { x: 0, y: 0 };
   private startTime: number = 0;
+  private pointerId: number | undefined;
+  private hasPointer = false;
 
   constructor(
     private callbacks: {
@@ -18,6 +20,11 @@ export class PanRecognizer extends GestureRecognizer {
   }
 
   onPointerDown(e: PointerEvent) {
+    if (this.hasPointer && !this.isOurPointer(e)) return;
+    if (this.state === GestureState.Began || this.state === GestureState.Changed) return;
+
+    this.hasPointer = true;
+    this.pointerId = e.pointerId;
     this.state = GestureState.Began;
     this.startLocation = { x: e.clientX, y: e.clientY };
     this.lastLocation = { x: e.clientX, y: e.clientY };
@@ -27,6 +34,7 @@ export class PanRecognizer extends GestureRecognizer {
   }
 
   onPointerMove(e: PointerEvent) {
+    if (!this.isOurPointer(e)) return;
     if (this.state !== GestureState.Began && this.state !== GestureState.Changed) return;
 
     this.state = GestureState.Changed;
@@ -36,6 +44,7 @@ export class PanRecognizer extends GestureRecognizer {
   }
 
   onPointerUp(e: PointerEvent) {
+    if (!this.isOurPointer(e)) return;
     if (this.state === GestureState.Changed || this.state === GestureState.Began) {
       this.state = GestureState.Ended;
       this.callbacks.onEnd?.(this.createEvent(e));
@@ -43,9 +52,42 @@ export class PanRecognizer extends GestureRecognizer {
     this.reset();
   }
 
-  onPointerCancel(_e: PointerEvent) {
-    this.state = GestureState.Cancelled;
+  onPointerCancel(e: PointerEvent) {
+    if (this.hasPointer && !this.isOurPointer(e)) return;
+    if (this.state === GestureState.Changed || this.state === GestureState.Began) {
+      this.state = GestureState.Cancelled;
+      this.callbacks.onEnd?.(this.createEvent(e));
+    } else {
+      this.state = GestureState.Cancelled;
+    }
     this.reset();
+  }
+
+  /** End an in-progress pan at the last known location (unmount / lost capture). */
+  cancel() {
+    if (this.state === GestureState.Changed || this.state === GestureState.Began) {
+      this.state = GestureState.Cancelled;
+      this.callbacks.onEnd?.(
+        this.createEvent({
+          clientX: this.lastLocation.x,
+          clientY: this.lastLocation.y,
+          pointerId: this.pointerId,
+        } as PointerEvent)
+      );
+    }
+    this.reset();
+  }
+
+  reset() {
+    super.reset();
+    this.hasPointer = false;
+    this.pointerId = undefined;
+  }
+
+  private isOurPointer(e: PointerEvent): boolean {
+    if (!this.hasPointer) return false;
+    if (this.pointerId === undefined || e.pointerId === undefined) return true;
+    return e.pointerId === this.pointerId;
   }
 
   private createEvent(e: PointerEvent): GestureEvent {

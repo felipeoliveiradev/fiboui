@@ -2,13 +2,12 @@ import {
     Box,
     Scaffold,
     Text,
-    Colors,
     Button,
     TextField,
     Row,
     Column,
     List,
-    signal,
+    Form,
     Component,
     useStore,
     useNavigate
@@ -16,8 +15,6 @@ import {
 import { TodoViewModel } from '../ViewModels/TodoViewModel';
 import { TodoItem } from './components/TodoItem';
 import { useEffect } from 'react';
-
-const inputText = signal('');
 
 const TodoPageComponent = () => {
     const vm = useStore(TodoViewModel);
@@ -27,18 +24,11 @@ const TodoPageComponent = () => {
         vm.loadTodos();
     }, []);
 
-    const handleAdd = () => {
-        if (inputText.value.trim()) {
-            vm.addTodo(inputText.value);
-            inputText.value = '';
-        }
-    };
-
     return Scaffold()
-        .bg(Colors.Background)
+        .bg('background')
         .headerBar(
             Box()
-                .bg(Colors.Primary)
+                .bg('primary')
                 .p(2)
                 .shadow('md')
                 .children([
@@ -47,20 +37,16 @@ const TodoPageComponent = () => {
                         .alignItems('center')
                         .children([
                             Text("FiboUI Todo")
-                                .text(Colors.OnPrimary)
+                                .text('on-primary')
                                 .fontSize(1.5)
-                                .weight('bold')
-                                .build(),
+                                .weight('bold'),
                             Button()
                                 .text("Perf Test")
                                 .variant("text")
                                 .onPress(() => navigate('/performance'))
                                 .className('text-white')
-                                .build()
                         ])
-                        .build()
                 ])
-                .build()
         )
         .children([
             Column()
@@ -69,28 +55,31 @@ const TodoPageComponent = () => {
                 .mx('auto')
                 .gap(2)
                 .children([
-                    Row()
-                        .gap(1)
+                    Form()
+                        .onSubmit((values) => {
+                            vm.addTodo(String(values.text ?? ''));
+                        })
+                        .afterSubmit((_values, form) => form.reset())
                         .children([
-                            Box()
-                                .className('flex-1')
+                            Row()
+                                .gap(1)
                                 .children([
-                                    TextField()
-                                        .value(inputText)
-                                        .placeholder("What needs to be done?")
-                                        .variant("outlined")
-                                        .bg(Colors.Surface)
-                                        .build()
+                                    Box()
+                                        .className('flex-1')
+                                        .children([
+                                            TextField()
+                                                .name('text')
+                                                .placeholder("What needs to be done?")
+                                                .variant("outlined")
+                                                .bg('surface')
+                                        ]),
+                                    Button()
+                                        .text("Add")
+                                        .variant("filled")
+                                        .submit()
+                                        .height('full')
                                 ])
-                                .build(),
-                            Button()
-                                .text("Add")
-                                .variant("filled")
-                                .onPress(handleAdd)
-                                .height('full')
-                                .build()
-                        ])
-                        .build(),
+                        ]),
 
                     Box()
                         .observer()
@@ -101,12 +90,11 @@ const TodoPageComponent = () => {
                                 .className("mb-4")
                                 .children([
                                     Text(`${vm.stats.active} items left`)
-                                        .text(Colors.Outline)
-                                        .build(),
+                                        .text('outline'),
 
                                     Row()
                                         .gap(0.5)
-                                        .bg(Colors.SurfaceVariant)
+                                        .bg('surface-variant')
                                         .p(0.5)
                                         .rounded('full')
                                         .children([
@@ -114,22 +102,19 @@ const TodoPageComponent = () => {
                                             FilterButton(vm, 'active', 'Active'),
                                             FilterButton(vm, 'completed', 'Completed'),
                                         ])
-                                        .build()
                                 ])
-                                .build()
-                        ])
-                        .build(),
+                        ]),
 
                     Box()
                         .className('flex-1 overflow-y-auto')
                         .observer()
                         .children(() => {
                             if (vm.isLoading.value) {
-                                return [Text('Loading...').build()];
+                                return [Text('Loading...')];
                             }
 
                             if (vm.error.value) {
-                                return [Text(`Error: ${vm.error.value}`).text(Colors.Error).build()];
+                                return [Text(`Error: ${vm.error.value}`).text('error')];
                             }
 
                             return [
@@ -137,20 +122,17 @@ const TodoPageComponent = () => {
                                     .className('flex-1 h-full')
                                     .items(vm.visibleTodos)
                                     .variant('default')
+                                    .empty(Text('No todos'))
                                     .renderItem((todo) =>
                                         TodoItem({
                                             todo,
                                             onToggle: () => vm.toggleTodo(todo.id)
                                         })
                                     )
-                                    .build()
                             ];
                         })
-                        .build()
                 ])
-                .build()
-        ])
-        .build();
+        ]);
 };
 
 const FilterButton = (vm: TodoViewModel, filterKey: 'all' | 'active' | 'completed', label: string) => {
@@ -160,8 +142,7 @@ const FilterButton = (vm: TodoViewModel, filterKey: 'all' | 'active' | 'complete
         .size('sm')
         .variant(isActive ? 'elevated' : 'text')
         .shape('pill')
-        .onPress(() => vm.setFilter(filterKey))
-        .build();
+        .onPress(() => vm.setFilter(filterKey));
 };
 
 export const TodoPage = Component()(TodoPageComponent);

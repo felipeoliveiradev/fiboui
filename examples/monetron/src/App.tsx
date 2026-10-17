@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import { signal, computed, Column, Row, Text, Avatar, Progress, Button, Box, ListTile } from 'fiboui';
 import * as I from './icons';
 
@@ -12,6 +13,26 @@ const LINE = '1px solid #3b3b3b';
 
 const T = (s: string | (() => string), size = 11) =>
   Text(s).mono().fontSize(size).letterSpacing('0.06em').lineHeight(1.3);
+
+const NAV_LABELS = ['Overview', 'Analytics', 'Trends', 'Apps'] as const;
+
+type Keyish = { key: string; preventDefault: () => void };
+
+function pressable(label: string, onPress: () => void, extra: Record<string, unknown> = {}) {
+  return {
+    role: 'button',
+    tabIndex: 0,
+    'aria-label': label,
+    onClick: onPress,
+    onKeyDown: (e: Keyish) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onPress();
+      }
+    },
+    ...extra,
+  };
+}
 
 const Phone = () =>
   Column()
@@ -139,17 +160,20 @@ function Dashboard() {
               .color('#9a9a9a')
               .children([
                 Box()
-                  .id('eye')
                   .bindSignal(hidden)
-                  .cursor('pointer')
                   .display('flex')
-                  .props({
-                    onClick: () => {
-                      hidden.value = !hidden.value;
-                    },
-                    role: 'button',
-                  })
-                  .children(() => (hidden.value ? <I.EyeOff /> : <I.Eye />)),
+                  .children(() =>
+                    Box()
+                      .id('eye')
+                      .cursor('pointer')
+                      .display('flex')
+                      .props(
+                        pressable(hidden.value ? 'Show balances' : 'Hide balances', () => {
+                          hidden.value = !hidden.value;
+                        }, { 'aria-pressed': hidden.value }),
+                      )
+                      .children(hidden.value ? <I.EyeOff /> : <I.Eye />),
+                  ),
                 Box().display('flex').children(<I.Gear />),
               ]),
           ]),
@@ -189,12 +213,11 @@ function Dashboard() {
                 .color(nav.value === i ? '#fff' : '#aaa')
                 .borderRight(i < 3 ? LINE : 'none')
                 .cursor('pointer')
-                .props({
-                  onClick: () => {
+                .props(
+                  pressable(NAV_LABELS[i], () => {
                     nav.value = i;
-                  },
-                  role: 'button',
-                })
+                  }, { 'aria-pressed': nav.value === i }),
+                )
                 .children(<Ic />)
             )
           )
@@ -314,7 +337,7 @@ function Investment() {
   ]);
 }
 
-export function App() {
+export function App(): ReactElement {
   return Row()
     .id('stage')
     .mainAxisAlignment('center')

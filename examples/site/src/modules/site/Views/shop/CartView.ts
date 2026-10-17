@@ -12,6 +12,8 @@ import {
   openCheckout,
   removeLine,
   setLineQty,
+  shipMethod,
+  shippingCost,
   type CartLine,
 } from './state'
 
@@ -19,11 +21,14 @@ export function CartView() {
   return Box()
     .width('100%')
     .bindSignal(cart)
+    .bindSignal(shipMethod)
     .children(() => {
       const lines = cart.value
       const total = cartTotal()
       const count = cartCount()
       const remaining = Math.max(0, freeShipFrom - total)
+      const shipping = shippingCost()
+      const grand = total + shipping
       return [
         Column()
           .width('100%')
@@ -116,17 +121,14 @@ export function CartView() {
                           .subLabel(`${money(Math.min(total, freeShipFrom))} / ${money(freeShipFrom)}`)
                           .width('100%'),
                         summaryRow('Subtotal', money(total)),
-                        summaryRow(
-                          'Shipping',
-                          remaining === 0 ? 'Free' : `From ${money(8)}`,
-                        ),
+                        summaryRow('Shipping', shipping === 0 ? 'Free' : money(shipping)),
                         Box().width('100%').height(1).bg('rgba(255,255,255,0.12)'),
                         Row()
                           .width('100%')
                           .mainAxisAlignment('spaceBetween')
                           .children([
                             Text('Total').fontSize(16).fontWeight(800).color(chalk),
-                            Text(money(total)).fontSize(22).fontWeight(800).color(chalk),
+                            Text(money(grand)).fontSize(22).fontWeight(800).color(chalk),
                           ]),
                         point(
                           Button('Checkout')

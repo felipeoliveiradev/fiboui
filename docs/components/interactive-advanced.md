@@ -36,7 +36,7 @@ Advanced input components for selections and multi-line text.
 
 ## Select
 
-Dropdown selector with single or multiple selection support.
+Dropdown selector with single or multiple selection support. Uncontrolled by default. `.name()` writes hidden input(s) for `Form` / `FormData`. Multi-select is one hidden per value (same `name`) → `string[]`, not a comma string. Use `.controlled(true)` when parent state must win.
 
 <ReactWrapper :component="renderSelect" />
 
@@ -68,11 +68,14 @@ Select() → SelectBuilder
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.value(value)` | `string \| string[]` | Selected value(s) |
+| `.value(value)` | `string \| string[]` | Initial selection. Uncontrolled unless `.controlled(true)`. |
 | `.options(options)` | `Array<{label, value}>` | Available options |
 | `.onChange(handler)` | `(value) => void` | Change event handler |
 | `.label(text)` | `string` | Optional label |
 | `.placeholder(text)` | `string` | Placeholder text |
+| `.name(name)` | `string` | Hidden input(s) for `Form` / `FormData`. Multi-select: one hidden per selected value |
+| `.controlled(on)` | `boolean` | `true` keeps React `value` and re-renders on each change |
+| `.rules(...rules)` | `FieldRule[]` | Checks collected on submit. See [Form](/components/interactive-form). |
 | `.multiple(enabled)` | `boolean` | Enable multiple selection |
 | `.disabled(disabled)` | `boolean` | Disabled state |
 | `.error(message)` | `string` | Error message |
@@ -81,7 +84,7 @@ Select() → SelectBuilder
 
 ## Textarea
 
-Multi-line text input with resize control.
+Multi-line text input with resize control. Uncontrolled by default (`defaultValue`). `.name()` participates in `Form` / `FormData`. Use `.controlled(true)` when parent state must win.
 
 <ReactWrapper :component="renderTextarea" />
 
@@ -109,10 +112,13 @@ Textarea() → TextareaBuilder
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.value(value)` | `string` | Text content |
+| `.value(value)` | `string` | Initial value (`defaultValue`). Uncontrolled unless `.controlled(true)`. |
 | `.onChange(handler)` | `(value: string) => void` | Change event handler |
 | `.label(text)` | `string` | Optional label |
 | `.placeholder(text)` | `string` | Placeholder text |
+| `.name(name)` | `string` | Name used by `Form` / `FormData` |
+| `.controlled(on)` | `boolean` | `true` keeps React `value` and re-renders on each change |
+| `.rules(...rules)` | `FieldRule[]` | Checks collected on submit. See [Form](/components/interactive-form). |
 | `.rows(count)` | `number` | Number of visible rows |
 | `.resize(mode)` | `'none' \| 'vertical' \| 'horizontal' \| 'both'` | Resize behavior |
 | `.disabled(disabled)` | `boolean` | Disabled state |

@@ -14,14 +14,22 @@ const CAMEL: Record<string, string> = {
   ease: 'ease',
 };
 
+function finitePositive(value: number | undefined, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
+function finiteNonNegative(value: number | undefined, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : fallback;
+}
+
 /**
  * CSS `linear()` spring sampled once. stiffness/damping/mass change the curve.
  * The browser interpolates — no rAF on the CSS path.
  */
 export function springEase(options: SpringOptions = {}): string {
-  const stiffness = options.stiffness ?? 170;
-  const damping = options.damping ?? 26;
-  const mass = options.mass ?? 1;
+  const stiffness = finitePositive(options.stiffness, 170);
+  const damping = finiteNonNegative(options.damping, 26);
+  const mass = finitePositive(options.mass, 1);
   const key = `${stiffness}:${damping}:${mass}`;
   const hit = cache.get(key);
   if (hit) return hit;
@@ -47,7 +55,8 @@ export function springEase(options: SpringOptions = {}): string {
   for (let i = 0; i < samples.length; i += step) {
     const t = i / (samples.length - 1);
     const y = Math.round(samples[i] * 10000) / 10000;
-    stops.push(i === 0 ? `${y}` : `${y} ${Math.round(t * 10000) / 100}%`);
+    const finiteY = Number.isFinite(y) ? y : 1;
+    stops.push(i === 0 ? `${finiteY}` : `${finiteY} ${Math.round(t * 10000) / 100}%`);
   }
   const value = `linear(${stops.join(', ')})`;
   cache.set(key, value);

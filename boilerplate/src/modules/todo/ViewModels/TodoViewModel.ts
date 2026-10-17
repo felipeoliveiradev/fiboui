@@ -1,30 +1,21 @@
-import { Store, container, Signal, SignalType } from 'fiboui';
+import { Store, signal } from 'fiboui';
 import { ITodoRepository } from '../Services/ITodoRepository';
 import { InMemoryTodoRepository } from '../Services/InMemoryTodoRepository';
 import { Todo } from '../Models/Todo';
 
 @Store()
 export class TodoViewModel {
-    // Signal properties
-    @Signal([])
-    todos!: SignalType<Todo[]>;
-
-    @Signal<'all' | 'active' | 'completed'>('all')
-    filter!: SignalType<'all' | 'active' | 'completed'>;
-
-    @Signal(false)
-    isLoading!: SignalType<boolean>;
-
-    @Signal<string | null>(null)
-    error!: SignalType<string | null>;
+    todos = signal<Todo[]>([]);
+    filter = signal<'all' | 'active' | 'completed'>('all');
+    isLoading = signal(false);
+    error = signal<string | null>(null);
 
     private repo: ITodoRepository;
 
     constructor() {
-        this.repo = container.resolve(InMemoryTodoRepository);
+        this.repo = new InMemoryTodoRepository();
     }
 
-    // Computed properties
     get visibleTodos(): Todo[] {
         const todos = this.todos.value;
         const filter = this.filter.value;
@@ -43,7 +34,6 @@ export class TodoViewModel {
         };
     }
 
-    // Actions
     async loadTodos() {
         this.isLoading.value = true;
         this.error.value = null;
@@ -52,9 +42,9 @@ export class TodoViewModel {
             const data = await this.repo.getAll();
             this.todos.value = data;
             this.isLoading.value = false;
-        } catch (e: any) {
+        } catch (e: unknown) {
             this.isLoading.value = false;
-            this.error.value = e.message || 'Failed to load';
+            this.error.value = e instanceof Error ? e.message : 'Failed to load';
         }
     }
 
@@ -68,16 +58,13 @@ export class TodoViewModel {
             createdAt: new Date()
         };
 
-        // Optimistic update
         const previousTodos = this.todos.value;
         this.todos.value = [...this.todos.value, newTodo];
 
         try {
             await this.repo.add(newTodo);
-        } catch (e) {
-            // Rollback on error
+        } catch {
             this.todos.value = previousTodos;
-            alert('Failed to add todo');
         }
     }
 

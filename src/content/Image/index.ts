@@ -1,9 +1,33 @@
 import React, { ReactElement } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
+import {
+  collectInterpSignals,
+  hasInterpMarks,
+  resolveInterpString,
+} from '../../core/interpolate';
+import { isDangerousUrl } from '../../core/safeUrl';
 import { BaseProps } from '../../core/types';
 
 type ImageFit = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
 type ClipShape = 'circle' | 'rounded' | 'square';
+
+function bindInterp(host: FiboBuilder, text: string | undefined): void {
+  if (typeof text !== 'string' || !hasInterpMarks(text)) return;
+  for (const sig of collectInterpSignals(text)) {
+    host.bindSignal(sig);
+  }
+}
+
+function resolveInterp(text: string | undefined): string {
+  if (typeof text !== 'string') return '';
+  return hasInterpMarks(text) ? resolveInterpString(text) : text;
+}
+
+const CLIP_RADIUS: Record<ClipShape, string> = {
+  circle: '50%',
+  rounded: '8px',
+  square: '0px',
+};
 
 const ImageInner = React.memo((props: any) => {
     const {
@@ -19,9 +43,10 @@ const ImageInner = React.memo((props: any) => {
         ...rest
     } = props;
 
-    const finalStyle = { ...style };
-
-    finalStyle.objectFit = fit;
+    const finalStyle: React.CSSProperties = { ...style };
+    if (fit) {
+      finalStyle.objectFit = fit;
+    }
 
     if (frameWidth) {
       finalStyle.width = `${frameWidth}px`;
@@ -33,15 +58,27 @@ const ImageInner = React.memo((props: any) => {
 
     if (resizable) {
       finalStyle.maxWidth = '100%';
-      finalStyle.height = 'auto';
+      if (!frameHeight) {
+        finalStyle.height = 'auto';
+      }
     }
 
+    if (clipShape === 'circle' || clipShape === 'rounded' || clipShape === 'square') {
+      const shape: ClipShape = clipShape;
+      finalStyle.overflow = 'hidden';
+      finalStyle.borderRadius = CLIP_RADIUS[shape];
+    }
+
+    const rawSrc = resolveInterp(typeof src === 'string' ? src : '');
+    const safeSrc = rawSrc && !isDangerousUrl(rawSrc) ? rawSrc : undefined;
+    const safeAlt = resolveInterp(typeof alt === 'string' ? alt : '');
+
     return React.createElement('img', {
-      src: src,
-      alt: alt,
+      ...rest,
+      src: safeSrc,
+      alt: safeAlt,
       className,
       style: finalStyle,
-      ...rest,
     });
 });
 
@@ -57,16 +94,18 @@ class ImageBuilder extends FiboBuilder {
 
   constructor(src: string = '') {
     super();
-    this._src = src;
+    this.src(src);
   }
 
   src(value: string): this {
-    this._src = value;
+    this._src = typeof value === 'string' ? value : '';
+    bindInterp(this, this._src);
     return this;
   }
 
   alt(value: string): this {
-    this._alt = value;
+    this._alt = typeof value === 'string' ? value : '';
+    bindInterp(this, this._alt);
     return this;
   }
 
@@ -117,8 +156,9 @@ class ImageBuilder extends FiboBuilder {
     }
 
     const props = {
-        src: this._src,
-        alt: this._alt,
+        ...this._props,
+        src: resolveInterp(this._src),
+        alt: resolveInterp(this._alt),
         fit: this._fit,
         resizable: this._resizable,
         clipShape: this._clipShape,
@@ -126,7 +166,6 @@ class ImageBuilder extends FiboBuilder {
         frameHeight: this._frameHeight,
         className: className,
         style,
-        ...this._props
     };
 
     return React.createElement(ImageInner, props);

@@ -1,10 +1,68 @@
 import React, { ReactElement, ReactNode } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
+import { buildChild } from '../../core/children';
+import { FineGrainText } from '../../core/FineGrain';
+import type { BindableSignal } from '../../core/state';
 import { BaseProps } from '../../core/types';
+import {
+  collectInterpSignals,
+  hasInterpMarks,
+  resolveInterpString,
+} from '../../core/interpolate';
 import { Box } from '../Box';
+
+function bindInterp(host: FiboBuilder, text: string | undefined): void {
+  if (typeof text !== 'string' || !hasInterpMarks(text)) return;
+  for (const sig of collectInterpSignals(text)) {
+    host.bindSignal(sig);
+  }
+}
+
+function resolveInterp(text: string | undefined): string | undefined {
+  if (typeof text !== 'string') return text;
+  return hasInterpMarks(text) ? resolveInterpString(text) : text;
+}
 
 type TableVariant = 'default' | 'clean';
 type TableDensity = 'compact' | 'standard' | 'relaxed';
+
+function isListSource<T>(value: unknown): value is BindableSignal<T[]> {
+  return (
+    value != null &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    typeof (value as BindableSignal<T[]>).subscribe === 'function' &&
+    'value' in (value as object)
+  );
+}
+
+function tableRowKey(row: unknown, index: number): string | number {
+  if (row != null && typeof row === 'object') {
+    const rec = row as { _id?: unknown; id?: unknown; key?: unknown };
+    if (rec._id != null && rec._id !== '') return rec._id as string | number;
+    if (rec.id != null && rec.id !== '') return rec.id as string | number;
+    if (rec.key != null && rec.key !== '') return rec.key as string | number;
+  }
+  return index;
+}
+
+function rawCellValue(row: any, col: TableColumn): unknown {
+  if (typeof col.render === 'function') return col.render(row);
+  if (row == null || typeof row !== 'object' || col.accessor == null || col.accessor === '') {
+    return null;
+  }
+  return row[col.accessor];
+}
+
+function tableCellNode(raw: unknown): ReactNode {
+  if (typeof raw === 'string' && hasInterpMarks(raw)) {
+    return React.createElement(FineGrainText, {
+      as: 'span',
+      compute: () => resolveInterpString(raw),
+    });
+  }
+  return buildChild(raw);
+}
 
 export interface TableColumn<T = any> {
   header: string;
@@ -12,6 +70,63 @@ export interface TableColumn<T = any> {
   render?: (item: T) => ReactNode;
   width?: string;
   align?: 'left' | 'center' | 'right';
+  /** When true, this header sorts even if the table is not `.sortable()`. `false` opts out. */
+  sortable?: boolean;
+}
+
+type SortDir = 'ascending' | 'descending';
+
+interface ColumnSort {
+  index: number;
+  dir: SortDir;
+}
+
+function columnIsSortable(col: TableColumn, tableSortable: boolean): boolean {
+  if (col.sortable === false) return false;
+  if (col.sortable === true) return true;
+  return tableSortable;
+}
+
+function sortKey(row: any, col: TableColumn): string | number | boolean | null {
+  if (row != null && typeof row === 'object' && col.accessor != null && col.accessor !== '') {
+    const value = row[col.accessor as string];
+    if (
+      value == null ||
+      typeof value === 'string' ||
+      typeof value === 'number' ||
+      typeof value === 'boolean'
+    ) {
+      return value ?? null;
+    }
+  }
+  if (typeof col.render !== 'function') return null;
+  const rendered = col.render(row);
+  if (
+    rendered == null ||
+    typeof rendered === 'string' ||
+    typeof rendered === 'number' ||
+    typeof rendered === 'boolean'
+  ) {
+    return rendered ?? null;
+  }
+  return null;
+}
+
+function compareSortKeys(
+  a: string | number | boolean | null,
+  b: string | number | boolean | null,
+): number {
+  if (a == null && b == null) return 0;
+  if (a == null) return 1;
+  if (b == null) return -1;
+  if (typeof a === 'number' && typeof b === 'number') return a - b;
+  if (typeof a === 'boolean' && typeof b === 'boolean') return Number(a) - Number(b);
+  return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+}
+
+function nextSort(current: ColumnSort | null, index: number): ColumnSort {
+  if (!current || current.index !== index) return { index, dir: 'ascending' };
+  return { index, dir: current.dir === 'ascending' ? 'descending' : 'ascending' };
 }
 
 const TableInner = React.memo((props: any) => {
@@ -22,9 +137,15 @@ const TableInner = React.memo((props: any) => {
         density,
         striped,
         width,
+        sortable,
         className,
-        style
+        style,
+        children: _children,
+        ...rest
     } = props;
+
+    const tableSortable = Boolean(sortable);
+    const [sort, setSort] = React.useState<ColumnSort | null>(null);
 
     const tableStyles: React.CSSProperties = {
        width: '100%',
@@ -47,34 +168,66 @@ const TableInner = React.memo((props: any) => {
         relaxed: '24px 32px'
     };
     const padding = cellPadding[density as TableDensity];
+    const sourceRows = Array.isArray(data) ? data : [];
+    const rows = React.useMemo(() => {
+        if (!sort) return sourceRows;
+        const col = columns?.[sort.index] as TableColumn | undefined;
+        if (!col || !columnIsSortable(col, tableSortable)) return sourceRows;
+        const sign = sort.dir === 'ascending' ? 1 : -1;
+        return sourceRows
+            .map((row: any, index: number) => ({ row, index }))
+            .sort((a, b) => {
+                const cmp = compareSortKeys(sortKey(a.row, col), sortKey(b.row, col));
+                return cmp === 0 ? a.index - b.index : sign * cmp;
+            })
+            .map((entry) => entry.row);
+    }, [sourceRows, columns, sort, tableSortable]);
 
     return Box()
        .className(className)
        .classNames(containerClass)
+       .props(rest)
        .children(
-          React.createElement('table', { style: tableStyles }, [
+          React.createElement('table', {
+             style: tableStyles,
+             className: ['fibo-table', className].filter(Boolean).join(' '),
+          }, [
 
              React.createElement('thead', { key: 'thead', className: 'bg-gray-50/50' },
                 React.createElement('tr', {},
-                   columns.map((col: any, i: number) =>
-                      React.createElement('th', {
-                          key: String(col.accessor ?? col.header ?? i),
+                   columns.map((col: any, i: number) => {
+                      const canSort = columnIsSortable(col, tableSortable);
+                      return React.createElement('th', {
+                          key: String(col.accessor ?? i),
                           scope: 'col',
                           style: {
                               textAlign: col.align || 'left',
                               padding: padding,
-                              width: col.width
+                              width: col.width,
+                              cursor: canSort ? 'pointer' : undefined,
                           },
-                          className: 'text-xs font-bold text-gray-400 uppercase tracking-widest'
-                      }, col.header)
-                   )
+                          className: 'text-xs font-bold text-gray-400 uppercase tracking-widest',
+                          'aria-sort': canSort
+                              ? (sort?.index === i ? sort.dir : 'none')
+                              : undefined,
+                          tabIndex: canSort ? 0 : undefined,
+                          onClick: canSort ? () => setSort((current) => nextSort(current, i)) : undefined,
+                          onKeyDown: canSort
+                              ? (event: React.KeyboardEvent) => {
+                                  if (event.key !== 'Enter' && event.key !== ' ') return;
+                                  event.preventDefault();
+                                  setSort((current) => nextSort(current, i));
+                              }
+                              : undefined,
+                      }, resolveInterp(col.header) ?? col.header);
+                   })
                 )
              ),
 
              React.createElement('tbody', { key: 'tbody' },
-                 data.map((row: any, i: number) =>
+                 rows.map((row: any, i: number) =>
                      React.createElement('tr', {
-                         key: row?.id ?? row?.key ?? i,
+                         key: tableRowKey(row, i),
 
                          className: `group transition-all duration-200 border-b border-gray-50 last:border-b-0 ${
                              striped && i % 2 !== 0 ? 'bg-gray-50/30' : 'bg-transparent'
@@ -90,7 +243,7 @@ const TableInner = React.memo((props: any) => {
                              },
                              className: 'text-sm text-gray-900 font-medium'
                          },
-                          col.render ? col.render(row) : (col.accessor ? row[col.accessor] as ReactNode : null)
+                          tableCellNode(rawCellValue(row, col))
                          )
                      )
                      )
@@ -102,19 +255,29 @@ const TableInner = React.memo((props: any) => {
 
 class TableBuilder<T = any> extends FiboBuilder {
   private _data: T[] = [];
+  /** Live source (`listSignal` / `signal`). Read on each rebuild. */
+  private _source?: BindableSignal<T[]>;
   private _columns: TableColumn<T>[] = [];
   private _variant: TableVariant = 'clean';
   private _density: TableDensity = 'standard';
   private _striped: boolean = false;
   private _width: string | number | undefined;
+  private _sortable: boolean = false;
 
-  data(items: T[]): this {
+  data(items: T[] | BindableSignal<T[]>): this {
+    if (isListSource<T>(items)) {
+      this._source = items;
+      this.bindSignal(items);
+      return this;
+    }
+    this._source = undefined;
     this._data = items;
     return this;
   }
 
   columns(cols: TableColumn<T>[]): this {
     this._columns = cols;
+    for (const col of cols) bindInterp(this, col.header);
     return this;
   }
 
@@ -138,16 +301,24 @@ class TableBuilder<T = any> extends FiboBuilder {
     return this;
   }
 
+  /** Header clicks sort that column ascending, then descending (`aria-sort`). */
+  sortable(enable: boolean = true): this {
+    this._sortable = enable;
+    return this;
+  }
+
   build(): ReactElement {
      const props = {
-         data: this._data,
+         data: this._source ? this._source.value : this._data,
          columns: this._columns,
          variant: this._variant,
          density: this._density,
          striped: this._striped,
          width: this._width,
+         sortable: this._sortable,
          className: this.getClassName(),
-         style: this.getStyle()
+         style: this.getStyle(),
+         ...this._props
      };
      return React.createElement(TableInner, props);
   }
@@ -161,4 +332,5 @@ export interface TableProps<T = any> extends BaseProps {
   variant?: TableVariant;
   density?: TableDensity;
   striped?: boolean;
+  sortable?: boolean;
 }

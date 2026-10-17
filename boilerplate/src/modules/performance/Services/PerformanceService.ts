@@ -1,7 +1,5 @@
-import { Injectable } from 'fiboui';
 import { TripData, PerformanceStats } from '../Models/PerformanceData';
 
-@Injectable({ singleton: true })
 export class PerformanceService {
   getRecentTrips(): TripData[] {
     return [

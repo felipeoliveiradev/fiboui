@@ -96,14 +96,8 @@ compare.paste(original, (0, 0))
 compare.paste(replica, (original.width, 0))
 compare.save(root / 'compare.png')
 
-artifact = Path('/opt/cursor/artifacts/screenshots')
-artifact.mkdir(parents=True, exist_ok=True)
-compare.save(artifact / 'monetron-compare.png')
-
 crops_dir = root / 'crops'
 crops_dir.mkdir(exist_ok=True)
-art_crops = artifact / 'crops'
-art_crops.mkdir(exist_ok=True)
 
 rows = []
 for name, box in REGIONS.items():
@@ -112,13 +106,10 @@ for name, box in REGIONS.items():
     rows.append((name, delta, box))
     a.save(crops_dir / f'{name}-original.png')
     b.save(crops_dir / f'{name}-replica.png')
-    a.save(art_crops / f'{name}-original.png')
-    b.save(art_crops / f'{name}-replica.png')
 
 for zname, src in ZOOM.items():
     pair = label_pair(zoom_pair(REGIONS[src]), 'original', 'replica')
     pair.save(root / f'{zname}.png')
-    pair.save(artifact / f'{zname}.png')
     pair.save(crops_dir / f'{zname}.png')
 
 # composite of the four zooms
@@ -131,7 +122,6 @@ for z in zooms:
     sheet.paste(z, (0, y))
     y += z.height + 12
 sheet.save(root / 'zoom-sheet.png')
-sheet.save(artifact / 'zoom-sheet.png')
 
 overall = mean_delta(original, replica)
 print(f'overall mean Δ {overall:.2f} / 255')
@@ -143,5 +133,4 @@ for name, delta, _ in rows:
     'overall': round(overall, 2),
     'regions': {name: round(delta, 2) for name, delta, _ in rows},
 }, indent=2))
-(artifact / 'diff.json').write_text((root / 'diff.json').read_text())
 print(f'wrote {root / "compare.png"} ({compare.size[0]}x{compare.size[1]})')

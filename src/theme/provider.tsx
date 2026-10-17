@@ -24,7 +24,17 @@ interface FiboThemeContextValue {
   setTheme: (input: ThemeInput) => void;
 }
 
-const FiboThemeContext = createContext<FiboThemeContextValue | undefined>(undefined);
+const defaultTheme = resolveTheme('material');
+
+const FiboThemeContext = createContext<FiboThemeContextValue>({
+  theme: defaultTheme,
+  themeName: defaultTheme.name,
+  setTheme: () => undefined,
+});
+
+function themeColorScheme(theme: FiboTheme): 'dark' | 'light' {
+  return theme.name === 'noir' ? 'dark' : 'light';
+}
 
 function themePropKey(input: ThemeInput): string {
   if (typeof input === 'string') return input;
@@ -46,7 +56,7 @@ export interface FiboThemeProviderProps {
  * SSR-safe: class + CSS vars on first paint — no documentElement useEffect.
  */
 export function FiboThemeProvider({
-  theme: themeProp = 'web',
+  theme: themeProp = 'material',
   children,
   className,
   style,
@@ -78,6 +88,8 @@ export function FiboThemeProvider({
   const rootClass = [themeClassName(theme), className].filter(Boolean).join(' ');
   const rootStyle: CSSProperties = {
     ...themeToInlineStyle(theme),
+    ...({ ['--fibo-theme']: theme.name } as CSSProperties),
+    colorScheme: themeColorScheme(theme),
     backgroundColor: theme.colors.background,
     color: theme.colors.onBackground,
     fontFamily: theme.fontFamily,
@@ -94,11 +106,7 @@ export function FiboThemeProvider({
 }
 
 export function useFiboTheme(): FiboThemeContextValue {
-  const context = useContext(FiboThemeContext);
-  if (!context) {
-    throw new Error('useFiboTheme must be used within a FiboThemeProvider');
-  }
-  return context;
+  return useContext(FiboThemeContext);
 }
 
 /** @deprecated Prefer ThemeInput / FiboThemePreset */

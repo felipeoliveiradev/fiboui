@@ -1,13 +1,55 @@
 import React, { ReactElement, ReactNode } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
-import { BaseProps, ButtonVariant } from '../../core/types';
+import { BaseProps, ButtonVariant, FiboChildren } from '../../core/types';
+import {
+  collectInterpSignals,
+  hasInterpMarks,
+  resolveInterpString,
+} from '../../core/interpolate';
 import { twMerge } from 'tailwind-merge';
+
+function bindInterp(host: FiboBuilder, text: string | undefined): void {
+  if (typeof text !== 'string' || !hasInterpMarks(text)) return;
+  for (const sig of collectInterpSignals(text)) {
+    host.bindSignal(sig);
+  }
+}
+
+function bindInterpTree(host: FiboBuilder, node: unknown): void {
+  if (typeof node === 'function') {
+    try {
+      bindInterpTree(host, (node as () => unknown)());
+    } catch {
+      /* factory may need mount */
+    }
+    return;
+  }
+  if (typeof node === 'string') {
+    bindInterp(host, node);
+    return;
+  }
+  if (Array.isArray(node)) {
+    for (const item of node) bindInterpTree(host, item);
+  }
+}
+
+function resolveInterpChild(child: ReactNode): ReactNode {
+  return typeof child === 'string' && hasInterpMarks(child)
+    ? resolveInterpString(child)
+    : child;
+}
 
 type ExtendedButtonVariant = ButtonVariant | 'ghost' | 'soft' | 'outline' | 'text' | 'raw' | 'solid';
 type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 type ButtonShape = 'default' | 'pill' | 'square' | 'rect' | 'rounded' | 'sharp';
 type ButtonTone = 'default' | 'inverse';
 type ButtonMotion = 'default' | 'none';
+type HtmlButtonType = 'button' | 'submit' | 'reset';
+
+/** Invalid `<button type>` (e.g. `.type('email')`) is the Submit Button state in HTML. */
+function asHtmlButtonType(value: unknown): HtmlButtonType {
+  return value === 'submit' || value === 'reset' || value === 'button' ? value : 'button';
+}
 
 const ButtonInner = React.memo((props: any) => {
   const {
@@ -26,8 +68,11 @@ const ButtonInner = React.memo((props: any) => {
     className,
     style,
     type: htmlType = 'button',
+    bare,
+    onClick: restOnClick,
     ...rest
   } = props;
+  const hostType = asHtmlButtonType(htmlType);
 
   const sizeClasses: Record<ButtonSize, string> = {
     xs: 'px-[21px] py-[8px] text-[10px] gap-[6px] h-auto tracking-[0.12em] font-normal',
@@ -100,17 +145,24 @@ const ButtonInner = React.memo((props: any) => {
   const skipShapeClass = userStyle.borderRadius !== undefined;
   const skipWeightClass = userStyle.fontWeight !== undefined || size === 'xs' || inverse;
 
-  const quiet = variant === 'raw' || motion === 'none' || inverse || size === 'xs';
+  const quiet = variant === 'raw' || motion === 'none' || inverse || size === 'xs' || bare;
+  if (bare) {
+    variantClass = '';
+    shapeClass = '';
+  } else if (disabled) {
+    variantClass = variantClass.replace(/\s*(hover|active):\S+/g, '').trim();
+  }
 
   const mergedClassName = twMerge(
     'fibo-button',
+    bare ? '' : 'relative overflow-hidden',
     `inline-flex items-center justify-center whitespace-nowrap`,
-    skipWeightClass ? '' : 'font-semibold',
+    skipWeightClass || bare ? '' : 'font-semibold',
     // Resting scale(1) so active:scale eases instead of snapping from none.
-    quiet ? '' : 'scale-100 active:scale-[0.96] transform transition-transform duration-200 ease-out',
-    disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
-    variant === 'raw' || skipSizeClass ? '' : sizeClasses[size as ButtonSize],
-    variant === 'raw' || skipShapeClass ? '' : shapeClass,
+    quiet || disabled ? '' : 'scale-100 active:scale-[0.96] transform transition-transform duration-200 ease-out',
+    disabled ? 'cursor-not-allowed opacity-60 pointer-events-none' : 'cursor-pointer',
+    variant === 'raw' || bare || skipSizeClass ? '' : sizeClasses[size as ButtonSize],
+    variant === 'raw' || bare || skipShapeClass ? '' : shapeClass,
     expand ? 'flex-1 w-full' : '',
     `fibo-button-${variant}`,
     variantClass,
@@ -156,11 +208,12 @@ const ButtonInner = React.memo((props: any) => {
             });
           }
           onPress?.();
+          restOnClick?.(e);
         }
       },
       disabled: disabled,
       ...rest,
-      type: htmlType,
+      type: hostType,
       style: userStyle,
     },
     ...childrenElements
@@ -180,7 +233,8 @@ class ButtonBuilder extends FiboBuilder {
   private _tone: ButtonTone = 'default';
   private _motion: ButtonMotion = 'default';
   private _expand = false;
-  private _htmlType: 'button' | 'submit' | 'reset' = 'button';
+  private _htmlType: HtmlButtonType = 'button';
+  private _htmlTypeExplicit = false;
 
   constructor(text: string | (() => string) = '') {
     super();
@@ -191,8 +245,15 @@ class ButtonBuilder extends FiboBuilder {
     this._text = value;
     if (typeof value === 'function') {
       this.observer();
+    } else {
+      bindInterp(this, value);
     }
     return this;
+  }
+
+  children(children: FiboChildren): this {
+    bindInterpTree(this, children);
+    return super.children(children);
   }
 
   variant(variant: ExtendedButtonVariant): this {
@@ -261,30 +322,43 @@ class ButtonBuilder extends FiboBuilder {
    * a props object renders the button.
    */
   type(value: 'button' | 'submit' | 'reset'): this {
-    this._htmlType = value;
+    this._htmlType = asHtmlButtonType(value);
+    this._htmlTypeExplicit = true;
     return this;
   }
 
   htmlType(value: 'button' | 'submit' | 'reset'): this {
-    this._htmlType = value;
+    this._htmlType = asHtmlButtonType(value);
+    this._htmlTypeExplicit = true;
     return this;
   }
 
   /** Shortcut for `.htmlType('submit')` inside a `Form`. */
   submit(): this {
     this._htmlType = 'submit';
+    this._htmlTypeExplicit = true;
     return this;
   }
 
   /** Shortcut for `.htmlType('reset')`. */
   reset(): this {
     this._htmlType = 'reset';
+    this._htmlTypeExplicit = true;
     return this;
+  }
+
+  private resolvedHtmlType(): HtmlButtonType {
+    if (this._htmlTypeExplicit) return asHtmlButtonType(this._htmlType);
+    return asHtmlButtonType(this._props?.type ?? this._htmlType);
   }
 
   build(): ReactElement {
     const builderClasses = this.getClassName();
-    const finalText = typeof this._text === 'function' ? this._text() : this._text;
+    const rawText = typeof this._text === 'function' ? this._text() : this._text;
+    const finalText =
+      typeof rawText === 'string' && hasInterpMarks(rawText)
+        ? resolveInterpString(rawText)
+        : rawText;
 
     const props = {
       text: finalText,
@@ -301,9 +375,10 @@ class ButtonBuilder extends FiboBuilder {
       expand: this._expand,
       className: builderClasses,
       style: this.getStyle(),
-      children: this.processChildren(),
+      children: this.processChildren().map(resolveInterpChild),
       ...this._props,
-      type: this._htmlType,
+      type: this.resolvedHtmlType(),
+      bare: this.isReset(),
     };
 
     return React.createElement(ButtonInner, props);

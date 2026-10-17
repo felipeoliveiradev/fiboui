@@ -14,28 +14,35 @@
       "default": "./dist/index.js"
     },
     "./server": {
-      "types": "./dist/index.d.ts",
+      "types": "./dist/server.d.ts",
       "import": "./dist/server.js"
     },
     "./core": {
+      "types": "./dist/core.d.ts",
       "import": "./dist/core.js"
     },
     "./layout": {
+      "types": "./dist/layout.d.ts",
       "import": "./dist/layout.js"
     },
     "./content": {
+      "types": "./dist/content.d.ts",
       "import": "./dist/content.js"
     },
     "./interactive": {
+      "types": "./dist/interactive.d.ts",
       "import": "./dist/interactive.js"
     },
     "./structure": {
+      "types": "./dist/structure.d.ts",
       "import": "./dist/structure.js"
     },
     "./navigation": {
+      "types": "./dist/navigation.d.ts",
       "import": "./dist/navigation.js"
     },
     "./theme": {
+      "types": "./dist/theme.d.ts",
       "import": "./dist/theme.js"
     },
     "./style.css": "./dist/style.css",

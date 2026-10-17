@@ -1,5 +1,7 @@
-import React from 'react';
-import { createRoot } from 'react-dom/client';
+'use client';
+
+import React, { StrictMode } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
 import { FiboPlugin } from './plugin/types';
 import { PluginManager } from './plugin/PluginManager';
 import { StateWrapper, ProviderWrapper } from './StateWrapper';
@@ -9,6 +11,8 @@ export class FiboAppBuilder {
   private _rootComponent: React.ComponentType | null = null;
   private _rootElement: HTMLElement | null = null;
   private _plugins: FiboPlugin[] = [];
+  private _reactRoot: Root | null = null;
+  private _installed: string[] = [];
 
   use(plugin: FiboPlugin): this {
     this._plugins.push(plugin);
@@ -25,44 +29,76 @@ export class FiboAppBuilder {
     return this;
   }
 
-  mount(elementId: string): void {
-    const element = document.getElementById(elementId);
+  mount(elementId: string, options?: { strict?: boolean }): () => void {
+    const doc = globalThis.document;
+    if (typeof globalThis.window === 'undefined' || !globalThis.window || !doc?.getElementById) {
+      return () => undefined;
+    }
+    const id = elementId.startsWith('#') ? elementId.slice(1) : elementId;
+    const element = id ? doc.getElementById(id) : null;
     if (!element) {
       throw new Error(`Root element with id "${elementId}" not found`);
     }
     this._rootElement = element;
-    this.build();
+    this.build(options);
+    return () => this.unmount();
   }
 
-  private build(): void {
+  unmount(): void {
+    this._reactRoot?.unmount();
+    this._reactRoot = null;
+    const pm = PluginManager.getInstance();
+    const names = this._installed.splice(0).reverse();
+    for (const name of names) {
+      try {
+        pm.uninstall(name);
+      } catch {
+        // teardown threw; PluginManager already dropped the plugin
+      }
+    }
+  }
+
+  private build(options?: { strict?: boolean }): void {
     if (!this._rootComponent || !this._rootElement) {
       throw new Error('Root component and mount element must be provided');
     }
 
-    // Register all plugins
+    this.unmount();
+
     const pluginManager = PluginManager.getInstance();
-    this._plugins.forEach(plugin => {
-      pluginManager.use(plugin);
-    });
+    try {
+      for (const plugin of this._plugins) {
+        const existed = pluginManager.has(plugin.name);
+        pluginManager.use(plugin);
+        if (!existed && pluginManager.has(plugin.name)) {
+          this._installed.push(plugin.name);
+        }
+      }
 
-    const RootComponent = this._rootComponent;
+      const RootComponent = this._rootComponent;
+      const stores = pluginManager.getStores();
 
-    // We wrap the app with necessary providers
-    // Note: This is an initial implementation. We might need to wrap with more providers later.
-    const App = () => (
-      React.createElement(ReactivityRoot, {
-        children: React.createElement(StateWrapper, {
-          stateMap: new Map(),
-          children: React.createElement(ProviderWrapper, {
-            providers: new Map(),
-            children: React.createElement(RootComponent, null)
+      const App = () => (
+        React.createElement(ReactivityRoot, {
+          children: React.createElement(StateWrapper, {
+            stateMap: stores,
+            children: React.createElement(ProviderWrapper, {
+              providers: stores,
+              children: React.createElement(RootComponent, null)
+            })
           })
         })
-      })
-    );
+      );
 
-    const root = createRoot(this._rootElement);
-    root.render(React.createElement(App));
+      this._reactRoot = createRoot(this._rootElement);
+      const tree = React.createElement(App);
+      this._reactRoot.render(
+        options?.strict === false ? tree : React.createElement(StrictMode, null, tree)
+      );
+    } catch (err) {
+      this.unmount();
+      throw err;
+    }
   }
 }
 

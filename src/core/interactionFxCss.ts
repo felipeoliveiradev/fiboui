@@ -1285,13 +1285,11 @@ export const FIBO_INTERACTION_FX_CSS = `
 .group:focus-within .fibo-fx-curl-bottom-left.fibo-fx-on-group-focus-within::after { transform:rotateY(20deg);box-shadow:-2px -2px 4px rgba(0,0,0,.15); }
 
 @media (prefers-reduced-motion: reduce) {
-  .fibo-fx:not(.fibo-motion-force) {
-    animation: none !important;
-  }
+  .fibo-fx:not(.fibo-motion-force),
   .fibo-fx:not(.fibo-motion-force)::before,
   .fibo-fx:not(.fibo-motion-force)::after {
-    transition: none !important;
     animation: none !important;
+    transition: none !important;
   }
 }
 `.trim();

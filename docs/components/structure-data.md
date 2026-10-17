@@ -69,11 +69,12 @@ List() → ListBuilder
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.items(items)` | `T[]` or `listSignal` | Rows. A list signal is subscribed (that signal only) and read on each rebuild. Data mode needs `.renderItem`. |
+| `.items(items)` | `T[]`, `listSignal`, or `() => T[]` | Rows. A list signal is subscribed (that signal only) and read on each rebuild. `todos.search('x')` is a live `view()` so a bound `List` stays live. `filter(fn)` is a one-shot snapshot of `_source` (does not change `.value`). `viewWhere(fn)` is the live predicate. `List().items(fn)` re-runs on each rebuild. Data mode needs `.renderItem`. |
+| `.empty(node)` | `string \| node \| builder \| () => …` | Shown in `.fibo-list-empty` when there are no rows. Hidden when rows exist. Factory re-runs on rebuild. |
 | `.renderItem(fn)` | `(item, index) => ReactNode` | Render function for each item. Row key prefers `_id`. |
 | `.variant(variant)` | `'default' \| 'card' \| 'floating'` | Visual style |
 | `.itemStyle(fn \| css)` | callback or style object | Row chrome. The callback is a CSS fluent proxy (`paddingHorizontal`, `boxShadow(0)` → `none`). |
-| `.itemHover(fn)` / `.itemActive(fn)` / `.itemFocus(fn)` | callback | Pseudo styles, injected with `!important`. One shared stylesheet for every list on the page. |
+| `.itemHover(fn)` / `.itemActive(fn)` / `.itemFocus(fn)` | callback | Pseudo styles, injected with `!important`. One stylesheet per list. `itemFocus` uses `:focus-within`. |
 | `.separator(show)` | `boolean` | Separators on the default variant only, and only when item styles were not reset |
 | `.onEndReached(handler)` | `() => void` | Infinite scroll callback |
 | `.loading(isLoading)` | `boolean` | Spinner inside the infinite-scroll sentinel. It does not paint a loader by itself. |
@@ -118,7 +119,7 @@ Table() → TableBuilder
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.data(items)` | `T[]` | Array of data rows |
+| `.data(items)` | `T[]` or `listSignal` | Rows. A list signal is subscribed (`bindSignal`) and read on each rebuild. |
 | `.columns(cols)` | `TableColumn[]` | Column definitions |
 | `.variant(variant)` | `'default' \| 'clean'` | Visual style |
 | `.density(density)` | `'compact' \| 'standard' \| 'relaxed'` | Row spacing |
@@ -152,6 +153,38 @@ List()
     ])
   )
 
+```
+
+### Empty state
+
+```tsx
+List()
+  .items(todos)
+  .empty('Nothing here')
+  .renderItem((todo) => Text(todo.title).variant('body'))
+
+List().items([]).empty(Text('No rows').variant('body'))
+```
+
+### Live search / filter
+
+`search(query)` is a live `view()` plus a copy of the visible rows. `filter(fn)` is a one-shot snapshot of `_source` (does not change `.value`; safe inside `computed`). `viewWhere(fn)` is the live predicate (AND with the query); `viewWhere()` clears it. Bind `List` to the **signal**, not a snapshot.
+
+```tsx
+const todos = listSignal<{ title: string; done?: boolean }>([
+  { title: 'Ship it' },
+])
+
+todos.search('ship')
+List()
+  .items(todos)
+  .empty('No matches')
+  .renderItem((todo) => ListTile().title(todo.title))
+
+const hits = todos.search('x') // copy of current visible rows
+const open = todos.filter((t) => !t.done) // snapshot of the full list
+todos.viewWhere((t) => !t.done)
+todos.viewWhere() // show every item again (clears the predicate)
 ```
 
 ### Table with Custom Cells

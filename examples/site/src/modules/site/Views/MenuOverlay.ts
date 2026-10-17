@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react'
 import type { PseudoStateBuilder } from 'fiboui'
 import { Column, Row, Box, Button } from 'fiboui'
 import { navigate } from '../route'
@@ -16,13 +17,55 @@ const items = [
 ] as const
 
 const ITEM_STAGGER = 55
+const FOCUSABLE =
+  'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+
+let lastFocus: HTMLElement | null = null
+
+function trapTab(event: {
+  key: string
+  shiftKey: boolean
+  preventDefault: () => void
+  currentTarget: EventTarget
+}) {
+  if (event.key !== 'Tab') return
+  const root = event.currentTarget as HTMLElement
+  const nodes = [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+    (el) => !el.hasAttribute('disabled'),
+  )
+  if (nodes.length === 0) return
+  const first = nodes[0]
+  const last = nodes[nodes.length - 1]
+  const now = document.activeElement
+  if (event.shiftKey) {
+    if (now === first || !root.contains(now)) {
+      event.preventDefault()
+      last.focus()
+    }
+  } else if (now === last || !root.contains(now)) {
+    event.preventDefault()
+    first.focus()
+  }
+}
+
+function bindPanel(node: HTMLElement | null) {
+  if (node) {
+    const prev = document.activeElement
+    lastFocus = prev instanceof HTMLElement ? prev : null
+    const close = node.querySelector<HTMLElement>('[aria-label="Close menu"]')
+    ;(close ?? node).focus()
+    return
+  }
+  lastFocus?.focus()
+  lastFocus = null
+}
 
 /**
  * Opaque fullscreen shell via bindSignal (not Presence fade).
  * Presence fadeIn put opacity on the wrapper, so the page behind stayed visible.
  * Items still stagger in; the pink panel is solid from the first frame.
  */
-export function MenuOverlay() {
+export function MenuOverlay(): ReactElement {
   return Box()
     .bindSignal(menuOpen)
     .children(() => (menuOpen.value ? [panel()] : []))
@@ -43,11 +86,20 @@ function panel() {
     .mainAxisAlignment('start')
     .crossAxisAlignment('stretch')
     .gap(48)
-    .overflow('hidden')
+    .props({
+      id: 'site-menu',
+      role: 'dialog',
+      'aria-modal': true,
+      'aria-label': 'Site menu',
+      tabIndex: -1,
+      ref: bindPanel,
+      onKeyDown: trapTab,
+    })
     .css({
       height: '100dvh',
+      overflowX: 'hidden',
+      overflowY: 'auto',
       overscrollBehavior: 'none',
-      touchAction: 'none',
     })
     .lg({ padding: '22px 36px 36px', gap: 64 })
     .children([
@@ -68,7 +120,9 @@ function panel() {
               .color(chalk)
               .hoverEffect('grow')
               .pressEffect('shrink')
+              .props({ 'aria-label': 'Close menu' })
               .onPress(closeMenu),
+            chalk,
           ),
         ]),
       Column()
@@ -101,6 +155,9 @@ function menuItem(label: string, id: string, index: number) {
       .hover((state: PseudoStateBuilder) => {
         state.color(chalk).translateX(8)
       })
+      .focus((state: PseudoStateBuilder) => {
+        state.color(chalk).translateX(8)
+      })
       .onPress(() => {
         closeMenu()
         if (id === 'root') navigate('home')
@@ -114,5 +171,6 @@ function menuItem(label: string, id: string, index: number) {
           go('#work')
         }
       }),
+    chalk,
   )
 }

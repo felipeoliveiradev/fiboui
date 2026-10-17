@@ -207,7 +207,7 @@ ScrollView() → ScrollViewBuilder
 
 ## Line
 
-Horizontal flex container (alias for Row).
+Flex row of children, or an `<hr>` separator when empty. `.direction('vertical')` paints a column rule. Not a `Row` alias (`mainAxisAlignment` / `spacing` live on `Row`).
 
 <ReactWrapper :component="renderLine" />
 
@@ -234,7 +234,8 @@ Line() → LineBuilder
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.sizeHeight(value)` | `string` | Line height |
+| `.sizeHeight(value)` | `string` | Host height when the line has children |
+| `.direction(dir)` | `'horizontal' \| 'vertical'` | Axis. Empty + `vertical` is a 1px column rule; empty + default is `<hr>` |
 
 ## Usage Examples
 

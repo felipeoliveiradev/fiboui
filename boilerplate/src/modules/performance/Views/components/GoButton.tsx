@@ -1,12 +1,12 @@
-import { Box, Button, Column, Text, SignalType, createFiboComponent } from 'fiboui';
+import { Box, Button, Column, Text, type Signal } from 'fiboui';
 
 interface GoButtonProps {
-  isOnline: SignalType<boolean>;
-  sheetY: SignalType<number>;
+  isOnline: Signal<boolean>;
+  sheetY: Signal<number>;
   onPress: () => void;
 }
 
-export const GoButton = createFiboComponent<GoButtonProps>(({ isOnline, sheetY, onPress }: GoButtonProps) => {
+export function GoButton({ isOnline, sheetY, onPress }: GoButtonProps) {
   const uberBlue = '#276EF1';
   const uberRed = '#E11900';
 
@@ -48,15 +48,9 @@ export const GoButton = createFiboComponent<GoButtonProps>(({ isOnline, sheetY, 
                         .fontWeight('900')
                         .color('white')
                         .className('tracking-tighter')
-                        .build()
                     ])
-                    .build()
                 )
-                .build()
             )
-            .build()
         ])
-        .build()
-    ])
-    .build();
-});
+    ]);
+}

@@ -86,6 +86,7 @@ function widthTab(label: string, value: Width) {
       .hover((state: PseudoStateBuilder) => {
         if (!selected) state.color(chalk)
       })
+      .props({ 'aria-pressed': selected })
       .onPress(() => selectWidth(value)),
   )
 }

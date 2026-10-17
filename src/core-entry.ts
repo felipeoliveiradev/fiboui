@@ -17,6 +17,11 @@ export {
   getCurrentScope,
 } from './core/state';
 export type { BindableSignal, Store as ReactiveStore, ReactivityScope } from './core/state';
+export { listSignal, collection, ListSignal } from './core/listSignal';
+export type { ListItemId, ListMatcher, ListEntity } from './core/listSignal';
+export { ensureListId } from './core/listSignal';
+export { interp } from './core/interpolate';
+
 export { useSignal, useReactiveStore, useObservable } from './core/hooks';
 export { useBuilderState, Observer, ProviderWrapper, useProvider } from './core/StateWrapper';
 export { ReactivityRoot } from './core/ReactivityRoot';
@@ -52,7 +57,7 @@ export type { InteractionEffectName } from './core/interactionEffects';
 export { FIBO_INTERACTION_FX_CSS } from './core/interactionFxCss';
 export { ensureInteractionFxCss } from './core/ensureInteractionFx';
 export { MotionStyles, FiboStyles, getMotionCss, getCss, getStyleTag, endSsrRequest } from './core/styleManager';
-export { page, withFiboStyles } from './core/page';
+export { page, withFiboStyles, createPage } from './core/page';
 export type { FiboPageBuild, FiboPageOptions } from './core/page';
 export { FiboApp, FiboAppBuilder } from './core/FiboApp';
 export { mount, Fibo, toElement } from './core/mount';

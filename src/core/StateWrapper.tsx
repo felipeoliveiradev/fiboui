@@ -9,11 +9,20 @@ export function Observer({ children }: { children: () => ReactNode }) {
   const listenersRef = useRef(new Set<() => void>());
   const tracker = useRef<Tracker | null>(null);
 
-  if (!tracker.current) {
-    tracker.current = new Tracker(() => {
-      versionRef.current += 1;
-      listenersRef.current.forEach((listener) => listener());
-    });
+  const invalidate = useCallback(() => {
+    versionRef.current += 1;
+    listenersRef.current.forEach((listener) => listener());
+  }, []);
+
+  // renderToString uses getServerSnapshot even in jsdom (where `window` exists).
+  const isServer = useSyncExternalStore(
+    () => () => {},
+    () => false,
+    () => true,
+  );
+
+  if (!isServer && !tracker.current) {
+    tracker.current = new Tracker(invalidate);
   }
 
   const subscribe = useCallback((onStoreChange: () => void) => {
@@ -27,20 +36,25 @@ export function Observer({ children }: { children: () => ReactNode }) {
   useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
   useEffect(() => {
+    // StrictMode runs setup → cleanup → setup without a render in between.
+    // Recreate the tracker and bump so execute() re-subscribes on the next render.
+    if (!tracker.current) {
+      tracker.current = new Tracker(invalidate);
+      invalidate();
+    }
     return () => {
       tracker.current?.dispose();
+      tracker.current = null;
     };
-  }, []);
+  }, [invalidate]);
 
   const scope = useReactivityScope();
 
-  let result: ReactNode = null;
-  try {
-    result = runInScope(scope, () => tracker.current!.execute(children));
-  } catch {
-    result = null;
+  if (isServer || !tracker.current) {
+    return <>{children()}</>;
   }
-  return <>{result}</>;
+
+  return <>{runInScope(scope, () => tracker.current!.execute(children))}</>;
 }
 
 export const StateContext = createContext<Map<string, unknown>>(new Map());

@@ -48,6 +48,9 @@
     "onLanguage:javascriptreact"
   ],
   "main": "./src/extension.js",
+  "scripts": {
+    "test": "node src/autoIndent.test.js && node src/closingLabels.test.js && node src/snippets.test.js"
+  },
   "contributes": {
     "themes": [
       {
@@ -91,7 +94,7 @@
         "fiboui.lineageGuides": {
           "type": "boolean",
           "default": true,
-          "description": "Draw subtle left-edge lineage marks on .children([ … ]) blocks."
+          "description": "Draw subtle left-edge lineage marks on .children([ … ]) and .items([ … ]) blocks."
         },
         "fiboui.completions": {
           "type": "boolean",

@@ -1,0 +1,561 @@
+/* Playground preview skin. Matches the site: ink, chalk, pink, lime, sharp corners. */
+
+.play-preview {
+  color-scheme: dark;
+  background: #000000;
+  color: #ffffff;
+  font-family: Geist, Helvetica, sans-serif;
+  align-items: stretch;
+}
+
+/* Columns default to min-h-0 + items-center. Inside this scrollport that
+   shrinks every band to its padding, so Web, PDF and Empty collapse to ~65px. */
+.play-preview > .fibo-column,
+.play-preview .fibo-column {
+  flex-shrink: 0 !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  min-height: min-content !important;
+}
+
+.play-preview .fibo-markdown h1,
+.play-preview .fibo-markdown h2,
+.play-preview .fibo-markdown h3 {
+  margin: 0 0 8px;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.play-preview .fibo-markdown p {
+  margin: 0;
+  color: #9a9a9a;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.play-preview .fibo-markdown code {
+  padding: 0 4px;
+  background: transparent;
+  color: #ff2d8a;
+  font-size: 0.95em;
+}
+
+.play-preview .fibo-searchable form {
+  margin: 0;
+}
+
+.play-preview .fibo-searchable input,
+.play-preview .fibo-rich-editor-surface,
+.play-preview .fibo-otp-field-input,
+.play-preview .fibo-date-range-picker-start,
+.play-preview .fibo-date-range-picker-end {
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 0;
+  background: transparent;
+  color: #ffffff;
+  font: inherit;
+  outline: none;
+}
+
+.play-preview .fibo-searchable input {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+}
+
+.play-preview .fibo-searchable input:focus,
+.play-preview .fibo-rich-editor-surface:focus,
+.play-preview .fibo-otp-field-input:focus,
+.play-preview .fibo-date-range-picker-start:focus,
+.play-preview .fibo-date-range-picker-end:focus {
+  border-color: #ff2d8a;
+}
+
+.play-preview .fibo-searchable ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.play-preview .fibo-searchable li {
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.play-preview .fibo-searchable li:last-child {
+  border-bottom: 0;
+}
+
+.play-preview .fibo-box.bg-white {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+.play-preview .fibo-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: transparent !important;
+  color: #ffffff;
+}
+
+.play-preview .fibo-table thead,
+.play-preview .fibo-table tr,
+.play-preview .fibo-table th,
+.play-preview .fibo-table td {
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.play-preview .fibo-table th {
+  padding: 8px 12px 8px 0 !important;
+  text-align: left;
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #c8ff00 !important;
+  cursor: pointer;
+}
+
+.play-preview .fibo-table td {
+  padding: 12px 12px 12px 0 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em;
+}
+
+.play-preview .fibo-calendar {
+  gap: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  border-left: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.play-preview .fibo-calendar-day {
+  min-height: 64px;
+  padding: 8px 4px;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  margin: -1px 0 0 -1px;
+  border-radius: 0;
+  background: transparent;
+  color: #ffffff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.play-preview .fibo-calendar-day:has(.fibo-calendar-event) {
+  background: #ff2d8a;
+}
+
+.play-preview .fibo-calendar-day:hover {
+  background: #ff2d8a;
+  color: #ffffff;
+}
+
+.play-preview .fibo-calendar-event {
+  display: block;
+  margin-top: 2px;
+  overflow: hidden;
+  color: #c8ff00;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.play-preview .fibo-otp-field {
+  display: flex;
+  gap: 0;
+}
+
+.play-preview .fibo-otp-field-input {
+  width: 44px;
+  height: 52px;
+  margin-left: -1px;
+  padding: 0;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.play-preview .fibo-otp-field-input:first-child {
+  margin-left: 0;
+}
+
+.play-preview .fibo-date-range-picker {
+  display: flex;
+  gap: 0;
+}
+
+.play-preview .fibo-date-range-picker-end {
+  margin-left: -1px;
+}
+
+.play-preview .fibo-date-range-picker-start,
+.play-preview .fibo-date-range-picker-end {
+  flex: 1;
+  width: auto;
+  height: 44px;
+  padding: 0 12px;
+}
+
+.play-preview .fibo-wheel-picker-item {
+  width: 100%;
+  height: 40px;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 0;
+  background: transparent;
+  color: #9a9a9a;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.play-preview .fibo-wheel-picker-item[aria-selected='true'] {
+  background: #ff2d8a;
+  color: #ffffff;
+}
+
+.play-preview .fibo-carousel-nav button,
+.play-preview .fibo-wizard-next,
+.play-preview .fibo-wizard-back,
+.play-preview .fibo-share-link,
+.play-preview .fibo-code-scanner-trigger,
+.play-preview .fibo-photos-trigger,
+.play-preview .fibo-file-trigger,
+.play-preview .fibo-content-unavailable-action,
+.play-preview .fibo-rich-editor-toolbar button,
+.play-preview button[data-kind] {
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 0;
+  background: transparent;
+  color: #ffffff;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.play-preview .fibo-wizard-next,
+.play-preview .fibo-content-unavailable-action,
+.play-preview button[data-kind='success'] {
+  border-color: transparent;
+  background: #ff2d8a;
+  color: #ffffff;
+}
+
+.play-preview button[data-kind='warning'] {
+  border-color: transparent;
+  background: #c8ff00;
+  color: #000000;
+}
+
+.play-preview button[data-kind='error'] {
+  border-color: #ff3b30;
+  background: transparent;
+  color: #ff3b30;
+}
+
+.play-preview .fibo-carousel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+}
+
+.play-preview .fibo-carousel-nav {
+  display: flex;
+  gap: 8px;
+}
+
+.play-preview .fibo-carousel-track {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #000000;
+  scrollbar-width: none;
+}
+
+.play-preview .fibo-wizard-title {
+  margin-bottom: 6px;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.play-preview .fibo-wizard-body {
+  margin-bottom: 14px;
+  color: #9a9a9a;
+  font-size: 14px;
+}
+
+.play-preview .fibo-rich-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.play-preview .fibo-rich-editor-toolbar {
+  display: flex;
+  gap: 8px;
+}
+
+.play-preview .fibo-rich-editor-surface {
+  min-height: 88px;
+  padding: 12px;
+  line-height: 1.45;
+}
+
+.play-preview .fibo-content-unavailable {
+  align-items: flex-start;
+  width: 100%;
+  gap: 10px;
+  text-align: left;
+}
+
+.play-preview .fibo-content-unavailable-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.play-preview .fibo-content-unavailable-message {
+  margin: 0 0 8px;
+  color: #9a9a9a;
+  font-size: 14px;
+}
+
+.play-preview .fibo-inspector {
+  flex-direction: column;
+  gap: 0;
+  align-items: stretch;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.play-preview .fibo-inspector-main,
+.play-preview .fibo-inspector-panel {
+  flex: none;
+  width: 100%;
+  min-width: 0;
+  padding: 16px 18px;
+  background: #000000;
+}
+
+.play-preview .fibo-inspector-main p,
+.play-preview .fibo-inspector-panel p {
+  max-width: 36rem;
+}
+
+.play-preview .fibo-inspector-panel {
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  border-left: 0;
+  background: #000000;
+}
+
+.play-preview .fibo-inspector-title {
+  margin: 0 0 8px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.play-preview .fibo-reorderable-row,
+.play-preview .fibo-swipe-row-child,
+.play-preview .fibo-refresh {
+  border-radius: 0;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.play-preview .fibo-reorderable-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 14px 0;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.play-preview .fibo-reorderable-row button,
+.play-preview .fibo-refresh button,
+.play-preview .fibo-dismissible button {
+  height: auto !important;
+  margin-left: auto;
+  padding: 0 0 0 10px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #ff2d8a !important;
+  font-family: inherit !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  cursor: pointer;
+}
+
+.play-preview .fibo-swipe-row-actions button {
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  background: #ff2d8a;
+  color: #ffffff;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.play-preview .fibo-code-scanner-video,
+.play-preview iframe,
+.play-preview embed {
+  display: block;
+  width: 100% !important;
+  height: 220px !important;
+  min-height: 220px !important;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 0;
+  background: #111111;
+}
+
+.play-preview .fibo-code-scanner-video {
+  max-height: 140px;
+  object-fit: cover;
+  background: #000000;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 0 !important;
+}
+
+.play-preview .fibo-code-scanner-status {
+  margin: 0;
+  color: #9a9a9a;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.play-preview .fibo-shortcuts kbd {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #c8ff00;
+  font-family: Geist, Helvetica, sans-serif;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.play-preview img {
+  display: block;
+  border-radius: 0;
+}
+
+.play-preview .fibo-map {
+  width: 100% !important;
+  max-width: 100%;
+  border-radius: 0 !important;
+  background: #000000 !important;
+}
+
+.play-preview .leaflet-bar {
+  border: 0;
+  box-shadow: none;
+}
+
+.play-preview .leaflet-bar a {
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  border-radius: 0;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #000000;
+  color: #ffffff;
+}
+
+.play-preview .leaflet-control-attribution {
+  background: transparent;
+  color: #9a9a9a;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+}
+
+.play-preview .leaflet-marker-icon span {
+  border-radius: 0 !important;
+  transform: none !important;
+}
+
+.play-preview .fibo-css-bar {
+  border-radius: 0 !important;
+}
+
+.play-preview .fibo-css-bars span {
+  color: #9a9a9a !important;
+  font-size: 9px !important;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.play-preview .fibo-calendar-weekday {
+  padding: 6px 0 8px;
+  color: #c8ff00;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-align: center;
+}
+
+.play-preview .fibo-photos-trigger,
+.play-preview .fibo-file-trigger {
+  height: 40px !important;
+  padding: 0 14px !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #ffffff !important;
+  font: inherit !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+}

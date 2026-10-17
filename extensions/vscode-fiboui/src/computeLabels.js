@@ -13,9 +13,10 @@ const { FACTORY_SET } = require('./factories');
  */
 function computeLabels(text, minDepth = 1) {
   const out = [];
+  const source = maskNoise(text);
   const callRe = /\.(children|items)\s*\(/g;
   let m;
-  while ((m = callRe.exec(text))) {
+  while ((m = callRe.exec(source))) {
     const openParen = m.index + m[0].length - 1; // position of '('
     const closeParen = findMatchingParen(text, openParen);
     if (closeParen < 0) continue;
@@ -27,7 +28,7 @@ function computeLabels(text, minDepth = 1) {
     if (!root) continue;
 
     // nesting: how many other multi-line children blocks enclose this open
-    const nest = countEnclosingChildren(text, openParen) + 1;
+    const nest = countEnclosingChildren(source, openParen) + 1;
     if (nest < minDepth) continue;
 
     out.push({ offset: closeParen + 1, label: root, depth: nest });
@@ -35,7 +36,7 @@ function computeLabels(text, minDepth = 1) {
 
   // Fluent chain closes + multi-line method callback labels
   const factoryRe = /\b([A-Z][A-Za-z0-9]*)\s*\(/g;
-  while ((m = factoryRe.exec(text))) {
+  while ((m = factoryRe.exec(source))) {
     const name = m[1];
     if (!FACTORY_SET.has(name)) continue;
 
@@ -46,7 +47,7 @@ function computeLabels(text, minDepth = 1) {
     const { chainEnd, methods } = walkFluentChain(text, factoryClose);
     const factoryStart = m.index;
     const chainSpan = text.slice(factoryStart, chainEnd + 1);
-    const nest = countEnclosingChildren(text, openParen) + 1;
+    const nest = countEnclosingChildren(source, openParen) + 1;
 
     if (chainSpan.includes('\n') && nest >= minDepth) {
       out.push({ offset: chainEnd + 1, label: name, depth: nest });
@@ -57,7 +58,7 @@ function computeLabels(text, minDepth = 1) {
       if (method.close === chainEnd) continue;
       const span = text.slice(method.open, method.close);
       if (!span.includes('\n')) continue;
-      const methodNest = countEnclosingChildren(text, method.open) + 1;
+      const methodNest = countEnclosingChildren(source, method.open) + 1;
       if (methodNest < minDepth) continue;
       out.push({
         offset: method.close + 1,
@@ -100,7 +101,7 @@ function walkFluentChain(text, factoryClose) {
   const methods = [];
 
   while (i < text.length) {
-    while (i < text.length && /\s/.test(text[i])) i++;
+    i = skipGap(text, i);
     if (text[i] !== '.') break;
 
     i++; // skip '.'
@@ -109,7 +110,7 @@ function walkFluentChain(text, factoryClose) {
     if (i === methodStart) break;
     const methodName = text.slice(methodStart, i);
 
-    while (i < text.length && /\s/.test(text[i])) i++;
+    i = skipGap(text, i);
     if (text[i] !== '(') break;
 
     const methodOpen = i;
@@ -126,32 +127,22 @@ function walkFluentChain(text, factoryClose) {
 
 function findMatchingParen(text, openIdx) {
   let depth = 0;
-  let i = openIdx;
-  let inStr = null;
-  while (i < text.length) {
+  for (let i = openIdx; i < text.length; i++) {
     const c = text[i];
-    if (inStr) {
-      if (c === '\\') {
-        i += 2;
-        continue;
-      }
-      if (c === inStr) inStr = null;
-      i++;
-      continue;
-    }
     if (c === '"' || c === "'" || c === '`') {
-      inStr = c;
-      i++;
+      i = skipString(text, i) - 1;
       continue;
     }
     if (c === '/' && text[i + 1] === '/') {
-      while (i < text.length && text[i] !== '\n') i++;
+      const nl = text.indexOf('\n', i);
+      if (nl < 0) return -1;
+      i = nl;
       continue;
     }
     if (c === '/' && text[i + 1] === '*') {
-      i += 2;
-      while (i < text.length && !(text[i] === '*' && text[i + 1] === '/')) i++;
-      i += 2;
+      const end = text.indexOf('*/', i + 2);
+      if (end < 0) return -1;
+      i = end + 1;
       continue;
     }
     if (c === '(') depth++;
@@ -159,7 +150,6 @@ function findMatchingParen(text, openIdx) {
       depth--;
       if (depth === 0) return i;
     }
-    i++;
   }
   return -1;
 }
@@ -254,4 +244,99 @@ function isIdentChar(c) {
   return /[A-Za-z0-9_$]/.test(c);
 }
 
-module.exports = { computeLabels };
+function skipGap(text, index) {
+  let i = index;
+  while (i < text.length) {
+    if (/\s/.test(text[i])) {
+      i++;
+      continue;
+    }
+    if (text[i] === '/' && text[i + 1] === '/') {
+      const nl = text.indexOf('\n', i);
+      i = nl < 0 ? text.length : nl + 1;
+      continue;
+    }
+    if (text[i] === '/' && text[i + 1] === '*') {
+      const end = text.indexOf('*/', i + 2);
+      i = end < 0 ? text.length : end + 2;
+      continue;
+    }
+    break;
+  }
+  return i;
+}
+
+function skipString(text, start) {
+  const quote = text[start];
+  let i = start + 1;
+  while (i < text.length) {
+    if (text[i] === '\\') {
+      i += 2;
+      continue;
+    }
+    if (quote === '`' && text[i] === '$' && text[i + 1] === '{') {
+      const close = findMatchingBrace(text, i + 1);
+      i = close < 0 ? text.length : close + 1;
+      continue;
+    }
+    if (text[i] === quote) return i + 1;
+    if (quote !== '`' && text[i] === '\n') return i;
+    i++;
+  }
+  return text.length;
+}
+
+function findMatchingBrace(text, open) {
+  let depth = 0;
+  for (let i = open; i < text.length; i++) {
+    if (text[i] === '{') depth++;
+    else if (text[i] === '}') {
+      depth--;
+      if (depth === 0) return i;
+    }
+  }
+  return -1;
+}
+
+/** Strings and comments become spaces so a factory inside them is not a label. */
+function maskNoise(text) {
+  const chars = text.split('');
+  let i = 0;
+  while (i < chars.length) {
+    const char = chars[i];
+    if (char === '"' || char === "'" || char === '`') {
+      const end = skipString(text, i);
+      for (let k = i; k < end && k < chars.length; k++) {
+        if (chars[k] !== '\n') chars[k] = ' ';
+      }
+      i = end;
+      continue;
+    }
+    if (char === '/' && chars[i + 1] === '/') {
+      while (i < chars.length && chars[i] !== '\n') {
+        chars[i] = ' ';
+        i++;
+      }
+      continue;
+    }
+    if (char === '/' && chars[i + 1] === '*') {
+      chars[i] = ' ';
+      chars[i + 1] = ' ';
+      i += 2;
+      while (i < chars.length && !(chars[i] === '*' && chars[i + 1] === '/')) {
+        if (chars[i] !== '\n') chars[i] = ' ';
+        i++;
+      }
+      if (chars[i] === '*') {
+        chars[i] = ' ';
+        chars[i + 1] = ' ';
+        i += 2;
+      }
+      continue;
+    }
+    i++;
+  }
+  return chars.join('');
+}
+
+module.exports = { computeLabels, maskNoise };

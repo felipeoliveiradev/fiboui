@@ -12,4 +12,4 @@ npm --prefix examples/ssr-fixtures run test:e2e
 ```
 
 - Vite injects `getStyleTag()` after `renderToString` (style tag outside `#root`).
-- Next renders `<FiboStyles />` as a later sibling of the page tree.
+- Next App Router page is a **Server Component** (`page()` from the `react-server` export). `FiboStyles` is appended by `page()`. A tiny client island sets `window.__FIBO_HYDRATED__` for Playwright.

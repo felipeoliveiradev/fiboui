@@ -2,7 +2,7 @@
 
 import React, { ReactElement, useEffect, useRef } from 'react';
 import { ensureMotionCss } from './styleManager';
-import { supportsScrollTimeline } from './scroll';
+import { pageScrollProgress, supportsScrollTimeline } from './scroll';
 
 export interface ScrollProgressProps {
   children: ReactElement;
@@ -24,9 +24,7 @@ export function ScrollProgress({ children }: ScrollProgressProps) {
     const update = () => {
       const node = bind();
       if (!node) return;
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      const p = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
-      node.style.setProperty('--fibo-progress', String(p));
+      node.style.setProperty('--fibo-progress', String(pageScrollProgress()));
     };
     update();
     window.addEventListener('scroll', update, { passive: true });
@@ -45,11 +43,11 @@ export function ScrollProgress({ children }: ScrollProgressProps) {
 }
 
 export function bindScrollProgress(node: HTMLElement | null): () => void {
-  if (!node || typeof window === 'undefined') return () => undefined;
+  if (!node || typeof window === 'undefined' || typeof document === 'undefined') {
+    return () => undefined;
+  }
   const update = () => {
-    const max = document.documentElement.scrollHeight - window.innerHeight;
-    const p = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
-    node.style.setProperty('--fibo-progress', String(p));
+    node.style.setProperty('--fibo-progress', String(pageScrollProgress()));
   };
   update();
   window.addEventListener('scroll', update, { passive: true });

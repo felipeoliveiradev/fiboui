@@ -3,5 +3,6 @@ export * from './shapes/Circle';
 export * from './shapes/Rect';
 export * from './shapes/Path';
 export * from './gradients/LinearGradient';
+export * from './gradients/MeshGradient';
 export * from './icons/BurgerIcon';
 export * from './components/Card';

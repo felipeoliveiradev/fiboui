@@ -1,13 +1,5 @@
-'use client';
-
-import { FiboStyles } from 'fiboui';
+import { page } from 'fiboui';
 import { App } from '../../shared/App';
 
-export default function Page() {
-  return (
-    <>
-      <App />
-      <FiboStyles />
-    </>
-  );
-}
+/** Call App() so createPage/page assemble the builder before Flight. HydrateFlag lives in layout. */
+export default page(() => App());

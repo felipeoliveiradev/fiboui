@@ -494,13 +494,11 @@ ${BASE}
 ${blocks.join('\n\n')}
 
 @media (prefers-reduced-motion: reduce) {
-  .fibo-fx:not(.fibo-motion-force) {
-    animation: none !important;
-  }
+  .fibo-fx:not(.fibo-motion-force),
   .fibo-fx:not(.fibo-motion-force)::before,
   .fibo-fx:not(.fibo-motion-force)::after {
-    transition: none !important;
     animation: none !important;
+    transition: none !important;
   }
 }
 \`.trim();

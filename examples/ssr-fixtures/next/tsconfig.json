@@ -13,8 +13,7 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "plugins": [{ "name": "next" }],
-    "paths": { "fiboui": ["../../../dist/index.d.ts"] }
+    "plugins": [{ "name": "next" }]
   },
   "include": ["**/*.ts", "**/*.tsx", "../../shared/App.tsx"],
   "exclude": ["node_modules"]

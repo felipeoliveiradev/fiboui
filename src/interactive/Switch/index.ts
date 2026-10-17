@@ -3,8 +3,25 @@
 import React, { ReactElement, useEffect, useRef, useState } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps } from '../../core/types';
+import {
+  collectInterpSignals,
+  hasInterpMarks,
+  resolveInterpString,
+} from '../../core/interpolate';
 import { twMerge } from 'tailwind-merge';
 import type { FieldRule } from '../Form/validators';
+
+function bindInterp(host: FiboBuilder, text: string | undefined): void {
+  if (typeof text !== 'string' || !hasInterpMarks(text)) return;
+  for (const sig of collectInterpSignals(text)) {
+    host.bindSignal(sig);
+  }
+}
+
+function resolveInterp(text: string | undefined): string | undefined {
+  if (typeof text !== 'string') return text;
+  return hasInterpMarks(text) ? resolveInterpString(text) : text;
+}
 
 interface SwitchInnerProps {
   checked?: boolean;
@@ -41,6 +58,9 @@ const SwitchInner = React.memo((props: SwitchInnerProps) => {
     id,
   } = props;
 
+  const uniqueId = React.useId();
+  const inputId = id || uniqueId;
+  const errId = name ? `fibo-err-${name}` : `${inputId}-error`;
   const inputRef = useRef<HTMLInputElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
   const initialChecked = checked;
@@ -94,6 +114,7 @@ const SwitchInner = React.memo((props: SwitchInnerProps) => {
 
   const trackClasses = twMerge(
     'fibo-switch-track w-[44px] h-[24px] rounded-full relative transition-colors duration-200 ease-in-out',
+    'group-focus-within:ring-2 group-focus-within:ring-offset-2 group-focus-within:ring-[var(--fibo-primary,#3B82F6)] group-has-[:focus-visible]:ring-2',
     disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
     isChecked ? 'bg-[var(--fibo-primary,#3B82F6)]' : 'bg-gray-200'
   );
@@ -105,15 +126,20 @@ const SwitchInner = React.memo((props: SwitchInnerProps) => {
 
   const inputProps: Record<string, unknown> = {
     ref: inputRef,
-    id,
+    id: inputId,
     type: 'checkbox',
     role: 'switch',
     name,
     value,
     disabled,
     className: 'sr-only',
+    'aria-checked': isChecked,
     onChange: handleChange,
   };
+  if (error) {
+    inputProps['aria-invalid'] = true;
+    inputProps['aria-describedby'] = errId;
+  }
   if (controlled) {
     inputProps.checked = !!checked;
   } else {
@@ -129,7 +155,8 @@ const SwitchInner = React.memo((props: SwitchInnerProps) => {
     React.createElement(
       'label',
       {
-        className: 'fibo-switch flex items-center gap-3',
+        htmlFor: inputId,
+        className: 'fibo-switch group flex items-center gap-3',
       },
       React.createElement(
         'div',
@@ -151,7 +178,9 @@ const SwitchInner = React.memo((props: SwitchInnerProps) => {
     React.createElement(
       'span',
       {
+        id: errId,
         className: 'fibo-field-error text-[var(--fibo-error,#b91c1c)] text-xs mt-1 ml-1',
+        role: 'alert',
         style: { display: error ? '' : 'none' },
       },
       error || ''
@@ -202,6 +231,7 @@ class SwitchBuilder extends FiboBuilder {
 
   label(text: string): this {
     this._label = text;
+    bindInterp(this, text);
     return this;
   }
 
@@ -212,6 +242,7 @@ class SwitchBuilder extends FiboBuilder {
 
   error(val: string): this {
     this._error = val;
+    bindInterp(this, val);
     return this;
   }
 
@@ -226,12 +257,12 @@ class SwitchBuilder extends FiboBuilder {
       checked: this._checked,
       controlled: this._controlled,
       onChange: this._onChange,
-      label: this._label,
+      label: resolveInterp(this._label),
       disabled: this._disabled,
       name: this._name,
       value: this._value,
       rules: this._rules,
-      error: this._error,
+      error: resolveInterp(this._error),
       className: this.getClassName(),
       style: this.getStyle(),
       ...(this._props as SwitchInnerProps),

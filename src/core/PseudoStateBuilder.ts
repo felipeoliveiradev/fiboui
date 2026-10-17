@@ -9,7 +9,14 @@ import {
 } from './interactionEffects';
 import { ensureInteractionFxCss } from './ensureInteractionFx';
 import { formatCssTransition, toTranslate3d } from './smoothInteraction';
-import { camelToKebab, logicalLonghands, normalizeCssValue, type LogicalAxes } from './cssFluent';
+import {
+  camelToKebab,
+  kebabToCamel,
+  logicalLonghands,
+  normalizeCssValue,
+  resolveBoxShorthand,
+  type LogicalAxes,
+} from './cssFluent';
 
 const SMOOTH_PROPS: Record<string, string[]> = {
   'background-color': ['background-color'],
@@ -39,6 +46,7 @@ export class PseudoStateBuilder {
   private transitionDelay: number = 0;
   private transitionProperties: string[] = ['all'];
   private transforms = new Map<string, string>();
+  private _boxLonghands = new Set<string>();
 
   constructor(pseudoState: string, parentBuilder: FiboBuilder, isGroup: boolean = false) {
     this.pseudoState = pseudoState;
@@ -106,6 +114,11 @@ export class PseudoStateBuilder {
     return this.set('background-color', color);
   }
 
+  /** Same longhand as `.bg()` — interpolates against the resting surface. */
+  backgroundColor(value: string): this {
+    return this.bg(value);
+  }
+
   color(value: string): this {
     return this.set('color', value);
   }
@@ -147,12 +160,25 @@ export class PseudoStateBuilder {
     return this.flushTransform();
   }
 
-  shadow(value: string): this {
-    return this.set('box-shadow', value);
+  shadow(value: string | number): this {
+    return this.set('box-shadow', normalizeCssValue('boxShadow', value));
   }
 
-  css(property: string, value: string): this {
-    return this.set(property, value);
+  css(property: string, value: string | number): this {
+    const camel = property.includes('-') ? kebabToCamel(property) : property;
+    return this.set(camelToKebab(camel), normalizeCssValue(camel, value));
+  }
+
+  padding(value: string | number): this {
+    return this.set('padding', normalizeCssValue('padding', value));
+  }
+
+  p(value: string | number): this {
+    return this.padding(value);
+  }
+
+  margin(value: string | number): this {
+    return this.set('margin', normalizeCssValue('margin', value));
   }
 
   transition(value: string): this;
@@ -222,6 +248,23 @@ export class PseudoStateBuilder {
   }
 
   private set(property: string, value: string): this {
+    if (property === 'padding' || property === 'margin') {
+      const resolved = resolveBoxShorthand(property, value, this._boxLonghands);
+      if (resolved.shorthand == null) {
+        for (const [prop, val] of resolved.longhands) {
+          this._boxLonghands.add(prop);
+          this.commit(prop, val);
+        }
+        return this;
+      }
+      value = resolved.shorthand;
+    } else if (property.startsWith('padding-') || property.startsWith('margin-')) {
+      this._boxLonghands.add(property);
+    }
+    return this.commit(property, value);
+  }
+
+  private commit(property: string, value: string): this {
     const smooth = SMOOTH_PROPS[property];
     if (smooth) {
       this.parentBuilder.prepareSmoothInteraction(smooth);

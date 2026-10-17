@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { createRequire } from 'node:module';
 import { Command } from 'commander';
-import { generateCommand } from './commands/generate';
-import { initCommand } from './commands/init';
+import { generateCommand } from './commands/generate/index.js';
+import { initCommand } from './commands/init.js';
 
 const require = createRequire(import.meta.url);
 const pkg = require('../../package.json');
@@ -15,13 +15,10 @@ program
   .description('FiboUI CLI - Supercharge your development')
   .version(version);
 
-
-// ... (version import)
-
 program.addCommand(initCommand);
 program.addCommand(generateCommand);
 
-program.parse(process.argv);
+await program.parseAsync(process.argv);
 
 if (!process.argv.slice(2).length) {
   program.outputHelp();

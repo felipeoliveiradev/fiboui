@@ -5,13 +5,15 @@ import {
   required,
   minLength,
   pattern,
+  rule,
   createFormControl,
 } from '../src/interactive/Form'
+import { runFieldRules } from '../src/interactive/Form/validators'
 import { TextField } from '../src/interactive/TextField'
 import { Button } from '../src/interactive/Button'
 
 describe('Form', () => {
-  it('collects named fields on submit without per-keystroke React state', () => {
+  it('collects named fields on submit without per-keystroke React state', async () => {
     const onSubmit = vi.fn()
     render(
       Form()
@@ -31,7 +33,7 @@ describe('Form', () => {
     fireEvent.change(input, { target: { value: 'a@b.c' } })
     fireEvent.submit(input.closest('form')!)
 
-    expect(onSubmit).toHaveBeenCalledTimes(1)
+    await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
     expect(onSubmit.mock.calls[0][0]).toEqual({ email: 'a@b.c' })
   })
 
@@ -227,8 +229,186 @@ describe('Form', () => {
     expect(box.checked).toBe(false)
     control.set('agree', 'true')
     expect(box.checked).toBe(true)
+    control.set('agree', 'off')
+    expect(box.checked).toBe(false)
+    control.set('agree', 'on')
+    expect(box.checked).toBe(true)
 
     form.remove()
+  })
+
+  it('FormControl.set on radios only checks the matching value, never on/true as check-all', () => {
+    const form = document.createElement('form')
+    const a = document.createElement('input')
+    a.type = 'radio'
+    a.name = 'plan'
+    a.value = 'a'
+    const b = document.createElement('input')
+    b.type = 'radio'
+    b.name = 'plan'
+    b.value = 'b'
+    form.append(a, b)
+    document.body.appendChild(form)
+
+    const control = createFormControl(form)
+    control.set('plan', 'on')
+    expect(a.checked).toBe(false)
+    expect(b.checked).toBe(false)
+
+    control.set('plan', 'true')
+    expect(a.checked).toBe(false)
+    expect(b.checked).toBe(false)
+
+    control.set('plan', 'a')
+    expect(a.checked).toBe(true)
+    expect(b.checked).toBe(false)
+
+    control.set('plan', 'b')
+    expect(a.checked).toBe(false)
+    expect(b.checked).toBe(true)
+
+    form.remove()
+  })
+
+  it('runFieldRules awaits Promise check(); false and rejected fail the field', async () => {
+    const falseRule = rule(() => Promise.resolve(false), 'no')
+    const rejectedRule = rule(() => Promise.reject(new Error('net')), 'boom')
+    const okRule = rule(() => Promise.resolve(true), 'ok')
+
+    expect(await runFieldRules({ t: 'x' }, { t: falseRule })).toEqual({ t: 'no' })
+    expect(await runFieldRules({ t: 'x' }, { t: rejectedRule })).toEqual({ t: 'boom' })
+    expect(await runFieldRules({ t: 'x' }, { t: okRule })).toEqual({})
+  })
+
+  it('async check() that resolves false blocks onSubmit', async () => {
+    const onSubmit = vi.fn()
+    render(
+      Form()
+        .validation({ t: { check: () => Promise.resolve(false), message: 'no' } })
+        .onSubmit(onSubmit)
+        .children([
+          TextField().name('t').placeholder('AsyncCheck'),
+          Button('Save').submit(),
+        ])
+        .build() as any
+    )
+    const input = screen.getByPlaceholderText('AsyncCheck') as HTMLInputElement
+    fireEvent.change(input, { target: { value: 'x' } })
+    fireEvent.submit(input.closest('form')!)
+    expect(await screen.findByText('no')).toBeTruthy()
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
+
+  it('ignores a second submit until the in-flight pipeline finishes', async () => {
+    let release!: () => void
+    const onSubmit = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          release = resolve
+        })
+    )
+    render(
+      Form()
+        .onSubmit(onSubmit)
+        .children([
+          TextField().name('email').placeholder('LockEmail'),
+          Button('Save').submit(),
+        ])
+        .build() as any
+    )
+    const form = screen.getByPlaceholderText('LockEmail').closest('form')!
+    fireEvent.submit(form)
+    fireEvent.submit(form)
+    await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
+    fireEvent.submit(form)
+    expect(onSubmit).toHaveBeenCalledTimes(1)
+    release()
+    await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
+    fireEvent.submit(form)
+    await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(2))
+  })
+
+  it('catches rejected onSubmit: no unhandledrejection, afterSubmit skipped', async () => {
+    const onSubmit = vi.fn(async () => {
+      throw new Error('fail')
+    })
+    const afterSubmit = vi.fn()
+    const rejections: unknown[] = []
+    const onUnhandled = (e: PromiseRejectionEvent) => {
+      e.preventDefault()
+      rejections.push(e.reason)
+    }
+    window.addEventListener('unhandledrejection', onUnhandled)
+    try {
+      render(
+        Form()
+          .onSubmit(onSubmit)
+          .afterSubmit(afterSubmit)
+          .children([
+            TextField().name('email').placeholder('RejectEmail'),
+            Button('Save').submit(),
+          ])
+          .build() as any
+      )
+      fireEvent.submit(screen.getByPlaceholderText('RejectEmail').closest('form')!)
+      await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
+      await Promise.resolve()
+      await Promise.resolve()
+      expect(afterSubmit).not.toHaveBeenCalled()
+      expect(rejections).toEqual([])
+    } finally {
+      window.removeEventListener('unhandledrejection', onUnhandled)
+    }
+  })
+
+  it('includes the clicked submitter name/value in FormData', async () => {
+    const onSubmit = vi.fn()
+    render(
+      Form()
+        .onSubmit(onSubmit)
+        .children([
+          TextField().name('email').placeholder('SubmitterEmail'),
+          Button('Save').submit().props({ name: 'op', value: 'save' }),
+          Button('Save new').submit().props({ name: 'op', value: 'save-new' }),
+        ])
+        .build() as any
+    )
+    const input = screen.getByPlaceholderText('SubmitterEmail') as HTMLInputElement
+    fireEvent.change(input, { target: { value: 'a@b.c' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save new' }))
+    await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
+    expect(onSubmit.mock.calls[0][0]).toEqual({ email: 'a@b.c', op: 'save-new' })
+  })
+
+  it('drops javascript: / data: form action (XSS)', () => {
+    const { unmount } = render(
+      Form()
+        .action('javascript:alert(1)')
+        .props({ 'data-testid': 'js-form' })
+        .children([Button('Go').submit()])
+        .build() as any
+    )
+    expect(screen.getByTestId('js-form').getAttribute('action') ?? '').not.toMatch(/javascript/i)
+    unmount()
+    render(
+      Form()
+        .action('data:text/html,<script>alert(1)</script>')
+        .props({ 'data-testid': 'data-form' })
+        .children([Button('Go').submit()])
+        .build() as any
+    )
+    expect(screen.getByTestId('data-form').getAttribute('action') ?? '').not.toMatch(/data:/i)
+  })
+
+  it('keeps http(s) form action', () => {
+    render(
+      Form()
+        .action('https://example.com/submit')
+        .props({ 'data-testid': 'https-form' })
+        .children([Button('Go').submit()])
+        .build() as any
+    )
+    expect(screen.getByTestId('https-form')).toHaveAttribute('action', 'https://example.com/submit')
   })
 })
 

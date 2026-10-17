@@ -1,8 +1,10 @@
 import { Route } from './RouterContext';
+import { useCurrentRoute } from './Router';
+import { findMatchingRoute, matchPath } from './routeMatching';
 
 export function useRouteMeta<T = Record<string, any>>(): T | undefined {
-
-  return undefined;
+  const route = useCurrentRoute();
+  return route?.meta as T | undefined;
 }
 
 export interface BreadcrumbItem {
@@ -11,28 +13,39 @@ export interface BreadcrumbItem {
   meta?: Record<string, any>;
 }
 
+function stripSearchAndHash(path: string): string {
+  let next = path || '/';
+  const hashIdx = next.indexOf('#');
+  if (hashIdx >= 0) next = next.slice(0, hashIdx);
+  const qIdx = next.indexOf('?');
+  if (qIdx >= 0) next = next.slice(0, qIdx);
+  return next || '/';
+}
+
 export function generateBreadcrumbs(
   routes: Route[],
   currentPath: string
 ): BreadcrumbItem[] {
   const breadcrumbs: BreadcrumbItem[] = [];
-  const segments = currentPath.split('/').filter(Boolean);
+  const segments = stripSearchAndHash(currentPath).split('/').filter(Boolean);
 
   let accumulatedPath = '';
 
   for (const segment of segments) {
     accumulatedPath += `/${segment}`;
 
-    const route = findRouteByPath(routes, accumulatedPath);
+    const { leaf, route } = findMatchingRoute(routes, accumulatedPath);
+    const matched = leaf ?? route;
+    // Prefix layouts match unmatched children; only use meta.title on an exact path match.
+    const exact = matched != null && matchPath(accumulatedPath, matched.path, true).match;
 
-    if (route) {
+    if (matched && exact) {
       breadcrumbs.push({
-        label: route.meta?.title || segment,
+        label: matched.meta?.title || segment,
         path: accumulatedPath,
-        meta: route.meta,
+        meta: matched.meta,
       });
     } else {
-
       breadcrumbs.push({
         label: segment.charAt(0).toUpperCase() + segment.slice(1),
         path: accumulatedPath,
@@ -43,24 +56,8 @@ export function generateBreadcrumbs(
   return breadcrumbs;
 }
 
-function findRouteByPath(routes: Route[], path: string): Route | null {
-  for (const route of routes) {
-    if (route.path === path) {
-      return route;
-    }
-
-    if (route.children) {
-      const childRoute = findRouteByPath(route.children, path);
-      if (childRoute) {
-        return childRoute;
-      }
-    }
-  }
-
-  return null;
-}
-
 export function setDocumentTitle(route: Route, appName: string = 'FiboUI'): void {
+  if (typeof document === 'undefined') return;
   const title = route.meta?.title;
 
   if (title) {

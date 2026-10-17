@@ -1,14 +1,15 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
+/// <reference types="vite/client" />
+import { FiboApp, FiboThemeProvider } from 'fiboui'
 import { App } from './main/App'
-import { FiboThemeProvider } from 'fiboui'
-import 'fiboui/dist/style.css'
+import 'fiboui/style.css'
 import './style.css'
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
+function Root() {
+  return (
     <FiboThemeProvider>
       <App />
     </FiboThemeProvider>
-  </React.StrictMode>,
-)
+  )
+}
+
+FiboApp().root(Root).mount('root')

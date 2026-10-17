@@ -1,6 +1,23 @@
 import React, { ReactElement } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps } from '../../core/types';
+import {
+  collectInterpSignals,
+  hasInterpMarks,
+  resolveInterpString,
+} from '../../core/interpolate';
+
+function bindInterp(host: FiboBuilder, text: string | undefined): void {
+  if (typeof text !== 'string' || !hasInterpMarks(text)) return;
+  for (const sig of collectInterpSignals(text)) {
+    host.bindSignal(sig);
+  }
+}
+
+function resolveInterp(text: string | undefined): string | undefined {
+  if (typeof text !== 'string') return text;
+  return hasInterpMarks(text) ? resolveInterpString(text) : text;
+}
 
 type ProgressVariant = 'default' | 'striped' | 'labeled' | 'circular' | 'ring' | 'segments' | 'knob' | 'steps' | 'chevron' | 'floating' | 'pagination' | 'timeline';
 
@@ -24,8 +41,20 @@ const ProgressInner = React.memo((props: any) => {
         className, style, ...rest
     } = props;
 
-    const percentage = Math.min(100, Math.max(0, (value / max) * 100));
+    const nowRaw = typeof value === 'number' && Number.isFinite(value) ? value : 0;
+    const maxVal = typeof max === 'number' && Number.isFinite(max) ? max : 100;
+    const now = maxVal > 0 ? Math.min(maxVal, Math.max(0, nowRaw)) : Math.max(0, nowRaw);
+    const percentage = maxVal > 0 ? (now / maxVal) * 100 : 0;
     const mainColor = color || '#3B82F6';
+    const restLabel = typeof rest['aria-label'] === 'string' ? rest['aria-label'] : '';
+    const meter = {
+        role: 'progressbar',
+        'aria-valuenow': now,
+        'aria-valuemin': 0,
+        'aria-valuemax': maxVal,
+        'aria-label': restLabel || label || 'Progress',
+    };
+    const a11y = { ...rest, ...meter };
 
     if (variant === 'ring') {
         const size = ringSize ?? (typeof height === 'number' ? height : 190);
@@ -74,12 +103,7 @@ const ProgressInner = React.memo((props: any) => {
         return React.createElement('div', {
             className: `fibo-progress-ring relative inline-flex items-center justify-center ${className || ''}`,
             style: { width: size, height: size, ...style },
-            role: 'progressbar',
-            'aria-valuenow': value,
-            'aria-valuemin': 0,
-            'aria-valuemax': max,
-            'aria-label': label || 'Progress',
-            ...rest
+            ...a11y
         }, [
             React.createElement('svg', {
                 key: 'svg',
@@ -105,20 +129,16 @@ const ProgressInner = React.memo((props: any) => {
         const offset = circumference - (percentage / 100) * circumference;
 
         return React.createElement('div', {
-            className: `relative inline-flex items-center justify-center ${className}`,
+            className: `relative inline-flex items-center justify-center ${className || ''}`,
             style: { width: size, height: size, ...style },
-            role: 'progressbar',
-            'aria-valuenow': value,
-            'aria-valuemin': 0,
-            'aria-valuemax': max,
-            'aria-label': label || 'Progress',
-            ...rest
+            ...a11y
         }, [
             React.createElement('svg', {
                 key: 'svg',
                 className: 'transform -rotate-90',
                 width: size,
-                height: size
+                height: size,
+                'aria-hidden': true,
             }, [
                 React.createElement('circle', {
                     key: 'track',
@@ -156,9 +176,9 @@ const ProgressInner = React.memo((props: any) => {
         const activeIndex = Math.floor((percentage / 100) * count);
 
         return React.createElement('div', {
-            className: `flex items-center gap-2 ${className}`,
+            className: `flex items-center gap-2 ${className || ''}`,
             style,
-            ...rest
+            ...a11y
         }, Array.from({ length: count }).map((_, i) => {
             const isActive = i === activeIndex;
             return React.createElement('div', {
@@ -178,9 +198,9 @@ const ProgressInner = React.memo((props: any) => {
         const activeIndex = Math.floor((percentage / 100) * timelineItems.length);
 
         return React.createElement('div', {
-            className: `flex flex-col relative ${className}`,
+            className: `flex flex-col relative ${className || ''}`,
             style,
-            ...rest
+            ...a11y
         }, timelineItems.map((item: ProgressItem, i: number) => {
             const isCompleted = i < activeIndex;
             const isCurrent = i === activeIndex;
@@ -220,9 +240,9 @@ const ProgressInner = React.memo((props: any) => {
 
     if (variant === 'floating') {
         return React.createElement('div', {
-            className: `w-full bg-white rounded-xl shadow-sm border border-gray-100 p-4 relative overflow-hidden ${className}`,
+            className: `w-full bg-white rounded-xl shadow-sm border border-gray-100 p-4 relative overflow-hidden ${className || ''}`,
             style,
-            ...rest
+            ...a11y
         }, [
             React.createElement('div', { key: 'info', className: 'flex justify-between items-center mb-3 px-1' }, [
                 React.createElement('span', { key: 'l', className: 'text-sm font-semibold text-gray-700' },
@@ -246,9 +266,9 @@ const ProgressInner = React.memo((props: any) => {
         const activeIndex = Math.floor((percentage / 100) * steps);
 
         return React.createElement('div', {
-            className: `flex w-full rounded-lg overflow-hidden ${className}`,
+            className: `flex w-full rounded-lg overflow-hidden ${className || ''}`,
             style,
-            ...rest
+            ...a11y
         }, Array.from({ length: steps }).map((_, i) => {
              const isActive = i <= activeIndex;
 
@@ -275,12 +295,12 @@ const ProgressInner = React.memo((props: any) => {
         const activeStep = Math.ceil((percentage / 100) * steps);
 
         return React.createElement('div', {
-            className: `w-full flex items-center justify-between relative ${className}`,
+            className: `w-full flex items-center justify-between relative ${className || ''}`,
             style: {
                 marginTop: '1rem',
                 ...style
             },
-            ...rest
+            ...a11y
         }, [
             React.createElement('div', {
                 key: 'line-bg',
@@ -312,9 +332,9 @@ const ProgressInner = React.memo((props: any) => {
         const activeSegs = Math.round((percentage / 100) * segCount);
 
         return React.createElement('div', {
-            className: `flex gap-1.5 w-full ${className}`,
+            className: `flex gap-1.5 w-full ${className || ''}`,
             style,
-            ...rest
+            ...a11y
         },
             Array.from({ length: segCount }).map((_, i) => React.createElement('div', {
                 key: i,
@@ -353,22 +373,17 @@ const ProgressInner = React.memo((props: any) => {
     }, React.createElement('div', { className: 'w-1.5 h-1.5 rounded-full', style: { backgroundColor: mainColor } })) : null;
 
     return React.createElement('div', {
-        className: `relative w-full ${variant === 'labeled' ? 'mt-8' : ''}`,
-        role: 'progressbar',
-        'aria-valuenow': value,
-        'aria-valuemin': 0,
-        'aria-valuemax': max,
-        'aria-label': label || 'Progress',
-        ...rest
+        className: `relative w-full ${variant === 'labeled' ? 'mt-8' : ''} ${className || ''}`,
+        style,
+        ...a11y
     }, [
         labelElement,
         React.createElement('div', {
             key: 'track',
-            className: `w-full bg-slate-100 rounded-full ${className}`,
+            className: 'w-full bg-slate-100 rounded-full',
             style: {
                 width: '100%',
                 height: heightVal,
-                ...style
             }
         },
             React.createElement('div', {
@@ -449,11 +464,13 @@ class ProgressBuilder extends FiboBuilder {
 
   label(text: string): this {
     this._label = text;
+    bindInterp(this, text);
     return this;
   }
 
   subLabel(text: string): this {
     this._subLabel = text;
+    bindInterp(this, text);
     return this;
   }
 
@@ -469,8 +486,8 @@ class ProgressBuilder extends FiboBuilder {
         color: this._color,
         height: this._height,
         variant: this._variant,
-        label: this._label,
-        subLabel: this._subLabel,
+        label: resolveInterp(this._label),
+        subLabel: resolveInterp(this._subLabel),
         items: this._items,
         size: this._size,
         strokeWidth: this._strokeWidth,

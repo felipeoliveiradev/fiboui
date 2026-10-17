@@ -98,9 +98,20 @@ export class ListItemStyleBuilder extends CssStyleStore {
   }
 
   style(extra: CSSProperties): this {
-    this.mergeStyle(extra);
+    this.mergeStyle(normalizeItemStyleObject(extra));
     return this;
   }
+}
+
+/** `itemStyle({ boxShadow: 0, padding: 14 })` → `{ boxShadow: 'none', padding: '14px' }`. */
+export function normalizeItemStyleObject(style: CSSProperties): CSSProperties {
+  const out: CSSProperties = {};
+  const record = out as Record<string, string>;
+  for (const [key, value] of Object.entries(style)) {
+    if (value === null || value === undefined) continue;
+    record[key] = normalizeCssValue(key, value);
+  }
+  return out;
 }
 
 /** Proxied builder: every CSS property is a method. */

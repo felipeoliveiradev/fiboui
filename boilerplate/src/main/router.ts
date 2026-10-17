@@ -1,9 +1,9 @@
-import { signal } from '../../../src/core/state';
+import { signal } from 'fiboui'
 
-export type Route = 'todo' | 'performance';
+export type Route = 'todo' | 'performance'
 
-export const currentRoute = signal<Route>('todo');
+export const currentRoute = signal<Route>('todo')
 
 export const navigate = (route: Route) => {
-  currentRoute.value = route;
-};
+  currentRoute.value = route
+}

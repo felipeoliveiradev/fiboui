@@ -7,6 +7,7 @@ import { Row } from '../../../layout/Row';
 import { Column } from '../../../layout/Column';
 import { Card } from '../../Card';
 import { Icons } from '../../../core/icons';
+import { Image } from '../../../content/Image';
 
 const CollectionCardInner = React.memo((props: any) => {
     const { image, title, author, items, className, style, ...rest } = props;
@@ -26,8 +27,12 @@ const CollectionCardInner = React.memo((props: any) => {
         .props(rest)
         .children([
 
-            Box().classNames(['absolute', 'inset-0', 'bg-cover', 'bg-center', 'transition-transform', 'duration-500'])
-                 .style({ backgroundImage: `url(${image})` }).build(),
+            Image()
+                 .src(image)
+                 .alt(title || '')
+                 .classNames(['absolute', 'inset-0', 'w-full', 'h-full', 'object-cover', 'transition-transform', 'duration-500'])
+                 .style({ position: 'absolute', inset: 0, width: '100%', height: '100%' })
+                 .build(),
 
             Box().classNames(['absolute', 'inset-0', 'bg-gradient-to-t', 'from-black/80', 'via-black/20', 'to-transparent']).build(),
 
@@ -71,13 +76,13 @@ class CollectionCardBuilder extends FiboBuilder {
 
   build(): ReactElement {
     const props = {
+        ...this._props,
         image: this._image,
         title: this._title,
         author: this._author,
         items: this._items,
         className: this.getClassName(),
         style: this.getStyle(),
-        ...this._props
     };
     return React.createElement(CollectionCardInner, props);
   }

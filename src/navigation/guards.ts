@@ -1,7 +1,19 @@
 import { RouteGuard } from './RouterContext';
 
+function samePath(a: string, b: string): boolean {
+  const norm = (p: string) => {
+    const cut = (p ?? '').split(/[?#]/, 1)[0];
+    if (!cut || cut === '/') return '/';
+    return cut.length > 1 && cut.endsWith('/') ? cut.slice(0, -1) : cut;
+  };
+  return norm(a) === norm(b);
+}
+
 export function requireAuth(loginPath: string = '/login'): RouteGuard {
-  return (_to, _from) => {
+  return (to, _from) => {
+    if (samePath(to.path, loginPath)) {
+      return true;
+    }
 
     const isAuthenticated = checkAuth();
 
@@ -17,7 +29,11 @@ export function requireRole(
   role: string | string[],
   unauthorizedPath: string = '/unauthorized'
 ): RouteGuard {
-  return (_to, _from) => {
+  return (to, _from) => {
+    if (samePath(to.path, unauthorizedPath)) {
+      return true;
+    }
+
     const userRoles = getUserRoles();
     const requiredRoles = Array.isArray(role) ? role : [role];
 
@@ -33,13 +49,15 @@ export function requireRole(
 
 export function confirmLeave(message: string = 'Are you sure you want to leave?'): RouteGuard {
   return (_to, _from) => {
-    const confirmed = window.confirm(message);
-    return confirmed;
+    if (typeof window === 'undefined' || typeof window.confirm !== 'function') {
+      return true;
+    }
+    return window.confirm(message);
   };
 }
 
 export function redirect(path: string): RouteGuard {
-  return () => path;
+  return (to) => (samePath(to.path, path) ? true : path);
 }
 
 export function composeGuards(...guards: RouteGuard[]): RouteGuard {
@@ -52,6 +70,9 @@ export function composeGuards(...guards: RouteGuard[]): RouteGuard {
       }
 
       if (typeof result === 'string') {
+        if (samePath(result, to.path)) {
+          continue;
+        }
         return result;
       }
     }
@@ -61,12 +82,22 @@ export function composeGuards(...guards: RouteGuard[]): RouteGuard {
 }
 
 function checkAuth(): boolean {
-
-  return !!localStorage.getItem('authToken');
+  if (typeof localStorage === 'undefined') return false;
+  try {
+    return !!localStorage.getItem('authToken');
+  } catch {
+    return false;
+  }
 }
 
 function getUserRoles(): string[] {
-
-  const rolesStr = localStorage.getItem('userRoles');
-  return rolesStr ? JSON.parse(rolesStr) : [];
+  if (typeof localStorage === 'undefined') return [];
+  try {
+    const rolesStr = localStorage.getItem('userRoles');
+    if (!rolesStr) return [];
+    const parsed = JSON.parse(rolesStr);
+    return Array.isArray(parsed) ? parsed.map(String) : [];
+  } catch {
+    return [];
+  }
 }

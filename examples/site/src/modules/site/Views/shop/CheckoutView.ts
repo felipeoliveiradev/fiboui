@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react'
 import type { PseudoStateBuilder } from 'fiboui'
 import { Column, Row, Box, Label, Text, Form, email, minLength, required, Button, Checkbox, RadioGroup, TextField } from 'fiboui'
 import { chalk, lime, line, muted, pink } from '../../theme'
@@ -13,7 +14,7 @@ import {
   shippingCost,
 } from './state'
 
-export function CheckoutView() {
+export function CheckoutView(): ReactElement {
   return Column()
     .width('100%')
     .crossAxisAlignment('stretch')
@@ -75,15 +76,16 @@ export function CheckoutView() {
               placeOrder(values.newsletter === 'on')
             })
             .children([
-              Label('Full name').required().fontSize(10).letterSpacing('0.14em').textTransform('uppercase').color(muted),
-              shopField('name', 'Alex Builder'),
-              Label('Email').required().fontSize(10).letterSpacing('0.14em').textTransform('uppercase').color(muted),
-              shopField('email', 'alex@studio.dev'),
-              Label('Shipping address').required().fontSize(10).letterSpacing('0.14em').textTransform('uppercase').color(muted),
-              shopField('address', 'Street, city, country, postal code'),
-              Label('Order note').fontSize(10).letterSpacing('0.14em').textTransform('uppercase').color(muted),
+              Label('Full name').required().htmlFor('shop-name').fontSize(10).letterSpacing('0.14em').textTransform('uppercase').color(muted),
+              shopField('name', 'Alex Builder', 'shop-name'),
+              Label('Email').required().htmlFor('shop-email').fontSize(10).letterSpacing('0.14em').textTransform('uppercase').color(muted),
+              shopField('email', 'alex@studio.dev', 'shop-email'),
+              Label('Shipping address').required().htmlFor('shop-address').fontSize(10).letterSpacing('0.14em').textTransform('uppercase').color(muted),
+              shopField('address', 'Street, city, country, postal code', 'shop-address'),
+              Label('Order note').htmlFor('shop-note').fontSize(10).letterSpacing('0.14em').textTransform('uppercase').color(muted),
               TextField()
                 .name('note')
+                .props({ id: 'shop-note' })
                 .placeholder('Gift message, delivery notes…')
                 .variant('outlined')
                 .width('100%')
@@ -151,9 +153,10 @@ export function CheckoutView() {
     ])
 }
 
-function shopField(name: string, placeholder: string) {
+function shopField(name: string, placeholder: string, id: string) {
   return TextField()
     .name(name)
+    .props({ id })
     .placeholder(placeholder)
     .variant('outlined')
     .width('100%')

@@ -1,13 +1,51 @@
-import React, { ReactElement } from 'react';
+'use client';
+
+import React, { ReactElement, ReactNode, useContext } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
-import { ProviderWrapper } from '../../core/StateWrapper';
+import { ProviderContext, ProviderWrapper } from '../../core/StateWrapper';
 import { PluginManager } from '../../core/plugin/PluginManager';
 import { buildChild, normalizeFiboChildren } from '../../core/children';
+import {
+  collectInterpSignals,
+  hasInterpMarks,
+  resolveInterpString,
+} from '../../core/interpolate';
 import type { FiboChild, FiboChildren } from '../../core/types';
 
 interface LayoutBarConfig {
   fixed?: boolean;
   children: FiboChildren;
+}
+
+function bindInterp(host: FiboBuilder, text: string | undefined): void {
+  if (typeof text !== 'string' || !hasInterpMarks(text)) return;
+  for (const sig of collectInterpSignals(text)) {
+    host.bindSignal(sig);
+  }
+}
+
+function bindInterpTree(host: FiboBuilder, node: unknown): void {
+  if (typeof node === 'function') {
+    try {
+      bindInterpTree(host, (node as () => unknown)());
+    } catch {
+      /* factory may need mount */
+    }
+    return;
+  }
+  if (typeof node === 'string') {
+    bindInterp(host, node);
+    return;
+  }
+  if (Array.isArray(node)) {
+    for (const item of node) bindInterpTree(host, item);
+  }
+}
+
+function resolveInterpChild(child: ReactNode): ReactNode {
+  return typeof child === 'string' && hasInterpMarks(child)
+    ? resolveInterpString(child)
+    : child;
 }
 
 interface ScaffoldConfig {
@@ -18,7 +56,10 @@ interface ScaffoldConfig {
   style?: React.CSSProperties;
   children?: React.ReactNode;
   overlays?: React.ReactNode[];
+  [key: string]: any;
 }
+
+const chromeNoShrink: React.CSSProperties = { flexShrink: 0 };
 
 const ScaffoldInner = React.memo((props: ScaffoldConfig) => {
   const {
@@ -28,10 +69,12 @@ const ScaffoldInner = React.memo((props: ScaffoldConfig) => {
     className,
     style,
     children,
-    overlays = []
+    overlays = [],
+    ...rest
   } = props;
 
-  const allProviders = new Map<string, any>();
+  const parentProviders = useContext(ProviderContext);
+  const allProviders = new Map<string, any>(parentProviders);
 
   if (theme) {
     allProviders.set('theme', theme);
@@ -45,20 +88,79 @@ const ScaffoldInner = React.memo((props: ScaffoldConfig) => {
     allProviders.set(key, value);
   });
 
+  const overlayLayer =
+    overlays.length > 0
+      ? React.createElement(
+          'div',
+          {
+            key: 'fibo-overlays',
+            className: 'fibo-scaffold-overlays',
+            style: {
+              position: 'absolute',
+              inset: '0px',
+              pointerEvents: 'none',
+              zIndex: 50,
+            },
+          },
+          overlays.map((node, index) =>
+            React.createElement(
+              'div',
+              {
+                key:
+                  React.isValidElement(node) && node.key != null && node.key !== ''
+                    ? String(node.key)
+                    : `fibo-overlay-slot-${index}`,
+                style: { pointerEvents: 'auto' },
+              },
+              node,
+            ),
+          ),
+        )
+      : null;
+
+  const hostStyle: React.CSSProperties = {
+    height: '100vh',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+    position: 'relative',
+    boxSizing: 'border-box',
+    ...style,
+  };
+  if (!hostStyle.boxSizing) {
+    hostStyle.boxSizing = 'border-box';
+  }
+  const paddingSet = [
+    hostStyle.padding,
+    hostStyle.paddingTop,
+    hostStyle.paddingRight,
+    hostStyle.paddingBottom,
+    hostStyle.paddingLeft,
+    hostStyle.paddingInline,
+    hostStyle.paddingBlock,
+  ].some((value) => value != null && value !== '');
+  if (!paddingSet) {
+    Object.assign(hostStyle, {
+      ['--fibo-safe-top']: 'env(safe-area-inset-top, 0px)',
+      ['--fibo-safe-right']: 'env(safe-area-inset-right, 0px)',
+      ['--fibo-safe-bottom']: 'env(safe-area-inset-bottom, 0px)',
+      ['--fibo-safe-left']: 'env(safe-area-inset-left, 0px)',
+      paddingTop: 'var(--fibo-safe-top)',
+      paddingRight: 'var(--fibo-safe-right)',
+      paddingBottom: 'var(--fibo-safe-bottom)',
+      paddingLeft: 'var(--fibo-safe-left)',
+    });
+  }
+
   const content = React.createElement(
     'div',
     {
-      className: `fibo-scaffold ${className || ''}`,
-      style: {
-        height: '100vh',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative', // Ensure relative positioning for overlays
-        ...style,
-      },
+      className: ['fibo-scaffold', className].filter(Boolean).join(' '),
+      style: hostStyle,
+      ...rest,
+      ...(locale ? { lang: locale } : {}),
     },
-    [children, ...overlays]
+    overlayLayer ? [children, overlayLayer] : children,
   );
 
   if (allProviders.size > 0) {
@@ -106,10 +208,22 @@ class ScaffoldBuilder extends FiboBuilder {
   private _customProviders: Record<string, any> = {};
   private _structure: ScaffoldStructure = {};
 
-  private _headerBar?: { content: React.ReactNode; fixed: boolean };
-  private _footerBar?: { content: React.ReactNode; fixed: boolean };
-  private _sideBarLeft?: { content: React.ReactNode; fixed: boolean };
-  private _sideBarRight?: { content: React.ReactNode; fixed: boolean };
+  private _headerBar?: FiboChild | LayoutBarConfig;
+  private _footerBar?: FiboChild | LayoutBarConfig;
+  private _sideBarLeft?: FiboChild | LayoutBarConfig;
+  private _sideBarRight?: FiboChild | LayoutBarConfig;
+
+  children(children: FiboChildren): this {
+    bindInterpTree(this, children);
+    return super.children(children);
+  }
+
+  props(value: Record<string, any>): this {
+    if (value && 'children' in value) {
+      bindInterpTree(this, value.children);
+    }
+    return super.props(value);
+  }
 
   locale(locale: string): this {
     this._locale = locale;
@@ -132,34 +246,50 @@ class ScaffoldBuilder extends FiboBuilder {
   }
 
   headerBar(config: FiboChild | LayoutBarConfig): this {
-    this._headerBar = this._normalizeBar(config);
+    this._bindBar(config);
+    this._headerBar = config;
     return this;
   }
 
   footerBar(config: FiboChild | LayoutBarConfig): this {
-    this._footerBar = this._normalizeBar(config);
+    this._bindBar(config);
+    this._footerBar = config;
     return this;
   }
 
   sideBarLeft(config: FiboChild | LayoutBarConfig): this {
-    this._sideBarLeft = this._normalizeBar(config);
+    this._bindBar(config);
+    this._sideBarLeft = config;
     return this;
   }
 
   sideBarRight(config: FiboChild | LayoutBarConfig): this {
-    this._sideBarRight = this._normalizeBar(config);
+    this._bindBar(config);
+    this._sideBarRight = config;
     return this;
+  }
+
+  private _bindBar(config: FiboChild | LayoutBarConfig): void {
+    if (this._isLayoutBarConfig(config)) {
+      bindInterpTree(this, config.children);
+      return;
+    }
+    bindInterpTree(this, config);
   }
 
   private _normalizeBar(config: FiboChild | LayoutBarConfig): { content: React.ReactNode; fixed: boolean } {
     if (this._isLayoutBarConfig(config)) {
       return {
-        content: React.createElement(React.Fragment, null, ...normalizeFiboChildren(config.children)),
+        content: React.createElement(
+          React.Fragment,
+          null,
+          ...normalizeFiboChildren(config.children).map(resolveInterpChild),
+        ),
         fixed: config.fixed ?? false
       };
     }
     return {
-      content: buildChild(config),
+      content: resolveInterpChild(buildChild(config)),
       fixed: false
     };
   }
@@ -175,13 +305,34 @@ class ScaffoldBuilder extends FiboBuilder {
   }
 
   build(): ReactElement {
-    const mainContent = this.processChildren();
+    const {
+      children: propsChildren,
+      className: extraClass,
+      style: extraStyle,
+      overlays: _propsOverlays,
+      theme: _propsTheme,
+      locale: _propsLocale,
+      providers: _propsProviders,
+      ...restProps
+    } = this._props;
+
+    const rawBody =
+      propsChildren !== undefined
+        ? normalizeFiboChildren(propsChildren as FiboChildren)
+        : this.processChildren();
+    const mainContent = rawBody.map(resolveInterpChild);
+
+    const headerBar = this._headerBar ? this._normalizeBar(this._headerBar) : undefined;
+    const footerBar = this._footerBar ? this._normalizeBar(this._footerBar) : undefined;
+    const leftBar = this._sideBarLeft ? this._normalizeBar(this._sideBarLeft) : undefined;
+    const rightBar = this._sideBarRight ? this._normalizeBar(this._sideBarRight) : undefined;
+
     const s = this._structure;
 
-    const showHeader = this._headerBar && (s.header?.visible !== false);
-    const showFooter = this._footerBar && (s.footer?.visible !== false);
-    const showLeft = this._sideBarLeft && (s.sidebarLeft?.visible !== false);
-    const showRight = this._sideBarRight && (s.sidebarRight?.visible !== false);
+    const showHeader = headerBar && (s.header?.visible !== false);
+    const showFooter = footerBar && (s.footer?.visible !== false);
+    const showLeft = leftBar && (s.sidebarLeft?.visible !== false);
+    const showRight = rightBar && (s.sidebarRight?.visible !== false);
 
     const leftIsFull = showLeft && s.sidebarLeft?.fullHeight;
     const rightIsFull = showRight && s.sidebarRight?.fullHeight;
@@ -195,7 +346,9 @@ class ScaffoldBuilder extends FiboBuilder {
           display: 'flex',
           flexDirection: 'row',
           overflow: 'hidden',
-          position: 'relative'
+          position: 'relative',
+          minWidth: '0px',
+          minHeight: '0px',
         }
       },
       [
@@ -205,14 +358,17 @@ class ScaffoldBuilder extends FiboBuilder {
           className: 'z-20',
           style: {
             width: s.sidebarLeft?.width,
-            position: s.sidebarLeft?.mode === 'over' ? 'absolute' : (s.sidebarLeft?.behavior === 'fixed' || this._sideBarLeft!.fixed ? 'sticky' : undefined),
-            top: (s.sidebarLeft?.behavior === 'fixed' || this._sideBarLeft!.fixed) ? 0 : undefined,
-            height: (s.sidebarLeft?.behavior === 'fixed' || this._sideBarLeft!.fixed) ? '100%' : undefined,
+            position: s.sidebarLeft?.mode === 'over' ? 'absolute' : (s.sidebarLeft?.behavior === 'fixed' || leftBar!.fixed ? 'sticky' : undefined),
+            top: (s.sidebarLeft?.mode === 'over' || s.sidebarLeft?.behavior === 'fixed' || leftBar!.fixed) ? 0 : undefined,
+            left: s.sidebarLeft?.mode === 'over' ? '0px' : undefined,
+            height: (s.sidebarLeft?.mode === 'over' || s.sidebarLeft?.behavior === 'fixed' || leftBar!.fixed) ? '100%' : undefined,
+            zIndex: s.sidebarLeft?.mode === 'over' ? 20 : undefined,
             overflowY: 'auto',
             borderRight: '1px solid var(--fibo-outline, #e0e0e0)',
             backgroundColor: 'var(--fibo-surface, #ffffff)',
+            ...chromeNoShrink,
           }
-        }, this._sideBarLeft!.content),
+        }, leftBar!.content),
 
         React.createElement('main', {
           key: 'scaffold-body',
@@ -221,7 +377,10 @@ class ScaffoldBuilder extends FiboBuilder {
             display: 'flex',
             flexDirection: 'column',
             overflow: 'auto',
-            position: 'relative'
+            position: 'relative',
+            zIndex: 0,
+            minWidth: '0px',
+            minHeight: '0px',
           }
         }, mainContent),
 
@@ -230,14 +389,17 @@ class ScaffoldBuilder extends FiboBuilder {
           className: 'z-20',
           style: {
             width: s.sidebarRight?.width,
-            position: s.sidebarRight?.mode === 'over' ? 'absolute' : (s.sidebarRight?.behavior === 'fixed' || this._sideBarRight!.fixed ? 'sticky' : undefined),
-            top: (s.sidebarRight?.behavior === 'fixed' || this._sideBarRight!.fixed) ? 0 : undefined,
-            height: (s.sidebarRight?.behavior === 'fixed' || this._sideBarRight!.fixed) ? '100%' : undefined,
+            position: s.sidebarRight?.mode === 'over' ? 'absolute' : (s.sidebarRight?.behavior === 'fixed' || rightBar!.fixed ? 'sticky' : undefined),
+            top: (s.sidebarRight?.mode === 'over' || s.sidebarRight?.behavior === 'fixed' || rightBar!.fixed) ? 0 : undefined,
+            right: s.sidebarRight?.mode === 'over' ? '0px' : undefined,
+            height: (s.sidebarRight?.mode === 'over' || s.sidebarRight?.behavior === 'fixed' || rightBar!.fixed) ? '100%' : undefined,
+            zIndex: s.sidebarRight?.mode === 'over' ? 20 : undefined,
             overflowY: 'auto',
             borderLeft: '1px solid var(--fibo-outline, #e0e0e0)',
             backgroundColor: 'var(--fibo-surface, #ffffff)',
+            ...chromeNoShrink,
           }
-        }, this._sideBarRight!.content),
+        }, rightBar!.content),
       ].filter(Boolean)
     );
 
@@ -247,13 +409,14 @@ class ScaffoldBuilder extends FiboBuilder {
         className: 'z-30',
         style: {
           height: s.header?.height,
-          position: s.header?.position || (this._headerBar!.fixed ? 'sticky' : 'static'),
+          position: s.header?.position || (headerBar!.fixed ? 'sticky' : 'static'),
           top: 0,
           backgroundColor: 'var(--fibo-surface, #ffffff)',
           zIndex: 30,
           borderBottom: '1px solid var(--fibo-outline, #e0e0e0)',
+          ...chromeNoShrink,
         }
-      }, this._headerBar!.content),
+      }, headerBar!.content),
 
       middleSection,
 
@@ -262,13 +425,14 @@ class ScaffoldBuilder extends FiboBuilder {
         className: 'z-30',
         style: {
           height: s.footer?.height,
-          position: s.footer?.position || (this._footerBar!.fixed ? 'sticky' : 'static'),
+          position: s.footer?.position || (footerBar!.fixed ? 'sticky' : 'static'),
           bottom: 0,
           backgroundColor: 'var(--fibo-surface, #ffffff)',
           zIndex: 30,
           borderTop: '1px solid var(--fibo-outline, #e0e0e0)',
+          ...chromeNoShrink,
         }
-      }, this._footerBar!.content)
+      }, footerBar!.content)
     ].filter(Boolean));
 
     let contentTree: ReactElement = React.createElement('div', {
@@ -295,9 +459,10 @@ class ScaffoldBuilder extends FiboBuilder {
             overflowY: 'auto',
             borderRight: '1px solid var(--fibo-outline, #e0e0e0)',
             backgroundColor: 'var(--fibo-surface, #ffffff)',
-            zIndex: 40
+            zIndex: 40,
+            ...chromeNoShrink,
           }
-        }, this._sideBarLeft!.content),
+        }, leftBar!.content),
         contentTree
       ]);
     }
@@ -315,24 +480,31 @@ class ScaffoldBuilder extends FiboBuilder {
             overflowY: 'auto',
             borderLeft: '1px solid var(--fibo-outline, #e0e0e0)',
             backgroundColor: 'var(--fibo-surface, #ffffff)',
-            zIndex: 40
+            zIndex: 40,
+            ...chromeNoShrink,
           }
-        }, this._sideBarRight!.content)
+        }, rightBar!.content)
       ]);
     }
 
-    // Fetch overlays from plugins
     const pluginOverlays = PluginManager.getInstance().getOverlays();
-    const renderedOverlays = pluginOverlays.map((builder: any) => builder().build());
+    const renderedOverlays = pluginOverlays.map((builder: any, index: number) => {
+      const node = builder().build();
+      if (React.isValidElement(node) && node.key != null && node.key !== '') {
+        return node;
+      }
+      return React.createElement(React.Fragment, { key: `fibo-overlay-${index}` }, node);
+    });
 
     const props: ScaffoldConfig = {
       theme: this._theme,
       locale: this._locale,
       providers: this._customProviders,
-      className: this.getClassName(),
-      style: this.getStyle(),
+      className: [this.getClassName(), extraClass].filter(Boolean).join(' '),
+      style: extraStyle ? { ...this.getStyle(), ...extraStyle } : this.getStyle(),
       children: contentTree,
       overlays: renderedOverlays,
+      ...restProps,
     };
 
     return React.createElement(ScaffoldInner, props);

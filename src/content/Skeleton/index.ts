@@ -1,11 +1,47 @@
 import React, { ReactElement } from 'react';
+import { usePrefersReducedMotion } from '../../core/animationHooks';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps } from '../../core/types';
 
+const SKELETON_CSS = `@keyframes fibo-skeleton-pulse {
+  50% { opacity: 0.5; }
+}
+.loading-skeleton {
+  animation: fibo-skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading-skeleton,
+  .loading-skeleton * {
+    animation: none !important;
+  }
+}`;
+
+function withSkeletonCss(host: ReactElement): ReactElement {
+    return React.createElement(
+        React.Fragment,
+        null,
+        React.createElement('style', { 'data-fibo-skeleton-motion': '' }, SKELETON_CSS),
+        host,
+    );
+}
+
+function toCssSize(value: string | number): string | number {
+    if (typeof value === 'number' && Number.isFinite(value)) return `${value}px`;
+    return value;
+}
+
 const SkeletonInner = React.memo((props: any) => {
     const { width, height, shape, className, style, ...rest } = props;
+    const {
+        'aria-hidden': _hidden,
+        role: _role,
+        'aria-busy': _busy,
+        ...safeRest
+    } = rest;
+    const reduceMotion = usePrefersReducedMotion();
 
-    const baseClasses = ['animate-pulse', 'bg-gray-200', 'loading-skeleton'];
+    const baseClasses = ['bg-gray-200', 'loading-skeleton'];
+    if (!reduceMotion) baseClasses.unshift('animate-pulse');
 
     if (shape === 'circle') baseClasses.push('rounded-full');
     else if (shape === 'rounded-sm') baseClasses.push('rounded-sm');
@@ -14,18 +50,22 @@ const SkeletonInner = React.memo((props: any) => {
     else if (shape === 'square') baseClasses.push('rounded-none');
     else baseClasses.push('rounded');
 
-    return React.createElement('div', {
+    const host = React.createElement('div', {
+        ...safeRest,
         className: [...baseClasses, className].filter(Boolean).join(' '),
-        role: 'status',
-        'aria-live': 'polite',
-        'aria-label': rest['aria-label'] || 'Loading',
         style: {
-            width: width,
-            height: height,
-            ...style
+            ...style,
+            width: toCssSize(width),
+            height: toCssSize(height),
+            ...(reduceMotion ? { animation: 'none' } : {}),
         },
-        ...rest
+        role: 'status',
+        'aria-busy': true,
+        'aria-live': 'polite',
+        'aria-label': safeRest['aria-label'] || rest['aria-label'] || 'Loading',
     });
+
+    return withSkeletonCss(host);
 });
 
 type SkeletonShape = 'circle' | 'square' | 'rounded' | 'rounded-sm' | 'rounded-md' | 'rounded-lg';
@@ -51,13 +91,26 @@ class SkeletonBuilder extends FiboBuilder {
   }
 
   build(): ReactElement {
+    const extra = this._props || {};
+    const {
+      width: _w,
+      height: _h,
+      shape: _shape,
+      className: extraClass,
+      style: extraStyle,
+      role: _role,
+      'aria-busy': _busy,
+      'aria-hidden': _hidden,
+      ...restProps
+    } = extra;
+
     const props = {
+        ...restProps,
         width: this._width,
         height: this._height,
         shape: this._shape,
-        className: this.getClassName(),
-        style: this.getStyle(),
-        ...this._props
+        className: [this.getClassName(), extraClass].filter(Boolean).join(' '),
+        style: { ...(extraStyle || {}), ...this.getStyle() },
     };
 
     return React.createElement(SkeletonInner, props);

@@ -112,6 +112,43 @@ assertEq(
   '\t\t'
 );
 
+// Playground parity (cases vscode used to miss)
+assertEq(
+  'factory already chained on the same line',
+  suggestIndent('Column().gap(12)', '', '', 2, unit),
+  '  '
+);
+
+assertEq(
+  'comment that looks like children open',
+  suggestIndent('  // .children([', '', '  ', 2, unit),
+  null
+);
+
+assertEq(
+  'chain plus comment that looks like children open',
+  suggestIndent('  .gap(12) // .children([', '', '  ', 2, unit),
+  '  '
+);
+
+assertEq(
+  'onPress callback brace',
+  suggestIndent('  .onPress(() => {', '', '  ', 2, unit),
+  '    '
+);
+
+assertEq(
+  'typed itemStyle callback',
+  suggestIndent('  .itemStyle((s: Style) =>', '', '  ', 2, unit),
+  '    '
+);
+
+assertEq(
+  'renderItem factory owns the next chain',
+  suggestIndent('      .renderItem((item) => Row()', '.children([', '      ', 2, unit),
+  '        '
+);
+
 if (failed) {
   console.error(`${failed} failed`);
   process.exit(1);

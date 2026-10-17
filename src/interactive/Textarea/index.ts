@@ -4,8 +4,25 @@ import React, { ReactElement, useEffect, useRef, useState } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { twMerge } from 'tailwind-merge';
 import { BaseProps } from '../../core/types';
+import {
+  collectInterpSignals,
+  hasInterpMarks,
+  resolveInterpString,
+} from '../../core/interpolate';
 import { Signal } from '../../core/state';
 import type { FieldRule } from '../Form/validators';
+
+function bindInterp(host: FiboBuilder, text: string | undefined): void {
+  if (typeof text !== 'string' || !hasInterpMarks(text)) return;
+  for (const sig of collectInterpSignals(text)) {
+    host.bindSignal(sig);
+  }
+}
+
+function resolveInterp(text: string | undefined): string | undefined {
+  if (typeof text !== 'string') return text;
+  return hasInterpMarks(text) ? resolveInterpString(text) : text;
+}
 
 /**
  * Uncontrolled by default — the DOM owns the text, so typing does not
@@ -23,6 +40,7 @@ const TextareaInner = React.memo((props: any) => {
     containerStyle,
     label,
     error,
+    helper,
     value,
     controlled,
     rules,
@@ -64,16 +82,21 @@ const TextareaInner = React.memo((props: any) => {
     }
     const host = textarea.closest('.fibo-textarea-container') as HTMLElement | null;
     const span = host?.querySelector('.fibo-field-error') as HTMLElement | null;
+    const helperSpan = host?.querySelector('.fibo-field-helper') as HTMLElement | null;
     if (host) {
       (host as unknown as { __fiboShowError?: (msg: string | null) => void }).__fiboShowError = (
         message
       ) => {
-        if (!span) return;
-        span.textContent = message ?? '';
-        span.style.display = message ? '' : 'none';
+        if (span) {
+          span.textContent = message ?? '';
+          span.style.display = message ? '' : 'none';
+        }
+        if (helperSpan) {
+          helperSpan.style.display = message || !helper ? 'none' : '';
+        }
       };
     }
-  }, [rules]);
+  }, [rules, helper]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
@@ -96,6 +119,12 @@ const TextareaInner = React.memo((props: any) => {
     inputRest.onBlur?.(e);
   };
 
+  const helperId = helper
+    ? inputRest.name
+      ? `fibo-help-${inputRest.name}`
+      : `fibo-help-${inputId}`
+    : undefined;
+
   const textareaProps: Record<string, unknown> = {
     key: 'textarea',
     ref: textareaRef,
@@ -105,6 +134,15 @@ const TextareaInner = React.memo((props: any) => {
     onBlur: handleBlur,
     ...inputRest,
   };
+
+  if (error) {
+    textareaProps['aria-invalid'] = true;
+    if (inputRest.name) {
+      textareaProps['aria-describedby'] = `fibo-err-${inputRest.name}`;
+    }
+  } else if (helperId) {
+    textareaProps['aria-describedby'] = helperId;
+  }
 
   if (controlled) {
     textareaProps.value = controlledValue;
@@ -126,9 +164,22 @@ const TextareaInner = React.memo((props: any) => {
         },
         label
       ),
+    helper
+      ? React.createElement(
+          'span',
+          {
+            id: helperId,
+            className:
+              'fibo-field-helper text-[var(--fibo-on-surface-variant,#9a9a9a)] text-xs mt-1 ml-1',
+            style: { display: error ? 'none' : '' },
+          },
+          helper
+        )
+      : null,
     React.createElement(
       'span',
       {
+        id: inputRest.name ? `fibo-err-${inputRest.name}` : undefined,
         className: 'fibo-field-error text-[var(--fibo-error,#b91c1c)] text-xs mt-1 ml-1',
         role: 'alert',
         style: { display: error ? '' : 'none' },
@@ -146,6 +197,7 @@ class TextareaBuilder extends FiboBuilder {
   private _disabled: boolean = false;
   private _rows: number = 4;
   private _error?: string;
+  private _helper?: string;
   private _rules?: FieldRule[];
   private _controlled = false;
   private _resize: 'none' | 'vertical' | 'horizontal' | 'both' = 'vertical';
@@ -174,11 +226,13 @@ class TextareaBuilder extends FiboBuilder {
 
   label(val: string): this {
     this._label = val;
+    bindInterp(this, val);
     return this;
   }
 
   placeholder(val: string): this {
     this._placeholder = val;
+    bindInterp(this, val);
     return this;
   }
 
@@ -205,6 +259,14 @@ class TextareaBuilder extends FiboBuilder {
 
   error(val: string): this {
     this._error = val;
+    bindInterp(this, val);
+    return this;
+  }
+
+  /** Muted hint under the field. Hidden while `.error()` (or a painted Form error) is showing. */
+  helper(text: string): this {
+    this._helper = text;
+    bindInterp(this, text);
     return this;
   }
 
@@ -232,19 +294,24 @@ class TextareaBuilder extends FiboBuilder {
     const props = {
       containerClass,
       containerStyle: this.getStyle(),
-      label: this._label,
-      error: this._error,
+      label: resolveInterp(this._label),
+      error: resolveInterp(this._error),
+      helper: resolveInterp(this._helper),
       rows: this._rows,
       value: this._value,
       controlled: this._controlled,
       name: this._name,
-      placeholder: this._placeholder || ' ',
+      placeholder: resolveInterp(this._placeholder) || ' ',
       disabled: this._disabled,
       rules: this._rules,
-      style: { resize: this._resize },
       onChange: this._onChange,
       onCommit: this._onCommit,
       ...this._props,
+      // After `_props` so `.props({ style })` cannot drop `.resize()`.
+      style: {
+        ...(this._props.style && typeof this._props.style === 'object' ? this._props.style : null),
+        resize: this._resize,
+      },
     };
 
     return React.createElement(TextareaInner, props);
@@ -257,6 +324,7 @@ export interface TextareaProps extends BaseProps {
   value: string | Signal<string>;
   label?: string;
   placeholder?: string;
+  helper?: string;
   onChange?: (value: string) => void;
   onCommit?: (value: string) => void;
   rows?: number;

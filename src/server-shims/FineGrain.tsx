@@ -1,10 +1,34 @@
-import React, { ReactNode } from 'react';
+import React, { CSSProperties, ReactNode } from 'react';
 
-/** RSC: no signal subscription — render the resolved child as-is. */
-export function FineGrainText({ children }: { children?: ReactNode }) {
-  return React.createElement(React.Fragment, null, children);
+interface FineGrainTextProps {
+  compute?: () => string;
+  as?: keyof HTMLElementTagNameMap;
+  className?: string;
+  style?: CSSProperties;
+  children?: ReactNode;
 }
 
-export function bindText(value: unknown) {
-  return typeof value === 'function' ? (value as () => unknown)() : value;
+function toText(value: unknown): string {
+  return value == null ? '' : String(value);
+}
+
+/** RSC: same host tag as the client island so hydration matches. */
+export function FineGrainText({
+  compute,
+  as = 'span',
+  className,
+  style,
+  children,
+  ...rest
+}: FineGrainTextProps & Record<string, unknown>) {
+  const { dangerouslySetInnerHTML: _html, ref: _ref, ...safeRest } = rest;
+  const text = typeof compute === 'function' ? toText(compute()) : children;
+  return React.createElement(as, { className, style, ...safeRest }, text as ReactNode);
+}
+
+export function bindText(signal: { readonly value: unknown }, as?: keyof HTMLElementTagNameMap) {
+  return React.createElement(FineGrainText, {
+    compute: () => String(signal.value),
+    as,
+  });
 }

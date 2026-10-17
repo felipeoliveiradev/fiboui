@@ -11,29 +11,29 @@ import { DashboardLayout } from '../../src/layout/DashboardLayout'
 import { Text } from '../../src/content/Text'
 
 const renderContainer = () =>
-  Box().bg('gray-100').p(4).children([
-    Container().bg('white').p(4).children('Centered Container Content')
+  Box().bg('#F3F4F6').p(4).children([
+    Container().bg('#FFFFFF').p(4).children('Centered Container Content')
   ])
 
 const renderRowCol = () =>
-  Box().flex().col().gap(4).children([
-    Row().bg('blue-50').p(2).gap(4).children([
-        Box().bg('blue-200').p(2).children('Row Item 1'),
-        Box().bg('blue-200').p(2).children('Row Item 2')
+  Box().flex().flexDirection('column').gap(4).children([
+    Row().bg('#EFF6FF').p(2).gap(4).children([
+        Box().bg('#BFDBFE').p(2).children('Row Item 1'),
+        Box().bg('#BFDBFE').p(2).children('Row Item 2')
     ]),
 
-    Column().bg('green-50').p(2).gap(4).children([
-        Box().bg('green-200').p(2).children('Col Item 1'),
-        Box().bg('green-200').p(2).children('Col Item 2')
+    Column().bg('#F0FDF4').p(2).gap(4).children([
+        Box().bg('#BBF7D0').p(2).children('Col Item 1'),
+        Box().bg('#BBF7D0').p(2).children('Col Item 2')
     ])
   ])
 
 const renderLayout = () =>
-  Box().h(300).border().relative().children([
-    Header().children(Text('Header')).borderBottom().h(50),
-    Box().flex().h('full').children([
-        Sidebar().w(60).borderRight().children([Text('Sidebar').p(2)]),
-        Box().flex1().p(4).children('Main Content Area')
+  Box().height(300).border('1px solid #e5e7eb').position('relative').children([
+    Header().height(50).borderBottom('1px solid #e5e7eb').children(Text('Header')),
+    Box().flex().height('full').children([
+        Sidebar().width(260).borderRight('1px solid #e5e7eb').children([Text('Sidebar').p(2)]),
+        Box().flex(1).p(4).children('Main Content Area')
     ])
   ])
 </script>

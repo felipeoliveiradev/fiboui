@@ -8,12 +8,6 @@ import { Sidebar } from './layout/Sidebar';
 import { Header } from './layout/Header';
 import { DashboardLayout } from './layout/DashboardLayout';
 import { createRoot, Root } from 'react-dom/client';
-
-declare global {
-  interface Window {
-    _reactRoot?: Root;
-  }
-}
 import {
   FiboThemeProvider,
   Column,
@@ -47,6 +41,149 @@ import {
   Alert,
   Progress
 } from './index';
+
+declare global {
+  interface Window {
+    _reactRoot?: Root;
+  }
+}
+
+function LazyLoadingList() {
+  const [items, setItems] = React.useState(() =>
+    Array.from({ length: 10 }).map((_, i) => `Initial Item ${i}`)
+  );
+  const [loading, setLoading] = React.useState(false);
+
+  const loadMore = () => {
+    if (loading) return;
+    setLoading(true);
+    setTimeout(() => {
+      setItems((prev) => [
+        ...prev,
+        ...Array.from({ length: 5 }).map((_, i) => `Loaded Item ${prev.length + i}`),
+      ]);
+      setLoading(false);
+    }, 1000);
+  };
+
+  return ScrollView().vertical().style({ height: '100%' }).children(
+    List()
+      .width('100%')
+      .items(items)
+      .variant('default')
+      .separator(true)
+      .renderItem((item) =>
+        Row().alignItems("center").justifyContent("between").className("w-full").children([
+          Text(item as string).fontSize(14).build(),
+          Badge().text("New").variant("dot").intent("success").build()
+        ]).build()
+      )
+      .onEndReached(loadMore)
+      .loading(loading)
+      .build()
+  ).build();
+}
+
+function DemoFormFields() {
+  const [name, setName] = React.useState("");
+  const [bio, setBio] = React.useState("");
+  const [pass, setPass] = React.useState("");
+  const [cpf, setCpf] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [role, setRole] = React.useState("dev");
+  const [skills, setSkills] = React.useState(["css", "js"]);
+  const [tech, setTech] = React.useState("react");
+  const [techOptions, setTechOptions] = React.useState([
+    { label: "React", value: "react" },
+    { label: "Vue", value: "vue" },
+    { label: "Angular", value: "ng" }
+  ]);
+  const [tags, setTags] = React.useState(["ux", "ui"]);
+  const [tagOptions, setTagOptions] = React.useState([
+    { label: "User Experience", value: "ux" },
+    { label: "User Interface", value: "ui" },
+    { label: "Accessibility", value: "a11y" }
+  ]);
+
+  const roles = [
+    { label: "Developer", value: "dev" },
+    { label: "Designer", value: "des" },
+    { label: "Manager", value: "mgr" },
+    { label: "Product Owner", value: "po" }
+  ];
+  const skillOptions = [
+    { label: "HTML5", value: "html" },
+    { label: "CSS3", value: "css" },
+    { label: "JavaScript", value: "js" },
+    { label: "TypeScript", value: "ts" },
+    { label: "React", value: "react" }
+  ];
+
+  return Column().gap(20).children([
+    TextField().label("Full Name").placeholder("John Doe").value(name).onChange(setName).build(),
+
+    Column().gap(4).children([
+      Label().text("Biography").required().htmlFor("bio-input").build(),
+      Textarea().id("bio-input").placeholder("Tell us about yourself...").rows(4).value(bio).onChange(setBio).build()
+    ]).build(),
+
+    TextField().label("Password").type("password").value(pass).onChange(setPass).build(),
+    TextField().label("CPF (Masked)").placeholder("999.999.999-99").mask("999.999.999-99").value(cpf).onChange(setCpf).build(),
+    TextField().label("Email Address").type("email").placeholder("user@example.com").value(email).onChange(setEmail).build(),
+    Select().label("Role").options(roles).value(role).onChange((val: string | string[]) => setRole(val as string)).build(),
+    Select().label("Skills (Multi)").options(skillOptions).value(skills).onChange((val: string | string[]) => setSkills(val as string[])).multiple(true).build(),
+    Combobox().label("Favorite Tech").options(techOptions).value(tech).onChange((val) => setTech(val as string)).onAdd((newLabel: string) => {
+      const newVal = newLabel.toLowerCase().replace(/\s+/g, '-');
+      setTechOptions([...techOptions, { label: newLabel, value: newVal }]);
+      setTech(newVal);
+    }).placeholder("Search or add...").build(),
+    Combobox().label("Tags (Multi + Add)").options(tagOptions).value(tags).onChange((val) => setTags(val as string[])).onAdd((newLabel: string) => {
+      const newVal = newLabel.toLowerCase().replace(/\s+/g, '-');
+      setTagOptions([...tagOptions, { label: newLabel, value: newVal }]);
+      setTags([...tags, newVal]);
+    }).multiple(true).placeholder("Type to tag...").build()
+  ]).build();
+}
+
+function DemoFormToggles() {
+  const [email, setEmail] = React.useState(true);
+  const [push, setPush] = React.useState(false);
+  const [c1, setC1] = React.useState(true);
+  const [c2, setC2] = React.useState(false);
+  const [level, setLevel] = React.useState("mid");
+
+  return Column().gap(24).children([
+    Column().gap(12).children([
+      Text("Notifications").variant("h6").className("text-gray-500 uppercase text-xs font-bold").build(),
+      Column().gap(8).children([
+        Switch().label("Email Notifications").checked(email).onChange(setEmail).build(),
+        Switch().label("Push Notifications").checked(push).onChange(setPush).build(),
+      ]).build()
+    ]).build(),
+
+    Column().gap(12).children([
+      Text("Interests").variant("h6").className("text-gray-500 uppercase text-xs font-bold").build(),
+      Row().gap(16).children([
+        Checkbox().label("Coding").checked(c1).onChange(setC1).build(),
+        Checkbox().label("Design").checked(c2).onChange(setC2).build(),
+      ]).build()
+    ]).build(),
+
+    Column().gap(12).children([
+      Text("Experience Level").variant("h6").className("text-gray-500 uppercase text-xs font-bold").build(),
+      RadioGroup()
+        .options([
+          { label: "Junior", value: "jr" },
+          { label: "Mid-Level", value: "mid" },
+          { label: "Senior", value: "sr" }
+        ])
+        .value(level)
+        .onChange(setLevel)
+        .direction('horizontal')
+        .build()
+    ]).build(),
+  ]).build();
+}
 
 const Gallery = () => {
   const { setTheme } = useFiboTheme();
@@ -132,6 +269,7 @@ const Gallery = () => {
                     CollectionCard()
                         .title("Future Scapes")
                         .items("10k Items")
+                        .author("Nova Labs")
                         .image("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80")
                         .build()
                 ]).build(),
@@ -226,36 +364,7 @@ const Gallery = () => {
                        Column().children([
                            Text("Lazy Loading List").variant("h3").className("mb-4 text-gray-400").build(),
                            Box().style({ width: '100%', height: '300px', overflowY: 'hidden', border: '1px solid #E5E7EB', borderRadius: '16px', backgroundColor: '#fff' }).children(
-                             React.createElement(() => {
-                                 const [items, setItems] = React.useState(Array.from({ length: 10 }).map((_, i) => `Initial Item ${i}`));
-                                 const [loading, setLoading] = React.useState(false);
-
-                                 const loadMore = () => {
-                                     setLoading(true);
-                                     setTimeout(() => {
-                                         const newItems = Array.from({ length: 5 }).map((_, i) => `Loaded Item ${items.length + i}`);
-                                         setItems(prev => [...prev, ...newItems]);
-                                         setLoading(false);
-                                     }, 1000);
-                                 };
-
-                                 return ScrollView().vertical().style({ height: '100%' }).children(
-                                     List()
-                                        .width('100%')
-                                        .items(items)
-                                        .variant('default')
-                                        .separator(true)
-                                        .renderItem((item) =>
-                                            Row().alignItems("center").justifyContent("between").className("w-full").children([
-                                                Text(item as string).fontSize(14).build(),
-                                                Badge().text("New").variant("dot").intent("success").build()
-                                            ]).build()
-                                        )
-                                        .onEndReached(loadMore)
-                                        .loading(loading)
-                                        .build()
-                                 ).build();
-                             })
+                             React.createElement(LazyLoadingList)
                            ).build()
                        ]).build()
                    ]).build()
@@ -267,142 +376,9 @@ const Gallery = () => {
 
                    Box().classNames(['grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-12']).children([
 
-                        Column().gap(20).children([
+                        React.createElement(DemoFormFields),
 
-                            React.createElement(() => {
-                                 const [name, setName] = React.useState("");
-
-                                 return TextField().label("Full Name").placeholder("John Doe").value(name).onChange(setName).build();
-                            }),
-
-                            Column().gap(4).children([
-                                Label().text("Biography").required().htmlFor("bio-input").build(),
-
-                                React.createElement(() => {
-                                     const [bio, setBio] = React.useState("");
-                                     return Textarea().id("bio-input").placeholder("Tell us about yourself...").rows(4).value(bio).onChange(setBio).build();
-                                })
-                            ]).build(),
-
-                            React.createElement(() => {
-                                 const [pass, setPass] = React.useState("");
-                                 return TextField().label("Password").type("password").value(pass).onChange(setPass).build();
-                            }),
-
-                            React.createElement(() => {
-                                 const [cpf, setCpf] = React.useState("");
-                                 return TextField().label("CPF (Masked)").placeholder("999.999.999-99").mask("999.999.999-99").value(cpf).onChange(setCpf).build();
-                            }),
-
-                            React.createElement(() => {
-                                 const [email, setEmail] = React.useState("");
-                                 return TextField().label("Email Address").type("email").placeholder("user@example.com").value(email).onChange(setEmail).build();
-                            }),
-
-                            React.createElement(() => {
-                                 const [role, setRole] = React.useState("dev");
-                                 const roles = [
-                                     { label: "Developer", value: "dev" },
-                                     { label: "Designer", value: "des" },
-                                     { label: "Manager", value: "mgr" },
-                                     { label: "Product Owner", value: "po" }
-                                 ];
-                                 return Select().label("Role").options(roles).value(role).onChange((val: string | string[]) => setRole(val as string)).build();
-                            }),
-
-                            React.createElement(() => {
-                                 const [skills, setSkills] = React.useState(["css", "js"]);
-                                 const skillOptions = [
-                                     { label: "HTML5", value: "html" },
-                                     { label: "CSS3", value: "css" },
-                                     { label: "JavaScript", value: "js" },
-                                     { label: "TypeScript", value: "ts" },
-                                     { label: "React", value: "react" }
-                                 ];
-                                 return Select().label("Skills (Multi)").options(skillOptions).value(skills).onChange((val: string | string[]) => setSkills(val as string[])).multiple(true).build();
-                            }),
-
-                            React.createElement(() => {
-                                 const [tech, setTech] = React.useState("react");
-                                 const [options, setOptions] = React.useState([
-                                     { label: "React", value: "react" },
-                                     { label: "Vue", value: "vue" },
-                                     { label: "Angular", value: "ng" }
-                                 ]);
-
-                                 const handleAdd = (newLabel: string) => {
-                                     const newVal = newLabel.toLowerCase().replace(/\s+/g, '-');
-                                     setOptions([...options, { label: newLabel, value: newVal }]);
-                                     setTech(newVal);
-                                 };
-
-                                 return Combobox().label("Favorite Tech").options(options).value(tech).onChange((val) => setTech(val as string)).onAdd(handleAdd).placeholder("Search or add...").build();
-                            }),
-
-                            React.createElement(() => {
-                                 const [tags, setTags] = React.useState(["ux", "ui"]);
-                                 const [options, setOptions] = React.useState([
-                                     { label: "User Experience", value: "ux" },
-                                     { label: "User Interface", value: "ui" },
-                                     { label: "Accessibility", value: "a11y" }
-                                 ]);
-
-                                 const handleAdd = (newLabel: string) => {
-                                     const newVal = newLabel.toLowerCase().replace(/\s+/g, '-');
-                                     setOptions([...options, { label: newLabel, value: newVal }]);
-
-                                     setTags([...tags, newVal]);
-                                 };
-
-                                 return Combobox().label("Tags (Multi + Add)").options(options).value(tags).onChange((val) => setTags(val as string[])).onAdd(handleAdd).multiple(true).placeholder("Type to tag...").build();
-                            })
-
-                        ]).build(),
-
-                        Column().gap(24).children([
-
-                            Column().gap(12).children([
-                                Text("Notifications").variant("h6").className("text-gray-500 uppercase text-xs font-bold").build(),
-                                React.createElement(() => {
-                                     const [email, setEmail] = React.useState(true);
-                                     const [push, setPush] = React.useState(false);
-                                     return Column().gap(8).children([
-                                        Switch().label("Email Notifications").checked(email).onChange(setEmail).build(),
-                                        Switch().label("Push Notifications").checked(push).onChange(setPush).build(),
-                                     ]).build();
-                                })
-                            ]).build(),
-
-                            Column().gap(12).children([
-                                Text("Interests").variant("h6").className("text-gray-500 uppercase text-xs font-bold").build(),
-                                React.createElement(() => {
-                                     const [c1, setC1] = React.useState(true);
-                                     const [c2, setC2] = React.useState(false);
-                                     return Row().gap(16).children([
-                                        Checkbox().label("Coding").checked(c1).onChange(setC1).build(),
-                                        Checkbox().label("Design").checked(c2).onChange(setC2).build(),
-                                     ]).build();
-                                })
-                            ]).build(),
-
-                            Column().gap(12).children([
-                                Text("Experience Level").variant("h6").className("text-gray-500 uppercase text-xs font-bold").build(),
-                                React.createElement(() => {
-                                     const [level, setLevel] = React.useState("mid");
-                                     return RadioGroup()
-                                        .options([
-                                            { label: "Junior", value: "jr" },
-                                            { label: "Mid-Level", value: "mid" },
-                                            { label: "Senior", value: "sr" }
-                                        ])
-                                        .value(level)
-                                        .onChange(setLevel)
-                                        .direction('horizontal')
-                                        .build();
-                                })
-                            ]).build(),
-
-                        ]).build(),
+                        React.createElement(DemoFormToggles),
                    ]).build()
 
                ]).build(),
@@ -696,9 +672,9 @@ const Gallery = () => {
                                    .children([
                                        Box().className("flex flex-col justify-center gap-1.5").children([
                                             Row().alignItems("center").gap(4).children([
-                                                Text("Recommended coins for 24 hours").className("text-[10px] text-gray-400 font-medium tracking-wide flex items-center gap-2").children([
+                                                Row().alignItems("center").gap(2).className("text-[10px] text-gray-400 font-medium tracking-wide").children([
                                                     Box().className("i-heroicons-clock w-3 h-3").build(),
-                                                    "Recommended coins for 24 hours"
+                                                    Text("Recommended coins for 24 hours").className("text-[10px] text-gray-400 font-medium tracking-wide").build()
                                                 ]).build(),
                                                 Box().className("bg-[#1A1B23] border border-white/5 px-2 py-0.5 rounded-md text-[9px] text-gray-400 font-bold").children("3 Assets").build()
                                             ]).build(),
@@ -822,10 +798,9 @@ const Gallery = () => {
                                                     StakentButton({ text: "Enter a Wallet Address", variant: "secondary", icon: Box().className("i-heroicons-lock-closed w-3 h-3").build(), className: "w-full py-3 text-xs" })
                                                 ]).build()
                                             ]).build()
-                                       ]).build()
-                                   ]).build(),
+                                       ]).build(),
 
-                                   GridItem().colSpan(4).children([
+                                   GridItem().colStart(1).colEnd(-1).className("col-span-full").children([
                                        StakentCard({ className: "p-8 h-full flex flex-col justify-center relative overflow-hidden" }).children([
                                             Box().className("absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2").build(),
                                             Text("Investment Period").className("text-white font-bold text-lg mb-1 relative z-10").build(),
@@ -842,6 +817,7 @@ const Gallery = () => {
                                             ]).build()
                                        ]).build()
                                    ]).build()
+                                   ]).build()
                             ]).build(),
 
                             Box().height(40).build(),
@@ -853,9 +829,9 @@ const Gallery = () => {
                                             Text("Stake Avalanche (AVAX)").className("font-bold text-white text-2xl tracking-tight").build(),
                                             StakentBadge({ text: "HOT", type: "hot" })
                                         ]).build(),
-                                        Text("Last Update - 45 minutes ago").className("text-[10px] text-gray-500 font-bold uppercase tracking-wide flex items-center gap-2").children([
+                                        Row().gap(2).className("items-center").children([
                                             Box().className("w-1.5 h-1.5 rounded-full bg-gray-600").build(),
-                                            "Last Update - 45 minutes ago"
+                                            Text("Last Update - 45 minutes ago").className("text-[10px] text-gray-500 font-bold uppercase tracking-wide").build()
                                         ]).build()
                                     ]).build(),
 
@@ -918,8 +894,9 @@ const Gallery = () => {
                                             ]).build(),
                                             Column().crossAxisAlignment("end").children([
                                                 Text("Reward Rate").className("text-xs text-gray-400 mb-1").build(),
-                                                Text("2.23%").className("text-white font-bold text-sm").children([
-                                                    Text(" 24h Ago").className("text-[10px] text-gray-500 font-normal").build()
+                                                Row().gap(1).className("items-baseline").children([
+                                                    Text("2.23%").className("text-white font-bold text-sm").build(),
+                                                    Text("24h Ago").className("text-[10px] text-gray-500 font-normal").build()
                                                 ]).build()
                                             ]).build()
                                         ]).build()
@@ -948,9 +925,10 @@ const App = () => (
     </FiboThemeProvider>
 );
 
-const container = document.getElementById('root');
-if (container) {
-
-  const root = window._reactRoot || (window._reactRoot = createRoot(container));
-  root.render(<App />);
+if (typeof document !== 'undefined' && typeof window !== 'undefined') {
+  const container = document.getElementById('root');
+  if (container) {
+    const root = window._reactRoot || (window._reactRoot = createRoot(container));
+    root.render(<App />);
+  }
 }

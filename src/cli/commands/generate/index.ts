@@ -1,8 +1,7 @@
 import { Command } from 'commander';
-import { moduleCommand } from './module';
-import { pluginCommand } from './plugin';
-
-import { componentCommand } from './component';
+import { moduleCommand } from './module.js';
+import { pluginCommand } from './plugin.js';
+import { componentCommand } from './component.js';
 
 export const generateCommand = new Command('generate')
   .alias('g')

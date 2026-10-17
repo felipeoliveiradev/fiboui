@@ -9,7 +9,9 @@ function subscribeSignal<T>(signal: Signal<T> | ComputedSignal<T>) {
 
 export function useSignal<T>(signal: Signal<T> | ComputedSignal<T>): T {
   const subscribe = useCallback(subscribeSignal(signal), [signal]);
-  return useSyncExternalStore(subscribe, () => signal.value, () => signal.value);
+  const getSnapshot = useCallback(() => signal.value, [signal]);
+  // Same snapshot on server and client — never reads `window`.
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
 /** Subscribe to a `createStore()` instance. Distinct from the class-decorator `useStore`. */
@@ -18,7 +20,8 @@ export function useReactiveStore<T>(store: Store<T>): T {
     (onStoreChange: () => void) => store.subscribe(onStoreChange),
     [store]
   );
-  return useSyncExternalStore(subscribe, () => store.getState(), () => store.getState());
+  const getSnapshot = useCallback(() => store.getState(), [store]);
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
 /** @deprecated Use `useReactiveStore` to avoid colliding with the decorator `useStore`. */
@@ -29,5 +32,6 @@ export function useObservable<T>(obs: Observable<T>): T {
     (onStoreChange: () => void) => obs.subscribe(onStoreChange),
     [obs]
   );
-  return useSyncExternalStore(subscribe, () => obs.get(), () => obs.get());
+  const getSnapshot = useCallback(() => obs.get(), [obs]);
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }

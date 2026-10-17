@@ -2,8 +2,6 @@ import { expect, test } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 
-const artifacts = '/opt/cursor/artifacts/screenshots';
-
 test('Monetron 2.0: bindSignal, mask, analyze, nav, compare', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#get-started')).toHaveText('GET STARTED');
@@ -12,7 +10,6 @@ test('Monetron 2.0: bindSignal, mask, analyze, nav, compare', async ({ page }) =
   await expect(page.locator('#analyze')).toHaveText('ANALYZE');
   await expect(page.locator('#delta')).toHaveText('-8.37%');
 
-  await page.screenshot({ path: `${artifacts}/monetron-initial.png` });
   await page.screenshot({ path: resolve(process.cwd(), 'monetron-initial.png') });
 
   await page.locator('#get-started').click();
@@ -36,7 +33,6 @@ test('Monetron 2.0: bindSignal, mask, analyze, nav, compare', async ({ page }) =
 
   await page.locator('#nav-2').click();
 
-  await page.screenshot({ path: `${artifacts}/monetron-after.png` });
   await page.screenshot({ path: resolve(process.cwd(), 'monetron-after.png') });
 
   const styled = page.locator('#get-started');

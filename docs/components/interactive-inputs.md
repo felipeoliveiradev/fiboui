@@ -3,7 +3,7 @@ import { Box } from '../../src/structure/Box'
 import { TextField } from '../../src/interactive/TextField'
 
 const renderBasic = () =>
-  Box().flex().col().gap(4).maxW('400px').children([
+  Box().flex().flexDirection('column').gap(4).maxWidth('400px').children([
     TextField()
       .label('Username')
       .placeholder('Enter your username')
@@ -20,11 +20,11 @@ const renderPassword = () =>
     .label('Password')
     .type('password')
     .placeholder('Enter password')
-    .maxW('400px')
+    .maxWidth('400px')
 
 
 const renderMasked = () =>
-  Box().flex().col().gap(4).maxW('400px').children([
+  Box().flex().flexDirection('column').gap(4).maxWidth('400px').children([
     TextField()
       .label('Phone')
       .mask('(999) 999-9999')
@@ -42,7 +42,7 @@ const renderError = () =>
     .label('Email')
     .type('email')
     .error('Invalid email address')
-    .maxW('400px')
+    .maxWidth('400px')
 
 </script>
 
@@ -60,7 +60,7 @@ A text input component with label, validation, masking, and password toggle supp
 
 ::: details View Source
 ```tsx
-Box().flex().col().gap(4).maxW('400px').children([
+Box().flex().flexDirection('column').gap(4).maxWidth('400px').children([
   TextField()
     .label('Username')
     .placeholder('Enter your username')
@@ -94,7 +94,7 @@ TextField()
 
 ::: details View Source
 ```tsx
-Box().flex().col().gap(4).maxW('400px').children([
+Box().flex().flexDirection('column').gap(4).maxWidth('400px').children([
   TextField()
     .label('Phone')
     .mask('(999) 999-9999')
@@ -141,16 +141,18 @@ Creates a new `TextField` builder instance.
 | Method | Type | Description |
 | :--- | :--- | :--- |
 | `.value(value)` | `string \| Signal<string>` | Initial value (`defaultValue`). A signal patches the DOM input and does not call `setState`. |
-| `.label(text)` | `string` | Sets the floating label text |
+| `.label(text)` | `string` | Floating label. `$length` / `interp` markers stay live (same as `Text`). |
 | `.placeholder(text)` | `string` | Sets the placeholder text |
 | `.name(name)` | `string` | Name used by `Form` / `FormData` |
-| `.rules(...rules)` | `FieldRule[]` | Checks collected on submit. See [Form](/components/interactive-form). |
+| `.helper(text)` | `string` | `.fibo-field-helper` under the field (`id` `fibo-help-{name}`). Hidden when an error is showing; `aria-describedby` points at the error then. |
+| `.clearable(on?)` / `.clear(true)` | `boolean` | `type="button"` Clear control (`aria-label="Clear"`) when there is a value. Hidden when empty or disabled. Alias: `.clear(true)`. |
+| `.rules(...rules)` | `FieldRule[]` | Checks collected on submit and on blur. See [Form](/components/interactive-form). |
 
 ### Input Type
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.props({ type })` | `'text' \| 'password' \| 'email' \| 'number' \| 'tel'` | DOM input type. `.type()` does not run: `type` is the React element field on every builder. |
+| `.type(type)` | `'text' \| 'password' \| 'email' \| 'number' \| 'tel'` | DOM input type. `TextField().type('email')` writes `type="email"`. |
 | `.mask(format)` | `string` | Mask written straight onto the input (`9` = digit) |
 
 ### State
@@ -190,6 +192,18 @@ TextField().mask('9999 9999 9999 9999')
 ## Password Toggle
 
 When `type('password')` is set, a visibility toggle button automatically appears in the input, allowing users to show/hide the password.
+
+## Helper and clear
+
+```tsx
+TextField()
+  .label('Search')
+  .helper('At least 2 characters')
+  .clearable()
+  .name('q')
+```
+
+`.helper()` is not an error. Form validation still paints `.error()` / the field error line and hides the helper. `.clearable()` writes `''`, fires `onChange('')`, and patches a bound signal. The button is `type="button"` so it does not submit. `.clear(true)` is the same write.
 
 ## See Also
 

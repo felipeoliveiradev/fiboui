@@ -92,6 +92,7 @@ Creates a new `Box` builder instance. No arguments required.
 | `.css(styles)` | `CSSProperties` | Merges CSS-to-Tailwind styles |
 | `.props(props)` | `Record<string, any>` | Merges additional props |
 | `.id(value)` | `string` | Sets element ID |
+| `.resetStyle()` | — | Clears builder classes, inline `_style` / `_cssStyles`, and box longhands, then adds `fibo-reset`. Helpers chained after it stamp again. |
 
 ### Layout Helpers
 

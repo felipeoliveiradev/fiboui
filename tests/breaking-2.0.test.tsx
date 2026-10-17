@@ -1,6 +1,8 @@
 import { act, render, screen } from '@testing-library/react';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { createElement } from 'react';
+import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import {
   Column,
@@ -15,6 +17,10 @@ import {
   signal,
 } from '../src';
 import { Effect } from '../src/core/state';
+import {
+  FineGrainText as ShimFineGrainText,
+  bindText as shimBindText,
+} from '../src/server-shims/FineGrain';
 import pkg from '../package.json';
 import * as publicApi from '../src';
 
@@ -114,15 +120,53 @@ describe('2.0 fine-grained DOM writes', () => {
   });
 });
 
+describe('2.0 FineGrain SSR shim matches client host tag', () => {
+  it('shim FineGrainText renders the same tag+text as the client (not a Fragment)', () => {
+    const sig = signal('ssr-hi');
+    const compute = () => sig.value;
+    const client = renderToString(
+      createElement(FineGrainText, { compute, as: 'p', className: 'fibo-text fibo-text-body' })
+    );
+    const shim = renderToString(
+      createElement(ShimFineGrainText, { compute, as: 'p', className: 'fibo-text fibo-text-body' })
+    );
+    expect(client).toContain('ssr-hi');
+    expect(shim).toContain('ssr-hi');
+    expect(shim).toMatch(/<p\b/);
+    expect(client).toMatch(/<p\b/);
+    expect(shim).toBe(client);
+  });
+
+  it('shim bindText emits a span host like the client, not a raw string', () => {
+    const sig = signal('bound');
+    const client = renderToString(bindText(sig));
+    const shim = renderToString(shimBindText(sig) as never);
+    expect(client).toMatch(/<span\b/);
+    expect(shim).toMatch(/<span\b/);
+    expect(shim).toContain('bound');
+    expect(shim).toBe(client);
+  });
+});
+
 describe('2.0 theme token unification', () => {
   it('Material JS + CSS agree on M3 primary #6750A4', () => {
     expect(materialTheme.colors.primary).toBe('#6750A4');
     const base = readFileSync(resolve(__dirname, '../src/styles/base.css'), 'utf8');
     const material = readFileSync(resolve(__dirname, '../src/styles/themes/material.css'), 'utf8');
-    expect(base).toContain('--fibo-primary: #6750A4');
     expect(material).toContain('--fibo-primary: #6750A4');
     expect(base).not.toContain('#1976d2');
     expect(base).not.toContain('#6200EE');
+    expect(base).not.toMatch(/\.fibo-theme-material\s*\{[^}]*--fibo-primary\s*:/);
+  });
+
+  it('base.css default --fibo-theme is material', () => {
+    const base = readFileSync(resolve(__dirname, '../src/styles/base.css'), 'utf8');
+    expect(base).toMatch(/--fibo-theme:\s*'material'/);
+  });
+
+  it('web.css publishes --fibo-error matching the web JS token', () => {
+    const web = readFileSync(resolve(__dirname, '../src/styles/themes/web.css'), 'utf8');
+    expect(web).toMatch(/--fibo-error:\s*#EF4444/i);
   });
 });
 
@@ -152,3 +196,28 @@ describe('2.0 pack / module flags', () => {
     expect(source).not.toMatch(/\.css['"]/);
   });
 });
+
+describe('2.0 leftover public export surface', () => {
+  it('root exports GridItem, Form, listSignal, Outlet; not Chip/IconButton', () => {
+    expect(publicApi.GridItem).toBeTypeOf('function');
+    expect(publicApi.Form).toBeTypeOf('function');
+    expect(publicApi.listSignal).toBeTypeOf('function');
+    expect(publicApi.collection).toBe(publicApi.listSignal);
+    expect(publicApi.Outlet).toBeTypeOf('function');
+    expect(publicApi).not.toHaveProperty('Chip');
+    expect(publicApi).not.toHaveProperty('IconButton');
+  });
+
+  it('FormErrorMode is a root type union', () => {
+    type Mode = import('../src').FormErrorMode;
+    const modes: Mode[] = ['field', 'below', 'manual'];
+    expect(modes).toEqual(['field', 'below', 'manual']);
+  });
+
+  it('root navigation names match the navigation barrel extras', () => {
+    expect(publicApi.lazyRoute).toBeTypeOf('function');
+    expect(publicApi.preloadRoute).toBeTypeOf('function');
+    expect(publicApi.useRouteMeta).toBeTypeOf('function');
+  });
+});
+

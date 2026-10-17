@@ -1,14 +1,20 @@
-import { act, render, screen, cleanup } from '@testing-library/react';
+import { act, fireEvent, render, screen, cleanup, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createElement, StrictMode, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  Alert,
+  Avatar,
   Box,
   Checkbox,
   Collapse,
   Combobox,
   Grid,
   GridItem,
+  Icon,
+  Image,
+  Integration,
+  Label,
   Link,
   List,
   Progress,
@@ -40,6 +46,17 @@ import { nextStableId, resetStableIds } from '../src/core/ids';
 import { ValueBuilder } from '../src/core/builder';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import {
+  DefaultLoader,
+  findMatchingRoute,
+  generateBreadcrumbs,
+  lazyRoute,
+  matchPath,
+  Outlet,
+  preloadRoute,
+  useParams,
+  useRouteMeta,
+} from '../src/navigation';
 
 afterEach(() => {
   cleanup();
@@ -211,8 +228,8 @@ describe('Checkbox / Switch single toggle + indeterminate', () => {
   });
 });
 
-describe('RadioGroup stable name', () => {
-  it('keeps a stable name across rebuilds via useId', () => {
+describe('RadioGroup a11y', () => {
+  it('exposes radios without hidden:true and does not auto-name', () => {
     const { rerender } = render(
       RadioGroup()
         .options([
@@ -222,7 +239,9 @@ describe('RadioGroup stable name', () => {
         .value('a')
         .build()
     );
-    const first = (screen.getAllByRole('radio', { hidden: true })[0] as HTMLInputElement).name;
+    const first = screen.getAllByRole('radio')[0] as HTMLInputElement;
+    expect(first).toBeChecked();
+    expect(first.name).toBe('');
     rerender(
       RadioGroup()
         .options([
@@ -232,9 +251,9 @@ describe('RadioGroup stable name', () => {
         .value('b')
         .build()
     );
-    const second = (screen.getAllByRole('radio', { hidden: true })[0] as HTMLInputElement).name;
-    expect(first).toBeTruthy();
-    expect(first).toBe(second);
+    const second = screen.getAllByRole('radio')[0] as HTMLInputElement;
+    expect(second.name).toBe('');
+    expect(first.name).toBe(second.name);
   });
 });
 
@@ -352,11 +371,110 @@ describe('theme initialTheme after mount', () => {
 });
 
 describe('Link basename + Sidebar router path', () => {
+  afterEach(() => {
+    window.history.pushState({}, '', '/');
+  });
+
   it('prefixes href with Router basename', () => {
     render(
       <Router basename="/app" routes={[{ path: '/', component: () => <Link to="/settings">Go</Link> }]} />
     );
     expect(screen.getByText('Go')).toHaveAttribute('href', '/app/settings');
+  });
+
+  it('does not strip a longer path that only shares a prefix with basename', () => {
+    const prev = `${window.location.pathname}${window.location.search}`;
+    window.history.pushState({}, '', '/application');
+    try {
+      render(
+        <Router
+          basename="/app"
+          initialPath="/application"
+          routes={[
+            { path: '/lication', component: () => <div>stripped-wrong</div> },
+            { path: '/application', component: () => <div>full-path</div> },
+          ]}
+        />
+      );
+      expect(screen.getByText('full-path')).toBeTruthy();
+      expect(screen.queryByText('stripped-wrong')).toBeNull();
+    } finally {
+      window.history.pushState({}, '', prev || '/');
+    }
+  });
+
+  it('joins basename without double slashes or missing separators', () => {
+    const { unmount } = render(
+      <Router
+        basename="/app/"
+        routes={[{ path: '/', component: () => <Link to="/foo">Slash</Link> }]}
+      />
+    );
+    expect(screen.getByText('Slash')).toHaveAttribute('href', '/app/foo');
+    unmount();
+    render(
+      <Router
+        basename="/app"
+        routes={[{ path: '/', component: () => <Link to="bar">NoSlash</Link> }]}
+      />
+    );
+    expect(screen.getByText('NoSlash')).toHaveAttribute('href', '/app/bar');
+  });
+
+  it('http(s) and protocol-relative hrefs are real navigation', () => {
+    const pushState = vi.spyOn(window.history, 'pushState');
+    render(
+      <Router
+        routes={[{
+          path: '/',
+          component: () => (
+            <>
+              <Link to="https://example.com/x">Abs</Link>
+              <Link to="//cdn.example.com/y">Proto</Link>
+              <Link to="/settings">In</Link>
+            </>
+          ),
+        }]}
+      />
+    );
+    expect(screen.getByText('Abs')).toHaveAttribute('href', 'https://example.com/x');
+    expect(screen.getByText('Proto')).toHaveAttribute('href', '//cdn.example.com/y');
+    expect(fireEvent.click(screen.getByText('Abs'))).toBe(true);
+    expect(fireEvent.click(screen.getByText('Proto'))).toBe(true);
+    expect(pushState).not.toHaveBeenCalled();
+    expect(fireEvent.click(screen.getByText('In'))).toBe(false);
+    expect(pushState).toHaveBeenCalled();
+    pushState.mockRestore();
+    window.history.pushState({}, '', '/');
+  });
+
+  it('honours target=_blank, download, modifier keys, and onClick preventDefault', () => {
+    const pushState = vi.spyOn(window.history, 'pushState');
+    const onClick = vi.fn((e: { preventDefault: () => void }) => e.preventDefault());
+    render(
+      <Router
+        routes={[{
+          path: '/',
+          component: () => (
+            <>
+              <Link to="/blank" target="_blank">Blank</Link>
+              <Link to="/file.pdf" download>Dl</Link>
+              <Link to="/alt">Alt</Link>
+              <Link to="/stop" onClick={onClick}>Stop</Link>
+            </>
+          ),
+        }]}
+      />
+    );
+    expect(screen.getByText('Blank')).toHaveAttribute('target', '_blank');
+    expect(screen.getByText('Dl')).toHaveAttribute('download');
+    expect(fireEvent.click(screen.getByText('Blank'))).toBe(true);
+    expect(fireEvent.click(screen.getByText('Dl'))).toBe(true);
+    fireEvent.click(screen.getByText('Alt'), { altKey: true });
+    expect(fireEvent.click(screen.getByText('Stop'))).toBe(false);
+    expect(onClick).toHaveBeenCalled();
+    expect(pushState).not.toHaveBeenCalled();
+    pushState.mockRestore();
   });
 
   it('Sidebar plugin items mark active from Router currentPath', () => {
@@ -433,11 +551,45 @@ describe('a11y roles', () => {
     expect(screen.getAllByRole('status')).toHaveLength(2);
   });
 
+  it('Alert error/warning use role=alert and info/success use status', () => {
+    const { unmount } = render(Alert().title('Boom').description('Failed').intent('error').build());
+    expect(screen.getByRole('alert')).toHaveTextContent('Boom');
+    unmount();
+    render(Alert().title('Note').description('Body').intent('info').build());
+    expect(screen.getByRole('status', { name: /Note/ })).toBeInTheDocument();
+  });
+
   it('Progress exposes progressbar valuemin/now/max', () => {
     render(Progress().value(40).max(80).label('Upload').build());
     const bar = screen.getByRole('progressbar');
     expect(bar).toHaveAttribute('aria-valuenow', '40');
+    expect(bar).toHaveAttribute('aria-valuemin', '0');
     expect(bar).toHaveAttribute('aria-valuemax', '80');
+  });
+
+  it('Progress variants all expose progressbar', () => {
+    for (const variant of ['segments', 'steps', 'timeline', 'pagination', 'floating', 'chevron', 'striped', 'circular'] as const) {
+      const { unmount } = render(Progress().value(40).max(100).variant(variant).label('Load').build());
+      const bar = screen.getByRole('progressbar');
+      expect(bar).toHaveAttribute('aria-valuenow', '40');
+      expect(bar).toHaveAttribute('aria-valuemin', '0');
+      expect(bar).toHaveAttribute('aria-valuemax', '100');
+      unmount();
+    }
+  });
+
+  it('Avatar exposes img with an accessible name', () => {
+    const { unmount } = render(Avatar().initials('AB').size(24).build());
+    expect(screen.getByRole('img', { name: /AB/i })).toBeInTheDocument();
+    unmount();
+    render(Avatar().src('/a.png').alt('Jane').size(32).build());
+    expect(screen.getByRole('img', { name: 'Jane' })).toBeInTheDocument();
+  });
+
+  it('Label required marker is hidden from the accessibility tree', () => {
+    render(Label('Email').required(true).htmlFor('em').build());
+    expect(screen.getByText('*')).toHaveAttribute('aria-hidden', 'true');
+    expect(screen.getByText('Email')).toHaveAttribute('for', 'em');
   });
 
   it('Table headers have scope=col', () => {
@@ -531,5 +683,278 @@ describe('SSR window guards', () => {
   it('applyResponsiveStyles without window width keeps the base style', () => {
     const style = applyResponsiveStyles({ color: 'black' }, { mobile: { color: 'red' } }, undefined);
     expect(style.color).toBe('black');
+  });
+});
+
+describe('content builders crashes / APIs', () => {
+  it('Icon accepts a React element source without throwing', () => {
+    const glyph = createElement('svg', { 'data-testid': 'glyph', viewBox: '0 0 24 24' });
+    render(Icon(glyph).size(16).build());
+    expect(screen.getByTestId('glyph')).toBeInTheDocument();
+  });
+
+  it('Icon accepts a component source', () => {
+    function Heart(props: { size?: number; color?: string }) {
+      return createElement('svg', { 'data-testid': 'heart', width: props.size, stroke: props.color });
+    }
+    render(Icon(Heart).size(20).color('#f00').build());
+    const el = screen.getByTestId('heart');
+    expect(el).toHaveAttribute('width', '20');
+    expect(el).toHaveAttribute('stroke', '#f00');
+  });
+
+  it('Progress max=0 does not paint NaN', () => {
+    const { container } = render(Progress().value(0).max(0).label('Empty').build());
+    expect(container.innerHTML).not.toMatch(/NaN/);
+    const bar = screen.getByRole('progressbar');
+    expect(bar.getAttribute('aria-valuenow')).not.toBe('NaN');
+    expect(bar.getAttribute('aria-valuemax')).not.toBe('NaN');
+  });
+
+  it('Alert unknown intent does not crash', () => {
+    expect(() =>
+      render(Alert().title('x').intent('nope' as 'info').build())
+    ).not.toThrow();
+    expect(screen.getByText('x')).toBeInTheDocument();
+  });
+
+  it('Image keeps alt when extra props are set', () => {
+    render(Image('/x.png').alt('demo').props({ decoding: 'async' }).build());
+    expect(screen.getByRole('img', { name: 'demo' })).toHaveAttribute('alt', 'demo');
+  });
+
+  it('Integration clones an element source without throwing', () => {
+    render(Integration(createElement('span', { 'data-testid': 'plug' }, 'ok')).build());
+    expect(screen.getByTestId('plug')).toHaveTextContent('ok');
+  });
+});
+
+describe('routeMatching nested layouts / wildcard / exact', () => {
+  const Leaf = () => createElement('div', null, 'leaf');
+  const Shell = () => createElement('div', null, 'shell');
+
+  it('matchPath stays exact by default so / does not swallow /other', () => {
+    expect(matchPath('/other', '/').match).toBe(false);
+    expect(matchPath('/users/1', '/users/:id').match).toBe(true);
+    expect(matchPath('/users/1', '/users/:id').params).toEqual({ id: '1' });
+    expect(matchPath('/users/1/posts', '/users/:id').match).toBe(false);
+    expect(matchPath('/users/1/posts', '/users/:id', false).match).toBe(true);
+  });
+
+  it('wildcard * consumes the remaining path', () => {
+    expect(matchPath('/x/y', '*').match).toBe(true);
+    expect(matchPath('/files/a/b', '/files/*').match).toBe(true);
+    expect(matchPath('/files/a/b', '/files/*').params['*']).toBe('a/b');
+    expect(matchPath('/files', '/files/*').match).toBe(false);
+  });
+
+  it('findMatchingRoute returns the layout parent so Outlet can render the child', () => {
+    const routes = [
+      {
+        path: '/app',
+        component: Shell,
+        children: [{ path: '/app/dash', component: Leaf }],
+      },
+    ];
+    const found = findMatchingRoute(routes, '/app/dash');
+    expect(found.route?.path).toBe('/app');
+    expect(found.leaf?.path).toBe('/app/dash');
+    expect(found.chain?.map((r) => r.path)).toEqual(['/app', '/app/dash']);
+  });
+
+  it('merges dynamic params from the deepest child', () => {
+    const routes = [
+      {
+        path: '/users/:id',
+        component: Shell,
+        children: [{ path: '/users/:id/posts/:postId', component: Leaf }],
+      },
+    ];
+    const found = findMatchingRoute(routes, '/users/42/posts/9');
+    expect(found.route?.path).toBe('/users/:id');
+    expect(found.params).toEqual({ id: '42', postId: '9' });
+  });
+});
+
+describe('Outlet nested routes', () => {
+  afterEach(() => {
+    cleanup();
+    window.history.pushState({}, '', '/');
+  });
+
+  it('renders the parent layout and the matched child', () => {
+    window.history.pushState({}, '', '/app/dash');
+    function Layout() {
+      return createElement('div', null, 'shell-', createElement(Outlet));
+    }
+    function Dash() {
+      return createElement('span', null, 'dash');
+    }
+    render(
+      createElement(Router, {
+        initialPath: '/app/dash',
+        routes: [
+          {
+            path: '/app',
+            component: Layout,
+            children: [{ path: '/app/dash', component: Dash }],
+          },
+        ],
+      })
+    );
+    expect(screen.getByText(/shell-/)).toBeTruthy();
+    expect(screen.getByText('dash')).toBeTruthy();
+  });
+
+  it('exposes nested params via useParams and child meta via useRouteMeta', () => {
+    window.history.pushState({}, '', '/users/42');
+    function Layout() {
+      return createElement(Outlet);
+    }
+    function Profile() {
+      const { id } = useParams();
+      const meta = useRouteMeta<{ title: string }>();
+      return createElement('div', null, `user-${id}-${meta?.title ?? 'none'}`);
+    }
+    render(
+      createElement(Router, {
+        initialPath: '/users/42',
+        routes: [
+          {
+            path: '/users/:id',
+            component: Layout,
+            children: [
+              { path: '/users/:id', component: Profile, meta: { title: 'Profile' } },
+            ],
+          },
+        ],
+      })
+    );
+    expect(screen.getByText('user-42-Profile')).toBeTruthy();
+  });
+});
+
+describe('lazyRoute / DefaultLoader', () => {
+  afterEach(() => {
+    cleanup();
+    window.history.pushState({}, '', '/');
+  });
+
+  it('DefaultLoader exposes a polite status region', () => {
+    render(createElement(DefaultLoader, { message: 'Please wait' }));
+    const status = screen.getByRole('status');
+    expect(status).toHaveTextContent('Please wait');
+    expect(status).toHaveAttribute('aria-live', 'polite');
+    expect(status).toHaveAttribute('aria-busy', 'true');
+  });
+
+  it('lazyRoute shows DefaultLoader until the import resolves', async () => {
+    let resolveMod!: (m: { default: () => ReturnType<typeof createElement> }) => void;
+    const loader = () =>
+      new Promise<{ default: () => ReturnType<typeof createElement> }>((resolve) => {
+        resolveMod = resolve;
+      });
+    const LazyPage = lazyRoute(loader);
+    render(
+      createElement(Router, {
+        routes: [{ path: '/', component: LazyPage }],
+      })
+    );
+    expect(screen.getByRole('status')).toHaveTextContent('Loading...');
+    await act(async () => {
+      resolveMod({ default: () => createElement('div', null, 'lazy-ready') });
+    });
+    expect(await screen.findByText('lazy-ready')).toBeTruthy();
+  });
+
+  it('preloadRoute shares the module promise with lazyRoute', async () => {
+    let calls = 0;
+    const loader = () => {
+      calls += 1;
+      return Promise.resolve({ default: () => createElement('div', null, 'preloaded') });
+    };
+    preloadRoute(loader);
+    const LazyPage = lazyRoute(loader);
+    render(
+      createElement(Router, {
+        routes: [{ path: '/', component: LazyPage }],
+      })
+    );
+    expect(await screen.findByText('preloaded')).toBeTruthy();
+    expect(calls).toBe(1);
+  });
+});
+
+describe('metadata breadcrumbs + useRouteMeta', () => {
+  afterEach(() => cleanup());
+
+  it('useRouteMeta reads the current route meta', () => {
+    function Page() {
+      const meta = useRouteMeta<{ title: string }>();
+      return createElement('div', null, meta?.title ?? 'missing');
+    }
+    render(
+      createElement(Router, {
+        routes: [{ path: '/', component: Page, meta: { title: 'HomeTitle' } }],
+      })
+    );
+    expect(screen.getByText('HomeTitle')).toBeTruthy();
+  });
+
+  it('generateBreadcrumbs matches parameterized paths', () => {
+    const Dummy = () => null;
+    const crumbs = generateBreadcrumbs(
+      [
+        { path: '/users', component: Dummy, meta: { title: 'Users' } },
+        { path: '/users/:id', component: Dummy, meta: { title: 'User' } },
+      ],
+      '/users/42'
+    );
+    expect(crumbs.map((c) => c.label)).toEqual(['Users', 'User']);
+    expect(crumbs[1].path).toBe('/users/42');
+  });
+});
+
+describe('RouteErrorBoundary remaining', () => {
+  afterEach(() => {
+    cleanup();
+    window.history.pushState({}, '', '/');
+  });
+
+  it('clears the error UI after navigating to another route', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const prev = `${window.location.pathname}${window.location.search}`;
+    window.history.pushState({}, '', '/boom');
+    function Boom() {
+      throw new Error('kaboom');
+      return createElement('div');
+    }
+    function Safe() {
+      return createElement('div', null, 'safe-route');
+    }
+    try {
+      render(
+        createElement(Router, {
+          initialPath: '/boom',
+          routes: [
+            { path: '/boom', component: Boom },
+            { path: '/safe', component: Safe },
+          ],
+        })
+      );
+      expect(screen.getByText('Oops! Something went wrong')).toBeTruthy();
+      expect(screen.getByText('kaboom')).toBeTruthy();
+      await act(async () => {
+        window.history.pushState({}, '', '/safe');
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      });
+      await waitFor(() => {
+        expect(screen.getByText('safe-route')).toBeTruthy();
+      });
+      expect(screen.queryByText('Oops! Something went wrong')).toBeNull();
+    } finally {
+      spy.mockRestore();
+      window.history.pushState({}, '', prev || '/');
+    }
   });
 });

@@ -26,15 +26,15 @@ import { signal } from 'fiboui'
 // Create a signal
 const count = signal(0)
 
-// Use in component
+// Function children re-read `.value` on each rebuild.
+// A static `.children([...])` array freezes the number at build time.
 Box()
   .bindSignal(count)
-  .children([
+  .children(() => [
     Text(`Count: ${count.value}`),
     Button()
       .text('Increment')
-      .onClick(() => count.value++)
-
+      .onPress(() => count.value++)
   ])
 
 ```
@@ -43,7 +43,7 @@ Signals live in memory on the client. Do not read or write them during SSR to pe
 
 There are two store APIs:
 
-- `createStore()` + `useReactiveStore(store)` — reactive object store (also exported historically as `useStore` from `fiboui/core` hooks).
+- `createStore()` + `useReactiveStore(store)` — reactive object store (`useReactiveStore` from `fiboui` and `fiboui/core`). `fiboui/core` does **not** export `useStore`.
 - `@Store()` class decorator + `useStore(StoreClass)` — the public `useStore` from the `fiboui` package root.
 
 ### How it Works
@@ -127,7 +127,7 @@ const cartTotal = computed(() => {
 
 Box()
   .bindSignal(cartTotal)
-  .children([
+  .children(() => [
     Text(`Total: $${cartTotal.value}`)
   ])
 
@@ -175,12 +175,11 @@ const user = observable({
 
 Box()
   .observe(user)
-  .children([
+  .children(() => [
     Text(`Name: ${user.get().name}`),
     Button()
       .text('Update')
-      .onClick(() => user.set({ ...user.get(), name: 'Jane' }))
-
+      .onPress(() => user.set({ ...user.get(), name: 'Jane' }))
   ])
 
 ```
@@ -194,20 +193,18 @@ const products = observable([...])
 // Component only re-renders when filters change
 Box()
   .observe(filters)
-  .children([
+  .children(() => [
     TextField()
       .value(filters.get().search)
-      .onChange((e) => {
-        filters.set({ ...filters.get(), search: e.target.value })
+      .onChange((value) => {
+        filters.set({ ...filters.get(), search: value })
       })
-
   ])
-
 
 // Component only re-renders when products change
 Box()
   .observe(products)
-  .children(
+  .children(() =>
     products.get().map(p => ProductCard(p))
   )
 
@@ -268,17 +265,19 @@ const unsubscribe = store.subscribe(state => {
 
 ```typescript
 function Header() {
-  const state = store.getState()
-
   return Box()
-    .observer()  // Re-renders when store changes
-    .children([
-      Text(state.user.name),
-      Text(`Cart: ${state.cart.length}`)
-    ])
-
+    .observer()
+    .children(() => {
+      const state = store.getState()
+      return [
+        Text(state.user.name),
+        Text(`Cart: ${state.cart.length}`),
+      ]
+    })
 }
 ```
+
+`store.getState()` must run **inside** the function child (or use `useReactiveStore(store)` in a React function). Reading the store once above `.observer()` freezes the snapshot. `.observer()` tracks reactive reads during that rebuild — it does not subscribe to every store in the app.
 
 ### Actions Pattern
 
@@ -322,59 +321,71 @@ Provider pattern for sharing values down the component tree.
 ### Basic Usage
 
 ```typescript
+import { useProvider } from 'fiboui'
+
 const theme = {
   primary: '#3B82F6',
   secondary: '#10B981'
 }
 
-// Provider
+// Provider — values are read with useProvider in a child React function
 Box()
   .provide('theme', theme)
   .children([
-    ChildComponent()
+    <ChildComponent key="child" />
   ])
 
-
-// Consumer
 function ChildComponent() {
-  return Box()
-    .consume('theme')
-    .backgroundColor((theme) => theme.primary)
-
+  const t = useProvider<typeof theme>('theme')
+  return Box().bg(t?.primary ?? '#3B82F6')
 }
 ```
+
+`.consume(key)` reads the **same builder’s** local map and returns the value (not `this`) — it does not walk parent context. Do not chain it.
 
 ### Dynamic Theme Example
 
 ```typescript
+import { useProvider } from 'fiboui'
+
+const lightTheme = { background: '#fff', primary: '#3B82F6' }
+const darkTheme = { background: '#111', primary: '#60A5FA' }
 const currentTheme = signal(lightTheme)
+
+function Content() {
+  return Box().children([Text('Content')])
+}
+
+function Footer() {
+  return Box().children([Text('Footer')])
+}
 
 function App() {
   return Box()
-    .provide('theme', currentTheme.value)
     .bindSignal(currentTheme)
-    .children([
-      Header(),
-      Content(),
-      Footer()
-    ])
-
+    .children(() =>
+      Box()
+        .provide('theme', currentTheme.value)
+        .children([
+          <Header key="header" />,
+          Content(),
+          Footer(),
+        ])
+    )
 }
 
 function Header() {
+  const theme = useProvider<typeof lightTheme>('theme')
   return Box()
-    .consume('theme')
-    .backgroundColor((theme) => theme.background)
+    .bg(theme?.background ?? '#fff')
     .children([
       Button()
         .text('Toggle Theme')
-        .onClick(() => {
+        .onPress(() => {
           currentTheme.value =
             currentTheme.value === lightTheme ? darkTheme : lightTheme
         })
-
     ])
-
 }
 ```
 
@@ -423,10 +434,11 @@ Box().provide('theme', theme)
 ### 2. Minimize Re-renders
 
 ```typescript
-// ❌ Bad - Re-renders for any store change
-Box().observer()
+// ❌ Static children — observer cannot re-read store.getState()
+Box().observer().children([Text(store.getState().user.name)])
 
-// ✅ Good - Only re-renders when specific observable changes
+// ✅ Function child, or .observe(one observable)
+Box().observer().children(() => Text(store.getState().user.name))
 Box().observe(userObservable)
 ```
 
@@ -513,28 +525,36 @@ const actions = {
 // 5. Components
 function AppHeader() {
   return Box()
-    .bindSignal(cartItemCount) // Re-renders only when count changes
-    .bindSignal(cartTotal)     // Re-renders only when total changes
-    .children([
+    .bindSignal(cartItemCount)
+    .bindSignal(cartTotal)
+    .children(() => [
       Text('🛒 FiboShop'),
       Row().children([
         Text(`Total: $${cartTotal.value.toFixed(2)}`),
-        Badge().text(cartItemCount.value.toString())
-      ])
-    ])
-    ;
+        Badge().text(String(cartItemCount.value)),
+      ]),
+    ]);
 }
 
 function CartContent() {
   return Box()
-    .observer() // Re-renders whenever the appStore updates
-    .children([
+    .observer()
+    .children(() => [
       Text('My Cart'),
-      ...appStore.getState().cart.map(item => (
+      ...appStore.getState().cart.map(item =>
         Text(`${item.name} x ${item.quantity}`)
-      ))
-    ])
-    ;
+      ),
+    ]);
+}
+
+function ProductSidebar() {
+  return Box()
+    .observer()
+    .children(() =>
+      appStore.getState().products.map((product) =>
+        Button(product.name).onPress(() => actions.addToCart(product))
+      )
+    );
 }
 
 // 6. Main Application
@@ -545,12 +565,10 @@ export function EcommerceApp() {
       Box()
         .display('flex')
         .children([
-          ProductSidebar(), // Sidebar updates the store
-          CartContent(),    // Content observes the store
-        ])
-        ,
-    ])
-    ;
+          ProductSidebar(),
+          CartContent(),
+        ]),
+    ]);
 }
 ```
 
@@ -569,9 +587,6 @@ graph TD
     Observer -->|Re-render| UI1[Cart List Updated]
     Binder -->|Re-render| UI2[Badge Count Updated]
 ```
-
-> [!TIP]
-> You can find the full source code for this example in [exemplo-completo.tsx](file:/
 
 ---
 
@@ -635,19 +650,27 @@ function listSignal<T>(initial?: T[]): ListSignal<T>
 
 `collection` is the same function. Each item gets an `_id` (`crypto.randomUUID`) unless one is already set.
 
-**Methods:** `add`, `insert`, `set`, `update`, `remove` / `delete`, `find`, `search`, `clear`, `replace`, `filter`, `map`, `move`.
+**Methods:** `add`, `insert`, `set`, `update`, `remove` / `delete`, `find`, `search`, `clear`, `replace`, `filter`, `map`, `move`, `view`, `viewWhere`.
 
-`update` / `remove` / `find` match `_id`, then a domain `id`, then a predicate. `search` and `filter` return a plain array. Pass that array to `List` and it will not stay subscribed — pass the `listSignal` itself.
+`update` / `remove` / `find` match `_id`, then a domain `id`, then a predicate. `search(query)` is a live `view()` plus a copy of the visible rows. `filter(fn)` is a one-shot snapshot of `_source` (does not change `.value`; safe inside `computed`). `viewWhere(fn)` is the live predicate (AND with the query); `viewWhere()` clears it. Bind `List` / `Table` to the signal itself — the array returned by `filter` / `search` is a snapshot.
 
 ```tsx
 const todos = listSignal<{ title: string }>([])
 todos.add({ title: 'Ship it' })
 
-List().items(todos).renderItem((todo) => ListTile().title(todo.title))
+List()
+  .items(todos)
+  .empty('No todos')
+  .renderItem((todo) => ListTile().title(todo.title))
+
+Table().data(todos).columns([{ header: 'Title', accessor: 'title' }])
+
 Text(`Total todos: ${todos.$length}`)
 ```
 
-`$length` is an interpolation token, not a number. `` `${todos.length}` `` freezes. `Text` auto-binds the signals whose markers appear in its string. `.bindSignal(other)` adds another. Nothing subscribes to every signal in the tree.
+`List().empty(...)` paints `.fibo-list-empty` when the array / `listSignal` / `items(fn)` result is empty. `List().items(fn)` re-runs when the list rebuilds (pair with `.bindSignal`). `Table().data(listSignal)` binds the same way. `view(query)` / `search(query)` filter `.value` in place; `viewWhere(fn)` is the live predicate (AND with the query). `add` / `update` still write the full list. `const hits = todos.search('x')` is a copy. `todos.filter(fn)` is a snapshot of `_source`.
+
+`$length` is an interpolation token, not a number. `` `${todos.length}` `` freezes. `Text`, Label, Alert, ListTile, Button, Banner, Card (`.text` / `.subtitle` / `.number` and string children), Combobox / RadioGroup / Progress labels, and field labels auto-bind the signals whose markers appear in the string. `.bindSignal(other)` adds another. Nothing subscribes to every signal in the tree.
 
 In-place edits (`todos.value[0].title = 'x'`) do not notify. Assign through `update` / `set`.
 
@@ -660,14 +683,12 @@ In-place edits (`todos.value[0].title = 'x'`) do not notify. Assign through `upd
 // Observe an observable
 .observe(observable)
 
-// Mark as observer (observes all changes)
+// Rebuild when tracked signals / observables / stores are read
+// during a function `.children(() => …)` (not a static array)
 .observer()
 
-// Provide a value
+// Provide a value for descendants (`useProvider(key)` in a child)
 .provide(key, value)
-
-// Consume a value
-.consume(key)
 
 // Local state
 .state(key, initialValue)

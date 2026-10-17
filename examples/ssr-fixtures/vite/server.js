@@ -3,6 +3,7 @@ import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer as createViteServer } from 'vite';
+import { injectSsrMarkup } from './inject.js';
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
 const port = Number(process.env.PORT || 4173);
@@ -23,15 +24,14 @@ http
         template = await vite.transformIndexHtml(url, template);
         const { render } = await vite.ssrLoadModule('/entry-server.tsx');
         const { html, styles } = await render();
-        const out = template
-          .replace('<!--app-html-->', html)
-          .replace('<!--app-styles-->', styles);
+        const out = injectSsrMarkup(template, html, styles);
         res.statusCode = 200;
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.end(out);
       } catch (err) {
         vite.ssrFixStacktrace(err);
         res.statusCode = 500;
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
         res.end(String(err?.stack || err));
       }
     });

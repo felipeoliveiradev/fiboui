@@ -138,3 +138,11 @@
     filter: none !important;
   }
 }
+
+@media (scripting: none) {
+  .fibo-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+}

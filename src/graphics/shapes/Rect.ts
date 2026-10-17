@@ -1,6 +1,10 @@
 import React, { ReactElement } from 'react';
 import { ShapeBuilder, createShapeBuilder } from '../ShapeBuilder';
 
+function isFiniteNum(n: number): boolean {
+  return typeof n === 'number' && Number.isFinite(n);
+}
+
 class RectBuilder extends ShapeBuilder {
   private _x: number = 0;
   private _y: number = 0;
@@ -14,74 +18,84 @@ class RectBuilder extends ShapeBuilder {
   private _radiusBottomRight?: number;
 
   position(x: number, y: number): this {
+    if (!isFiniteNum(x) || !isFiniteNum(y)) return this;
     this._x = x;
     this._y = y;
     return this;
   }
 
   x(value: number): this {
+    if (!isFiniteNum(value)) return this;
     this._x = value;
     return this;
   }
 
   y(value: number): this {
+    if (!isFiniteNum(value)) return this;
     this._y = value;
     return this;
   }
 
   left(value: number): this {
-    this._x = value;
-    return this;
+    return this.x(value);
   }
 
   top(value: number): this {
-    this._y = value;
-    return this;
+    return this.y(value);
   }
 
   right(value: number): this {
+    if (!isFiniteNum(value)) return this;
     this._x = value - this._width;
     return this;
   }
 
   bottom(value: number): this {
+    if (!isFiniteNum(value)) return this;
     this._y = value - this._height;
     return this;
   }
 
   centerX(value: number): this {
+    if (!isFiniteNum(value)) return this;
     this._x = value - this._width / 2;
     return this;
   }
 
   centerY(value: number): this {
+    if (!isFiniteNum(value)) return this;
     this._y = value - this._height / 2;
     return this;
   }
 
   center(cx: number, cy: number): this {
+    if (!isFiniteNum(cx) || !isFiniteNum(cy)) return this;
     this._x = cx - this._width / 2;
     this._y = cy - this._height / 2;
     return this;
   }
 
   size(width: number, height: number): this {
+    if (!isFiniteNum(width) || !isFiniteNum(height)) return this;
     this._width = width;
     this._height = height;
     return this;
   }
 
   width(value: number): this {
+    if (!isFiniteNum(value)) return this;
     this._width = value;
     return this;
   }
 
   height(value: number): this {
+    if (!isFiniteNum(value)) return this;
     this._height = value;
     return this;
   }
 
   cornerRadius(radius: number): this {
+    if (!isFiniteNum(radius)) return this;
     this._rx = radius;
     this._ry = radius;
     this._radiusTopLeft = undefined;
@@ -92,50 +106,63 @@ class RectBuilder extends ShapeBuilder {
   }
 
   cornerRadii(rx: number, ry: number): this {
+    if (!isFiniteNum(rx) || !isFiniteNum(ry)) return this;
     this._rx = rx;
     this._ry = ry;
+    this._radiusTopLeft = undefined;
+    this._radiusTopRight = undefined;
+    this._radiusBottomLeft = undefined;
+    this._radiusBottomRight = undefined;
     return this;
   }
 
   cornerRadiusTopLeft(radius: number): this {
+    if (!isFiniteNum(radius)) return this;
     this._radiusTopLeft = radius;
     return this;
   }
 
   cornerRadiusTopRight(radius: number): this {
+    if (!isFiniteNum(radius)) return this;
     this._radiusTopRight = radius;
     return this;
   }
 
   cornerRadiusBottomLeft(radius: number): this {
+    if (!isFiniteNum(radius)) return this;
     this._radiusBottomLeft = radius;
     return this;
   }
 
   cornerRadiusBottomRight(radius: number): this {
+    if (!isFiniteNum(radius)) return this;
     this._radiusBottomRight = radius;
     return this;
   }
 
   cornerRadiusTop(radius: number): this {
+    if (!isFiniteNum(radius)) return this;
     this._radiusTopLeft = radius;
     this._radiusTopRight = radius;
     return this;
   }
 
   cornerRadiusBottom(radius: number): this {
+    if (!isFiniteNum(radius)) return this;
     this._radiusBottomLeft = radius;
     this._radiusBottomRight = radius;
     return this;
   }
 
   cornerRadiusLeft(radius: number): this {
+    if (!isFiniteNum(radius)) return this;
     this._radiusTopLeft = radius;
     this._radiusBottomLeft = radius;
     return this;
   }
 
   cornerRadiusRight(radius: number): this {
+    if (!isFiniteNum(radius)) return this;
     this._radiusTopRight = radius;
     this._radiusBottomRight = radius;
     return this;
@@ -144,8 +171,7 @@ class RectBuilder extends ShapeBuilder {
   rotateSelf(degrees: number): this {
     const cx = this._x + this._width / 2;
     const cy = this._y + this._height / 2;
-    this._transform = `rotate(${degrees} ${cx} ${cy})`;
-    return this;
+    return this.rotate(degrees, cx, cy);
   }
 
   private generateRoundedRectPath(): string {
@@ -153,10 +179,11 @@ class RectBuilder extends ShapeBuilder {
     const y = this._y;
     const w = this._width;
     const h = this._height;
-    const tl = this._radiusTopLeft || 0;
-    const tr = this._radiusTopRight || 0;
-    const br = this._radiusBottomRight || 0;
-    const bl = this._radiusBottomLeft || 0;
+    const fallback = this._rx;
+    const tl = this._radiusTopLeft ?? fallback ?? 0;
+    const tr = this._radiusTopRight ?? fallback ?? 0;
+    const br = this._radiusBottomRight ?? fallback ?? 0;
+    const bl = this._radiusBottomLeft ?? fallback ?? 0;
 
     return `
       M ${x + tl} ${y}
@@ -179,25 +206,11 @@ class RectBuilder extends ShapeBuilder {
       this._radiusBottomLeft !== undefined ||
       this._radiusBottomRight !== undefined;
 
-    const hasLayers = this._below.length > 0 || this._children.length > 0 || this._over.length > 0;
-
+    const paint = this.shapePaintProps();
     const shapeElement = hasIndividualCorners
       ? React.createElement('path', {
         d: this.generateRoundedRectPath(),
-        fill: this._fill,
-        fillOpacity: this._fillOpacity,
-        stroke: this._stroke,
-        strokeWidth: this._strokeWidth,
-        strokeOpacity: this._strokeOpacity,
-        strokeDasharray: this._strokeDasharray,
-        strokeLinecap: this._strokeLinecap,
-        strokeLinejoin: this._strokeLinejoin,
-        opacity: this._opacity,
-        transform: this._transform,
-        filter: this._filter,
-        clipPath: this._clipPath,
-        className: this._className,
-        style: this._style
+        ...paint,
       })
       : React.createElement('rect', {
         x: this._x,
@@ -206,38 +219,9 @@ class RectBuilder extends ShapeBuilder {
         height: this._height,
         rx: this._rx,
         ry: this._ry,
-        fill: this._fill,
-        fillOpacity: this._fillOpacity,
-        stroke: this._stroke,
-        strokeWidth: this._strokeWidth,
-        strokeOpacity: this._strokeOpacity,
-        strokeDasharray: this._strokeDasharray,
-        strokeLinecap: this._strokeLinecap,
-        strokeLinejoin: this._strokeLinejoin,
-        opacity: this._opacity,
-        transform: this._transform,
-        filter: this._filter,
-        clipPath: this._clipPath,
-        className: this._className,
-        style: this._style
+        ...paint,
       });
-
-    if (!hasLayers) {
-      return shapeElement;
-    }
-
-    const groupChildren = [
-      ...this._below,
-      shapeElement,
-      ...this._children,
-      ...this._over
-    ];
-
-    return React.createElement(
-      'g',
-      { key: this._className || 'rect-group' },
-      groupChildren
-    );
+    return this.wrapShape(shapeElement, 'rect-group');
   }
 }
 

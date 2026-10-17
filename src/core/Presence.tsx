@@ -6,6 +6,10 @@ import { ensureMotionCss } from './styleManager';
 import { normalizePreset } from './motionCss';
 import { FiboBuilder, createBuilder } from './builder';
 import type { BindableSignal } from './state';
+import {
+  getPrefersReducedMotion,
+  subscribePrefersReducedMotion,
+} from './animationHooks';
 
 export type PresenceShow = boolean | BindableSignal<boolean>;
 
@@ -33,29 +37,25 @@ export function isPresenceProps(value: unknown): value is PresenceProps {
   return Object.prototype.hasOwnProperty.call(value, 'show');
 }
 
-function subscribeReducedMotion(onChange: () => void): () => void {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-    return () => undefined;
-  }
-  const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-  mq.addEventListener('change', onChange);
-  return () => mq.removeEventListener('change', onChange);
-}
-
-function prefersReducedMotion(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    typeof window.matchMedia === 'function' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  );
-}
-
 function useHydrateSafeReducedMotion(): boolean {
-  return useSyncExternalStore(subscribeReducedMotion, prefersReducedMotion, () => false);
+  return useSyncExternalStore(subscribePrefersReducedMotion, getPrefersReducedMotion, () => false);
 }
 
 function resolveShow(show: PresenceShow): boolean {
   return isBindableSignal(show) ? Boolean(show.value) : Boolean(show);
+}
+
+function finiteDuration(ms: number | undefined, fallback = 200): number {
+  return typeof ms === 'number' && Number.isFinite(ms) && ms >= 0 ? ms : fallback;
+}
+
+function presetOrUndefined(name: string | undefined): MotionPreset | undefined {
+  if (!name) return undefined;
+  try {
+    return normalizePreset(name);
+  } catch {
+    return undefined;
+  }
 }
 
 function useShow(show: PresenceShow): boolean {
@@ -85,7 +85,10 @@ export function PresenceHost({
   const visible = useShow(show);
   const [mounted, setMounted] = useState(visible);
   const [phase, setPhase] = useState<'enter' | 'idle' | 'exit'>(visible ? 'enter' : 'idle');
-  const reduce = reducedMotion !== 'never' && useHydrateSafeReducedMotion();
+  const forceMotion = reducedMotion === 'never';
+  const osReduce = useHydrateSafeReducedMotion();
+  const reduce = !forceMotion && osReduce;
+  const dur = finiteDuration(duration);
 
   useEffect(() => {
     ensureMotionCss();
@@ -103,21 +106,37 @@ export function PresenceHost({
     setPhase('exit');
   }, [visible, reduce]);
 
+  useEffect(() => {
+    if (phase !== 'exit' || !mounted) return;
+    const timer = window.setTimeout(() => setMounted(false), dur + 50);
+    return () => window.clearTimeout(timer);
+  }, [phase, mounted, dur]);
+
   if (!mounted) return null;
 
   const presetName = phase === 'exit' ? exit : phase === 'enter' ? enter : undefined;
-  const preset = presetName && !reduce ? normalizePreset(presetName) : undefined;
+  const preset = presetName && !reduce ? presetOrUndefined(presetName) : undefined;
+  const expectedAnim = preset ? `fibo-${preset}` : undefined;
+  const className = [
+    preset ? `fibo-anim fibo-anim-${preset}` : '',
+    forceMotion ? 'fibo-motion-force' : '',
+  ]
+    .filter(Boolean)
+    .join(' ') || undefined;
 
   return React.createElement(
     'div',
     {
-      className: preset ? `fibo-anim fibo-anim-${preset}` : undefined,
+      className,
       style: preset
-        ? ({ '--fibo-dur': `${duration}ms`, '--fibo-ease': 'ease' } as React.CSSProperties)
+        ? ({ '--fibo-dur': `${dur}ms`, '--fibo-ease': 'ease' } as React.CSSProperties)
         : undefined,
       'data-fibo-presence': phase,
       onAnimationEnd: (event: React.AnimationEvent<HTMLDivElement>) => {
         if (event.target !== event.currentTarget) return;
+        const native = event.nativeEvent as { animationName?: string } | undefined;
+        const name = event.animationName || native?.animationName;
+        if (name && expectedAnim && name !== expectedAnim) return;
         if (phase === 'exit') setMounted(false);
         if (phase === 'enter') setPhase('idle');
       },

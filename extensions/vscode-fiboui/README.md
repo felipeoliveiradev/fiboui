@@ -16,7 +16,7 @@ Labels cover:
 
 **Auto-indent.** With `fiboui.autoIndent` on, Enter inside a fluent chain adjusts the next line (continuation dots, children/items arrays, and `itemStyle` / `itemHover` callbacks).
 
-**Lineage guides.** A left-edge mark on each multi-line `.children([ … ])` block. Toggle with **FiboUI: Toggle Lineage Guides**.
+**Lineage guides.** A left-edge mark on each multi-line `.children([ … ])` or `.items([ … ])` block. Toggle with **FiboUI: Toggle Lineage Guides**.
 
 **Autocomplete.** Two completion kinds:
 
@@ -25,7 +25,7 @@ Labels cover:
 
 There is no separate function completion kind.
 
-**Snippets.** Prefixes in `snippets/fiboui.json` for the same four languages.
+**Snippets.** Prefixes in `snippets/fiboui.json` for the same four languages. Bodies use 2-space indent (same as the playground), not tabs.
 
 **Theme.** **FiboUI Noir** (`vs-dark`). Indent guides and bracket-pair guides are one gray (`#3F3F46`). The active guide is teal (`#4EC9B0`).
 
@@ -55,7 +55,7 @@ Language defaults for TS, TSX, JS, and JSX turn on full auto-indent, indentation
 | `fiboui.closingLabels` | `true` | Grey italic `// Name` after multi-line fluent closes |
 | `fiboui.closingLabels.minDepth` | `1` | Minimum nesting depth before a label is shown |
 | `fiboui.autoIndent` | `true` | Enter adjusts indent in fluent chains |
-| `fiboui.lineageGuides` | `true` | Left-edge marks on multi-line `.children([ … ])` blocks |
+| `fiboui.lineageGuides` | `true` | Left-edge marks on multi-line `.children([ … ])` / `.items([ … ])` blocks |
 | `fiboui.completions` | `true` | Factory and chain-method suggestions |
 
 Commands: **FiboUI: Toggle Closing Labels**, **FiboUI: Toggle Lineage Guides**.
@@ -120,4 +120,5 @@ The extension is plain JavaScript. There is no build step. Edit `src/` and reloa
 ```bash
 node src/closingLabels.test.js
 node src/autoIndent.test.js
+node src/snippets.test.js
 ```

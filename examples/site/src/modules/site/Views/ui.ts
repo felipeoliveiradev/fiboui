@@ -1,12 +1,47 @@
+import type { ReactElement } from 'react'
 import type { FiboChild, PseudoStateBuilder } from 'fiboui'
-import { scrollTo, openExternal, Column, Row, Box, Text, Button } from 'fiboui'
+import { scrollTo, openExternal, Row, Box, Text, Button } from 'fiboui'
+import { navigate, pathToRoute, route } from '../route'
 import { closeMenu } from '../state'
 import { ink, muted, red } from '../theme'
 
+export function waitScroll(target: string, attempts = 24) {
+  const hash = target.startsWith('#') ? target : `#${target}`
+  const id = hash.slice(1)
+  const tick = () => {
+    if (document.getElementById(id)) {
+      scrollTo(hash, { hash: true })
+      return
+    }
+    if (attempts <= 0) return
+    attempts -= 1
+    requestAnimationFrame(tick)
+  }
+  tick()
+}
+
 export function go(target: string) {
   closeMenu()
-  scrollTo(target)
+  const hash = target.startsWith('#') ? target : `#${target}`
+  if (route.value !== 'home') navigate('home')
+  waitScroll(hash)
 }
+
+/** After mount: `/#work` is a real section, not a leftover hash. */
+export function bootHash() {
+  const hash = window.location.hash
+  if (!hash || hash === '#') return
+  if (pathToRoute(window.location.pathname) !== 'home') return
+  waitScroll(hash)
+}
+
+window.addEventListener('popstate', () => {
+  bootHash()
+})
+
+window.addEventListener('hashchange', () => {
+  bootHash()
+})
 
 export function open(url: string) {
   openExternal(url)
@@ -16,7 +51,7 @@ export function grid(
   children: FiboChild[],
   columns: { base?: string; md?: string; lg?: string },
   gap = 0
-) {
+): ReactElement {
   let node = Box()
     .display('grid')
     .width('100%')
@@ -31,7 +66,7 @@ export function grid(
   return node
 }
 
-export function halves(children: FiboChild[]) {
+export function halves(children: FiboChild[]): ReactElement {
   return Box()
     .display('grid')
     .width('100%')
@@ -40,7 +75,7 @@ export function halves(children: FiboChild[]) {
     .children(children)
 }
 
-export function kicker(label: string, square: 'primary' | 'secondary' = 'primary', color = ink) {
+export function kicker(label: string, square: 'primary' | 'secondary' = 'primary', color = ink): ReactElement {
   return Row()
     .gap(8)
     .crossAxisAlignment('center')
@@ -55,7 +90,7 @@ export function kicker(label: string, square: 'primary' | 'secondary' = 'primary
     ])
 }
 
-export function display(text: string, size = 'clamp(4.8rem, 16vw, 9.2rem)') {
+export function display(text: string, size = 'clamp(4.8rem, 16vw, 9.2rem)'): ReactElement {
   return Text(text)
     .variant('h1')
     .whiteSpace('nowrap')
@@ -65,7 +100,7 @@ export function display(text: string, size = 'clamp(4.8rem, 16vw, 9.2rem)') {
     .letterSpacing('-0.055em')
 }
 
-export function prose(text: string) {
+export function prose(text: string): ReactElement {
   return Text(text)
     .variant('body')
     .fontSize('clamp(1.2rem, 2.4vw, 1.65rem)')
@@ -79,16 +114,16 @@ type Pressable = {
   focus(fn: (state: PseudoStateBuilder) => void): Pressable
 }
 
-export function point<T extends Pressable>(node: T): T {
+export function point<T extends Pressable>(node: T, ring = '#ff2d8a'): T {
   return node
     .cursor('pointer')
     .focus((state: PseudoStateBuilder) => {
-      state.css('outline', '2px solid #ff2d8a')
+      state.css('outline', `2px solid ${ring}`)
       state.css('outline-offset', '2px')
     }) as T
 }
 
-export function cta(label: string, onPress: () => void, tone: 'ink' | 'paper' | 'red' = 'red') {
+export function cta(label: string, onPress: () => void, tone: 'ink' | 'paper' | 'red' = 'red'): ReactElement {
   const color = tone === 'red' ? red : '#ffffff'
   return point(
     Button('')

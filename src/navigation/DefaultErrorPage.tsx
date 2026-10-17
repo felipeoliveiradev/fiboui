@@ -1,21 +1,57 @@
 import React from 'react';
+import { joinBasename } from './Router';
+import { useRouterOptional } from './RouterContext';
 
 interface DefaultErrorPageProps {
   error?: Error;
   onReset?: () => void;
 }
 
+const TITLE_ID = 'fibo-error-title';
+const DETAIL_ID = 'fibo-error-detail';
+
+/** Read env at runtime so Vite does not inline `process.env.NODE_ENV`. */
+function envName(key: string): string | undefined {
+  try {
+    return process.env[key];
+  } catch {
+    return undefined;
+  }
+}
+
+function errorDetail(error?: Error): string {
+  if (!error) return '';
+  const message = typeof error.message === 'string' ? error.message.trim() : '';
+  if (message) return message;
+  const asString = String(error).trim();
+  if (asString && asString !== 'Error') return asString;
+  return 'An unexpected error occurred';
+}
+
 export const DefaultErrorPage: React.FC<DefaultErrorPageProps> = ({ error, onReset }) => {
-  const handleGoHome = () => {
-    window.location.href = '/';
-  };
+  const router = useRouterOptional();
+  const homeHref = joinBasename(router?.basename ?? '', '/');
+  const detail = errorDetail(error);
 
   const handleReload = () => {
+    if (typeof window === 'undefined') return;
     window.location.reload();
+  };
+
+  const handleTryAgain = () => {
+    if (onReset) {
+      onReset();
+      return;
+    }
+    handleReload();
   };
 
   return (
     <div
+      role="alert"
+      aria-live="assertive"
+      aria-labelledby={TITLE_ID}
+      aria-describedby={detail ? DETAIL_ID : undefined}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -38,7 +74,6 @@ export const DefaultErrorPage: React.FC<DefaultErrorPageProps> = ({ error, onRes
           textAlign: 'center',
         }}
       >
-        {}
         <div
           style={{
             width: '64px',
@@ -60,6 +95,7 @@ export const DefaultErrorPage: React.FC<DefaultErrorPageProps> = ({ error, onRes
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
+            aria-hidden="true"
           >
             <circle cx="12" cy="12" r="10" />
             <line x1="12" y1="8" x2="12" y2="12" />
@@ -67,8 +103,8 @@ export const DefaultErrorPage: React.FC<DefaultErrorPageProps> = ({ error, onRes
           </svg>
         </div>
 
-        {}
         <h1
+          id={TITLE_ID}
           style={{
             fontSize: '1.875rem',
             fontWeight: '700',
@@ -79,8 +115,7 @@ export const DefaultErrorPage: React.FC<DefaultErrorPageProps> = ({ error, onRes
           Oops! Something went wrong
         </h1>
 
-        {}
-        {error && (
+        {detail ? (
           <div
             style={{
               marginTop: '1.5rem',
@@ -91,6 +126,7 @@ export const DefaultErrorPage: React.FC<DefaultErrorPageProps> = ({ error, onRes
             }}
           >
             <p
+              id={DETAIL_ID}
               style={{
                 fontSize: '0.875rem',
                 color: '#991b1b',
@@ -99,12 +135,11 @@ export const DefaultErrorPage: React.FC<DefaultErrorPageProps> = ({ error, onRes
                 wordBreak: 'break-word',
               }}
             >
-              {error.message}
+              {detail}
             </p>
           </div>
-        )}
+        ) : null}
 
-        {}
         <p
           style={{
             fontSize: '1rem',
@@ -116,7 +151,6 @@ export const DefaultErrorPage: React.FC<DefaultErrorPageProps> = ({ error, onRes
           We're sorry for the inconvenience. Please try one of the options below.
         </p>
 
-        {/* Action Buttons */}
         <div
           style={{
             display: 'flex',
@@ -125,32 +159,32 @@ export const DefaultErrorPage: React.FC<DefaultErrorPageProps> = ({ error, onRes
             flexWrap: 'wrap',
           }}
         >
-          {onReset && (
-            <button
-              onClick={onReset}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#3b82f6',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                fontWeight: '500',
-                cursor: 'pointer',
-                transition: 'background-color 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#2563eb';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#3b82f6';
-              }}
-            >
-              Try Again
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleTryAgain}
+            style={{
+              padding: '0.75rem 1.5rem',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '1rem',
+              fontWeight: '500',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#2563eb';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#3b82f6';
+            }}
+          >
+            Try Again
+          </button>
 
           <button
+            type="button"
             onClick={handleReload}
             style={{
               padding: '0.75rem 1.5rem',
@@ -173,8 +207,8 @@ export const DefaultErrorPage: React.FC<DefaultErrorPageProps> = ({ error, onRes
             Reload Page
           </button>
 
-          <button
-            onClick={handleGoHome}
+          <a
+            href={homeHref}
             style={{
               padding: '0.75rem 1.5rem',
               backgroundColor: 'white',
@@ -185,6 +219,8 @@ export const DefaultErrorPage: React.FC<DefaultErrorPageProps> = ({ error, onRes
               fontWeight: '500',
               cursor: 'pointer',
               transition: 'all 0.2s',
+              textDecoration: 'none',
+              display: 'inline-block',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = '#f9fafb';
@@ -196,11 +232,10 @@ export const DefaultErrorPage: React.FC<DefaultErrorPageProps> = ({ error, onRes
             }}
           >
             Go Home
-          </button>
+          </a>
         </div>
 
-        {/* Stack Trace */}
-        {error?.stack && (
+        {error?.stack && envName('NODE_ENV') !== 'production' ? (
           <details
             style={{
               marginTop: '2rem',
@@ -232,7 +267,7 @@ export const DefaultErrorPage: React.FC<DefaultErrorPageProps> = ({ error, onRes
               {error.stack}
             </pre>
           </details>
-        )}
+        ) : null}
       </div>
     </div>
   );

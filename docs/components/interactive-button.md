@@ -4,11 +4,11 @@ import { Button } from '../../src/interactive/Button'
 
 const renderVariants = () =>
   Box().flex().gap(4).flexWrap('wrap').children([
-    Button('Primary').variant('primary'),
-    Button('Secondary').variant('secondary'),
-    Button('Outline').variant('outline'),
+    Button('Filled').variant('filled'),
+    Button('Outlined').variant('outlined'),
     Button('Ghost').variant('ghost'),
-    Button('Soft').variant('soft')
+    Button('Soft').variant('soft'),
+    Button('Text').variant('text')
   ])
 
 const renderSizes = () =>
@@ -22,7 +22,7 @@ const renderStates = () =>
   Box().flex().gap(4).flexWrap('wrap').children([
     Button('Default'),
     Button('Disabled').disabled(true),
-    Button('Loading').loading(true)
+    Button('Pill').shape('pill')
   ])
 </script>
 
@@ -30,7 +30,7 @@ const renderStates = () =>
 
 An interactive button component with multiple variants, sizes, and states.
 
-`Button` is a fundamental interactive element that handles user clicks and actions. It supports various visual styles, loading states, and can be disabled when needed.
+`Button` is a fundamental interactive element that handles user clicks and actions. It supports various visual styles and can be disabled when needed. There is no built-in spinner state — disable the control while a request is in flight.
 
 ## Live Examples
 
@@ -41,11 +41,11 @@ An interactive button component with multiple variants, sizes, and states.
 ::: details View Source
 ```tsx
 Box().flex().gap(4).flexWrap('wrap').children([
-  Button('Primary').variant('primary'),
-  Button('Secondary').variant('secondary'),
-  Button('Outline').variant('outline'),
+  Button('Filled').variant('filled'),
+  Button('Outlined').variant('outlined'),
   Button('Ghost').variant('ghost'),
-  Button('Soft').variant('soft')
+  Button('Soft').variant('soft'),
+  Button('Text').variant('text')
 ])
 ```
 :::
@@ -73,7 +73,7 @@ Box().flex().gap(4).alignItems('center').children([
 Box().flex().gap(4).flexWrap('wrap').children([
   Button('Default'),
   Button('Disabled').disabled(true),
-  Button('Loading').loading(true)
+  Button('Pill').shape('pill')
 ])
 ```
 :::
@@ -95,9 +95,9 @@ Creates a new `Button` builder instance.
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.variant(variant)` | `'primary' \| 'secondary' \| 'outline' \| 'ghost' \| 'soft'` | Sets the button visual style |
-| `.size(size)` | `'sm' \| 'md' \| 'lg'` | Sets the button size |
-| `.pill()` | `boolean` | Makes the button fully rounded |
+| `.variant(variant)` | `'elevated' \| 'filled' \| 'outlined' \| 'text' \| 'ghost' \| 'soft' \| 'outline' \| 'solid' \| 'raw'` | Visual style. `'primary'` is an alias of `'filled'`. Default is `'elevated'`. |
+| `.size(size)` | `'xs' \| 'sm' \| 'md' \| 'lg'` | Sets the button size |
+| `.shape(shape)` | `'default' \| 'pill' \| 'square' \| 'rect' \| 'rounded' \| 'sharp'` | Corner style. `.shape('pill')` is fully rounded. |
 
 ### Content
 
@@ -105,14 +105,12 @@ Creates a new `Button` builder instance.
 | :--- | :--- | :--- |
 | `.text(text)` | `string` | Sets the button text |
 | `.icon(icon)` | `ReactNode` | Sets a leading icon |
-| `.iconRight(icon)` | `ReactNode` | Sets a trailing icon |
 
 ### State
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
 | `.disabled(disabled)` | `boolean` | Disables the button |
-| `.loading(loading)` | `boolean` | Shows loading spinner |
 
 ### Events
 
@@ -121,9 +119,10 @@ Creates a new `Button` builder instance.
 | `.onPress(handler)` | `() => void` | Press / click handler (preferred) |
 | `.onClick(handler)` | `(event: MouseEvent) => void` | Raw DOM click handler |
 | `.onHover(handler)` | `() => void` | `mouseenter` handler (does not receive the event) |
+| `.type(type)` | `'button' \| 'submit' \| 'reset'` | HTML `type` on the `<button>`. |
 | `.submit()` | — | `type="submit"`. Use this inside [Form](/components/interactive-form). |
 | `.reset()` | — | `type="reset"` |
-| `.htmlType(type)` | `'button' \| 'submit' \| 'reset'` | DOM `type`. `.type()` is the React component and does not set the attribute. |
+| `.htmlType(type)` | `'button' \| 'submit' \| 'reset'` | Same write as `.type()`. |
 
 ### Inherited from FiboBuilder
 
@@ -131,7 +130,7 @@ Creates a new `Button` builder instance.
 
 - Layout: `.flex()`, `.flexDirection()`, `.alignItems()`, `.justifyContent()`
 - Spacing: `.p()`, `.m()`, `.px()`, `.py()`, `.mx()`, `.my()`
-- Sizing: `.w()`, `.h()`, `.minW()`, `.maxW()`
+- Sizing: `.width()`, `.height()`, `.minWidth()`, `.maxWidth()`
 - Colors: `.bg()`, `.color()`, `.opacity()`
 - Advanced: `.className()`, `.style()`, `.css()`, `.props()`
 
@@ -149,14 +148,14 @@ Button('Save')
 
 ```
 
-### Loading State
+### Disabled while in-flight
+
+Button has no built-in spinner state. Disable the control (and swap the label if you want a spinner elsewhere):
 
 ```tsx
-Button('Submit')
-  .loading(isLoading)
+Button(isLoading ? 'Submitting…' : 'Submit')
   .disabled(isLoading)
-  .onClick(handleSubmit)
-
+  .onPress(handleSubmit)
 ```
 
 ### Hover handler

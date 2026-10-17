@@ -1,5 +1,12 @@
 export { Router, useCurrentRoute, CurrentRouteContext } from './Router';
 export { Link, NavLink } from './Link';
+export { Anchor } from './Anchor';
+export { TabView } from './TabView';
+export { BottomBar } from './BottomBar';
+export { NavigationBar } from './NavigationBar';
+export { NavigationRail } from './NavigationRail';
+export { Breadcrumbs } from './Breadcrumbs';
+export { Toolbar } from './Toolbar';
 export { Outlet } from './Outlet';
 export { RouteErrorBoundary } from './ErrorBoundary';
 export { DefaultErrorPage } from './DefaultErrorPage';
@@ -9,4 +16,5 @@ export * from './guards';
 export * from './metadata';
 export * from './RouterContext';
 export { matchPath, findMatchingRoute, buildPath } from './routeMatching';
+export type { MatchedRoute } from './routeMatching';
 export type { Route, RouterContextValue, NavigateOptions } from './RouterContext';

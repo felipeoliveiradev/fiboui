@@ -1,14 +1,24 @@
 'use client';
 
-import { CSSProperties, ReactElement, cloneElement, useEffect, useState } from 'react';
+import {
+  CSSProperties,
+  ReactElement,
+  ReactNode,
+  cloneElement,
+  createElement,
+  isValidElement,
+  useEffect,
+  useState,
+} from 'react';
 import { AnimationOptions } from './animations';
+import { usePrefersReducedMotion } from './animationHooks';
 import { resolveCssEase } from './easing';
 import { Signal } from './state';
 
 interface AnimatedWrapperProps {
   animatedProps: Map<string, Signal<any>>;
   animationConfig?: Partial<AnimationOptions>;
-  children: ReactElement;
+  children?: ReactNode;
 }
 
 function readAnimatedValues(animatedProps: Map<string, Signal<any>>): Record<string, unknown> {
@@ -19,7 +29,22 @@ function readAnimatedValues(animatedProps: Map<string, Signal<any>>): Record<str
   return initial;
 }
 
+function finiteNumber(value: unknown): number | undefined {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : undefined;
+  if (typeof value === 'string' && value.trim() !== '') {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : undefined;
+  }
+  return undefined;
+}
+
+function asHostElement(children: ReactNode): ReactElement {
+  if (isValidElement(children)) return children;
+  return createElement('span', null, children);
+}
+
 export function AnimatedWrapper({ animatedProps, animationConfig, children }: AnimatedWrapperProps) {
+  const reduce = usePrefersReducedMotion();
   const [transforms, setTransforms] = useState<Record<string, any>>(() =>
     readAnimatedValues(animatedProps)
   );
@@ -45,18 +70,14 @@ export function AnimatedWrapper({ animatedProps, animationConfig, children }: An
   }, [animatedProps]);
 
   const transformParts: string[] = [];
-  if (transforms.translateX !== undefined) {
-    transformParts.push(`translateX(${transforms.translateX}px)`);
-  }
-  if (transforms.translateY !== undefined) {
-    transformParts.push(`translateY(${transforms.translateY}px)`);
-  }
-  if (transforms.scale !== undefined) {
-    transformParts.push(`scale(${transforms.scale})`);
-  }
-  if (transforms.rotate !== undefined) {
-    transformParts.push(`rotate(${transforms.rotate}deg)`);
-  }
+  const tx = finiteNumber(transforms.translateX);
+  const ty = finiteNumber(transforms.translateY);
+  const scale = finiteNumber(transforms.scale);
+  const rotate = finiteNumber(transforms.rotate);
+  if (tx !== undefined) transformParts.push(`translateX(${tx}px)`);
+  if (ty !== undefined) transformParts.push(`translateY(${ty}px)`);
+  if (scale !== undefined) transformParts.push(`scale(${scale})`);
+  if (rotate !== undefined) transformParts.push(`rotate(${rotate}deg)`);
 
   const animatedStyle: CSSProperties = {};
 
@@ -64,16 +85,18 @@ export function AnimatedWrapper({ animatedProps, animationConfig, children }: An
     animatedStyle.transform = transformParts.join(' ');
   }
 
-  if (animationConfig) {
+  if (animationConfig && !reduce) {
     const { duration = 300, curve = 'easeOut', stiffness, damping } = animationConfig;
     const timingFunction = resolveCssEase(curve, { stiffness, damping });
-    animatedStyle.transition = `transform ${duration}ms ${timingFunction}`;
+    const dur = typeof duration === 'number' && Number.isFinite(duration) && duration >= 0 ? duration : 300;
+    animatedStyle.transition = `transform ${dur}ms ${timingFunction}`;
   }
 
+  const host = asHostElement(children);
   const mergedStyle = {
-    ...children.props.style,
+    ...host.props.style,
     ...animatedStyle
   };
 
-  return cloneElement(children, { style: mergedStyle });
+  return cloneElement(host, { style: mergedStyle });
 }

@@ -11,6 +11,20 @@ interface FineGrainTextProps {
   style?: CSSProperties;
 }
 
+function toText(value: unknown): string {
+  return value == null ? '' : String(value);
+}
+
+function assignRef(ref: unknown, node: HTMLElement | null): void {
+  if (typeof ref === 'function') {
+    ref(node);
+    return;
+  }
+  if (ref && typeof ref === 'object' && 'current' in ref) {
+    (ref as { current: HTMLElement | null }).current = node;
+  }
+}
+
 /** Updates `textContent` in place — the host element is not remounted. */
 export function FineGrainText({
   compute,
@@ -20,22 +34,33 @@ export function FineGrainText({
   ...rest
 }: FineGrainTextProps & Record<string, unknown>) {
   const scope = useReactivityScope();
-  const ref = useRef<HTMLElement | null>(null);
-  const initial = compute();
+  const nodeRef = useRef<HTMLElement | null>(null);
+  const initial = toText(compute());
 
   useEffect(() => {
     return runInScope(scope, () => {
       const effect = new Effect(() => {
-        const next = compute();
-        if (ref.current && ref.current.textContent !== next) {
-          ref.current.textContent = next;
+        const next = toText(compute());
+        if (nodeRef.current && nodeRef.current.textContent !== next) {
+          nodeRef.current.textContent = next;
         }
       });
       return () => effect.dispose();
     });
   }, [compute, scope]);
 
-  return React.createElement(as, { ref, className, style, ...rest }, initial);
+  const {
+    dangerouslySetInnerHTML: _html,
+    ref: userRef,
+    ...safeRest
+  } = rest;
+
+  const setRef = (node: HTMLElement | null) => {
+    nodeRef.current = node;
+    assignRef(userRef, node);
+  };
+
+  return React.createElement(as, { className, style, ...safeRest, ref: setRef }, initial);
 }
 
 /** Bind a signal to a live text node without a React state subscription. */

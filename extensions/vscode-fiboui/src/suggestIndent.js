@@ -1,25 +1,111 @@
+/** Same Enter rules as the FiboUI playground indent helper. */
+
 /** Line that opens a fluent children/items array. */
 const CHILDREN_OPEN = /\.(children|items)\s*\(\s*\[\s*$/;
 
-/** itemStyle / itemHover callback opener ending with `(s) =>` or `(h) =>`. */
+/** `.children` / `.children()` / `.children([])` with no body yet. */
+const CHILDREN_EMPTY = /\.(children|items)(?:\s*\(\s*(?:\[\s*\])?\s*\))?\s*$/;
+
+/** itemStyle / itemHover callback opener, including typed params. */
 const STYLE_CALLBACK =
-  /\.(itemStyle|itemHover)\s*\(\s*\(\s*[a-zA-Z_]\w*\s*\)\s*=>\s*$/;
+  /\.(itemStyle|itemHover)\s*\(\s*\([^)]*\)\s*=>\s*(\{\s*)?$/;
 
 /** Continuation chain line: leading whitespace + `.method`. */
 const CHAIN_LINE = /^\s*\.[A-Za-z_$]/;
 
-/** Unclosed method call on a chain/factory line: `.gap(` or `Foo(`. */
-const OPEN_CALL = /\.\w+\s*\(\s*$/;
+/** Unclosed method or factory call: `.gap(` or `Foo(`. */
+const OPEN_CALL = /(?:\.\w+|[A-Z][A-Za-z0-9]*)\s*\(\s*$/;
 
 /**
  * Empty-arg factory: `Column()`, `return Form()`, `const x = Box()`.
  * @param {string} trimmed
  */
 function isFactoryEmptyLine(trimmed) {
-  const t = trimmed.trim();
-  if (/^(?:return\s+)?[A-Z][A-Za-z0-9]*\s*\(\s*\)\s*$/.test(t)) return true;
-  if (/[=:,(]\s*[A-Z][A-Za-z0-9]*\s*\(\s*\)\s*$/.test(trimmed)) return true;
+  const text = trimmed.trim().replace(/,+\s*$/, '');
+  if (/^(?:export\s+default\s+|return\s+)?[A-Z][A-Za-z0-9]*\s*\(\s*\)\s*$/.test(text)) {
+    return true;
+  }
+  if (/[=:,(]\s*[A-Z][A-Za-z0-9]*\s*\(\s*\)\s*$/.test(text)) return true;
   return false;
+}
+
+/** `Column().gap(12)` — the factory already continued on this line. */
+function isFactoryChainLine(trimmed) {
+  return /^(?:export\s+default\s+|return\s+)?[A-Z][A-Za-z0-9]*\s*\([^)]*\)(?:\s*\.[A-Za-z_$][\w$]*\s*\([^)]*\))*\s*$/.test(
+    trimmed.trim().replace(/,+\s*$/, '')
+  );
+}
+
+/** Last `ident(...)` at the end of `text`, with nested parens (`Row(Box())`). */
+function lastCompleteCall(text) {
+  let i = text.length - 1;
+  while (i >= 0 && /\s/.test(text[i])) i -= 1;
+  if (i < 0 || text[i] !== ')') return null;
+  let depth = 0;
+  let quote = '';
+  for (; i >= 0; i -= 1) {
+    const char = text[i];
+    if (quote) {
+      if (char === quote && text[i - 1] !== '\\') quote = '';
+      continue;
+    }
+    if (char === '"' || char === "'" || char === '`') {
+      quote = char;
+      continue;
+    }
+    if (char === ')') depth += 1;
+    else if (char === '(') {
+      depth -= 1;
+      if (depth !== 0) continue;
+      let j = i - 1;
+      while (j >= 0 && /\s/.test(text[j])) j -= 1;
+      const nameEnd = j + 1;
+      while (j >= 0 && /[A-Za-z0-9_$]/.test(text[j])) j -= 1;
+      const name = text.slice(j + 1, nameEnd);
+      if (!name) return null;
+      const dotted = text[j] === '.';
+      return { name, dotted, start: dotted ? j : j + 1 };
+    }
+  }
+  return null;
+}
+
+/** `.renderItem((item) => Row()` — the next `.children` belongs to Row, not to List. */
+function endsWithFactory(trimmed) {
+  let text = trimmed.trim().replace(/,+\s*$/, '');
+  while (text) {
+    const call = lastCompleteCall(text);
+    if (!call) return false;
+    if (!call.dotted) return /^[A-Z]/.test(call.name);
+    text = text.slice(0, call.start).trimEnd();
+  }
+  return false;
+}
+
+function stripLineComment(line) {
+  let out = '';
+  let quote = '';
+  for (let i = 0; i < line.length; i += 1) {
+    const char = line[i];
+    if (quote) {
+      out += char;
+      if (char === '\\') {
+        out += line[i + 1] ?? '';
+        i += 1;
+        continue;
+      }
+      if (char === quote) quote = '';
+      continue;
+    }
+    if (char === '"' || char === "'" || char === '`') {
+      quote = char;
+      out += char;
+      continue;
+    }
+    if (char === '/' && line[i + 1] === '/') break;
+    out += char;
+  }
+  return out;
 }
 
 /**
@@ -37,45 +123,21 @@ function suggestIndent(prevLine, nextLine, baseIndent, tabSize, indentUnit) {
     indentUnit != null
       ? indentUnit
       : ' '.repeat(Math.max(1, Number(tabSize) || 2));
-  const trimmed = prevLine.replace(/\s+$/, '');
+  const trimmed = stripLineComment(prevLine).replace(/\s+$/, '');
   const nextTrim = (nextLine || '').replace(/^\s+/, '');
   const nextIsChainOrEmpty = !nextTrim || nextTrim.startsWith('.');
 
-  if (CHILDREN_OPEN.test(trimmed)) {
-    return baseIndent + unit;
-  }
-
-  if (STYLE_CALLBACK.test(trimmed)) {
-    return baseIndent + unit;
-  }
-
-  // Broader: itemStyle((s) => {  or itemHover((h) => {
-  if (/\.(itemStyle|itemHover)\b.*=>\s*\{\s*$/.test(trimmed)) {
-    return baseIndent + unit;
-  }
-
-  if (OPEN_CALL.test(trimmed) && !CHILDREN_OPEN.test(trimmed)) {
-    return baseIndent + unit;
-  }
-
-  if (isFactoryEmptyLine(trimmed) && nextIsChainOrEmpty) {
-    return baseIndent + unit;
-  }
-
-  // `Something().` unfinished rare form — treat as chain start
-  if (/[A-Z][A-Za-z0-9]*\s*\(\s*\)\s*\.\s*$/.test(trimmed)) {
-    return baseIndent + unit;
-  }
-
-  if (CHAIN_LINE.test(prevLine) && nextIsChainOrEmpty) {
-    // Stay on the continuation column (editor may have collapsed indent)
-    return baseIndent;
-  }
-
-  // After `).` mid-chain fragment when next is `.method`
-  if (/\)\s*\.\s*$/.test(trimmed) && nextIsChainOrEmpty) {
-    return baseIndent + unit;
-  }
+  if (CHILDREN_OPEN.test(trimmed)) return baseIndent + unit;
+  if (CHILDREN_EMPTY.test(trimmed) && !nextTrim) return baseIndent + unit;
+  if (STYLE_CALLBACK.test(trimmed)) return baseIndent + unit;
+  if (/\.(itemStyle|itemHover)\b.*=>\s*\{\s*$/.test(trimmed)) return baseIndent + unit;
+  if (/=>\s*(\{\s*)?$/.test(trimmed) || /\{\s*$/.test(trimmed)) return baseIndent + unit;
+  if (OPEN_CALL.test(trimmed)) return baseIndent + unit;
+  if (isFactoryEmptyLine(trimmed) && nextIsChainOrEmpty) return baseIndent + unit;
+  if (isFactoryChainLine(trimmed) && nextIsChainOrEmpty) return baseIndent + unit;
+  if (endsWithFactory(trimmed) && nextIsChainOrEmpty) return baseIndent + unit;
+  if (CHAIN_LINE.test(stripLineComment(prevLine)) && nextIsChainOrEmpty) return baseIndent;
+  if (/\)\s*\.\s*$/.test(trimmed) && nextIsChainOrEmpty) return baseIndent + unit;
 
   return null;
 }
@@ -95,6 +157,9 @@ module.exports = {
   suggestIndent,
   isEnterInsertion,
   isFactoryEmptyLine,
+  isFactoryChainLine,
+  endsWithFactory,
+  stripLineComment,
   CHILDREN_OPEN,
   STYLE_CALLBACK,
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { CSSProperties, ReactNode, useEffect, useRef } from 'react';
+import React, { CSSProperties, ReactNode, useEffect, useRef, useState } from 'react';
 import { ensureMotionCss } from './styleManager';
 
 export interface RevealProps {
@@ -27,6 +27,9 @@ export function Reveal({
   children,
 }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
+  // React `className` replaces the attribute; IO classList alone is wiped on
+  // preset/forceMotion updates (and `once` has already unobserved).
+  const [inView, setInView] = useState(false);
 
   useEffect(() => {
     ensureMotionCss();
@@ -34,16 +37,21 @@ export function Reveal({
     if (!node) return;
     if (typeof IntersectionObserver === 'undefined') {
       node.classList.add('fibo-inview');
+      setInView(true);
       return;
     }
     const io = new IntersectionObserver(
-      (entries) => {
+      (entries, observer) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
             entry.target.classList.add('fibo-inview');
-            if (once) io.unobserve(entry.target);
+            setInView(true);
+            // Use the callback observer — `const io` is in TDZ if a polyfill
+            // delivers the first entry from the constructor.
+            if (once) observer.unobserve(entry.target);
           } else if (!once) {
             entry.target.classList.remove('fibo-inview');
+            setInView(false);
           }
         }
       },
@@ -59,6 +67,7 @@ export function Reveal({
     // min-w-0 only — do NOT force w-full (breaks horizontal ScrollView / carousel slides)
     'min-w-0',
     forceMotion ? 'fibo-motion-force' : '',
+    inView ? 'fibo-inview' : '',
   ]
     .filter(Boolean)
     .join(' ');

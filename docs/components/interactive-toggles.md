@@ -54,9 +54,12 @@ Checkbox() → CheckboxBuilder
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.checked(value)` | `boolean` | Checked state |
+| `.checked(value)` | `boolean` | Initial checked state (`defaultChecked`). Uncontrolled unless `.controlled(true)`. |
 | `.onChange(handler)` | `(checked: boolean) => void` | Change event handler |
 | `.label(text)` | `string` | Optional label text |
+| `.name(name)` | `string` | Name used by `Form` / `FormData` (checked value defaults to `'on'`) |
+| `.controlled(on)` | `boolean` | `true` keeps React `checked` and re-renders on each change |
+| `.rules(...rules)` | `FieldRule[]` | Checks collected on submit. See [Form](/components/interactive-form). |
 | `.disabled(disabled)` | `boolean` | Disabled state |
 | `.indeterminate(value)` | `boolean` | Indeterminate state (dash icon) |
 
@@ -90,12 +93,17 @@ Switch() → SwitchBuilder
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.checked(value)` | `boolean` | Toggle state |
+| `.checked(value)` | `boolean` | Initial toggle state (`defaultChecked`). Uncontrolled unless `.controlled(true)`. |
 | `.onChange(handler)` | `(checked: boolean) => void` | Change event handler |
 | `.label(text)` | `string` | Optional label text |
+| `.name(name)` | `string` | Name used by `Form` / `FormData` (checked value defaults to `'on'`) |
+| `.controlled(on)` | `boolean` | `true` keeps React `checked` and re-renders on each change |
+| `.rules(...rules)` | `FieldRule[]` | Checks collected on submit. See [Form](/components/interactive-form). |
 | `.disabled(disabled)` | `boolean` | Disabled state |
 
 ## Usage Examples
+
+Drive the parent with `.controlled(true)` plus `.checked(state).onChange(setState)`. Without that, `.checked()` is only the initial `defaultChecked`.
 
 ### Form with Checkboxes
 

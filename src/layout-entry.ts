@@ -9,5 +9,5 @@ export { Sidebar } from './layout/Sidebar';
 export { DashboardLayout } from './layout/DashboardLayout';
 export { ZStack } from './layout/Stack';
 export { Line } from './layout/Line';
-export { ScrollView } from './layout/ScrollView';
+export { ScrollView, ScrollController } from './layout/ScrollView';
 export { VirtualColumn } from './layout/VirtualColumn';

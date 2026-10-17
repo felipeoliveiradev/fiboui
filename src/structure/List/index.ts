@@ -10,8 +10,8 @@ import React, {
   useEffect,
 } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
-import { buildChild } from '../../core/children';
-import { BaseProps, FiboChildren } from '../../core/types';
+import { buildChild, isUsableReactKey } from '../../core/children';
+import { BaseProps, FiboChild, FiboChildren } from '../../core/types';
 import type { BindableSignal } from '../../core/state';
 import { Box } from '../Box';
 import {
@@ -21,8 +21,14 @@ import {
 import {
   ListItemStyleBuilder,
   createListItemStyleBuilder,
+  normalizeItemStyleObject,
 } from './ListItemStyleBuilder';
-import type { CssFluentProxy } from '../../core/cssFluent';
+import { camelToKebab, type CssFluentProxy } from '../../core/cssFluent';
+import {
+  collectInterpSignals,
+  hasInterpMarks,
+  resolveInterpString,
+} from '../../core/interpolate';
 
 type ListVariant = 'default' | 'card' | 'floating';
 
@@ -37,12 +43,39 @@ function isListSource<T>(value: unknown): value is BindableSignal<T[]> {
   );
 }
 
+function isStableListId(value: unknown): value is string | number {
+  if (typeof value === 'number' && Number.isFinite(value)) return true;
+  return typeof value === 'string' && value !== '';
+}
+
 function listItemKey(item: unknown, index: number): string {
-  if (item != null && typeof item === 'object' && '_id' in (item as object)) {
-    const id = (item as { _id?: unknown })._id;
-    if (id != null && id !== '') return String(id);
+  if (item != null && typeof item === 'object') {
+    const rec = item as {
+      _id?: unknown;
+      id?: unknown;
+      key?: unknown;
+      _props?: { key?: unknown };
+    };
+    if (isStableListId(rec._id)) return String(rec._id);
+    if (isStableListId(rec.id)) return String(rec.id);
+    if (isUsableReactKey(rec.key) && rec.key !== '') return String(rec.key);
+    if (isStableListId(rec._props?.key)) return String(rec._props.key);
+    if (
+      React.isValidElement(item) &&
+      isUsableReactKey(item.key) &&
+      item.key !== ''
+    ) {
+      return String(item.key);
+    }
   }
   return `item-${index}`;
+}
+
+function materializeListEntries<T>(raw: unknown): T[] {
+  const arr = (Array.isArray(raw) ? raw : [raw]).filter(
+    (x) => x !== undefined && x !== null && x !== false
+  );
+  return arr as T[];
 }
 
 function resolveListItem<T>(
@@ -54,6 +87,38 @@ function resolveListItem<T>(
     return buildChild(renderItem(item, index));
   }
   return buildChild(item);
+}
+
+function bindInterp(host: FiboBuilder, text: string | undefined): void {
+  if (typeof text !== 'string' || !hasInterpMarks(text)) return;
+  for (const sig of collectInterpSignals(text)) {
+    host.bindSignal(sig);
+  }
+}
+
+function bindInterpTree(host: FiboBuilder, node: unknown): void {
+  if (typeof node === 'function') {
+    try {
+      bindInterpTree(host, (node as () => unknown)());
+    } catch {
+      /* factory may need mount */
+    }
+    return;
+  }
+  if (typeof node === 'string') {
+    bindInterp(host, node);
+    return;
+  }
+}
+
+/** `.empty(node | string | builder | factory)` — factory re-runs on each rebuild. */
+function resolveEmptyContent(empty: unknown): ReactNode {
+  if (empty == null) return null;
+  const raw = typeof empty === 'function' ? (empty as () => unknown)() : empty;
+  if (typeof raw === 'string' && hasInterpMarks(raw)) {
+    return resolveInterpString(raw);
+  }
+  return buildChild(raw);
 }
 
 const VIRTUALIZATION_THRESHOLD = 100;
@@ -68,6 +133,42 @@ function withImportant(css: string): string {
     .filter(Boolean)
     .map((decl) => (/\s!important\s*$/i.test(decl) ? decl : `${decl} !important`))
     .join('; ');
+}
+
+/** Inheritable typography only — paint stays on the row so nested chrome is not wiped. */
+function isInheritableTypography(prop: string): boolean {
+  const p = camelToKebab(prop.trim()).toLowerCase();
+  return (
+    p === 'color' ||
+    p === 'letter-spacing' ||
+    p === 'line-height' ||
+    p === 'font' ||
+    p.startsWith('font-') ||
+    p.startsWith('text-')
+  );
+}
+
+function splitPseudoCss(css: string): { row: string; inherit: string } {
+  const decls = withImportant(css)
+    .split(';')
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const inherit = decls.filter((decl) => {
+    const colon = decl.indexOf(':');
+    if (colon < 0) return false;
+    return isInheritableTypography(decl.slice(0, colon));
+  });
+  return { row: decls.join('; '), inherit: inherit.join('; ') };
+}
+
+function pseudoBlock(scope: string, selector: string, css: string): string {
+  const { row, inherit } = splitPseudoCss(css);
+  if (!row) return '';
+  let out = `${scope} ${selector} { ${row} }\n`;
+  if (inherit) {
+    out += `${scope} ${selector} * { ${inherit} }\n`;
+  }
+  return out;
 }
 
 const ListInner = React.memo((props: any) => {
@@ -88,6 +189,7 @@ const ListInner = React.memo((props: any) => {
     customItemActive,
     customItemFocus,
     itemStyle: itemStyleProp,
+    empty,
   } = props;
 
   const reactId = React.useId();
@@ -99,8 +201,8 @@ const ListInner = React.memo((props: any) => {
   const [scrollOffset, setScrollOffset] = useState(0);
   const [layoutVersion, setLayoutVersion] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const itemRefs = useRef<Map<number, HTMLDivElement>>(new Map());
-  const heightCache = useRef<Map<number, number>>(new Map());
+  const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const heightCache = useRef<Map<string, number>>(new Map());
   const observerRef = useRef<HTMLDivElement>(null);
   const isHorizontal = direction === 'horizontal';
 
@@ -108,7 +210,8 @@ const ListInner = React.memo((props: any) => {
   const shouldVirtualize = itemCount > VIRTUALIZATION_THRESHOLD;
 
   const getItemHeight = (index: number): number => {
-    return heightCache.current.get(index) ?? DEFAULT_ITEM_HEIGHT;
+    const key = listItemKey(items[index], index);
+    return heightCache.current.get(key) ?? DEFAULT_ITEM_HEIGHT;
   };
 
   const getItemOffset = (index: number): number => {
@@ -169,21 +272,38 @@ const ListInner = React.memo((props: any) => {
   const visibleItems = items.slice(startIndex, endIndex);
 
   useLayoutEffect(() => {
+    if (!shouldVirtualize && scrollOffset !== 0) {
+      setScrollOffset(0);
+    }
+  }, [shouldVirtualize, scrollOffset]);
+
+  useLayoutEffect(() => {
     if (!shouldVirtualize) return;
 
+    const live = new Set(
+      items.map((item: unknown, i: number) => listItemKey(item, i))
+    );
+    for (const key of Array.from(heightCache.current.keys())) {
+      if (!live.has(key)) heightCache.current.delete(key);
+    }
+    for (const key of Array.from(itemRefs.current.keys())) {
+      if (!live.has(key)) itemRefs.current.delete(key);
+    }
+
     let changed = false;
-    visibleItems.forEach((_: unknown, i: number) => {
+    visibleItems.forEach((item: unknown, i: number) => {
       const actualIndex = startIndex + i;
-      const element = itemRefs.current.get(actualIndex);
+      const key = listItemKey(item, actualIndex);
+      const element = itemRefs.current.get(key);
 
       if (element) {
         const rect = element.getBoundingClientRect();
         const measured = isHorizontal ? rect.width : rect.height;
 
         if (measured > 0) {
-          const cached = heightCache.current.get(actualIndex);
+          const cached = heightCache.current.get(key);
           if (cached !== measured) {
-            heightCache.current.set(actualIndex, measured);
+            heightCache.current.set(key, measured);
             changed = true;
           }
         }
@@ -193,10 +313,11 @@ const ListInner = React.memo((props: any) => {
     if (changed) {
       setLayoutVersion((version) => version + 1);
     }
-  }, [visibleItems, startIndex, shouldVirtualize, isHorizontal, layoutVersion]);
+  }, [items, visibleItems, startIndex, shouldVirtualize, isHorizontal, layoutVersion]);
 
   useLayoutEffect(() => {
     if (!onEndReached || loading) return;
+    if (typeof IntersectionObserver === 'undefined') return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -236,17 +357,17 @@ const ListInner = React.memo((props: any) => {
     const scope = `.${listScopeClass}`;
 
     if (customItemHover) {
-      css += `${scope} .fibo-list-item-custom-hover:hover { ${withImportant(customItemHover)} }\n`;
+      css += pseudoBlock(scope, '.fibo-list-item-custom-hover:hover', customItemHover);
     }
 
     if (customItemActive) {
-      css += `${scope} .fibo-list-item-custom-active:active { ${withImportant(customItemActive)} }\n`;
+      css += pseudoBlock(scope, '.fibo-list-item-custom-active:active', customItemActive);
     }
 
     if (customItemFocus) {
       // Items are divs without tabIndex — :focus never matches; :focus-within
       // covers focus on nested focusable content (links, buttons, inputs).
-      css += `${scope} .fibo-list-item-custom-focus:focus-within { ${withImportant(customItemFocus)} }\n`;
+      css += pseudoBlock(scope, '.fibo-list-item-custom-focus:focus-within', customItemFocus);
     }
 
     styleElement.textContent = css;
@@ -297,7 +418,7 @@ const ListInner = React.memo((props: any) => {
     floating: { ...baseItemContainerStyles.floating, ...itemStyleOverlay },
   };
 
-  const customItemClasses: string[] = [];
+  const customItemClasses: string[] = ['fibo-list-item'];
   if (customItemHover) customItemClasses.push('fibo-list-item-custom-hover');
   if (customItemActive) customItemClasses.push('fibo-list-item-custom-active');
   if (customItemFocus) customItemClasses.push('fibo-list-item-custom-focus');
@@ -311,6 +432,24 @@ const ListInner = React.memo((props: any) => {
     card: ['hover:-translate-y-0.5', 'hover:shadow-md', ...customItemClasses],
     floating: ['hover:bg-white', 'hover:shadow-sm', ...customItemClasses]
   };
+
+  if (itemCount === 0 && empty != null) {
+    return Box()
+      .className(className)
+      .classNames(['fibo-list', listScopeClass, 'flex', direction === 'horizontal' ? 'flex-row' : 'flex-col', 'w-full'])
+      .style({
+        ...variantStyles[variant as ListVariant],
+        ...style
+      })
+      .children(
+        React.createElement(
+          'div',
+          { className: 'fibo-list-empty' },
+          resolveEmptyContent(empty)
+        )
+      )
+      .build();
+  }
 
   if (shouldVirtualize) {
 
@@ -357,6 +496,7 @@ const ListInner = React.memo((props: any) => {
         visibleItems.map((item: any, i: number) => {
           const actualIndex = startIndex + i;
           const renderedItem = resolveListItem(item, actualIndex, renderItem);
+          const rowKey = listItemKey(item, actualIndex);
 
           return React.cloneElement(
             Box()
@@ -365,12 +505,12 @@ const ListInner = React.memo((props: any) => {
               .children(renderedItem)
               .build() as React.ReactElement,
             {
-              key: listItemKey(item, actualIndex),
+              key: rowKey,
               ref: (el: HTMLDivElement | null) => {
                 if (el) {
-                  itemRefs.current.set(actualIndex, el);
+                  itemRefs.current.set(rowKey, el);
                 } else {
-                  itemRefs.current.delete(actualIndex);
+                  itemRefs.current.delete(rowKey);
                 }
               }
             }
@@ -379,7 +519,13 @@ const ListInner = React.memo((props: any) => {
       ),
       onEndReached && React.createElement('div', {
         ref: observerRef,
-        className: 'py-4 flex justify-center w-full'
+        className: 'py-4 flex justify-center w-full',
+        style: {
+          position: 'absolute',
+          top: isHorizontal ? 0 : totalHeight,
+          left: isHorizontal ? totalHeight : 0,
+          width: isHorizontal ? undefined : '100%',
+        },
       }, loading ? (
         React.createElement('div', { className: 'animate-spin rounded-full h-5 w-5 border-2 border-gray-300 border-b-blue-600' })
       ) : (
@@ -441,6 +587,10 @@ class ListBuilder<T = any> extends FiboBuilder {
   private _customItemFocus?: string;
   /** Universal row chrome — applies to every child wrapper. */
   private _itemStyle?: CSSProperties;
+  /** Kept and re-invoked on each rebuild (`List().items(fn)` / bindSignal). */
+  private _itemsFn?: () => unknown;
+  /** Placeholder when `items.length === 0` (plain array or empty `listSignal`). */
+  private _empty?: FiboChild | (() => FiboChild);
 
   /**
    * Entries to show.
@@ -448,8 +598,9 @@ class ListBuilder<T = any> extends FiboBuilder {
    * - **UI mode** (same as `.children`): `List().items([ListTile()…, Text(…)])`
    * - **Data mode**: `List().items(rows).renderItem((row) => ListTile().title(row.name))`
    * - **Live list**: `List().items(listSignal).renderItem((row) => ListTile().title(row.title))`
+   * - **Live fn**: `List().items(() => todos.value).bindSignal(todos)` — fn re-runs on rebuild
    */
-  items(items: T[] | FiboChildren | BindableSignal<T[]>): this {
+  items(items: T[] | FiboChildren | BindableSignal<T[]> | (() => T[])): this {
     if (isListSource<T>(items)) {
       this._source = items;
       this.bindSignal(items);
@@ -468,17 +619,16 @@ class ListBuilder<T = any> extends FiboBuilder {
   }
 
   /** Shared path so `.children` and `.items` stay interchangeable for UI. */
-  private setListEntries(entries: T[] | FiboChildren): this {
-    const raw =
-      typeof entries === 'function'
-        ? (entries as () => unknown)()
-        : entries;
-    const arr = (Array.isArray(raw) ? raw : [raw]).filter(
-      (x) => x !== undefined && x !== null && x !== false
-    );
-    this._items = arr as T[];
-    // Keep FiboBuilder._children aligned (devtools / processChildren).
-    super.children(arr as FiboChildren);
+  private setListEntries(entries: T[] | FiboChildren | (() => T[])): this {
+    if (typeof entries === 'function') {
+      this._itemsFn = entries as () => unknown;
+      this._items = [];
+      super.children(entries as FiboChildren);
+      return this;
+    }
+    this._itemsFn = undefined;
+    this._items = materializeListEntries<T>(entries);
+    super.children(this._items as FiboChildren);
     return this;
   }
 
@@ -488,6 +638,22 @@ class ListBuilder<T = any> extends FiboBuilder {
    */
   renderItem(fn: (item: T, index: number) => ReactNode): this {
     this._renderItem = fn;
+    return this;
+  }
+
+  /**
+   * Shown when there are no rows — empty array or empty `listSignal`.
+   * Accepts a string, a node, a builder, or a factory that re-runs on rebuild.
+   *
+   * ```ts
+   * List().items(todos).empty('No todos').renderItem((t) => Text(t.title))
+   * List().items([]).empty(Text('Nothing'))
+   * List().items(todos).empty(() => Text(`Count ${todos.length}`))
+   * ```
+   */
+  empty(content: FiboChild | (() => FiboChild)): this {
+    this._empty = content;
+    bindInterpTree(this, content);
     return this;
   }
 
@@ -557,7 +723,7 @@ class ListBuilder<T = any> extends FiboBuilder {
       style(builder);
       this._itemStyle = { ...this._itemStyle, ...builder.toStyle() };
     } else {
-      this._itemStyle = { ...this._itemStyle, ...style };
+      this._itemStyle = { ...this._itemStyle, ...normalizeItemStyleObject(style) };
     }
     return this;
   }
@@ -618,7 +784,11 @@ class ListBuilder<T = any> extends FiboBuilder {
   }
 
   build(): ReactElement {
-    const items = this._source ? this._source.value : this._items;
+    const items = this._source
+      ? this._source.value
+      : this._itemsFn
+        ? materializeListEntries<T>(this._itemsFn())
+        : this._items;
     const props = {
       items,
       renderItem: this._renderItem,
@@ -634,6 +804,7 @@ class ListBuilder<T = any> extends FiboBuilder {
       customItemActive: this._customItemActive,
       customItemFocus: this._customItemFocus,
       itemStyle: this._itemStyle,
+      empty: this._empty,
       className: this.getClassName(),
       style: this.getStyle()
     };
@@ -651,4 +822,5 @@ export interface ListProps<T = any> extends BaseProps {
   separator?: boolean;
   containerHeight?: number;
   itemStyle?: CSSProperties;
+  empty?: FiboChild | (() => FiboChild);
 }

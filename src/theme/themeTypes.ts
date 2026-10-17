@@ -4,11 +4,13 @@ export interface ColorScheme {
 
   primary?: string;
   onPrimary?: string;
+  primaryVariant?: string;
   primaryContainer?: string;
   onPrimaryContainer?: string;
 
   secondary?: string;
   onSecondary?: string;
+  secondaryVariant?: string;
   secondaryContainer?: string;
   onSecondaryContainer?: string;
 
@@ -19,6 +21,12 @@ export interface ColorScheme {
 
   error?: string;
   onError?: string;
+  errorContainer?: string;
+  onErrorContainer?: string;
+
+  success?: string;
+  warning?: string;
+  info?: string;
 
   background?: string;
   onBackground?: string;
@@ -28,6 +36,9 @@ export interface ColorScheme {
   onSurfaceVariant?: string;
 
   outline?: string;
+  outlineVariant?: string;
+  /** Maps to `--fibo-surface-container-low` (M3). */
+  surfaceContainerLow?: string;
 }
 
 export interface Typography {

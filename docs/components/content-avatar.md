@@ -112,6 +112,10 @@ Creates a new `Avatar` builder instance.
 | Method | Type | Description |
 | :--- | :--- | :--- |
 | `.image(url)` | `string` | Sets the avatar image URL |
+| `.src(url)` | `string` | Alias of `.image()` |
+| `.alt(text)` | `string` | Accessible name (`aria-label`) |
+| `.initials(text)` | `string` | Fallback initials (first two characters) when there is no image |
+| `.icon(source)` | `'user' \| ReactNode` | Glyph when there is no image or initials |
 
 ### Appearance
 

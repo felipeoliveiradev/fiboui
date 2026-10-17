@@ -186,6 +186,35 @@
   transform: translateY(-2px);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .shop-product-card,
+  .shop-product-art-panel,
+  .shop-cat-tile,
+  .shop-skin .fibo-card {
+    transition: none !important;
+  }
+  .shop-product-card:hover .shop-product-art-panel,
+  .shop-cat-tile:hover,
+  .shop-product-art-panel,
+  .shop-cat-tile {
+    transform: none !important;
+  }
+}
+
+/* Menu overlay: lock document scroll (iOS rubber-band + wheel chaining). */
+html:has(#site-menu),
+body:has(#site-menu) {
+  overflow: hidden;
+  height: 100dvh;
+  overscroll-behavior: none;
+}
+
+.site-menu-open {
+  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 .shop-skin .fibo-alert,
 .shop-skin [class*='fibo-alert'] {
   border-radius: 0 !important;
@@ -218,23 +247,30 @@
   height: fit-content;
 }
 .fibo-reset input,
-.fibo-reset textarea,
 .fibo-reset select,
 .fibo-theme-material .fibo-reset input,
-.fibo-theme-material .fibo-reset textarea,
 .fibo-theme-material .fibo-reset select,
 .fibo-theme-web .fibo-reset input,
-.fibo-theme-web .fibo-reset textarea,
 .fibo-theme-web .fibo-reset select,
 .fibo-theme-cupertino .fibo-reset input,
-.fibo-theme-cupertino .fibo-reset textarea,
 .fibo-theme-cupertino .fibo-reset select,
 .fibo-theme-noir .fibo-reset input,
-.fibo-theme-noir .fibo-reset textarea,
 .fibo-theme-noir .fibo-reset select {
   display: block;
   width: 100%;
   height: 1lh;
+  line-height: inherit;
+  padding: 0;
+}
+/* Textarea must honour `rows` — `height: 1lh` would collapse it. */
+.fibo-reset textarea,
+.fibo-theme-material .fibo-reset textarea,
+.fibo-theme-web .fibo-reset textarea,
+.fibo-theme-cupertino .fibo-reset textarea,
+.fibo-theme-noir .fibo-reset textarea {
+  display: block;
+  width: 100%;
+  height: auto;
   line-height: inherit;
   padding: 0;
 }

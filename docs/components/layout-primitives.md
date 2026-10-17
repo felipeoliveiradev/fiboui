@@ -197,6 +197,7 @@ Spacer() → SpacerBuilder
 | :--- | :--- | :--- |
 | `.height(value)` | `string \| number` | Vertical spacing |
 | `.width(value)` | `string \| number` | Horizontal spacing |
+| `.flex(grow?)` | `number \| string` | Grow factor inside a Row or Column (does not turn the spacer into a flex container) |
 
 ## Usage Examples
 

@@ -1,9 +1,8 @@
-import { Button, Column, Row, Text, Icon, createFiboComponent } from 'fiboui';
+import { Button, Column, Row, Text, Icon, useNavigate } from 'fiboui';
 import { Home, BarChart2, DollarSign, User } from 'lucide-react';
 
-interface BottomNavBarProps { }
-
-export const BottomNavBar = createFiboComponent<BottomNavBarProps>(() => {
+export function BottomNavBar() {
+  const navigate = useNavigate();
   const uberBlack = '#1C1C1E';
   const textTertiary = '#9CA3AF';
   const surfaceWhite = '#FFFFFF';
@@ -21,24 +20,21 @@ export const BottomNavBar = createFiboComponent<BottomNavBarProps>(() => {
     .children([
       Button()
         .clean()
+        .onPress(() => navigate('/todo'))
         .children(
           Column()
             .alignItems('center')
             .gap(4)
             .paddingVertical(4)
             .children([
-              Icon().source(Home).size(24).color(uberBlack).build(),
+              Icon().source(Home).size(24).color(uberBlack),
               Text('Home')
                 .fontSize(11)
                 .fontWeight('700')
                 .color(uberBlack)
-                .build()
             ])
-            .build()
-        )
-        .build(),
+        ),
 
-      // Activity
       Button()
         .clean()
         .children(
@@ -47,18 +43,14 @@ export const BottomNavBar = createFiboComponent<BottomNavBarProps>(() => {
             .gap(4)
             .paddingVertical(4)
             .children([
-              Icon().source(BarChart2).size(24).color(textTertiary).build(),
+              Icon().source(BarChart2).size(24).color(textTertiary),
               Text('Activity')
                 .fontSize(11)
                 .fontWeight('500')
                 .color(textTertiary)
-                .build()
             ])
-            .build()
-        )
-        .build(),
+        ),
 
-      // Earnings
       Button()
         .clean()
         .children(
@@ -67,18 +59,14 @@ export const BottomNavBar = createFiboComponent<BottomNavBarProps>(() => {
             .gap(4)
             .paddingVertical(4)
             .children([
-              Icon().source(DollarSign).size(24).color(textTertiary).build(),
+              Icon().source(DollarSign).size(24).color(textTertiary),
               Text('Earnings')
                 .fontSize(11)
                 .fontWeight('500')
                 .color(textTertiary)
-                .build()
             ])
-            .build()
-        )
-        .build(),
+        ),
 
-      // Account
       Button()
         .clean()
         .children(
@@ -87,16 +75,12 @@ export const BottomNavBar = createFiboComponent<BottomNavBarProps>(() => {
             .gap(4)
             .paddingVertical(4)
             .children([
-              Icon().source(User).size(24).color(textTertiary).build(),
+              Icon().source(User).size(24).color(textTertiary),
               Text('Account')
                 .fontSize(11)
                 .fontWeight('500')
                 .color(textTertiary)
-                .build()
             ])
-            .build()
         )
-        .build()
-    ])
-    .build();
-});
+    ]);
+}

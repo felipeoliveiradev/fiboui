@@ -1,9 +1,10 @@
+import type { ReactElement } from 'react'
 import { Column, Row, Box, Text, Button } from 'fiboui'
 import { chalk, lime } from '../theme'
 import { navigate } from '../route'
 import { point } from './ui'
 
-export function logoMark(unit = 9, light = chalk) {
+export function logoMark(unit = 9, light = chalk): ReactElement {
   const side = unit * 2 + 1
   return Row()
     .hug()
@@ -24,7 +25,7 @@ export function logoMark(unit = 9, light = chalk) {
     ])
 }
 
-export function logoLockup() {
+export function logoLockup(): ReactElement {
   return point(
     Button('')
       .variant('raw')
@@ -51,7 +52,7 @@ export function logoLockup() {
   ])
 }
 
-export function focusMark(size = 18) {
+export function focusMark(size = 18): ReactElement {
   const arm = Math.max(4, Math.floor(size / 4))
   return Box()
     .position('relative')

@@ -1,4 +1,4 @@
-import { Component, ReactNode, ErrorInfo } from 'react';
+import { Component, ReactNode, ErrorInfo, cloneElement, isValidElement, type ReactElement } from 'react';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -12,6 +12,16 @@ interface ErrorBoundaryState {
   errorInfo: ErrorInfo | null;
 }
 
+function toError(error: unknown): Error {
+  if (error instanceof Error) return error;
+  if (typeof error === 'string' && error.trim()) return new Error(error);
+  if (error != null && typeof error === 'object' && 'message' in error) {
+    const message = (error as { message: unknown }).message;
+    if (typeof message === 'string' && message.trim()) return new Error(message);
+  }
+  return new Error('An unexpected error occurred');
+}
+
 export class RouteErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
@@ -22,18 +32,19 @@ export class RouteErrorBoundary extends Component<ErrorBoundaryProps, ErrorBound
     };
   }
 
-  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
+  static getDerivedStateFromError(error: unknown): Partial<ErrorBoundaryState> {
     return {
       hasError: true,
-      error,
+      error: toError(error),
     };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+  componentDidCatch(error: unknown, errorInfo: ErrorInfo): void {
+    const normalized = toError(error);
 
-    console.error('RouteErrorBoundary caught error:', error, errorInfo);
+    console.error('RouteErrorBoundary caught error:', normalized, errorInfo);
 
-    this.props.onError?.(error, errorInfo);
+    this.props.onError?.(normalized, errorInfo);
 
     this.setState({
       errorInfo,
@@ -41,11 +52,20 @@ export class RouteErrorBoundary extends Component<ErrorBoundaryProps, ErrorBound
   }
 
   render(): ReactNode {
-    if (this.state.hasError && this.state.error) {
+    if (this.state.hasError) {
       const { fallback } = this.props;
+      const error = this.state.error ?? toError(null);
+      const errorInfo = this.state.errorInfo ?? { componentStack: '' };
 
       if (typeof fallback === 'function') {
-        return fallback(this.state.error, this.state.errorInfo!);
+        return fallback(error, errorInfo);
+      }
+
+      if (isValidElement(fallback)) {
+        return cloneElement(fallback as ReactElement<{ error?: Error; onReset?: () => void }>, {
+          error,
+          onReset: this.reset,
+        });
       }
 
       if (fallback) {
@@ -53,9 +73,12 @@ export class RouteErrorBoundary extends Component<ErrorBoundaryProps, ErrorBound
       }
 
       return (
-        <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <div role="alert" aria-live="assertive" style={{ padding: '2rem', textAlign: 'center' }}>
           <h1>Something went wrong</h1>
-          <p>{this.state.error.message}</p>
+          <p>{error.message}</p>
+          <button type="button" onClick={this.reset}>
+            Try Again
+          </button>
         </div>
       );
     }

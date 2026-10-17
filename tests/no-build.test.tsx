@@ -1,8 +1,8 @@
 import { createElement, isValidElement, StrictMode, type ReactElement, type ReactNode } from 'react';
-import { act, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
-import { Button, Column, Row, Text, Box, mount, toElement } from '../src';
+import { afterEach, describe, expect, it } from 'vitest';
+import { Button, Column, Row, Text, Box, Form, GridItem, Outlet, Router, listSignal, mount, toElement } from '../src';
 
 function Slot({ child }: { child: ReactNode }) {
   return <div data-testid="slot">{child}</div>;
@@ -92,3 +92,58 @@ describe('builders are React elements (no .build())', () => {
     host.remove();
   });
 });
+
+describe('public factories without .build() (export surface)', () => {
+  it('Form and GridItem are valid React elements', () => {
+    expect(isValidElement(Form().children(Text('form-nb')))).toBe(true);
+    expect(isValidElement(GridItem().children(Text('gi-nb')))).toBe(true);
+  });
+
+  it('renders Form and GridItem as JSX children without .build()', () => {
+    render(
+      <div>
+        {Form().children(Text('form-live'))}
+        {GridItem().children(Text('gi-live'))}
+      </div>
+    );
+    expect(screen.getByText('form-live')).toBeInTheDocument();
+    expect(screen.getByText('gi-live')).toBeInTheDocument();
+  });
+
+  afterEach(() => {
+    cleanup();
+    window.history.pushState({}, '', '/');
+  });
+
+  it('Outlet is a component (not a fluent factory) and paints nested routes', () => {
+    expect(Outlet).toBeTypeOf('function');
+    window.history.pushState({}, '', '/app/dash');
+    function Layout() {
+      return createElement('div', null, 'shell-nb-', createElement(Outlet));
+    }
+    function Dash() {
+      return createElement('span', null, 'dash-nb');
+    }
+    render(
+      createElement(Router, {
+        initialPath: '/app/dash',
+        routes: [
+          {
+            path: '/app',
+            component: Layout,
+            children: [{ path: '/app/dash', component: Dash }],
+          },
+        ],
+      })
+    );
+    expect(screen.getByText(/shell-nb-/)).toBeInTheDocument();
+    expect(screen.getByText('dash-nb')).toBeInTheDocument();
+  });
+
+  it('listSignal is a factory, not a React element', () => {
+    const items = listSignal<{ title: string }>([{ title: 'a' }]);
+    expect(items.length).toBe(1);
+    expect(isValidElement(items as never)).toBe(false);
+  });
+});
+

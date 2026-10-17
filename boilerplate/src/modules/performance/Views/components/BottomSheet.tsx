@@ -1,12 +1,12 @@
-import { Box, Button, Column, Row, Text, Icon, SignalType, DragGesture, createFiboComponent, ScrollView } from 'fiboui';
+import { Box, Button, Column, Row, Text, Icon, ScrollView, type Signal } from 'fiboui';
 import { ShieldCheck, Zap, Navigation, ChevronUp } from 'lucide-react';
 
 interface BottomSheetProps {
-  sheetY: SignalType<number>;
-  earnings: SignalType<number>;
+  sheetY: Signal<number>;
+  earnings: Signal<number>;
 }
 
-export const BottomSheet = createFiboComponent<BottomSheetProps>(({ sheetY, earnings }: BottomSheetProps) => {
+export function BottomSheet({ sheetY, earnings }: BottomSheetProps) {
   const uberBlack = '#1C1C1E';
   const uberBlue = '#276EF1';
   const uberGreen = '#05A357';
@@ -19,27 +19,14 @@ export const BottomSheet = createFiboComponent<BottomSheetProps>(({ sheetY, earn
     .bg('white')
     .className('absolute bottom-0 left-0 w-full z-10')
     .width('100%')
-    .gesture(
-      DragGesture()
-        .onUpdate((e) => {
-          const newY = sheetY.value + e.delta.y;
-          sheetY.value = Math.max(-200, Math.min(0, newY));
-        })
-        .onEnd((e) => {
-          const shouldExpand = e.velocity.y < -500 || sheetY.value < -100;
-          const target = shouldExpand ? -250 : 0;
-          sheetY.spring(target, { damping: 0.8, stiffness: 300 });
-        })
-    )
     .children([
       Box()
         .width('100%')
         .height(24)
         .center()
         .children(
-          Box().width(36).height(5).rounded('full').bg('#D1D5DB').build()
-        )
-        .build(),
+          Box().width(36).height(5).rounded('full').bg('#D1D5DB')
+        ),
       Box()
         .observer('sheet-height')
         .width('100%')
@@ -69,8 +56,7 @@ export const BottomSheet = createFiboComponent<BottomSheetProps>(({ sheetY, earn
                           Text('Daily Overview')
                             .fontSize(14)
                             .fontWeight('600')
-                            .color(textTertiary)
-                            .build(),
+                            .color(textTertiary),
                           Row()
                             .alignItems('center')
                             .gap(6)
@@ -78,18 +64,14 @@ export const BottomSheet = createFiboComponent<BottomSheetProps>(({ sheetY, earn
                               Text('⭐ 4.98')
                                 .fontSize(16)
                                 .fontWeight('700')
-                                .color(uberBlack)
-                                .build(),
+                                .color(uberBlack),
                               Text('Platinum')
                                 .fontSize(12)
                                 .fontWeight('600')
                                 .color(uberGreen)
                                 .className('bg-green-50 px-2 py-0.5 rounded')
-                                .build()
                             ])
-                            .build()
-                        ])
-                        .build(),
+                        ]),
 
                       Button()
                         .clean()
@@ -104,15 +86,11 @@ export const BottomSheet = createFiboComponent<BottomSheetProps>(({ sheetY, earn
                                 .fontSize(14)
                                 .fontWeight('600')
                                 .color(uberBlack)
-                                .build()
                             )
-                            .build()
                         )
-                        .build()
-                    ])
-                    .build(),
+                    ]),
 
-                  Box().height(1).bg(borderLight).build(),
+                  Box().height(1).bg(borderLight),
                   Row()
                     .gap(12)
                     .alignItems('center')
@@ -123,24 +101,20 @@ export const BottomSheet = createFiboComponent<BottomSheetProps>(({ sheetY, earn
                         .rounded('full')
                         .bg(uberBlue + '10')
                         .center()
-                        .children(Icon().source(ShieldCheck).size(18).color(uberBlue).build())
-                        .build(),
+                        .children(Icon().source(ShieldCheck).size(18).color(uberBlue)),
                       Text('You are in a safe area')
                         .fontSize(14)
                         .fontWeight('500')
-                        .color(textSecondary)
-                        .build(),
-                      Box().className('flex-1').build(),
-                      Icon().source(Zap).size(16).color('#F59E0B').build(),
+                        .color(textSecondary),
+                      Box().className('flex-1'),
+                      Icon().source(Zap).size(16).color('#F59E0B'),
                       Text('High Demand')
                         .fontSize(12)
                         .fontWeight('700')
                         .color('#F59E0B')
-                        .build()
-                    ])
-                    .build(),
+                    ]),
 
-                  Box().height(1).bg(borderLight).build(),
+                  Box().height(1).bg(borderLight),
                   Row()
                     .observer('last-trip')
                     .alignItems('center')
@@ -151,25 +125,20 @@ export const BottomSheet = createFiboComponent<BottomSheetProps>(({ sheetY, earn
                         .height(44)
                         .bg(uberGreen + '10')
                         .center()
-                        .children(Icon().source(Navigation).size(22).color(uberGreen).build())
-                        .build(),
+                        .children(Icon().source(Navigation).size(22).color(uberGreen)),
                       Column()
                         .flex(1)
                         .children([
                           Text(`Last Trip: $${(earnings.value * 0.3).toFixed(2)}`)
                             .fontSize(16)
                             .fontWeight('700')
-                            .color(uberBlack)
-                            .build(),
+                            .color(uberBlack),
                           Text('28 min • Downtown to Airport')
                             .fontSize(13)
                             .color(textSecondary)
-                            .build()
-                        ])
-                        .build(),
-                      Icon().source(ChevronUp).size(20).color(textTertiary).build()
-                    ])
-                    .build(),
+                        ]),
+                      Icon().source(ChevronUp).size(20).color(textTertiary)
+                    ]),
                   Box()
                     .width('100%')
                     .style({
@@ -180,7 +149,7 @@ export const BottomSheet = createFiboComponent<BottomSheetProps>(({ sheetY, earn
                       Column()
                         .gap(16)
                         .children([
-                          Box().height(1).bg(borderLight).build(),
+                          Box().height(1).bg(borderLight),
 
                           Column()
                             .gap(8)
@@ -188,8 +157,7 @@ export const BottomSheet = createFiboComponent<BottomSheetProps>(({ sheetY, earn
                               Text('Recent Trips')
                                 .fontSize(14)
                                 .fontWeight('600')
-                                .color(textTertiary)
-                                .build(),
+                                .color(textTertiary),
                               Row()
                                 .justifyContent('between')
                                 .alignItems('center')
@@ -203,23 +171,17 @@ export const BottomSheet = createFiboComponent<BottomSheetProps>(({ sheetY, earn
                                           Text('Downtown → Airport')
                                             .fontSize(14)
                                             .fontWeight('500')
-                                            .color(uberBlack)
-                                            .build(),
+                                            .color(uberBlack),
                                           Text('28 min • 15.2 mi')
                                             .fontSize(12)
                                             .color(textSecondary)
-                                            .build()
                                         ])
-                                        .build()
-                                    ])
-                                    .build(),
+                                    ]),
                                   Text('$42.50')
                                     .fontSize(16)
                                     .fontWeight('700')
                                     .color(uberGreen)
-                                    .build()
-                                ])
-                                .build(),
+                                ]),
 
                               Row()
                                 .justifyContent('between')
@@ -231,21 +193,16 @@ export const BottomSheet = createFiboComponent<BottomSheetProps>(({ sheetY, earn
                                       Text('Marina → Financial District')
                                         .fontSize(14)
                                         .fontWeight('500')
-                                        .color(uberBlack)
-                                        .build(),
+                                        .color(uberBlack),
                                       Text('18 min • 8.4 mi')
                                         .fontSize(12)
                                         .color(textSecondary)
-                                        .build()
-                                    ])
-                                    .build(),
+                                    ]),
                                   Text('$28.75')
                                     .fontSize(16)
                                     .fontWeight('700')
                                     .color(uberGreen)
-                                    .build()
-                                ])
-                                .build(),
+                                ]),
 
                               Row()
                                 .justifyContent('between')
@@ -257,33 +214,21 @@ export const BottomSheet = createFiboComponent<BottomSheetProps>(({ sheetY, earn
                                       Text('Mission Bay → SoMa')
                                         .fontSize(14)
                                         .fontWeight('500')
-                                        .color(uberBlack)
-                                        .build(),
+                                        .color(uberBlack),
                                       Text('12 min • 4.1 mi')
                                         .fontSize(12)
                                         .color(textSecondary)
-                                        .build()
-                                    ])
-                                    .build(),
+                                    ]),
                                   Text('$18.20')
                                     .fontSize(16)
                                     .fontWeight('700')
                                     .color(uberGreen)
-                                    .build()
                                 ])
-                                .build()
                             ])
-                            .build()
                         ])
-                        .build()
                     )
-                    .build()
                 ])
-                .build()
             )
-            .build()
         ])
-        .build()
-    ])
-    .build();
-});
+    ]);
+}

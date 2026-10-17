@@ -26,12 +26,12 @@ There is no JSX — the function return **is** the view.
 
 ### Live product
 
-| Marketing site | Store demo |
+| Marketing site | Store (in-app `/shop`) |
 | :---: | :---: |
-| [![FiboUI site](./docs/brand/site-hero.png)](https://fiboui.vercel.app) | [![Fibo Store](./docs/brand/store-hero.png)](https://fiboui-store.vercel.app) |
-| [**fiboui.vercel.app**](https://fiboui.vercel.app) | [**fiboui-store.vercel.app**](https://fiboui-store.vercel.app) |
+| [![FiboUI site](./docs/brand/site-hero.png)](https://fiboui.vercel.app) | [![Fibo Store](./docs/brand/store-hero.png)](https://fiboui.vercel.app/shop) |
+| [**fiboui.vercel.app**](https://fiboui.vercel.app) | [**fiboui.vercel.app/shop**](https://fiboui.vercel.app/shop) |
 
-Both ships are built **only** with FiboUI fluent builders — no JSX in the product UI.
+Both ships are built **only** with FiboUI fluent builders — no JSX in the product UI. The store is `/shop` (alias `/store`). The playground is [`/play`](https://fiboui.vercel.app/play) (alias `/playground`). Same Vercel app, not extra deployments.
 
 </div>
 
@@ -71,7 +71,16 @@ function App() {
 mount('#root', App)
 ```
 
-ESM-only · React **18 / 19** · Next App Router → `'use client'` on files that call builders.
+Tree-shakeable entries (each has its own `types`): `fiboui/core`, `fiboui/layout`, `fiboui/content`, `fiboui/interactive`, `fiboui/structure`, `fiboui/navigation`, `fiboui/theme`, `fiboui/server`.
+
+```tsx
+import { signal } from 'fiboui/core'
+import { Column } from 'fiboui/layout'
+import { Button } from 'fiboui/interactive'
+import { page } from 'fiboui/server'
+```
+
+ESM-only · React **18 / 19** · Next App Router: static builders + `page()` work in Server Components (`fiboui/server` / the `react-server` export); signals / Router still need `'use client'`.
 
 ---
 
@@ -247,6 +256,7 @@ Column().crossAxisAlignment('stretch')
 
 | | |
 | :--- | :--- |
+| Getting started | [`docs/guide/getting-started.md`](./docs/guide/getting-started.md) |
 | Migration from 1.x | [MIGRATION.md](./MIGRATION.md) |
 | Contributing & release | [CONTRIBUTING.md](./CONTRIBUTING.md) |
 | Animation guide | [`docs/guide/animation.md`](./docs/guide/animation.md) |
@@ -266,6 +276,6 @@ Publishing is automated on **`main`** (GitHub Actions + `NPM_TOKEN`). Prefer not
 
 MIT © 2025–2026 FiboUI
 
-[Site](https://fiboui.vercel.app) · [Store](https://fiboui-store.vercel.app) · [npm](https://www.npmjs.com/package/fiboui) · [GitHub](https://github.com/felipeoliveiradev/fiboui)
+[Site](https://fiboui.vercel.app) · [Store](https://fiboui.vercel.app/shop) · [Play](https://fiboui.vercel.app/play) · [npm](https://www.npmjs.com/package/fiboui) · [GitHub](https://github.com/felipeoliveiradev/fiboui)
 
 </div>

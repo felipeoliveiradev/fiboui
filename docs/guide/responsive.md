@@ -1,6 +1,6 @@
 # Responsive / media queries
 
-FiboUI already had **`.responsive()`** (JS viewport). 2.2 adds **`.media()`** — the easy path — which compiles to real CSS `@media`. Prefer `.media()` / `.md()` unless you need JS.
+**`.media()`** / **`.md()`** compile to real CSS `@media` (no `window.innerWidth`). **`.responsive({ mobile, tablet, desktop })`** uses the same engine with exclusive bands. Prefer `.media()` / `.md()` for Tailwind-aligned min-width queries. Use `useViewportWidth()` only when JavaScript must read the viewport (SSR snapshot is **1024**).
 
 ## Easy: `.media()` / `.md()` (CSS)
 
@@ -35,7 +35,7 @@ Same API as 2.2.0, but it compiles to CSS `@media` (same engine as `.md()`). Tie
 ## Grid columns
 
 ```tsx
-// real API (Tailwind classes)
+// real API — CSS `grid-template-columns: repeat(n, minmax(0, 1fr))` (not Tailwind JIT)
 Grid().columns({ sm: 1, md: 2, lg: 3 }).gap('md')
 
 // not valid JS — do not write .md:columns(2)

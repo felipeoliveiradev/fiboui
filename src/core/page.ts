@@ -5,10 +5,19 @@ import { FiboStyles } from './styleManager';
 
 export type FiboPageBuild = () => FiboChild | ReactNode;
 
+export type FiboPageMeta = {
+  title?: string;
+  description?: string;
+};
+
 export type FiboPageOptions = {
   /** Append `<FiboStyles />` after the tree (SSR dynamic CSS). Default true. */
   styles?: boolean;
+  /** SSR `<title>` / `<meta name="description">` (React 19 hoists into `<head>`). */
+  meta?: FiboPageMeta;
 };
+
+export type FiboPageComponent = ComponentType & { meta?: FiboPageMeta };
 
 /**
  * Next/Vite page helper — **zero JSX** in app code, SSR-safe.
@@ -32,19 +41,36 @@ export type FiboPageOptions = {
 export function page(
   build: FiboPageBuild,
   options: FiboPageOptions = {}
-): ComponentType {
-  const { styles = true } = options;
+): FiboPageComponent {
+  const { styles = true, meta } = options;
 
   function FiboPage(): ReactElement {
     // Build during render (SSR + client) so dynamic classes register before styles emit.
     const tree = buildChild(build());
-    if (!styles) {
-      return React.createElement(React.Fragment, null, tree);
+    const nodes: ReactNode[] = [];
+    if (typeof meta?.title === 'string' && meta.title.length > 0) {
+      nodes.push(React.createElement('title', { key: 'fibo-title' }, meta.title));
     }
-    return React.createElement(React.Fragment, null, tree, React.createElement(FiboStyles));
+    if (typeof meta?.description === 'string' && meta.description.length > 0) {
+      nodes.push(
+        React.createElement('meta', {
+          key: 'fibo-description',
+          name: 'description',
+          content: meta.description,
+        })
+      );
+    }
+    nodes.push(tree);
+    if (styles) {
+      nodes.push(React.createElement(FiboStyles));
+    }
+    return React.createElement(React.Fragment, null, ...nodes);
   }
 
   FiboPage.displayName = 'FiboPage';
+  if (meta) {
+    (FiboPage as FiboPageComponent).meta = meta;
+  }
   return FiboPage;
 }
 

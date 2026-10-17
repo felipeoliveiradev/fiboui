@@ -26,6 +26,17 @@ const UNITLESS = new Set([
   'grid-column',
   'gridArea',
   'grid-area',
+  'aspectRatio',
+  'aspect-ratio',
+  'lineClamp',
+  'line-clamp',
+  'tabSize',
+  'tab-size',
+  'scale',
+  'scaleX',
+  'scaleY',
+  'animationIterationCount',
+  'animation-iteration-count',
 ]);
 
 /** Props where `0` means “off”, not `0px`. */
@@ -41,10 +52,12 @@ const ZERO_MEANS_NONE = new Set([
 ]);
 
 export function camelToKebab(prop: string): string {
+  if (prop.startsWith('--')) return prop;
   return prop.replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2').toLowerCase();
 }
 
 export function kebabToCamel(prop: string): string {
+  if (prop.startsWith('--')) return prop;
   return prop.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 }
 
@@ -129,6 +142,167 @@ export function logicalLonghands(method: string): string[] | null {
   return hit ? [...hit] : null;
 }
 
+export type BoxKind = 'padding' | 'margin';
+
+const BOX_SIDE_KEBAB: Record<BoxKind, readonly [string, string, string, string]> = {
+  padding: ['padding-top', 'padding-right', 'padding-bottom', 'padding-left'],
+  margin: ['margin-top', 'margin-right', 'margin-bottom', 'margin-left'],
+};
+
+const BOX_LONGHAND: Record<string, BoxKind> = {
+  paddingTop: 'padding',
+  paddingRight: 'padding',
+  paddingBottom: 'padding',
+  paddingLeft: 'padding',
+  marginTop: 'margin',
+  marginRight: 'margin',
+  marginBottom: 'margin',
+  marginLeft: 'margin',
+};
+
+/**
+ * Split a padding/margin shorthand on spaces, keeping `calc()` / `var()` / `clamp()`
+ * (and nested parens) as a single token. Naive `split(/\s+/)` turns
+ * `8px calc(50% - 10px)` into four parts and yields `padding-bottom: -`.
+ */
+function splitCssSpaceSeparated(value: string): string[] {
+  const parts: string[] = [];
+  let current = '';
+  let depth = 0;
+  for (const ch of value) {
+    if (ch === '(') {
+      depth += 1;
+      current += ch;
+      continue;
+    }
+    if (ch === ')') {
+      if (depth > 0) depth -= 1;
+      current += ch;
+      continue;
+    }
+    if (depth === 0 && /\s/.test(ch)) {
+      if (current) {
+        parts.push(current);
+        current = '';
+      }
+      continue;
+    }
+    current += ch;
+  }
+  if (current) parts.push(current);
+  return parts;
+}
+
+/** Parse CSS `padding` / `margin` shorthand into [top, right, bottom, left]. */
+export function parseBoxShorthand(value: string): [string, string, string, string] {
+  const parts = splitCssSpaceSeparated(String(value).trim());
+  const a = parts[0] ?? '';
+  const b = parts[1] ?? a;
+  const c = parts[2] ?? a;
+  const d = parts[3] ?? b;
+  return [a, b, c, d];
+}
+
+/**
+ * Later `padding`/`margin` shorthand must not clobber existing axis longhands.
+ * If any side is already set, expand into the missing sides only.
+ */
+export function resolveBoxShorthand(
+  kind: BoxKind,
+  value: string | number,
+  existingKebab: ReadonlySet<string>,
+): { shorthand: string | null; longhands: Array<[string, string]> } {
+  const v = normalizeCssValue(kind, value);
+  const sides = BOX_SIDE_KEBAB[kind];
+  if (!sides.some((side) => existingKebab.has(side))) {
+    return { shorthand: v, longhands: [] };
+  }
+  const parsed = parseBoxShorthand(v);
+  const longhands: Array<[string, string]> = [];
+  sides.forEach((side, i) => {
+    if (!existingKebab.has(side)) longhands.push([side, parsed[i]]);
+  });
+  return { shorthand: null, longhands };
+}
+
+/** Apply a box shorthand onto a style object without resetting existing longhands. */
+export function applyBoxShorthandToStyle(
+  style: CSSProperties,
+  kind: BoxKind,
+  value: string | number,
+): void {
+  const record = style as Record<string, string | number>;
+  const existing = new Set<string>();
+  for (const kebab of BOX_SIDE_KEBAB[kind]) {
+    if (record[kebabToCamel(kebab)] != null) existing.add(kebab);
+  }
+  const resolved = resolveBoxShorthand(kind, value, existing);
+  if (resolved.shorthand != null) {
+    record[kind] = resolved.shorthand;
+    return;
+  }
+  for (const [kebab, val] of resolved.longhands) {
+    record[kebabToCamel(kebab)] = val;
+  }
+  delete record[kind];
+}
+
+/**
+ * Expand `padding` / `margin` shorthand into four longhands so a later
+ * `.paddingLeft` / `.paddingHorizontal` is not reset by the shorthand.
+ */
+function expandBoxShorthand(style: CSSProperties, kind: BoxKind): void {
+  const raw = (style as Record<string, unknown>)[kind];
+  if (raw == null || raw === '') return;
+
+  const [top, right, bottom, left] = parseBoxShorthand(String(raw));
+  const sides: Array<[string, string]> = [
+    [`${kind}Top`, top],
+    [`${kind}Right`, right],
+    [`${kind}Bottom`, bottom],
+    [`${kind}Left`, left],
+  ];
+  const record = style as Record<string, string | number>;
+  for (const [key, value] of sides) {
+    if (record[key] == null) record[key] = value;
+  }
+  delete record[kind];
+}
+
+function writeNormalizedProp(
+  out: Record<string, string>,
+  camel: string,
+  raw: unknown,
+): void {
+  const box = BOX_LONGHAND[camel];
+  if (box) expandBoxShorthand(out as CSSProperties, box);
+  out[camel] = normalizeCssValue(camel, raw);
+}
+
+/** Normalize every value in a style object (`boxShadow: 0` → `none`). */
+export function normalizeCssProperties(
+  styles: CSSProperties | Record<string, unknown>,
+): CSSProperties {
+  const out: Record<string, string> = {};
+  for (const [key, raw] of Object.entries(styles)) {
+    if (raw === undefined || raw === null) continue;
+    const camel = key.startsWith('--') ? key : key.includes('-') ? kebabToCamel(key) : key;
+    const logical = logicalLonghands(camel);
+    if (logical) {
+      for (const longhand of logical) {
+        writeNormalizedProp(out, longhand, raw);
+      }
+      continue;
+    }
+    if (camel === 'padding' || camel === 'margin') {
+      applyBoxShorthandToStyle(out as CSSProperties, camel, raw as string | number);
+      continue;
+    }
+    writeNormalizedProp(out, camel, raw);
+  }
+  return out as CSSProperties;
+}
+
 /**
  * Normalize a fluent value into a CSS declaration value.
  * Numbers get `px` unless unitless; `boxShadow(0)` → `none`.
@@ -138,6 +312,7 @@ export function normalizeCssValue(prop: string, value: unknown): string {
   if (typeof value === 'boolean') return value ? 'true' : 'false';
 
   if (typeof value === 'number') {
+    if (prop.startsWith('--')) return String(value);
     if (value === 0 && ZERO_MEANS_NONE.has(prop)) return 'none';
     if (UNITLESS.has(prop) || UNITLESS.has(camelToKebab(prop))) return String(value);
     return `${value}px`;
@@ -230,51 +405,15 @@ export function createCssFluentProxy(host: CssFluentHost): CssFluentProxy {
   return proxy;
 }
 
-const BOX_LONGHAND: Record<string, 'padding' | 'margin'> = {
-  paddingTop: 'padding',
-  paddingRight: 'padding',
-  paddingBottom: 'padding',
-  paddingLeft: 'padding',
-  marginTop: 'margin',
-  marginRight: 'margin',
-  marginBottom: 'margin',
-  marginLeft: 'margin',
-};
-
-/**
- * Expand `padding` / `margin` shorthand into four longhands so a later
- * `.paddingLeft` / `.paddingHorizontal` is not reset by the shorthand.
- */
-function expandBoxShorthand(style: CSSProperties, kind: 'padding' | 'margin'): void {
-  const raw = (style as Record<string, unknown>)[kind];
-  if (raw == null || raw === '') return;
-
-  const parts = String(raw).trim().split(/\s+/);
-  const [a, b = a, c = a, d = b] = parts;
-  const top = a;
-  const right = parts.length === 1 ? a : b;
-  const bottom = parts.length <= 2 ? a : c;
-  const left = parts.length === 1 ? a : parts.length === 2 ? b : parts.length === 3 ? b : d;
-
-  const cap = kind === 'padding' ? 'padding' : 'margin';
-  const sides: Array<[string, string]> = [
-    [`${cap}Top`, top],
-    [`${cap}Right`, right],
-    [`${cap}Bottom`, bottom],
-    [`${cap}Left`, left],
-  ];
-  const record = style as Record<string, string | number>;
-  for (const [key, value] of sides) {
-    if (record[key] == null) record[key] = value;
-  }
-  delete record[kind];
-}
-
 /** Shared store for itemStyle / itemHover fluent builders. */
 export class CssStyleStore implements CssFluentHost {
   protected _style: CSSProperties = {};
 
   setProp(prop: string, value: string | number): void {
+    if (prop === 'padding' || prop === 'margin') {
+      applyBoxShorthandToStyle(this._style, prop, value);
+      return;
+    }
     const box = BOX_LONGHAND[prop];
     if (box) expandBoxShorthand(this._style, box);
     (this._style as Record<string, string | number>)[prop] = value;
@@ -327,7 +466,10 @@ export class CssStyleStore implements CssFluentHost {
   }
 
   mergeStyle(extra: CSSProperties): void {
-    this._style = { ...this._style, ...extra };
+    const normalized = normalizeCssProperties(extra);
+    for (const [key, value] of Object.entries(normalized)) {
+      this.setProp(key, value as string);
+    }
   }
 
   toStyle(): CSSProperties {

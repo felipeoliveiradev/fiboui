@@ -12,10 +12,10 @@ import { Scaffold } from 'fiboui'
 Scaffold()
   .theme(myTheme)
   .locale('pt-BR')
+  .headerBar(Header())
+  .footerBar(Box().children('Footer'))
   .children([
-    Header(),
     MainContent(),
-    Footer()
   ])
 
 ```
@@ -37,11 +37,15 @@ Scaffold() → ScaffoldBuilder
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.theme(theme)` | `any` | Set global theme |
+| `.theme(theme)` | preset name / `FiboTheme` | CSS vars on this subtree (`FiboBuilder.theme`) |
 | `.locale(locale)` | `string` | Set application locale |
 | `.provider(key, value)` | `string, any` | Add single provider |
 | `.providers(providers)` | `Record<string, any>` | Add multiple providers |
-| `.children(children)` | `ReactNode \| ReactNode[]` | App content |
+| `.headerBar(node)` | builder / `{ children, fixed? }` | Top bar |
+| `.footerBar(node)` | builder / `{ children, fixed? }` | Bottom bar |
+| `.sideBarLeft(node)` / `.sideBarRight(node)` | builder / `{ children, fixed? }` | Side bars |
+| `.structure(config)` | `ScaffoldStructure` | Positions, widths, visibility |
+| `.children(children)` | `ReactNode \| ReactNode[]` | Main content |
 
 ## Examples
 
@@ -58,16 +62,15 @@ function App() {
   return Scaffold()
     .theme(theme)
     .children([
-      Header(),
       Box()
         .flex('1')
         .padding('24px')
         .children(
           Text('Welcome!').variant('h1')
         )
-        ,
-      Footer()
     ])
+    .headerBar(Header())
+    .footerBar(Box().children('Footer'))
 
 }
 ```
@@ -105,8 +108,7 @@ function EcommerceApp() {
     .theme(theme.value)
     .bindSignal(theme)
     .provider('store', store)
-    .children([
-      // Header
+    .headerBar(
       Header()
         .height(80)
         .children(
@@ -116,18 +118,13 @@ function EcommerceApp() {
               Text('🛒 Shop').variant('h2'),
               CartBadge()
             ])
-
         )
-        ,
-
-      // Main content
+    )
+    .footerBar(Box().children('Footer'))
+    .children([
       Box()
         .flex('1')
         .children(ProductGrid())
-        ,
-
-      // Footer
-      Footer()
     ])
 
 }
@@ -172,24 +169,21 @@ Scaffold()
 
 ## Accessing Providers
 
-Child components can access providers using `.consume()`:
+Child components read providers with `useProvider` (React context). `.consume(key)` only reads the **same** builder's `.provider()` map and returns the value — it is not chainable and does not see a parent Scaffold.
 
 ```typescript
-// In Scaffold
+import { useProvider } from 'fiboui'
+
 Scaffold()
   .provider('theme', myTheme)
   .provider('user', userStore)
   .children([App()])
 
-// In child component
 function ThemedBox() {
+  const theme = useProvider<{ primary: string }>('theme')
   return Box()
-    .consume('theme')
-    .backgroundColor((theme) => theme.primary)
-    .children(
-      Text('Themed!')
-    )
-
+    .backgroundColor(theme?.primary)
+    .children(Text('Themed!'))
 }
 ```
 

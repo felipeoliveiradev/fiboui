@@ -79,6 +79,7 @@ export function SignalsView() {
               TextField()
                 .name('task')
                 .placeholder('Add a task')
+                .props({ 'aria-label': 'Add a task' })
                 .variant('outlined')
                 .flex('1')
                 .minWidth(0)
@@ -190,6 +191,7 @@ function filterTab(label: string, value: Filter) {
       .hover((state: PseudoStateBuilder) => {
         if (!selected) state.color(chalk)
       })
+      .props({ 'aria-pressed': selected })
       .onPress(() => setFilter(value)),
   )
 }

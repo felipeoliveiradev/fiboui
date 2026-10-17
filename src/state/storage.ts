@@ -1,14 +1,32 @@
+/** Resolve window storage without throwing on SSR / private mode. */
+export function getBrowserStorage(
+  kind: 'localStorage' | 'sessionStorage' = 'localStorage'
+): Storage | null {
+  try {
+    const g = globalThis as typeof globalThis & {
+      localStorage?: Storage;
+      sessionStorage?: Storage;
+      window?: { localStorage?: Storage; sessionStorage?: Storage };
+    };
+    const store = g[kind] ?? g.window?.[kind];
+    if (!store || typeof store.getItem !== 'function') return null;
+    return store;
+  } catch {
+    return null;
+  }
+}
+
 export function saveToStorage<T>(
   key: string,
   value: T,
-  storage: Storage = localStorage
+  storage: Storage | null = getBrowserStorage('localStorage')
 ): boolean {
   try {
+    if (!storage) return false;
     const serialized = JSON.stringify(value);
     storage.setItem(key, serialized);
     return true;
   } catch (error) {
-
     console.error(`Failed to save to storage (key: ${key}):`, error);
     return false;
   }
@@ -17,9 +35,10 @@ export function saveToStorage<T>(
 export function loadFromStorage<T>(
   key: string,
   defaultValue: T,
-  storage: Storage = localStorage
+  storage: Storage | null = getBrowserStorage('localStorage')
 ): T {
   try {
+    if (!storage) return defaultValue;
     const item = storage.getItem(key);
 
     if (item === null) {
@@ -28,7 +47,6 @@ export function loadFromStorage<T>(
 
     return JSON.parse(item) as T;
   } catch (error) {
-
     console.error(`Failed to load from storage (key: ${key}):`, error);
     return defaultValue;
   }
@@ -36,18 +54,18 @@ export function loadFromStorage<T>(
 
 export function removeFromStorage(
   key: string,
-  storage: Storage = localStorage
+  storage: Storage | null = getBrowserStorage('localStorage')
 ): void {
   try {
-    storage.removeItem(key);
+    storage?.removeItem(key);
   } catch (error) {
     console.error(`Failed to remove from storage (key: ${key}):`, error);
   }
 }
 
-export function clearStorage(storage: Storage = localStorage): void {
+export function clearStorage(storage: Storage | null = getBrowserStorage('localStorage')): void {
   try {
-    storage.clear();
+    storage?.clear();
   } catch (error) {
     console.error('Failed to clear storage:', error);
   }
@@ -55,9 +73,10 @@ export function clearStorage(storage: Storage = localStorage): void {
 
 export function hasInStorage(
   key: string,
-  storage: Storage = localStorage
+  storage: Storage | null = getBrowserStorage('localStorage')
 ): boolean {
   try {
+    if (!storage) return false;
     return storage.getItem(key) !== null;
   } catch (error) {
     console.error(`Failed to check storage (key: ${key}):`, error);
@@ -65,8 +84,9 @@ export function hasInStorage(
   }
 }
 
-export function getStorageKeys(storage: Storage = localStorage): string[] {
+export function getStorageKeys(storage: Storage | null = getBrowserStorage('localStorage')): string[] {
   try {
+    if (!storage) return [];
     const keys: string[] = [];
     for (let i = 0; i < storage.length; i++) {
       const key = storage.key(i);
@@ -79,8 +99,9 @@ export function getStorageKeys(storage: Storage = localStorage): string[] {
   }
 }
 
-export function getStorageSize(storage: Storage = localStorage): number {
+export function getStorageSize(storage: Storage | null = getBrowserStorage('localStorage')): number {
   try {
+    if (!storage) return 0;
     let size = 0;
     for (let i = 0; i < storage.length; i++) {
       const key = storage.key(i);
@@ -99,13 +120,14 @@ export function getStorageSize(storage: Storage = localStorage): number {
 }
 
 export const sessionStorage = {
-  save: <T>(key: string, value: T) => saveToStorage(key, value, window.sessionStorage),
-  load: <T>(key: string, defaultValue: T) => loadFromStorage(key, defaultValue, window.sessionStorage),
-  remove: (key: string) => removeFromStorage(key, window.sessionStorage),
-  clear: () => clearStorage(window.sessionStorage),
-  has: (key: string) => hasInStorage(key, window.sessionStorage),
-  keys: () => getStorageKeys(window.sessionStorage),
-  size: () => getStorageSize(window.sessionStorage),
+  save: <T>(key: string, value: T) => saveToStorage(key, value, getBrowserStorage('sessionStorage')),
+  load: <T>(key: string, defaultValue: T) =>
+    loadFromStorage(key, defaultValue, getBrowserStorage('sessionStorage')),
+  remove: (key: string) => removeFromStorage(key, getBrowserStorage('sessionStorage')),
+  clear: () => clearStorage(getBrowserStorage('sessionStorage')),
+  has: (key: string) => hasInStorage(key, getBrowserStorage('sessionStorage')),
+  keys: () => getStorageKeys(getBrowserStorage('sessionStorage')),
+  size: () => getStorageSize(getBrowserStorage('sessionStorage')),
 };
 
 export const localStorageUtils = {

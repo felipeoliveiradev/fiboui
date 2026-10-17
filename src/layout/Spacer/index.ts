@@ -1,9 +1,15 @@
-import React, { ReactElement } from 'react';
+import React, { CSSProperties, ReactElement } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps } from '../../core/types';
 
 function toCssSize(value: string | number): string {
   return typeof value === 'number' ? `${value}px` : value;
+}
+
+function extraStyle(value: unknown): CSSProperties {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as CSSProperties)
+    : {};
 }
 
 class SpacerBuilder extends FiboBuilder {
@@ -41,28 +47,33 @@ class SpacerBuilder extends FiboBuilder {
   }
 
   build(): ReactElement {
-    const style = this.getStyle();
+    const { className: extraClass, style: propsStyle, ...rest } = this._props;
+    const style: CSSProperties = { ...this.getStyle(), ...extraStyle(propsStyle) };
     const fixed = this._height != null || this._width != null;
     const expand = this._expand ?? !fixed;
 
     if (this._height != null) style.height = toCssSize(this._height);
     if (this._width != null) style.width = toCssSize(this._width);
 
+    // Host flex must win over leftover `grow` classes and `.props({ style })`.
     if (expand) {
       style.flex = `${this._grow ?? 1} 1 0%`;
       style.alignSelf = style.alignSelf ?? 'stretch';
-      style.minWidth = 0;
-      style.minHeight = 0;
+      style.minWidth = style.minWidth ?? 0;
+      style.minHeight = style.minHeight ?? 0;
     } else {
       style.flex = '0 0 auto';
     }
 
-    const className = this.getClassName();
+    const className = ['fibo-spacer', this.getClassName(), extraClass]
+      .filter(Boolean)
+      .join(' ');
 
     return React.createElement('div', {
-      className: `fibo-spacer ${className}`,
+      ...rest,
       style,
-      ...this._props,
+      className,
+      'aria-hidden': true,
     });
   }
 }

@@ -7,7 +7,7 @@ At the core of FiboUI is the `FiboBuilder` class. Every component in the system 
 
 1. **Instantiation**: Calling `Box()` creates a new instance of `BoxBuilder`.
 2. **Chaining**: Methods like `.padding(4)` or `.color('red')` update the internal state of the builder and return `this`, allowing method chaining.
-3. **Rendering**: The builder **is** a React element (it carries React’s `$$typeof`). Return it, nest it, or pass it as a child — do not call ``. `` still exists and is deprecated.
+3. **Rendering**: The builder **is** a React element (it carries React’s `$$typeof`). Return it, nest it, or pass it as a child — **do not call `.build()`**. `.build()` still exists on the class (custom builders implement it) and is deprecated for app code. There is no `Chip()` or `IconButton()` factory — use `Badge()` and `Button().icon(...)`.
 
 ## FiboBuilder Base Class
 
@@ -17,26 +17,20 @@ The base class provides common properties shared by all UI elements:
 - `style(object)`: inline styles.
 - `key(string)`: React key.
 - `onPress(callback)`: click handler.
+- `resetStyle()`: clears builder classes, inline `_style` / `_cssStyles`, and box longhands, then adds `fibo-reset`. Helpers chained after it stamp again.
+
+`Circle()` / `Rect()` / `Path()` use a CSS-like proxy on `ShapeBuilder`: unknown methods merge into `_style` via `normalizeCssValue`. SVG `shadow(dx, dy, blur, color)` stays a 4-arg drop-shadow.
 
 ## Creating your own Builder
 
-You can extend the system by creating your own builders using `createBuilder`.
+`FiboBuilder` and `createBuilder` are **not** public exports (`fiboui` / `fiboui/core` ship `ValueBuilder`, not the base class). Compose the public factories:
 
-```typescript
-import { FiboBuilder, createBuilder } from 'fiboui/core';
+```tsx
+import { Box, Text } from 'fiboui';
 
-class MyComponentBuilder extends FiboBuilder {
-    private _title: string = "";
-
-    title(val: string): this {
-        this._title = val;
-        return this;
-    }
-
-    build() {
-        return <div className={this.getClassName()}>{this._title}</div>;
-    }
+export function TitleCard(title: string) {
+  return Box()
+    .padding(16)
+    .children([Text(title).type('h2')]);
 }
-
-export const MyComponent = createBuilder(MyComponentBuilder);
 ```

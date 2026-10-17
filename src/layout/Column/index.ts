@@ -1,6 +1,52 @@
-import React, { ReactElement } from 'react';
+import React, { ReactElement, ReactNode } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
-import { ChildrenProps, MainAxisAlignment, CrossAxisAlignment } from '../../core/types';
+import { ChildrenProps, FiboChildren, MainAxisAlignment, CrossAxisAlignment } from '../../core/types';
+import {
+  collectInterpSignals,
+  hasInterpMarks,
+  resolveInterpString,
+} from '../../core/interpolate';
+
+function bindInterp(host: FiboBuilder, text: string | undefined): void {
+  if (typeof text !== 'string' || !hasInterpMarks(text)) return;
+  for (const sig of collectInterpSignals(text)) {
+    host.bindSignal(sig);
+  }
+}
+
+function bindInterpTree(host: FiboBuilder, node: unknown): void {
+  if (typeof node === 'function') {
+    try {
+      bindInterpTree(host, (node as () => unknown)());
+    } catch {
+      /* factory may need mount */
+    }
+    return;
+  }
+  if (typeof node === 'string') {
+    bindInterp(host, node);
+    return;
+  }
+  if (Array.isArray(node)) {
+    for (const item of node) bindInterpTree(host, item);
+  }
+}
+
+function resolveInterpChild(child: ReactNode): ReactNode {
+  return typeof child === 'string' && hasInterpMarks(child)
+    ? resolveInterpString(child)
+    : child;
+}
+
+function hostNodes(
+  fromBuilder: ReactNode[],
+  props: Record<string, any>
+): { nodes: ReactNode[]; rest: Record<string, any> } {
+  const { children: propsChildren, ...rest } = props;
+  const source = propsChildren !== undefined ? propsChildren : fromBuilder;
+  const nodes = source == null ? [] : Array.isArray(source) ? source : [source];
+  return { nodes, rest };
+}
 
 class ColumnBuilder extends FiboBuilder {
   private _mainAxisAlignment: MainAxisAlignment = 'start';
@@ -8,6 +54,18 @@ class ColumnBuilder extends FiboBuilder {
   private _crossAxisAlignment: CrossAxisAlignment = 'center';
   private _spacing?: string | number;
   private _size?: 'small' | 'medium' | 'large';
+
+  children(children: FiboChildren): this {
+    bindInterpTree(this, children);
+    return super.children(children);
+  }
+
+  props(value: Record<string, any>): this {
+    if (value && 'children' in value) {
+      bindInterpTree(this, value.children);
+    }
+    return super.props(value);
+  }
 
   mainAxisAlignment(alignment: MainAxisAlignment): this {
     this._mainAxisAlignment = alignment;
@@ -56,8 +114,8 @@ class ColumnBuilder extends FiboBuilder {
       'fibo-column',
       'flex',
       'flex-col',
-      // min-w-0: allow shrink inside flex/grid so wide children (tables, nowrap) don't blow the track
-      this.isHug() ? 'w-auto self-auto' : 'w-full min-w-0',
+      // min-w-0 / min-h-0: shrink inside flex/grid so nested overflow can scroll
+      this.isHug() ? 'w-auto self-auto' : 'w-full min-w-0 min-h-0',
       alignmentMap[this._mainAxisAlignment],
       crossAlignmentMap[this._crossAxisAlignment],
       this._size ? sizeMap[this._size] : '',
@@ -66,29 +124,33 @@ class ColumnBuilder extends FiboBuilder {
 
     const style = this.getStyle();
 
-    if (this._spacing) {
+    const { nodes, rest } = hostNodes(this.processChildren(), this._props);
+    const { className: extraClass, style: propsStyle, ...dom } = rest;
+    const className = [...classes, extraClass].filter(Boolean).join(' ');
+    const resolved = nodes.map(resolveInterpChild);
+    const merged = {
+      ...style,
+      ...(propsStyle && typeof propsStyle === 'object' ? propsStyle : {}),
+    };
+
+    if (this._spacing != null && this._spacing !== '') {
       if (typeof this._spacing === 'number') {
-        style.gap = `${this._spacing}px`;
+        merged.gap = `${this._spacing}px`;
+      } else if (!isNaN(Number(this._spacing))) {
+        merged.gap = `${Number(this._spacing) * 4}px`;
       } else {
-        if (!isNaN(Number(this._spacing))) {
-          style.gap = `${Number(this._spacing) * 4}px`;
-        } else {
-          style.gap = this._spacing;
-        }
+        merged.gap = this._spacing;
       }
     }
-
-    const className = classes.filter(Boolean).join(' ');
-    const children = this.processChildren();
 
     return React.createElement(
       'div',
       {
+        style: merged,
+        ...dom,
         className,
-        style,
-        ...this._props,
       },
-      ...children
+      ...resolved
     );
   }
 }

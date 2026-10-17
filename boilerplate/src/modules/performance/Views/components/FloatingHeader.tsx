@@ -1,18 +1,15 @@
-import { Box, Button, Column, Row, Text, Icon, SignalType, createFiboComponent, TextField, signal } from 'fiboui';
+import { Box, Button, Column, Row, Text, Icon, TextField, Form, type Signal } from 'fiboui';
 import { Menu, Bell, Search } from 'lucide-react';
 
 interface FloatingHeaderProps {
-  earnings: SignalType<number>;
-  tripsCount: SignalType<number>;
+  earnings: Signal<number>;
+  tripsCount: Signal<number>;
 }
 
-const searchValue = signal('');
-
-export const FloatingHeader = createFiboComponent<FloatingHeaderProps>(({ earnings, tripsCount }: FloatingHeaderProps) => {
+export function FloatingHeader({ earnings, tripsCount }: FloatingHeaderProps) {
   const uberBlack = '#1C1C1E';
   const uberBlue = '#276EF1';
   const textSecondary = '#6B7280';
-  const textTertiary = '#9CA3AF';
   const borderLight = '#E5E7EB';
 
   return Column()
@@ -24,15 +21,14 @@ export const FloatingHeader = createFiboComponent<FloatingHeaderProps>(({ earnin
     .paddingHorizontal(16)
     .paddingVertical(8)
     .children([
-      // Top Bar
       Row()
         .observer('top-pill')
         .justifyContent('between')
         .alignItems('center')
         .children(() => [
-          // Menu Button
           Button()
             .clean()
+            .props({ 'aria-label': 'Menu' })
             .children(
               Box()
                 .width(48)
@@ -42,13 +38,10 @@ export const FloatingHeader = createFiboComponent<FloatingHeaderProps>(({ earnin
                 .center()
                 .style({ boxShadow: '0 4px 12px rgba(0,0,0,0.12)' })
                 .children(
-                  Icon().source(Menu).size(24).color(uberBlack).build()
+                  Icon().source(Menu).size(24).color(uberBlack)
                 )
-                .build()
-            )
-            .build(),
+            ),
 
-          // Earnings Pill
           Box()
             .paddingVertical(10)
             .paddingHorizontal(20)
@@ -64,22 +57,18 @@ export const FloatingHeader = createFiboComponent<FloatingHeaderProps>(({ earnin
                     .fontSize(16)
                     .fontWeight('700')
                     .color(uberBlack)
-                    .className('transition-all duration-300')
-                    .build(),
-                  Box().width(1).height(16).bg(borderLight).build(),
+                    .className('transition-all duration-300'),
+                  Box().width(1).height(16).bg(borderLight),
                   Text(`${tripsCount.value} trips`)
                     .fontSize(14)
                     .fontWeight('500')
                     .color(textSecondary)
-                    .build()
                 ])
-                .build()
-            )
-            .build(),
+            ),
 
-          // Notifications
           Button()
             .clean()
+            .props({ 'aria-label': 'Notifications' })
             .children(
               Box()
                 .width(48)
@@ -89,29 +78,26 @@ export const FloatingHeader = createFiboComponent<FloatingHeaderProps>(({ earnin
                 .center()
                 .style({ boxShadow: '0 4px 12px rgba(0,0,0,0.12)' })
                 .children(
-                  Icon().source(Bell).size(24).color(uberBlack).build()
+                  Icon().source(Bell).size(24).color(uberBlack)
                 )
-                .build()
             )
-            .build()
-        ])
-        .build(),
+        ]),
 
-      // Quick Search Bar
-      Box().height(12).build(),
-      TextField()
-        .value(searchValue)
-        .placeholder('Where to?')
-        .variant('outlined')
-        .leadingIcon(Icon().source(Search).size(20).color(uberBlue).build())
-        .className('!h-12')
-        .style({
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-          backgroundColor: 'white',
-          border: 'none',
-          borderRadius: '12px'
-        })
-        .build()
-    ])
-    .build();
-});
+      Box().height(12),
+      Form()
+        .children([
+          TextField()
+            .name('destination')
+            .placeholder('Where to?')
+            .variant('outlined')
+            .leadingIcon(Icon().source(Search).size(20).color(uberBlue))
+            .className('!h-12')
+            .style({
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              backgroundColor: 'white',
+              border: 'none',
+              borderRadius: '12px'
+            })
+        ])
+    ]);
+}

@@ -1,15 +1,20 @@
 /** Closing labels, same rules as the FiboUI VS Code extension. */
 
-/** Same factories as extensions/vscode-fiboui/src/factories.js. */
+/** Public fiboui factories. Suggesting a name Run cannot see is a dead completion. */
 export const FACTORY_NAMES = [
-  'ActionCard', 'Alert', 'AssetCard', 'Avatar', 'Badge', 'Banner', 'Box', 'BurgerIcon',
-  'Button', 'Canvas', 'Card', 'CardSvg', 'Center', 'Checkbox', 'Collapse', 'CollectionCard',
+  'Alert', 'AssetCard', 'Avatar', 'Badge', 'Banner', 'Box', 'BurgerIcon',
+  'Button', 'Canvas', 'Card', 'Center', 'Checkbox', 'Collapse', 'CollectionCard',
   'Column', 'Combobox', 'Container', 'ContentCard', 'DashboardLayout', 'Grid', 'GridItem',
-  'Header', 'Icon', 'Image', 'InfoCard', 'InputCard', 'Integration', 'Label', 'Line',
-  'LinearGradient', 'List', 'ListTile', 'MetricCard', 'ProfileCard', 'Progress', 'RadioGroup',
+  'Header', 'Icon', 'Image', 'Integration', 'Label', 'Line',
+  'LinearGradient', 'List', 'ListTile', 'MapView', 'ProfileCard', 'Progress', 'RadioGroup',
   'Row', 'Scaffold', 'ScrollView', 'Select', 'Sidebar', 'Skeleton', 'Spacer', 'Spinner',
   'Switch', 'Table', 'Tags', 'Text', 'TextField', 'Textarea', 'VirtualColumn', 'ZStack',
   'FiboApp', 'Form', 'Presence', 'Reveal',
+  'AsyncImage', 'Calendar', 'Carousel', 'Chart', 'CodeScanner', 'ContentUnavailable',
+  'DateRangePicker', 'Dismissible', 'FilePicker', 'Hero', 'Inspector', 'Markdown',
+  'MeshGradient', 'NumericText', 'OtpField', 'PdfView', 'PhotosPicker', 'RefreshIndicator',
+  'ReorderableList', 'RichEditor', 'Searchable', 'SensoryFeedback', 'Shake', 'ShareLink',
+  'Shortcuts', 'SwipeRow', 'WebView', 'WheelPicker', 'Wizard',
 ]
 
 const FACTORIES = new Set(FACTORY_NAMES)

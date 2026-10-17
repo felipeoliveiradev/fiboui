@@ -24,6 +24,26 @@ function interpolate(start: number, end: number, progress: number): number {
 
 const rafIds = new WeakMap<object, number>();
 
+function canUseAnimationFrame(): boolean {
+  return typeof requestAnimationFrame === 'function';
+}
+
+function prefersReducedMotionNow(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
+}
+
+function cancelTrackedFrame(owner: object): void {
+  const prev = rafIds.get(owner);
+  if (prev != null && typeof cancelAnimationFrame === 'function') {
+    cancelAnimationFrame(prev);
+  }
+  rafIds.delete(owner);
+}
+
 declare module './state' {
   interface Signal<T> {
     spring(target: T, options?: Partial<AnimationOptions>): void;
@@ -39,20 +59,38 @@ Signal.prototype.spring = function <T>(target: T, options: Partial<AnimationOpti
 Signal.prototype.animate = function <T>(target: T, options: Partial<AnimationOptions> = {}) {
   const start = this.value as number;
   const end = target as number;
-  const prev = rafIds.get(this);
-  if (prev) cancelAnimationFrame(prev);
+  cancelTrackedFrame(this);
+
+  if (!canUseAnimationFrame() || prefersReducedMotionNow()) {
+    this.value = end as T;
+    options.onComplete?.();
+    return;
+  }
 
   if (options.curve === 'spring') {
-    const stiffness = options.stiffness ?? 170;
-    const damping = options.damping ?? 26;
-    const mass = options.mass ?? 1;
+    const stiffness =
+      typeof options.stiffness === 'number' && Number.isFinite(options.stiffness) && options.stiffness > 0
+        ? options.stiffness
+        : 170;
+    const damping =
+      typeof options.damping === 'number' && Number.isFinite(options.damping) && options.damping >= 0
+        ? options.damping
+        : 26;
+    const mass =
+      typeof options.mass === 'number' && Number.isFinite(options.mass) && options.mass > 0 ? options.mass : 1;
     let x = start;
-    let v = options.velocity ?? 0;
+    let v = typeof options.velocity === 'number' && Number.isFinite(options.velocity) ? options.velocity : 0;
     const dt = 1 / 60;
     const tick = () => {
       const force = -stiffness * (x - end) - damping * v;
       v += (force / mass) * dt;
       x += v * dt;
+      if (!Number.isFinite(x) || !Number.isFinite(v)) {
+        this.value = end as T;
+        rafIds.delete(this);
+        options.onComplete?.();
+        return;
+      }
       this.value = x as T;
       if (Math.abs(x - end) > 0.01 || Math.abs(v) > 0.01) {
         rafIds.set(this, requestAnimationFrame(tick));
@@ -66,7 +104,19 @@ Signal.prototype.animate = function <T>(target: T, options: Partial<AnimationOpt
     return;
   }
 
-  const duration = options.duration || 300;
+  const rawDuration = options.duration;
+  const duration =
+    typeof rawDuration === 'number' && Number.isFinite(rawDuration) && rawDuration > 0
+      ? rawDuration
+      : rawDuration === undefined
+        ? 300
+        : 0;
+  if (duration === 0) {
+    this.value = end as T;
+    options.onComplete?.();
+    return;
+  }
+
   const curve = easingCurves[options.curve || 'easeOut'] ?? easingCurves.easeOut;
   let startTime: number | null = null;
 

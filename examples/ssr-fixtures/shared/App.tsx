@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import {
   Box,
   Button,
@@ -9,18 +8,11 @@ import {
   Text,
 } from 'fiboui';
 
-declare global {
-  interface Window {
-    __FIBO_HYDRATED__?: boolean;
-  }
-}
-
-/** Same tree for Vite SSR and Next App Router. First paint must match hydrate. */
-export function App() {
-  useEffect(() => {
-    window.__FIBO_HYDRATED__ = true;
-  }, []);
-
+/** Same tree for Vite SSR and Next App Router. First paint must match hydrate.
+ *  Returns a builder (not a host-div wrapping unassembled builders) so
+ *  `page(() => App())` / `createPage` can `buildChild` before Flight sees `.key`.
+ */
+export function App(): any {
   const cards = ['alpha', 'beta', 'gamma'].map((label) =>
     Card()
       .key(label)
@@ -28,9 +20,10 @@ export function App() {
       .children(label)
   );
 
-  return (
-    <div id="ssr-root">
-      {          Column()
+  return Box()
+    .id('ssr-root')
+    .children(
+      Column()
         .spacing(12)
         .children([
           Header().sticky().children(Text('Fibo SSR').variant('h2')),
@@ -48,7 +41,6 @@ export function App() {
             .variant('bento')
             .columns(4)
             .children([Text('A'), Text('B'), Text('C')]),
-        ])}
-    </div>
-  );
+        ])
+    );
 }

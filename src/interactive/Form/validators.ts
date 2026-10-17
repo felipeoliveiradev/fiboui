@@ -1,8 +1,9 @@
+import { isDangerousUrl } from '../../core/safeUrl';
 import type { FormValues } from './index';
 
 /** One check against a field value. `message` is what the form shows. */
 export type FieldRule = {
-  check: (value: string, values: FormValues) => boolean;
+  check: (value: string, values: FormValues) => boolean | Promise<boolean>;
   message: string;
 };
 
@@ -68,12 +69,46 @@ export function max(n: number, message = `Maximum ${n}`): FieldRule {
   };
 }
 
-/** Escape hatch — return true when the value is valid. */
+/** Escape hatch — return true when the value is valid. Promise false/reject fails. */
 export function rule(
-  check: (value: string, values: FormValues) => boolean,
+  check: (value: string, values: FormValues) => boolean | Promise<boolean>,
   message: string
 ): FieldRule {
   return { check, message };
+}
+
+export function url(message = 'Invalid URL'): FieldRule {
+  return {
+    message,
+    check: (value) => {
+      const t = value.trim();
+      if (t === '') return true;
+      if (isDangerousUrl(t)) return false;
+      try {
+        const parsed = new URL(t);
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+      } catch {
+        return false;
+      }
+    },
+  };
+}
+
+export function integer(message = 'Must be an integer'): FieldRule {
+  return {
+    message,
+    check: (value) => {
+      const t = value.trim();
+      return t === '' || /^-?\d+$/.test(t);
+    },
+  };
+}
+
+export function equalTo(otherFieldName: string, message?: string): FieldRule {
+  return {
+    message: message ?? `Must match ${otherFieldName}`,
+    check: (value, values) => value === fieldText(values, otherFieldName),
+  };
 }
 
 export type FieldSchema = Record<string, FieldRule | FieldRule[]>;
@@ -81,11 +116,11 @@ export type FieldSchema = Record<string, FieldRule | FieldRule[]>;
 export type FieldErrors = Record<string, string>;
 
 /** First failing rule per field. Empty object means valid. */
-export function runFieldRules(
+export async function runFieldRules(
   values: FormValues,
   schema: FieldSchema,
   extra: Map<string, FieldRule[]> = new Map()
-): FieldErrors {
+): Promise<FieldErrors> {
   const names = new Set([...Object.keys(schema), ...extra.keys()]);
   const errors: FieldErrors = {};
 
@@ -97,7 +132,13 @@ export function runFieldRules(
     ];
     const value = fieldText(values, name);
     for (const item of list) {
-      if (!item.check(value, values)) {
+      let ok = false;
+      try {
+        ok = await item.check(value, values);
+      } catch {
+        ok = false;
+      }
+      if (!ok) {
         errors[name] = item.message;
         break;
       }

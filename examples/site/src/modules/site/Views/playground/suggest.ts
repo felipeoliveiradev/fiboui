@@ -4,11 +4,12 @@ import { editText } from './edit'
 import { FACTORY_NAMES } from './labels'
 import { CHAIN_METHODS } from './methods'
 import { fillFor } from './fill'
+import { ensureLucideNames, lucideNames } from './imports'
 import { scheme } from './scheme'
 import { suggest, type PlaySuggest } from './state'
 
-const SIGNAL_METHODS = [
-  'add', 'clear', 'filter', 'find', 'insert', 'length', 'map', 'move', 'remove', 'replace', 'search', 'set', 'update', 'view',
+export const SIGNAL_METHODS = [
+  'add', 'clear', 'delete', 'filter', 'find', 'insert', 'length', '$length', 'map', 'move', 'remove', 'replace', 'search', 'set', 'update', 'view',
 ] as const
 const ROW = 22
 const VISIBLE = 12
@@ -99,6 +100,9 @@ export function refreshSuggest(el: HTMLTextAreaElement) {
     return
   }
   const found = queryAt(el.value, pos)
+  if (found?.kind === 'import' && !lucideNames()) {
+    void ensureLucideNames().then(() => refreshSuggest(el)).catch(() => undefined)
+  }
   if (!found) {
     suggest.value = null
     el.setAttribute('aria-expanded', 'false')
@@ -153,7 +157,7 @@ function acceptName(name: string) {
 function writeInsert(el: HTMLTextAreaElement, menu: PlaySuggest, name: string) {
   const end = completionEnd(el.value, menu.from, replaceTo)
   const nextStart = menu.from
-  const fill = fillFor(name, menu.kind)
+  const fill = fillFor(name, menu.kind, menu.signal)
   const insert = `${name}${fill.text}`
   const caret = nextStart + name.length
   editText(el, menu.from, end, insert, caret + fill.start, caret + fill.end)
@@ -204,10 +208,12 @@ function inNoise(value: string, pos: number): boolean {
   return quote !== ''
 }
 
-function queryAt(value: string, pos: number): { kind: PlaySuggest['kind']; partial: string; from: number; signal: boolean } | null {
+export function queryAt(value: string, pos: number): { kind: PlaySuggest['kind']; partial: string; from: number; signal: boolean } | null {
   if (inNoise(value, pos)) return null
+  const imported = importAt(value, pos)
+  if (imported) return { kind: 'import', partial: imported.partial, from: imported.from, signal: false }
   const prefix = value.slice(0, pos)
-  const method = prefix.match(/\.([A-Za-z0-9_]*)$/)
+  const method = prefix.match(/\.([A-Za-z0-9_$]*)$/)
   if (method) {
     const partial = method[1] ?? ''
     const dot = pos - partial.length - 1
@@ -231,10 +237,27 @@ const methodCache = new Map<string, readonly string[]>()
 const factoryCache = new Map<string, readonly string[]>()
 const functionCache = new Map<string, readonly string[]>()
 
+function importAt(value: string, pos: number): { partial: string; from: number } | null {
+  const prefix = value.slice(0, pos)
+  const open = prefix.match(/(?:^|\n)\s*import\s*\{([^}]*)$/)
+  if (!open) return null
+  const from = /\}[\s\S]*?\bfrom\s+['"]([^'"]+)['"]/.exec(value.slice(pos))
+  if (from && from[1] !== 'lucide-react') return null
+  const named = /([A-Za-z_$][\w$]*)$/.exec(open[1] ?? '')
+  const partial = named?.[1] ?? ''
+  return { partial, from: pos - partial.length }
+}
+
 function poolFor(kind: PlaySuggest['kind'], partial: string, signal: boolean): readonly string[] {
+  if (kind === 'import') return iconNamesFor(partial)
   if (kind === 'method') return signal ? signalMethodsFor(partial) : methodsFor(partial)
   if (kind === 'factory') return factoriesFor(partial)
   return functionsFor(partial)
+}
+
+function iconNamesFor(partial: string): readonly string[] {
+  const names = lucideNames() ?? []
+  return partial ? names.filter((name) => name.startsWith(partial)) : names
 }
 
 function signalMethodsFor(partial: string): readonly string[] {
@@ -261,8 +284,9 @@ function functionsFor(partial: string): readonly string[] {
   const hit = functionCache.get(partial)
   if (hit) return hit
   const list = FUNCTIONS.filter((name) => name.startsWith(partial))
-  functionCache.set(partial, list)
-  return list
+  const withImport = partial && 'import'.startsWith(partial) ? ['import', ...list] : list
+  functionCache.set(partial, withImport)
+  return withImport
 }
 
 function shellHtml(menu: PlaySuggest): string {
@@ -271,7 +295,7 @@ function shellHtml(menu: PlaySuggest): string {
 }
 
 function rowsHtml(menu: PlaySuggest, start: number, end: number): string {
-  const detail = menu.signal ? 'fiboui list' : menu.kind === 'factory' ? 'fiboui factory' : menu.kind === 'function' ? 'fiboui function' : 'fiboui chain'
+  const detail = menu.signal ? 'fiboui list' : menu.kind === 'import' ? 'lucide-react' : menu.kind === 'factory' ? 'fiboui factory' : menu.kind === 'function' ? 'fiboui function' : 'fiboui chain'
   const idle = idleColor(menu.kind)
   let html = ''
   for (let index = start; index < end; index += 1) {
@@ -336,7 +360,7 @@ function paintSelection(scroller: ParentNode) {
 }
 
 function idleColor(kind: PlaySuggest['kind']): string {
-  if (kind === 'factory') return scheme.widget
+  if (kind === 'factory' || kind === 'import') return scheme.widget
   if (kind === 'function') return scheme.keyword
   return scheme.onSurface
 }

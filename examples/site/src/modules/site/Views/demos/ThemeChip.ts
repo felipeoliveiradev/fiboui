@@ -18,6 +18,7 @@ export function toneChip(label: string, value: Tone) {
       .alignItems('center')
       .bg(selected ? 'rgba(255,45,138,0.18)' : 'transparent')
       .borderBottom(selected ? `2px solid ${pink}` : '2px solid transparent')
+      .props({ 'aria-pressed': selected })
       .onPress(() => selectTone(value)),
   ).children([
     Row()

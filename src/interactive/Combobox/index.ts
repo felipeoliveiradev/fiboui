@@ -4,7 +4,24 @@ import React, { ReactElement, useState, useRef, useEffect, ChangeEvent, Keyboard
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { twMerge } from 'tailwind-merge';
 import { BaseProps } from '../../core/types';
+import {
+  collectInterpSignals,
+  hasInterpMarks,
+  resolveInterpString,
+} from '../../core/interpolate';
 import type { FieldRule } from '../Form/validators';
+
+function bindInterp(host: FiboBuilder, text: string | undefined): void {
+  if (typeof text !== 'string' || !hasInterpMarks(text)) return;
+  for (const sig of collectInterpSignals(text)) {
+    host.bindSignal(sig);
+  }
+}
+
+function resolveInterp(text: string | undefined): string | undefined {
+  if (typeof text !== 'string') return text;
+  return hasInterpMarks(text) ? resolveInterpString(text) : text;
+}
 
 interface Option {
   label: string;
@@ -30,8 +47,38 @@ interface ComboboxInnerProps {
 }
 
 function serializeComboboxValue(value: string | string[] | undefined): string {
-  if (Array.isArray(value)) return value.join(',');
+  if (Array.isArray(value)) return value[0] ?? '';
   return value ?? '';
+}
+
+function hiddenSlots(value: string | string[] | undefined, multiple?: boolean): string[] {
+  if (multiple) {
+    if (Array.isArray(value) && value.length > 0) return value;
+    if (typeof value === 'string' && value !== '') return [value];
+    return [''];
+  }
+  return [serializeComboboxValue(value)];
+}
+
+function sameHiddenValue(a: string | string[], b: string | string[]): boolean {
+  const aa = Array.isArray(a) ? a : [a];
+  const bb = Array.isArray(b) ? b : [b];
+  return aa.length === bb.length && aa.every((v, i) => v === bb[i]);
+}
+
+function hiddenInputsIn(host: HTMLElement): HTMLInputElement[] {
+  return [...host.querySelectorAll('input[type="hidden"]')] as HTMLInputElement[];
+}
+
+function parseHiddenGroup(
+  host: HTMLElement | null,
+  fallback: HTMLInputElement | null,
+  multiple?: boolean
+): string | string[] {
+  const inputs = host ? hiddenInputsIn(host) : fallback ? [fallback] : [];
+  const raw = inputs.map((el) => el.value);
+  if (multiple) return [...new Set(raw.filter((v) => v !== ''))];
+  return raw[0] ?? '';
 }
 
 const ComboboxInner = React.memo((props: ComboboxInnerProps) => {
@@ -44,8 +91,17 @@ const ComboboxInner = React.memo((props: ComboboxInnerProps) => {
     // participates in FormData via the hidden input below.
     const [searchTerm, setSearchTerm] = useState('');
     const [highlighted, setHighlighted] = useState(0);
+    const [browseUnlocked, setBrowseUnlocked] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const hiddenRef = useRef<HTMLInputElement>(null);
+    const syncingRef = useRef(false);
+    const selectFrameRef = useRef<number | null>(null);
+
+    const cancelPendingSelect = () => {
+        if (selectFrameRef.current == null) return;
+        cancelAnimationFrame(selectFrameRef.current);
+        selectFrameRef.current = null;
+    };
 
     const {
         containerClass,
@@ -69,6 +125,7 @@ const ComboboxInner = React.memo((props: ComboboxInnerProps) => {
     );
 
     const currentValue = controlled ? (value ?? (multiple ? [] : '')) : localValue;
+    const initialValueRef = useRef(value ?? (multiple ? [] : ''));
 
     useEffect(() => {
         if (!multiple) {
@@ -79,29 +136,126 @@ const ComboboxInner = React.memo((props: ComboboxInnerProps) => {
         }
     }, [currentValue, options, isOpen, multiple]);
 
-    const filteredOptions = options.filter((opt) =>
-        opt.label.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // While browsing a committed single value, list every option until the user types.
+    const filteredOptions =
+      !multiple && isOpen && !browseUnlocked
+        ? options
+        : options.filter((opt) =>
+            opt.label.toLowerCase().includes(searchTerm.toLowerCase())
+          );
 
     useEffect(() => {
         setHighlighted(0);
     }, [searchTerm, isOpen]);
 
+    const restoreSearchTerm = () => {
+        if (!multiple) {
+            const selected = options.find((o) => o.value === currentValue);
+            setSearchTerm(selected ? selected.label : '');
+        } else {
+            setSearchTerm('');
+        }
+    };
+
+    const closeList = () => {
+        setIsOpen(false);
+        setBrowseUnlocked(false);
+        restoreSearchTerm();
+    };
+
+    const openList = () => {
+        if (disabled) return;
+        setBrowseUnlocked(false);
+        setIsOpen(true);
+    };
+
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
-                if (!multiple) {
-                    const selected = options.find((o) => o.value === currentValue);
-                    setSearchTerm(selected ? selected.label : '');
-                } else {
-                    setSearchTerm('');
-                }
+                closeList();
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            cancelPendingSelect();
+        };
     }, [currentValue, options, multiple]);
+
+    // Uncontrolled: DOM owns the hidden value so Form.reset / Form.set stick.
+    // Do not pass React `value` on the single hidden — jsdom would restore default on re-render.
+    useEffect(() => {
+        if (controlled) return;
+        const input = hiddenRef.current;
+        if (!input) return;
+        const host = containerRef.current;
+
+        if (input.getAttribute('data-fibo-seeded') == null) {
+            const initialVals = hiddenSlots(initialValueRef.current, multiple);
+            const inputs = host ? hiddenInputsIn(host) : [input];
+            syncingRef.current = true;
+            inputs.forEach((el, i) => {
+                const v = initialVals[i] ?? '';
+                el.defaultValue = v;
+                el.value = v;
+            });
+            syncingRef.current = false;
+            input.setAttribute('data-fibo-seeded', '1');
+        }
+
+        const syncFromDom = () => {
+            if (syncingRef.current) return;
+            const next = parseHiddenGroup(host, input, multiple);
+            setLocalValue((prev) => (sameHiddenValue(prev, next) ? prev : next));
+        };
+        const onFormReset = () => {
+            // type=hidden: value reflects the content attribute, so native reset is a no-op.
+            const initial = initialValueRef.current;
+            const first = serializeComboboxValue(initial);
+            syncingRef.current = true;
+            if (input.value !== first) input.value = first;
+            syncingRef.current = false;
+            setLocalValue(initial);
+        };
+
+        input.addEventListener('fibo-sync', syncFromDom);
+        const form = input.closest('form');
+        form?.addEventListener('reset', onFormReset);
+
+        const proto = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+        if (proto?.get && proto.set) {
+            Object.defineProperty(input, 'value', {
+                configurable: true,
+                enumerable: true,
+                get() {
+                    return proto.get!.call(this);
+                },
+                set(v: string) {
+                    proto.set!.call(this, v);
+                    if (syncingRef.current) return;
+                    if (multiple) {
+                        const next = v === '' ? [] : [v];
+                        setLocalValue((prev) => (sameHiddenValue(prev, next) ? prev : next));
+                    } else {
+                        syncFromDom();
+                    }
+                },
+            });
+        }
+
+        return () => {
+            input.removeEventListener('fibo-sync', syncFromDom);
+            form?.removeEventListener('reset', onFormReset);
+            if (proto) {
+                Object.defineProperty(input, 'value', {
+                    configurable: true,
+                    enumerable: proto.enumerable,
+                    get: proto.get,
+                    set: proto.set,
+                });
+            }
+        };
+    }, [controlled, multiple, name]);
 
     useEffect(() => {
         const input = hiddenRef.current;
@@ -122,14 +276,34 @@ const ComboboxInner = React.memo((props: ComboboxInnerProps) => {
         }
     }, [rules]);
 
+    const writeHidden = (next: string | string[]) => {
+        const input = hiddenRef.current;
+        if (!input) return;
+        const first = serializeComboboxValue(next);
+        const host = containerRef.current;
+        syncingRef.current = true;
+        if (input.value !== first) input.value = first;
+        if (host && multiple && Array.isArray(next)) {
+            hiddenInputsIn(host).forEach((el, i) => {
+                const v = next[i] ?? '';
+                if (el.value !== v) el.value = v;
+            });
+        }
+        syncingRef.current = false;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+
     const commitValue = (next: string | string[]) => {
         if (!controlled) {
             setLocalValue(next);
         }
+        writeHidden(next);
         onChange?.(next);
     };
 
     const handleSelect = (opt: Option) => {
+        if (disabled) return;
         if (multiple) {
              const currentValues = Array.isArray(currentValue) ? [...currentValue] : [];
              if (!currentValues.includes(opt.value)) {
@@ -137,14 +311,17 @@ const ComboboxInner = React.memo((props: ComboboxInnerProps) => {
                  commitValue(currentValues);
              }
              setSearchTerm('');
+             setBrowseUnlocked(false);
         } else {
             setSearchTerm(opt.label);
             commitValue(opt.value);
             setIsOpen(false);
+            setBrowseUnlocked(false);
         }
     };
 
     const handleRemoveTag = (valToRemove: string) => {
+        if (disabled) return;
         if (multiple && Array.isArray(currentValue)) {
             const newValues = currentValue.filter(v => v !== valToRemove);
             commitValue(newValues);
@@ -169,32 +346,50 @@ const ComboboxInner = React.memo((props: ComboboxInnerProps) => {
 
     const onInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
         if (disabled) return;
+        if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+            cancelPendingSelect();
+        }
         switch (event.key) {
             case 'ArrowDown':
                 event.preventDefault();
-                if (!isOpen) setIsOpen(true);
+                if (!isOpen) openList();
                 else if (filteredOptions.length) setHighlighted((i) => (i + 1) % filteredOptions.length);
                 break;
             case 'ArrowUp':
                 event.preventDefault();
-                if (!isOpen) setIsOpen(true);
+                if (!isOpen) openList();
                 else if (filteredOptions.length) setHighlighted((i) => (i - 1 + filteredOptions.length) % filteredOptions.length);
                 break;
-            case 'Enter':
-                event.preventDefault();
-                if (filteredOptions[highlighted]) {
-                    handleSelect(filteredOptions[highlighted]);
+            case 'Enter': {
+                if (!isOpen) break;
+                const toCommit = filteredOptions[highlighted];
+                if (toCommit) {
+                    event.preventDefault();
+                    handleSelect(toCommit);
                 } else if (searchTerm && onAdd) {
+                    event.preventDefault();
                     handleAdd();
                 }
                 break;
+            }
             case 'Escape':
+                if (!isOpen) break;
                 event.preventDefault();
-                setIsOpen(false);
+                closeList();
+                break;
+            case 'Tab':
+                closeList();
                 break;
             default:
                 break;
         }
+    };
+
+    const onContainerBlur = (event: React.FocusEvent<HTMLDivElement>) => {
+        const next = event.relatedTarget as Node | null;
+        if (next && containerRef.current?.contains(next)) return;
+        if (!next) return;
+        closeList();
     };
 
     return React.createElement(
@@ -202,18 +397,26 @@ const ComboboxInner = React.memo((props: ComboboxInnerProps) => {
       {
           ref: containerRef,
           className: containerClass,
-          style: containerStyle
+          style: containerStyle,
+          onBlur: onContainerBlur,
       },
       React.createElement('div', { className: 'relative w-full h-full' }, [
-          name
-            ? React.createElement('input', {
-                key: 'hidden',
-                ref: hiddenRef,
-                type: 'hidden',
-                name,
-                value: serializeComboboxValue(currentValue),
-              })
-            : null,
+          ...(name
+            ? hiddenSlots(currentValue, multiple).map((v, i) =>
+                React.createElement('input', {
+                  key: multiple ? `hidden-${i}` : 'hidden',
+                  ref: i === 0 ? hiddenRef : undefined,
+                  type: 'hidden',
+                  name,
+                  disabled: !!disabled,
+                  ...(controlled
+                    ? { value: v }
+                    : multiple
+                      ? { defaultValue: v }
+                      : null),
+                })
+              )
+            : [null]),
 
           React.createElement('div', {
               key: 'field',
@@ -232,6 +435,7 @@ const ComboboxInner = React.memo((props: ComboboxInnerProps) => {
                           type: 'button',
                           className: 'ml-1 hover:text-[var(--fibo-primary)] focus:outline-none',
                           'aria-label': `Remove ${labelStr}`,
+                          disabled: !!disabled,
                           onClick: (e: React.MouseEvent) => { e.stopPropagation(); handleRemoveTag(val); }
                       }, '×')
                   ]);
@@ -250,10 +454,32 @@ const ComboboxInner = React.memo((props: ComboboxInnerProps) => {
                   placeholder: (multiple && Array.isArray(currentValue) && currentValue.length > 0) ? '' : (placeholder || ' '),
                   disabled: disabled,
                   onChange: (e: ChangeEvent<HTMLInputElement>) => {
-                      setSearchTerm(e.target.value);
+                      cancelPendingSelect();
+                      let next = e.target.value;
+                      // Closed-field input holds the committed label. A first
+                      // keystroke must start a new query (mouseup often collapses
+                      // select-all, so the DOM value is `Label` + char).
+                      if (!multiple && !browseUnlocked) {
+                          const selected = options.find((o) => o.value === currentValue);
+                          const label = selected?.label ?? '';
+                          if (label.length > 0 && next.length === label.length + 1) {
+                              if (next.startsWith(label)) next = next.slice(label.length);
+                              else if (next.endsWith(label)) next = next.slice(0, 1);
+                          }
+                      }
+                      setBrowseUnlocked(true);
+                      setSearchTerm(next);
                       if (!isOpen) setIsOpen(true);
                   },
-                  onFocus: () => setIsOpen(true),
+                  onFocus: (e: React.FocusEvent<HTMLInputElement>) => {
+                      openList();
+                      const el = e.currentTarget;
+                      cancelPendingSelect();
+                      selectFrameRef.current = requestAnimationFrame(() => {
+                          selectFrameRef.current = null;
+                          if (document.activeElement === el) el.select();
+                      });
+                  },
                   onKeyDown: onInputKeyDown,
               })
           ]),
@@ -348,11 +574,13 @@ class ComboboxBuilder extends FiboBuilder {
 
   label(val: string): this {
     this._label = val;
+    bindInterp(this, val);
     return this;
   }
 
   placeholder(val: string): this {
     this._placeholder = val;
+    bindInterp(this, val);
     return this;
   }
 
@@ -364,6 +592,7 @@ class ComboboxBuilder extends FiboBuilder {
 
   options(opts: Option[]): this {
       this._options = opts;
+      for (const opt of opts) bindInterp(this, opt.label);
       return this;
   }
 
@@ -379,6 +608,7 @@ class ComboboxBuilder extends FiboBuilder {
 
   error(val: string): this {
     this._error = val;
+    bindInterp(this, val);
     return this;
   }
 
@@ -404,11 +634,14 @@ class ComboboxBuilder extends FiboBuilder {
     const props: ComboboxInnerProps = {
         containerClass,
         containerStyle: this.getStyle(),
-        label: this._label,
-        error: this._error,
+        label: resolveInterp(this._label),
+        error: resolveInterp(this._error),
         value: this._value,
-        placeholder: this._placeholder,
-        options: this._options,
+        placeholder: resolveInterp(this._placeholder),
+        options: this._options.map((opt) => ({
+          ...opt,
+          label: resolveInterp(opt.label) ?? opt.label,
+        })),
         disabled: this._disabled,
         multiple: this._multiple,
         onChange: this._onChange,

@@ -7,4 +7,10 @@ export {
   useParams,
   useLocation,
   useQuery,
+  Outlet,
+  lazyRoute,
+  preloadRoute,
+  useRouteMeta,
+  DefaultLoader,
+  DefaultErrorPage,
 } from './navigation';

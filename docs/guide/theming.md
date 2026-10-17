@@ -48,8 +48,8 @@ import { FiboThemeProvider } from 'fiboui';
 
 | Name | Role |
 |------|------|
-| `web` | Clean light SaaS (default provider) |
-| `material` | Material Design tokens |
+| `web` | Clean light SaaS |
+| `material` | Material Design tokens (**`FiboThemeProvider` default**, same as `base.css`) |
 | `cupertino` | iOS / HIG tokens |
 | `noir` | Obsidian editorial dark (dense apps / marketing) |
 

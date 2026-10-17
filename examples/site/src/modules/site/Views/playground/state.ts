@@ -1,7 +1,7 @@
 import { signal } from 'fiboui'
 import { helloExample } from './examples'
 import { toReact } from './react'
-import { runPlay, type PlayError } from './run'
+import { runPlayAsync, type PlayError } from './run'
 
 /** Source the editor writes. Only the highlight layer reads it. */
 export const source = signal(helloExample)
@@ -19,7 +19,7 @@ export const reactCode = signal<string | null>(null)
 export type PlaySuggest = {
   items: readonly string[]
   partial: string
-  kind: 'method' | 'factory' | 'function'
+  kind: 'method' | 'factory' | 'function' | 'import'
   /** Completion is on a lowercase receiver (`todos.view`), not a widget chain. */
   signal: boolean
   from: number
@@ -30,8 +30,12 @@ export type PlaySuggest = {
 
 export const suggest = signal<PlaySuggest | null>(null)
 
-function publish() {
-  const result = runPlay(source.value)
+let previewTicket = 0
+
+async function publish() {
+  const ticket = ++previewTicket
+  const result = await runPlayAsync(source.value)
+  if (ticket !== previewTicket) return
   if (!result.ok) {
     status.value = result.error
     return

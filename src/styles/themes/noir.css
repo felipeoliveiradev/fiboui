@@ -1,130 +1,141 @@
-@layer fibo.theme {
-  :root:has(.fibo-theme-noir),
-  .fibo-theme-noir {
-    color-scheme: dark;
+:root:has(.fibo-theme-noir),
+.fibo-theme-noir {
+  color-scheme: dark;
 
-    --fibo-primary: #f4f4f6;
-    --fibo-on-primary: #0a0a0b;
-    --fibo-primary-variant: #c8c8d0;
-    --fibo-secondary: #8e8e9a;
-    --fibo-on-secondary: #f4f4f6;
-    --fibo-secondary-variant: #4e4e57;
-    --fibo-background: #0a0a0b;
-    --fibo-on-background: #f4f4f6;
-    --fibo-surface: #141417;
-    --fibo-on-surface: #f4f4f6;
-    --fibo-error: #f87171;
-    --fibo-on-error: #0a0a0b;
-    --fibo-success: #34d399;
-    --fibo-warning: #fbbf24;
-    --fibo-info: #94a3b8;
-    --fibo-outline: rgba(255, 255, 255, 0.12);
+  --fibo-primary: #f4f4f6;
+  --fibo-on-primary: #0a0a0b;
+  --fibo-primary-variant: #c8c8d0;
+  --fibo-primary-container: #2A2A32;
+  --fibo-on-primary-container: #F4F4F6;
+  --fibo-secondary: #8e8e9a;
+  --fibo-on-secondary: #f4f4f6;
+  --fibo-secondary-variant: #4e4e57;
+  --fibo-secondary-container: #222228;
+  --fibo-on-secondary-container: #E4E4EA;
+  --fibo-tertiary: #D4A017;
+  --fibo-on-tertiary: #0A0A0B;
+  --fibo-tertiary-container: #3A2E10;
+  --fibo-on-tertiary-container: #F5E6B8;
+  --fibo-background: #0a0a0b;
+  --fibo-on-background: #f4f4f6;
+  --fibo-surface: #141417;
+  --fibo-on-surface: #f4f4f6;
+  --fibo-surface-variant: #1C1C22;
+  --fibo-on-surface-variant: #C8C8D0;
+  --fibo-surface-container-low: #141417;
+  --fibo-error: #f87171;
+  --fibo-on-error: #0a0a0b;
+  --fibo-error-container: #F87171;
+  --fibo-on-error-container: #0A0A0B;
+  --fibo-success: #34d399;
+  --fibo-warning: #fbbf24;
+  --fibo-info: #94a3b8;
+  --fibo-outline: rgba(255, 255, 255, 0.12);
 
-    --fibo-font-family: var(--font-sans-loaded, "Plus Jakarta Sans"), system-ui, sans-serif;
+  --fibo-font-family: var(--font-sans-loaded, "Plus Jakarta Sans"), system-ui, -apple-system, sans-serif;
 
-    --fibo-space-xs: 4px;
-    --fibo-space-sm: 8px;
-    --fibo-space-md: 16px;
-    --fibo-space-lg: 24px;
-    --fibo-space-xl: 40px;
+  --fibo-space-xs: 4px;
+  --fibo-space-sm: 8px;
+  --fibo-space-md: 16px;
+  --fibo-space-lg: 24px;
+  --fibo-space-xl: 40px;
 
-    --fibo-radius-xs: 2px;
-    --fibo-radius-sm: 6px;
-    --fibo-radius-md: 14px;
-    --fibo-radius-lg: 18px;
-    --fibo-radius-xl: 18px;
-    --fibo-radius-full: 9999px;
+  --fibo-radius-xs: 2px;
+  --fibo-radius-sm: 6px;
+  --fibo-radius-md: 14px;
+  --fibo-radius-lg: 18px;
+  --fibo-radius-xl: 18px;
+  --fibo-radius-full: 9999px;
 
-    --fibo-elevation-1: 0 1px 0 rgba(255, 255, 255, 0.04);
-    --fibo-elevation-2: 0 12px 40px rgba(0, 0, 0, 0.45);
-    --fibo-elevation-3: 0 30px 80px rgba(0, 0, 0, 0.75);
-    --fibo-shadow-sm: var(--fibo-elevation-1);
-    --fibo-shadow-md: var(--fibo-elevation-2);
-    --fibo-shadow-lg: var(--fibo-elevation-3);
+  --fibo-elevation-1: 0 1px 0 rgba(255, 255, 255, 0.04);
+  --fibo-elevation-2: 0 12px 40px rgba(0, 0, 0, 0.45);
+  --fibo-elevation-3: 0 30px 80px rgba(0, 0, 0, 0.75);
+  --fibo-shadow-sm: var(--fibo-elevation-1);
+  --fibo-shadow-md: var(--fibo-elevation-2);
+  --fibo-shadow-lg: var(--fibo-elevation-3);
 
-    --fibo-text-h1-size: clamp(38px, 4.4vw, 60px);
-    --fibo-text-h1-weight: 300;
-    --fibo-text-h1-tracking: 0.03em;
-    --fibo-text-h1-height: 1.12;
-    --fibo-text-h1-color: var(--fibo-on-background);
+  --fibo-text-h1-size: clamp(38px, 4.4vw, 60px);
+  --fibo-text-h1-weight: 300;
+  --fibo-text-h1-tracking: 0.03em;
+  --fibo-text-h1-height: 1.12;
+  --fibo-text-h1-color: var(--fibo-on-background);
 
-    --fibo-text-h2-size: clamp(28px, 3.2vw, 44px);
-    --fibo-text-h2-weight: 300;
-    --fibo-text-h2-tracking: 0.03em;
-    --fibo-text-h2-height: 1.18;
-    --fibo-text-h2-color: var(--fibo-on-background);
+  --fibo-text-h2-size: clamp(28px, 3.2vw, 44px);
+  --fibo-text-h2-weight: 300;
+  --fibo-text-h2-tracking: 0.03em;
+  --fibo-text-h2-height: 1.18;
+  --fibo-text-h2-color: var(--fibo-on-background);
 
-    --fibo-text-h3-size: 16px;
-    --fibo-text-h3-weight: 500;
-    --fibo-text-h3-tracking: 0.01em;
-    --fibo-text-h3-color: var(--fibo-on-background);
+  --fibo-text-h3-size: 16px;
+  --fibo-text-h3-weight: 500;
+  --fibo-text-h3-tracking: 0.01em;
+  --fibo-text-h3-color: var(--fibo-on-background);
 
-    --fibo-text-h4-size: 15px;
-    --fibo-text-h4-weight: 500;
-    --fibo-text-h4-color: var(--fibo-on-background);
+  --fibo-text-h4-size: 15px;
+  --fibo-text-h4-weight: 500;
+  --fibo-text-h4-color: var(--fibo-on-background);
 
-    --fibo-text-h5-size: 14px;
-    --fibo-text-h5-weight: 500;
-    --fibo-text-h5-color: var(--fibo-on-background);
+  --fibo-text-h5-size: 14px;
+  --fibo-text-h5-weight: 500;
+  --fibo-text-h5-color: var(--fibo-on-background);
 
-    --fibo-text-h6-size: 13px;
-    --fibo-text-h6-weight: 500;
-    --fibo-text-h6-color: var(--fibo-on-background);
+  --fibo-text-h6-size: 13px;
+  --fibo-text-h6-weight: 500;
+  --fibo-text-h6-color: var(--fibo-on-background);
 
-    --fibo-text-body-size: 13.5px;
-    --fibo-text-body-weight: 400;
-    --fibo-text-body-height: 1.7;
-    --fibo-text-body-color: var(--fibo-secondary);
+  --fibo-text-body-size: 13.5px;
+  --fibo-text-body-weight: 400;
+  --fibo-text-body-height: 1.7;
+  --fibo-text-body-color: var(--fibo-secondary);
 
-    --fibo-text-caption-size: 12.5px;
-    --fibo-text-caption-weight: 400;
-    --fibo-text-caption-height: 1.4;
-    --fibo-text-caption-color: var(--fibo-secondary);
+  --fibo-text-caption-size: 12.5px;
+  --fibo-text-caption-weight: 400;
+  --fibo-text-caption-height: 1.4;
+  --fibo-text-caption-color: var(--fibo-secondary);
 
-    --fibo-text-label-size: 11.5px;
-    --fibo-text-label-weight: 500;
-    --fibo-text-label-tracking: 0.02em;
-    --fibo-text-label-color: var(--fibo-secondary);
-  }
+  --fibo-text-label-size: 11.5px;
+  --fibo-text-label-weight: 500;
+  --fibo-text-label-tracking: 0.02em;
+  --fibo-text-label-color: var(--fibo-secondary);
+}
 
-  .fibo-theme-noir .fibo-text-h1,
-  .fibo-theme-noir .fibo-text-h2 {
-    text-transform: uppercase;
-    font-family: var(--fibo-font-family);
-    color: var(--fibo-text-h1-color);
-  }
+.fibo-theme-noir .fibo-text-h1,
+.fibo-theme-noir .fibo-text-h2 {
+  text-transform: uppercase;
+  font-family: var(--fibo-font-family);
+  color: var(--fibo-text-h1-color);
+}
 
-  .fibo-theme-noir .fibo-text-h1 {
-    font-size: var(--fibo-text-h1-size);
-    font-weight: var(--fibo-text-h1-weight);
-    letter-spacing: var(--fibo-text-h1-tracking);
-    line-height: var(--fibo-text-h1-height);
-  }
+.fibo-theme-noir .fibo-text-h1 {
+  font-size: var(--fibo-text-h1-size);
+  font-weight: var(--fibo-text-h1-weight);
+  letter-spacing: var(--fibo-text-h1-tracking);
+  line-height: var(--fibo-text-h1-height);
+}
 
-  .fibo-theme-noir .fibo-text-h2 {
-    font-size: var(--fibo-text-h2-size);
-    font-weight: var(--fibo-text-h2-weight);
-    letter-spacing: var(--fibo-text-h2-tracking);
-    line-height: var(--fibo-text-h2-height);
-    color: var(--fibo-text-h2-color);
-  }
+.fibo-theme-noir .fibo-text-h2 {
+  font-size: var(--fibo-text-h2-size);
+  font-weight: var(--fibo-text-h2-weight);
+  letter-spacing: var(--fibo-text-h2-tracking);
+  line-height: var(--fibo-text-h2-height);
+  color: var(--fibo-text-h2-color);
+}
 
-  .fibo-theme-noir .fibo-text-body {
-    font-size: var(--fibo-text-body-size);
-    font-weight: var(--fibo-text-body-weight);
-    line-height: var(--fibo-text-body-height);
-    color: var(--fibo-text-body-color);
-  }
+.fibo-theme-noir .fibo-text-body {
+  font-size: var(--fibo-text-body-size);
+  font-weight: var(--fibo-text-body-weight);
+  line-height: var(--fibo-text-body-height);
+  color: var(--fibo-text-body-color);
+}
 
-  .fibo-theme-noir .fibo-text-caption,
-  .fibo-theme-noir .fibo-text-label {
-    font-size: var(--fibo-text-caption-size);
-    color: var(--fibo-text-caption-color);
-  }
+.fibo-theme-noir .fibo-text-caption,
+.fibo-theme-noir .fibo-text-label {
+  font-size: var(--fibo-text-caption-size);
+  color: var(--fibo-text-caption-color);
+}
 
-  .fibo-theme-noir .fibo-button-filled:hover {
-    background-color: #ffffff;
-    color: #0a0a0b;
-    box-shadow: none;
-  }
+.fibo-theme-noir .fibo-button-filled:hover {
+  background-color: #ffffff;
+  color: #0a0a0b;
+  box-shadow: none;
 }

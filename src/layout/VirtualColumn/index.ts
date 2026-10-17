@@ -1,8 +1,17 @@
 'use client';
 
-import React, { ReactElement, ReactNode, useRef, useState, useLayoutEffect } from 'react';
+import React, { ReactElement, ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
-import { ChildrenProps } from '../../core/types';
+import { normalizeFiboChildren, reactListKey } from '../../core/children';
+import { ChildrenProps, FiboChildren } from '../../core/types';
+
+const useIsoLayoutEffect = typeof document !== 'undefined' ? useLayoutEffect : useEffect;
+
+type ItemCacheKey = string | number;
+
+function itemCacheKey(child: ReactNode, index: number): ItemCacheKey {
+  return reactListKey(child, index);
+}
 
 interface VirtualColumnInnerProps {
   children: ReactNode[];
@@ -24,20 +33,35 @@ const VirtualColumnInner = React.memo((props: VirtualColumnInnerProps) => {
     overscan = 5,
     containerHeight = 500,
     className,
-    style
+    style,
+    ...rest
   } = props;
 
   const [scrollTop, setScrollTop] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const itemRefs = useRef<Map<number, HTMLDivElement>>(new Map());
-  const heightCache = useRef<Map<number, number>>(new Map());
+  const itemRefs = useRef<Map<ItemCacheKey, HTMLDivElement>>(new Map());
+  const heightCache = useRef<Map<ItemCacheKey, number>>(new Map());
 
-  const itemCount = children.length;
+  const items = Array.isArray(children) ? children : children != null ? [children] : [];
+  const itemCount = items.length;
   const isFixedHeight = itemHeight !== undefined;
+
+  if (!isFixedHeight) {
+    const liveKeys = new Set<ItemCacheKey>();
+    for (let i = 0; i < itemCount; i++) {
+      liveKeys.add(itemCacheKey(items[i], i));
+    }
+    for (const key of Array.from(heightCache.current.keys())) {
+      if (!liveKeys.has(key)) {
+        heightCache.current.delete(key);
+        itemRefs.current.delete(key);
+      }
+    }
+  }
 
   const getItemHeight = (index: number): number => {
     if (isFixedHeight) return itemHeight;
-    return heightCache.current.get(index) ?? estimatedItemHeight;
+    return heightCache.current.get(itemCacheKey(items[index], index)) ?? estimatedItemHeight;
   };
 
   const getItemOffset = (index: number): number => {
@@ -104,27 +128,28 @@ const VirtualColumnInner = React.memo((props: VirtualColumnInnerProps) => {
     endIndex = Math.min(itemCount, index);
   }
 
-  const visibleItems = children.slice(startIndex, endIndex);
+  const visibleItems = items.slice(startIndex, endIndex);
   const startOffset = getItemOffset(startIndex);
   const totalHeight = getTotalHeight();
   const [layoutVersion, setLayoutVersion] = useState(0);
 
-  useLayoutEffect(() => {
+  useIsoLayoutEffect(() => {
     if (!measureItems || isFixedHeight) return;
 
     let changed = false;
-    visibleItems.forEach((_, i) => {
+    visibleItems.forEach((child, i) => {
       const actualIndex = startIndex + i;
-      const element = itemRefs.current.get(actualIndex);
+      const cacheKey = itemCacheKey(child, actualIndex);
+      const element = itemRefs.current.get(cacheKey);
 
       if (element) {
         const rect = element.getBoundingClientRect();
         const measuredHeight = rect.height;
 
         if (measuredHeight > 0) {
-          const cachedHeight = heightCache.current.get(actualIndex);
+          const cachedHeight = heightCache.current.get(cacheKey);
           if (cachedHeight !== measuredHeight) {
-            heightCache.current.set(actualIndex, measuredHeight);
+            heightCache.current.set(cacheKey, measuredHeight);
             changed = true;
           }
         }
@@ -143,8 +168,9 @@ const VirtualColumnInner = React.memo((props: VirtualColumnInnerProps) => {
   return React.createElement(
     'div',
     {
+      ...rest,
       ref: containerRef,
-      className: `fibo-virtual-column ${className || ''}`,
+      className: `fibo-virtual-column ${className || ''}`.trim(),
       style: {
         height: `${containerHeight}px`,
         overflowY: 'auto',
@@ -174,16 +200,17 @@ const VirtualColumnInner = React.memo((props: VirtualColumnInnerProps) => {
       },
       visibleItems.map((child, i) => {
         const actualIndex = startIndex + i;
+        const childKey = itemCacheKey(child, actualIndex);
 
         return React.createElement(
           'div',
           {
-            key: actualIndex,
+            key: childKey,
             ref: (el: HTMLDivElement | null): void => {
               if (el && measureItems && !isFixedHeight) {
-                itemRefs.current.set(actualIndex, el);
+                itemRefs.current.set(childKey, el);
               } else if (!el) {
-                itemRefs.current.delete(actualIndex);
+                itemRefs.current.delete(childKey);
               }
             },
             style: { width: '100%' }
@@ -228,17 +255,33 @@ class VirtualColumnBuilder extends FiboBuilder {
   }
 
   build(): ReactElement {
-    const children = this.processChildren();
+    const {
+      children: propsChildren,
+      className: extraClass,
+      style: extraStyle,
+      itemHeight: _itemHeightProp,
+      estimatedItemHeight: _estimatedItemHeightProp,
+      measureItems: _measureItemsProp,
+      overscan: _overscanProp,
+      containerHeight: _containerHeightProp,
+      ...dom
+    } = this._props ?? {};
+
+    const fromBuilder = this.processChildren();
+    const children = propsChildren !== undefined
+      ? normalizeFiboChildren(propsChildren as FiboChildren)
+      : fromBuilder;
 
     const props: VirtualColumnInnerProps = {
+      ...dom,
       children,
       itemHeight: this._itemHeight,
       estimatedItemHeight: this._estimatedItemHeight,
       measureItems: this._measureItems,
       overscan: this._overscan,
       containerHeight: this._containerHeight,
-      className: this.getClassName(),
-      style: this.getStyle()
+      className: [this.getClassName(), extraClass].filter(Boolean).join(' '),
+      style: extraStyle ? { ...this.getStyle(), ...extraStyle } : this.getStyle(),
     };
 
     return React.createElement(VirtualColumnInner, props);

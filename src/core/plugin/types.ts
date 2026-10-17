@@ -1,5 +1,5 @@
-import { Token, Provider } from '../../core/di/types';
-import type { FiboBuilder } from '../../core/builder';
+import { Token, Provider } from '../di/types';
+import type { FiboBuilder } from '../builder';
 
 export interface RouteDefinition {
   path: string;
@@ -30,4 +30,5 @@ export interface FiboPlugin {
   name: string;
   version?: string;
   setup: PluginSetup;
+  teardown?: PluginSetup;
 }

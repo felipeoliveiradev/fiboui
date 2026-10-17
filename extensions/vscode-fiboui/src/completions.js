@@ -1,15 +1,16 @@
 const vscode = require('vscode');
-const { FACTORIES } = require('./factories');
+const { FACTORIES, sliceLooksLikeBuilder } = require('./factories');
 const METHODS = require('./methods.json');
+
+const LANGUAGES = ['typescript', 'typescriptreact', 'javascript', 'javascriptreact'];
+const DOCUMENT_SELECTORS = LANGUAGES.flatMap((language) => [
+  { language, scheme: 'file' },
+  { language, scheme: 'untitled' },
+]);
 
 function registerCompletions(context) {
   const provider = vscode.languages.registerCompletionItemProvider(
-    [
-      { language: 'typescript', scheme: 'file' },
-      { language: 'typescriptreact', scheme: 'file' },
-      { language: 'javascript', scheme: 'file' },
-      { language: 'javascriptreact', scheme: 'file' },
-    ],
+    DOCUMENT_SELECTORS,
     {
       provideCompletionItems(document, position) {
         const cfg = vscode.workspace.getConfiguration('fiboui');
@@ -60,10 +61,10 @@ function fileMentionsFiboui(document) {
 
 function looksLikeBuilderContext(document, position) {
   if (fileMentionsFiboui(document)) return true;
-  // Look back a few lines for Factory( or .children(
+  // Look back a few lines for a real FiboUI factory or .children( / .items(
   const start = Math.max(0, position.line - 12);
   const slice = document.getText(new vscode.Range(start, 0, position.line, position.character));
-  return /[A-Z][A-Za-z0-9]*\s*\(/.test(slice) || /\.children\s*\(/.test(slice);
+  return sliceLooksLikeBuilder(slice);
 }
 
-module.exports = { registerCompletions };
+module.exports = { registerCompletions, DOCUMENT_SELECTORS };

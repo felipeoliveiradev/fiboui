@@ -1,5 +1,5 @@
 import { listSignal, signal } from 'fiboui'
-import { productById, products } from './data'
+import { freeShipFrom, productById, products } from './data'
 
 export type ShopScreen = 'catalog' | 'product' | 'cart' | 'checkout' | 'success'
 export type SortBy = 'featured' | 'price-asc' | 'price-desc' | 'name'
@@ -134,7 +134,7 @@ export function cartTotal() {
 }
 
 export function shippingCost() {
-  if (cartTotal() >= 75) return 0
+  if (cartTotal() >= freeShipFrom) return 0
   return shipMethod.value === 'express' ? 18 : 8
 }
 

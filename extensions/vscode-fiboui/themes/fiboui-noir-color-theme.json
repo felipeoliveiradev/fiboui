@@ -15,6 +15,8 @@
     "editorLineNumber.foreground": "#A1A1AA",
     "editorLineNumber.activeForeground": "#F4F4F5",
     "editorCursor.foreground": "#F4F4F5",
+    "editorIndentGuide.background": "#3F3F46",
+    "editorIndentGuide.activeBackground": "#4EC9B0",
     "editor.selectionBackground": "#14332E",
     "editor.inactiveSelectionBackground": "#14332E88",
     "editor.lineHighlightBackground": "#1C1C1F",
@@ -122,12 +124,30 @@
     "button.background": "#4EC9B0",
     "button.foreground": "#06241F"
   },
+  "semanticHighlighting": true,
+  "semanticTokenColors": {
+    "function": "#4EC9B0",
+    "function.defaultLibrary": "#4EC9B0",
+    "method": "#F4F4F5",
+    "method.defaultLibrary": "#F4F4F5",
+    "comment": {
+      "foreground": "#71717A",
+      "fontStyle": "italic"
+    },
+    "keyword": "#C4B5FD",
+    "string": "#CE9178",
+    "number": "#B5CEA8",
+    "variable": "#F4F4F5"
+  },
   "tokenColors": [
     {
       "name": "FiboUI factories (Column, Row, Box…)",
       "scope": [
+        "entity.name.function",
         "entity.name.function.ts",
         "entity.name.function.tsx",
+        "entity.name.function.js",
+        "entity.name.function.jsx",
         "support.function",
         "meta.function-call entity.name.function"
       ],

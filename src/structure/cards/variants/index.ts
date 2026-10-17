@@ -7,13 +7,21 @@ import { Button } from '../../../interactive/Button';
 import { Switch } from '../../../interactive/Switch';
 import { TextField } from '../../../interactive/TextField';
 import { Badge } from '../../../content/Badge';
+import type { FieldRule } from '../../../interactive/Form/validators';
+
+const TEXT_INPUT_TYPES = new Set(['text', 'password', 'email', 'number', 'tel']);
+
+function asHtmlInputType(value: unknown): string {
+  return typeof value === 'string' && TEXT_INPUT_TYPES.has(value) ? value : 'text';
+}
 
 const InfoCardInner = React.memo((props: any) => {
-    const { title, description, icon, footer, className, style } = props;
+    const { title, description, icon, footer, className, style, ...rest } = props;
 
     return Card()
         .className(className)
         .style(style)
+        .props(rest)
         .children([
             Box().className("flex items-start gap-4").children([
                icon ? Box().className("mt-1 text-gray-400").children(icon).build() : null,
@@ -54,20 +62,32 @@ class InfoCardBuilder extends FiboBuilder {
 
   build(): ReactElement {
     const props = {
+        ...this._props,
         title: this._title,
         description: this._description,
         icon: this._icon,
         footer: this._footer,
         className: this.getClassName(),
         style: this.getStyle(),
-        ...this._props
     };
     return React.createElement(InfoCardInner, props);
   }
 }
 
 const ActionCardInner = React.memo((props: any) => {
-    const { title, description, action, actionType, onAction, actionLabel, className, style } = props;
+    const {
+        title,
+        description,
+        action,
+        actionType,
+        onAction,
+        actionLabel,
+        name,
+        rules,
+        className,
+        style,
+        ...rest
+    } = props;
 
     let ActionElement = action;
 
@@ -75,14 +95,39 @@ const ActionCardInner = React.memo((props: any) => {
         if (actionType === 'button') {
             ActionElement = Button(actionLabel || 'Action').variant("soft").size("sm").onPress(onAction).build();
         } else if (actionType === 'switch') {
-
-            ActionElement = Switch().onChange(onAction).build();
+            const sw = Switch().onChange(onAction);
+            if (typeof name === 'string' && name) sw.name(name);
+            if (Array.isArray(rules) && rules.length) sw.rules(...rules);
+            ActionElement = sw.build();
         }
+    }
+
+    const restOnClick = rest.onClick as
+        | ((e: React.MouseEvent<HTMLDivElement>) => void)
+        | undefined;
+    const restOnKeyDown = rest.onKeyDown as
+        | ((e: React.KeyboardEvent<HTMLDivElement>) => void)
+        | undefined;
+    const isPressable = typeof restOnClick === 'function';
+    const hostRest = { ...rest };
+    if (isPressable) {
+        hostRest.role = 'button';
+        hostRest.tabIndex = rest.tabIndex ?? 0;
+        hostRest.onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+            restOnKeyDown?.(e);
+            if (e.defaultPrevented) return;
+            if (e.target !== e.currentTarget) return;
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                (e.currentTarget as HTMLElement).click();
+            }
+        };
     }
 
     return Card()
         .className(`flex items-center justify-between gap-4 ${className || ''}`)
         .style(style)
+        .props(hostRest)
         .children([
            Box().className("flex-1").children([
                title ? Text(title).fontSize(16).fontWeight(600).color("#111827").build() : null,
@@ -99,6 +144,8 @@ class ActionCardBuilder extends FiboBuilder {
     private _actionType?: 'button' | 'switch';
     private _actionLabel?: string;
     private _onAction?: (val?: any) => void;
+    private _name?: string;
+    private _rules?: FieldRule[];
 
     title(text: string): this {
       this._title = text;
@@ -128,17 +175,34 @@ class ActionCardBuilder extends FiboBuilder {
         return this;
     }
 
+    /** HTML `name` — forwarded to the switch for `Form` FormData. */
+    name(val: string): this {
+        this._name = val;
+        return this;
+    }
+
+    /** Rules collected by `Form` on submit (switch field). */
+    rules(...items: FieldRule[]): this {
+        this._rules = items;
+        return this;
+    }
+
     build(): ReactElement {
+      const rest = { ...this._props };
+      const restName = rest.name;
+      delete rest.name;
       const props = {
+          ...rest,
           title: this._title,
           description: this._description,
           action: this._action,
           actionType: this._actionType,
           actionLabel: this._actionLabel,
           onAction: this._onAction,
+          name: this._name ?? (typeof restName === 'string' ? restName : undefined),
+          rules: this._rules,
           className: this.getClassName(),
           style: this.getStyle(),
-          ...this._props
       };
       return React.createElement(ActionCardInner, props);
     }
@@ -149,21 +213,38 @@ export const InfoCard = createBuilder(InfoCardBuilder);
 export const ActionCard = createBuilder(ActionCardBuilder);
 
 const InputCardInner = React.memo((props: any) => {
-    const { title, description, placeholder, value, onChange, type, className, style } = props;
+    const {
+        title,
+        description,
+        placeholder,
+        value,
+        onChange,
+        inputType,
+        name,
+        rules,
+        className,
+        style,
+        ...rest
+    } = props;
+
+    const field = TextField()
+        .placeholder(placeholder)
+        .value(value)
+        .onChange(onChange)
+        .className("w-full");
+    if (typeof name === 'string' && name) field.name(name);
+    if (Array.isArray(rules) && rules.length) field.rules(...rules);
+    // Dual leftover: do not call TextField().type() — pass HTML type via .props({ type }).
+    field.props({ type: asHtmlInputType(inputType) });
 
     return Card()
         .className(className)
         .style(style)
+        .props(rest)
         .children([
             title ? Text(title).fontSize(14).fontWeight(600).color("#374151").className("mb-1").build() : null,
             description ? Text(description).fontSize(12).color("#6B7280").className("mb-3").build() : null,
-            TextField()
-                .placeholder(placeholder)
-                .value(value)
-                .type(type)
-                .onChange(onChange)
-                .className("w-full")
-                .build()
+            field.build()
         ]).build();
 });
 
@@ -172,7 +253,10 @@ class InputCardBuilder extends FiboBuilder {
     private _description?: string;
     private _placeholder?: string;
     private _value?: string;
-    private _type: string = 'text';
+    private _type?: string;
+    private _typed = false;
+    private _name?: string;
+    private _rules?: FieldRule[];
     private _onChange?: (val: string) => void;
 
     title(text: string): this {
@@ -197,6 +281,19 @@ class InputCardBuilder extends FiboBuilder {
 
     type(t: string): this {
         this._type = t;
+        this._typed = true;
+        return this;
+    }
+
+    /** HTML `name` — required for `Form().onSubmit` FormData collection. */
+    name(val: string): this {
+        this._name = val;
+        return this;
+    }
+
+    /** Rules collected by `Form` on submit (this field's own checks). */
+    rules(...items: FieldRule[]): this {
+        this._rules = items;
         return this;
     }
 
@@ -206,16 +303,23 @@ class InputCardBuilder extends FiboBuilder {
     }
 
     build(): ReactElement {
+        const rest = { ...this._props };
+        const restType = rest.type;
+        const restName = rest.name;
+        delete rest.type;
+        delete rest.name;
         const props = {
+            ...rest,
             title: this._title,
             description: this._description,
             placeholder: this._placeholder,
             value: this._value,
-            type: this._type,
+            inputType: asHtmlInputType(this._typed ? this._type : restType),
+            name: this._name ?? (typeof restName === 'string' ? restName : undefined),
+            rules: this._rules,
             onChange: this._onChange,
             className: this.getClassName(),
             style: this.getStyle(),
-            ...this._props
         };
         return React.createElement(InputCardInner, props);
     }
@@ -224,7 +328,7 @@ class InputCardBuilder extends FiboBuilder {
 export const InputCard = createBuilder(InputCardBuilder);
 
 const MetricCardInner = React.memo((props: any) => {
-    const { title, value, trend, trendDirection, className, style } = props;
+    const { title, value, trend, trendDirection, className, style, ...rest } = props;
 
     const trendColor = trendDirection === 'up' ? 'success' : trendDirection === 'down' ? 'error' : 'none';
     const trendIcon = trendDirection === 'up' ? '↑' : trendDirection === 'down' ? '↓' : '•';
@@ -232,6 +336,7 @@ const MetricCardInner = React.memo((props: any) => {
     return Card()
         .className(className)
         .style(style)
+        .props(rest)
         .children([
             Text(title).fontSize(14).fontWeight(600).color("#6B7280").build(),
             Box().className("flex items-end justify-between mt-2").children([
@@ -269,13 +374,13 @@ class MetricCardBuilder extends FiboBuilder {
 
     build(): ReactElement {
         const props = {
+            ...this._props,
             title: this._title,
             value: this._value,
             trend: this._trend,
             trendDirection: this._trendDirection,
             className: this.getClassName(),
             style: this.getStyle(),
-            ...this._props
         };
         return React.createElement(MetricCardInner, props);
     }

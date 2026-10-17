@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { ReactElement } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
-import { hashKey } from '../../core/styleManager';
+import { nextStableId } from '../../core/ids';
 
 class LinearGradientBuilder extends FiboBuilder {
   private _id?: string;
+  /** Per-instance auto id — content hashes collided for identical paints (invalid SVG). */
+  private readonly _uid = nextStableId('gradient');
   private _colors: string[] = ['#000', '#fff'];
   private _stops?: number[];
   private _angle: number = 0;
@@ -13,23 +15,26 @@ class LinearGradientBuilder extends FiboBuilder {
     return this;
   }
 
-  private gradientId(): string {
+  /** SVG paint id — used by ShapeBuilder.fill(gradient). */
+  gradientId(): string {
     if (this._id) return this._id;
-    return `gradient-${hashKey(JSON.stringify({ c: this._colors, s: this._stops, a: this._angle }))}`;
+    return this._uid;
   }
 
   colors(colors: string[]): this {
-    this._colors = colors;
+    if (!Array.isArray(colors)) return this;
+    const paints = colors.filter((c): c is string => typeof c === 'string' && c.length > 0);
+    this._colors = paints.length > 0 ? paints : ['#000', '#fff'];
     return this;
   }
 
   stops(stops: number[]): this {
-    this._stops = stops;
+    if (Array.isArray(stops)) this._stops = stops;
     return this;
   }
 
   angle(degrees: number): this {
-    this._angle = degrees;
+    if (typeof degrees === 'number' && Number.isFinite(degrees)) this._angle = degrees;
     return this;
   }
 
@@ -48,11 +53,24 @@ class LinearGradientBuilder extends FiboBuilder {
     };
   }
 
-  build(): any {
-    const coords = this.angleToCoords();
-    const stops = this._stops || this._colors.map((_, i) => i / (this._colors.length - 1));
+  private stopOffsets(): number[] {
+    const n = this._colors.length;
+    if (n <= 0) return [];
+    if (n === 1) {
+      const s = this._stops?.[0];
+      return [typeof s === 'number' && Number.isFinite(s) ? s : 0];
+    }
+    return this._colors.map((_, i) => {
+      const s = this._stops?.[i];
+      return typeof s === 'number' && Number.isFinite(s) ? s : i / (n - 1);
+    });
+  }
 
+  build(): ReactElement {
+    const coords = this.angleToCoords();
+    const stops = this.stopOffsets();
     const gid = this.gradientId();
+
     const gradientElement = React.createElement(
       'linearGradient',
       {
@@ -68,7 +86,7 @@ class LinearGradientBuilder extends FiboBuilder {
       )
     );
 
-    return { element: gradientElement, id: gid };
+    return React.createElement('defs', { key: gid }, gradientElement);
   }
 }
 

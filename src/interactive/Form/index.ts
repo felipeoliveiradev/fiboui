@@ -1,9 +1,10 @@
 'use client';
 
-import React, { FormEvent, ReactElement, ReactNode } from 'react';
+import React, { FormEvent, ReactElement, ReactNode, useEffect, useRef, useState } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps, FiboChildren } from '../../core/types';
 import { twMerge } from 'tailwind-merge';
+import { isDangerousUrl } from '../../core/safeUrl';
 import {
   runFieldRules,
   type FieldErrors,
@@ -21,6 +22,9 @@ export {
   min,
   max,
   rule,
+  url,
+  integer,
+  equalTo,
 } from './validators';
 
 /** Where failed rules are painted. */
@@ -30,6 +34,70 @@ const RULES_KEY = '__fiboRules';
 const SHOW_ERROR_KEY = '__fiboShowError';
 const FIBO_HOST_SELECTOR =
   '.fibo-textfield-container, .fibo-textarea-container, .fibo-checkbox-container, .fibo-switch-container, .fibo-radio-group';
+
+function fieldHost(el: HTMLElement): HTMLElement {
+  return (el.closest(FIBO_HOST_SELECTOR) ?? el) as HTMLElement;
+}
+
+function namedControl(
+  target: EventTarget | null
+): HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null {
+  if (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement
+  ) {
+    return target;
+  }
+  return null;
+}
+
+function isHiddenInput(el: Element): boolean {
+  return el instanceof HTMLInputElement && el.type === 'hidden';
+}
+
+/** Visible control that should get aria-invalid (Select/Combobox combobox, else the named field). */
+function a11yControls(named: HTMLElement): HTMLElement[] {
+  const host = fieldHost(named);
+  const combo = host.querySelector<HTMLElement>('[role="combobox"]');
+  if (combo) return [combo];
+  if (isHiddenInput(named)) return [];
+  return [named];
+}
+
+function resolveFieldFromEvent(target: EventTarget | null): {
+  name: string;
+  el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+  host: HTMLElement;
+} | null {
+  if (!(target instanceof HTMLElement)) return null;
+  const native = namedControl(target);
+  if (native && native.name && !isHiddenInput(native)) {
+    if (isDisabledControl(native)) return null;
+    return { name: native.name, el: native, host: fieldHost(native) };
+  }
+  const host = target.closest(FIBO_HOST_SELECTOR) as HTMLElement | null;
+  if (!host) return null;
+  const named = host.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
+    'input[name], textarea[name], select[name]'
+  );
+  if (!named?.name || isDisabledControl(named)) return null;
+  return { name: named.name, el: named, host };
+}
+
+function markTrue(el: HTMLElement, attr: string) {
+  el.setAttribute(attr, 'true');
+}
+
+function setFormBusy(form: HTMLFormElement, busy: boolean) {
+  if (busy) {
+    form.setAttribute('data-submitting', 'true');
+    form.setAttribute('aria-busy', 'true');
+  } else {
+    form.removeAttribute('data-submitting');
+    form.removeAttribute('aria-busy');
+  }
+}
 
 export type FormValues = Record<string, string | string[]>;
 
@@ -104,9 +172,16 @@ function clearControlAria(el: HTMLElement) {
   el.removeAttribute('aria-describedby');
 }
 
-function setControlInvalid(el: HTMLElement, name: string) {
-  el.setAttribute('aria-invalid', 'true');
-  el.setAttribute('aria-describedby', errorId(name));
+function setControlInvalid(named: HTMLElement, name: string) {
+  for (const el of a11yControls(named)) {
+    el.setAttribute('aria-invalid', 'true');
+    el.setAttribute('aria-describedby', errorId(name));
+  }
+}
+
+function clearFieldAria(named: HTMLElement) {
+  clearControlAria(named);
+  for (const el of a11yControls(named)) clearControlAria(el);
 }
 
 function hostShowError(host: HTMLElement): ((msg: string | null) => void) | undefined {
@@ -121,6 +196,7 @@ export function createFormControl(form: HTMLFormElement): FormControl {
     reset(name?: string) {
       if (!name) {
         form.reset();
+        clearPaintedErrors(form);
         return;
       }
       namedFields(form, name).forEach((el) => {
@@ -133,10 +209,15 @@ export function createFormControl(form: HTMLFormElement): FormControl {
           el.value = '';
         }
       });
+      // Named reset does not fire a native `reset` event, so errors would stick.
+      clearPaintedErrorForField(form, name);
     },
     set(name: string, value: string) {
       namedFields(form, name).forEach((el) => {
-        if (el instanceof HTMLInputElement && (el.type === 'checkbox' || el.type === 'radio')) {
+        if (el instanceof HTMLInputElement && el.type === 'radio') {
+          el.checked = value === el.value;
+          el.dispatchEvent(new Event('fibo-sync', { bubbles: true }));
+        } else if (el instanceof HTMLInputElement && el.type === 'checkbox') {
           el.checked = value === 'true' || value === 'on' || value === el.value;
           el.dispatchEvent(new Event('fibo-sync', { bubbles: true }));
         } else {
@@ -176,7 +257,7 @@ function paintFieldError(form: HTMLFormElement, name: string, message: string, m
     const generic = host.nextElementSibling;
     if (generic?.classList.contains('fibo-form-error')) generic.remove();
     if (message) setControlInvalid(el, name);
-    else clearControlAria(el);
+    else clearFieldAria(el);
     return;
   }
 
@@ -187,7 +268,7 @@ function paintFieldError(form: HTMLFormElement, name: string, message: string, m
   let node = host.nextElementSibling as HTMLElement | null;
   if (!message) {
     if (node?.classList.contains('fibo-form-error')) node.remove();
-    clearControlAria(el);
+    clearFieldAria(el);
     return;
   }
   if (!node?.classList.contains('fibo-form-error')) {
@@ -208,7 +289,7 @@ function clearPaintedErrorForField(form: HTMLFormElement, name: string) {
   const safe = escapeName(name);
   form.querySelectorAll(`.fibo-form-error[data-for="${safe}"]`).forEach((n) => n.remove());
   namedFields(form, name).forEach((el) => {
-    clearControlAria(el);
+    clearFieldAria(el);
     const host = el.closest(FIBO_HOST_SELECTOR) as HTMLElement | null;
     if (host) hostShowError(host)?.(null);
   });
@@ -235,6 +316,19 @@ export function formDataToValues(fd: FormData): FormValues {
     }
   });
   return out;
+}
+
+function formDataWithSubmitter(form: HTMLFormElement, event: FormEvent<HTMLFormElement>): FormData {
+  const submitter = (event.nativeEvent as SubmitEvent).submitter ?? null;
+  try {
+    return submitter ? new FormData(form, submitter) : new FormData(form);
+  } catch {
+    const fd = new FormData(form);
+    if (submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement) {
+      if (submitter.name) fd.append(submitter.name, submitter.value);
+    }
+    return fd;
+  }
 }
 
 function filterDisabledSchema(
@@ -286,6 +380,18 @@ const FormInner = React.memo((props: {
     ...rest
   } = props;
 
+  const submitting = useRef(false);
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const [busy, setBusy] = useState(false);
+  const validationRef = useRef(validation);
+  validationRef.current = validation;
+  const errorModeRef = useRef(errorMode);
+  errorModeRef.current = errorMode;
+  const safeAction =
+    typeof action === 'string' && action.length > 0 && !isDangerousUrl(action)
+      ? action
+      : undefined;
+
   const direction = style?.flexDirection ?? 'column';
   const mergedStyle: React.CSSProperties = {
     display: 'flex',
@@ -300,26 +406,70 @@ const FormInner = React.memo((props: {
     ...style,
   };
 
+  useEffect(() => {
+    const form = formRef.current;
+    if (!form) return;
+    const onFocusOut = (e: FocusEvent) => {
+      const resolved = resolveFieldFromEvent(e.target);
+      if (!resolved) return;
+      const { name, host } = resolved;
+      if (e.relatedTarget instanceof Node && host.contains(e.relatedTarget)) return;
+      markTrue(host, 'data-touched');
+      markTrue(form, 'data-touched');
+
+      const mode = errorModeRef.current;
+      const schema = validationRef.current ?? {};
+      const extraAll = collectDomRules(form);
+      const extra = new Map<string, FieldRule[]>();
+      const fromDom = extraAll.get(name);
+      if (fromDom?.length) extra.set(name, fromDom);
+      const schemaRules = schema[name];
+      if (!schemaRules && extra.size === 0) return;
+
+      // Wait a tick so a Select/Combobox option click can commit FormData first.
+      window.setTimeout(() => {
+        if (!form.isConnected) return;
+        const values = formDataToValues(new FormData(form));
+        void (async () => {
+          const errors = await runFieldRules(
+            values,
+            schemaRules ? { [name]: schemaRules } : {},
+            extra
+          );
+          const message = errors[name];
+          if (message) paintFieldError(form, name, message, mode);
+          else clearPaintedErrorForField(form, name);
+        })();
+      }, 0);
+    };
+    const onNativeReset = () => {
+      clearPaintedErrors(form);
+    };
+    form.addEventListener('focusout', onFocusOut);
+    form.addEventListener('reset', onNativeReset);
+    return () => {
+      form.removeEventListener('focusout', onFocusOut);
+      form.removeEventListener('reset', onNativeReset);
+    };
+  }, []);
+
   const handleLiveClear = (e: React.FormEvent<HTMLFormElement>) => {
-    const target = e.target;
-    if (
-      !(
-        target instanceof HTMLInputElement ||
-        target instanceof HTMLTextAreaElement ||
-        target instanceof HTMLSelectElement
-      )
-    ) {
-      return;
-    }
-    const name = target.name;
-    if (!name) return;
-    clearPaintedErrorForField(e.currentTarget, name);
+    const resolved = resolveFieldFromEvent(e.target);
+    if (!resolved) return;
+    clearPaintedErrorForField(e.currentTarget, resolved.name);
+    markTrue(resolved.host, 'data-dirty');
+    markTrue(e.currentTarget, 'data-dirty');
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
-    const values = formDataToValues(new FormData(form));
+    if (submitting.current) return;
+    submitting.current = true;
+    setFormBusy(form, true);
+    setBusy(true);
+
+    const values = formDataToValues(formDataWithSubmitter(form, e));
 
     const control = createFormControl(form);
     clearPaintedErrors(form);
@@ -329,28 +479,37 @@ const FormInner = React.memo((props: {
       validation ?? {},
       collectDomRules(form)
     );
-    const errors = runFieldRules(values, schema, extra);
-    control.errors = errors;
-    if (Object.keys(errors).length > 0) {
-      for (const [name, message] of Object.entries(errors)) {
-        paintFieldError(form, name, message, errorMode);
-      }
-      onInvalid?.(errors, control);
-      return;
-    }
 
     void (async () => {
-      if (beforeSubmit) {
-        const allow = await beforeSubmit(values, control, e);
-        if (allow === false) return;
-      }
+      try {
+        const errors = await runFieldRules(values, schema, extra);
+        control.errors = errors;
+        if (Object.keys(errors).length > 0) {
+          for (const [name, message] of Object.entries(errors)) {
+            paintFieldError(form, name, message, errorMode);
+          }
+          onInvalid?.(errors, control);
+          return;
+        }
 
-      if (onSubmitForm) {
-        await onSubmitForm(values, control, e);
-      }
+        if (beforeSubmit) {
+          const allow = await beforeSubmit(values, control, e);
+          if (allow === false) return;
+        }
 
-      if (afterSubmit) {
-        await afterSubmit(values, control, e);
+        if (onSubmitForm) {
+          await onSubmitForm(values, control, e);
+        }
+
+        if (afterSubmit) {
+          await afterSubmit(values, control, e);
+        }
+      } catch {
+        // Rejected before/on/after must not become unhandledrejection; skip afterSubmit.
+      } finally {
+        submitting.current = false;
+        setFormBusy(form, false);
+        setBusy(false);
       }
     })();
   };
@@ -360,11 +519,14 @@ const FormInner = React.memo((props: {
     {
       className: twMerge('fibo-form', className),
       style: mergedStyle,
-      action,
       method,
       ...rest,
-      // After rest so callers cannot strip validation / live-clear wiring.
+      action: safeAction,
+      // After rest so callers cannot strip validation / live-clear / busy wiring.
+      ref: formRef,
       noValidate,
+      'data-submitting': busy ? 'true' : undefined,
+      'aria-busy': busy ? true : undefined,
       onSubmit: handleSubmit,
       onInputCapture: handleLiveClear,
       onChangeCapture: handleLiveClear,

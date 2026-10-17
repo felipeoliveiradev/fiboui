@@ -1,4 +1,4 @@
-import { Box, Text, Checkbox, Row, Colors, createFiboComponent } from 'fiboui';
+import { Box, Checkbox, Row } from 'fiboui';
 import { Todo } from '../../Models/Todo';
 
 interface TodoItemProps {
@@ -6,12 +6,12 @@ interface TodoItemProps {
     onToggle: () => void;
 }
 
-export const TodoItem = createFiboComponent<TodoItemProps>(({ todo, onToggle }: TodoItemProps) => {
+export function TodoItem({ todo, onToggle }: TodoItemProps) {
     return Box()
         .props({ key: todo.id })
-        .bg(Colors.Surface)
+        .bg('surface')
         .className('border')
-        .borderColor(Colors.Outline)
+        .borderColor('outline')
         .rounded(0.5)
         .p(1)
         .className('mb-2')
@@ -26,13 +26,10 @@ export const TodoItem = createFiboComponent<TodoItemProps>(({ todo, onToggle }: 
                 .children([
                     Checkbox()
                         .checked(todo.isCompleted)
+                        .controlled(true)
+                        .label(todo.text)
                         .onChange(onToggle)
-                        .build(),
-                    Text(() => todo.text)
-                        .className(todo.isCompleted ? "line-through opacity-60" : "opacity-100")
-                        .fontSize(1)
-                        .build()
-                ]).build()
-        ])
-        .build();
-}, (prev: TodoItemProps, next: TodoItemProps) => prev.todo === next.todo);
+                        .className(todo.isCompleted ? 'line-through opacity-60' : 'opacity-100'),
+                ])
+        ]);
+}

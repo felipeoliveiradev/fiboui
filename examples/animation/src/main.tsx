@@ -4,4 +4,9 @@ import './demo.css';
 import { mount } from 'fiboui';
 import { App } from './App';
 
-mount('#root', App);
+function boot(): void {
+  if (typeof document === 'undefined') return;
+  mount('#root', App);
+}
+
+boot();

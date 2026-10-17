@@ -9,8 +9,27 @@ type BadgeVariant = 'neutral' | 'accent' | 'outline' | 'glass' | 'solid' | 'dot'
 type BadgeIntent = 'none' | 'success' | 'warning' | 'error' | 'info';
 type BadgeShape = 'pill' | 'rounded';
 
+function resolveIntent(intent: unknown): BadgeIntent {
+    return intent === 'success' || intent === 'warning' || intent === 'error' || intent === 'info'
+        ? intent
+        : 'none';
+}
+
+function resolveVariant(variant: unknown): BadgeVariant {
+    return variant === 'accent' || variant === 'outline' || variant === 'glass' || variant === 'solid' || variant === 'dot' || variant === 'neutral'
+        ? variant
+        : 'neutral';
+}
+
+function resolveShape(shape: unknown): BadgeShape {
+    return shape === 'pill' ? 'pill' : 'rounded';
+}
+
 const BadgeInner = React.memo((props: any) => {
-    const { text, icon, variant, intent, shape, className, style } = props;
+    const { text, icon, variant, intent, shape, className, style, ...rest } = props;
+    const currentIntent = resolveIntent(intent);
+    const currentVariant = resolveVariant(variant);
+    const currentShape = resolveShape(shape);
 
     const intentColors: Record<BadgeIntent, { bg: string, text: string, border?: string }> = {
         none: { bg: '#F9FAFB', text: '#6B7280', border: '#E5E7EB' },
@@ -36,19 +55,19 @@ const BadgeInner = React.memo((props: any) => {
       dot: { backgroundColor: 'transparent', color: '#6B7280', border: '1px solid #E5E7EB', padding: '4px 10px' }
     };
 
-    let finalStyle = { ...variantStyles[variant as BadgeVariant] };
+    let finalStyle = { ...variantStyles[currentVariant] };
 
-    if (intent !== 'none') {
-        const colors = intentColors[intent as BadgeIntent];
+    if (currentIntent !== 'none') {
+        const colors = intentColors[currentIntent];
 
-        if (variant === 'solid') {
+        if (currentVariant === 'solid') {
 
              const solidIntentMap: Record<BadgeIntent, string> = {
                  none: '#111827', success: '#059669', warning: '#D97706', error: '#E11D48', info: '#2563EB'
              };
-             finalStyle.backgroundColor = solidIntentMap[intent as BadgeIntent];
+             finalStyle.backgroundColor = solidIntentMap[currentIntent];
              finalStyle.color = '#FFFFFF';
-        } else if (variant === 'dot') {
+        } else if (currentVariant === 'dot') {
              finalStyle.color = '#374151';
              finalStyle.borderColor = '#E5E7EB';
         } else {
@@ -65,12 +84,21 @@ const BadgeInner = React.memo((props: any) => {
       rounded: '8px'
     };
 
+    const isAlert = currentIntent === 'error' || currentIntent === 'warning';
+    const live =
+      currentIntent === 'none'
+        ? {}
+        : {
+            role: isAlert ? 'alert' : 'status',
+            'aria-live': isAlert ? 'assertive' : 'polite',
+          };
+
     return Box()
       .className(className)
       .style({
         ...finalStyle,
-        borderRadius: shapeRadius[shape as BadgeShape],
-        padding: variant === 'dot' ? '4px 8px' : '4px 10px',
+        borderRadius: shapeRadius[currentShape],
+        padding: currentVariant === 'dot' ? '4px 8px' : '4px 10px',
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -80,17 +108,21 @@ const BadgeInner = React.memo((props: any) => {
         fontWeight: 600,
         ...style
       })
+      .props({
+        ...rest,
+        ...live,
+      })
       .children(
         Row().gap(6).alignItems("center").children([
 
-          variant === 'dot' && intent !== 'none' ?
+          currentVariant === 'dot' && currentIntent !== 'none' ?
               Box().style({
                   width: '6px',
                   height: '6px',
                   borderRadius: '50%',
-                  backgroundColor: intentColors[intent as BadgeIntent].text,
-                  boxShadow: `0 0 6px ${intentColors[intent as BadgeIntent].text}66`
-              }).build() : null,
+                  backgroundColor: intentColors[currentIntent].text,
+                  boxShadow: `0 0 6px ${intentColors[currentIntent].text}66`
+              }).props({ 'aria-hidden': true }).build() : null,
 
           icon ? Box().classNames(['flex', 'items-center']).children(icon).build() : null,
           Text(text).fontSize(12).fontWeight(600).style({ color: 'inherit' }).build()
@@ -139,7 +171,8 @@ class BadgeBuilder extends FiboBuilder {
          intent: this._intent,
          shape: this._shape,
          className: this.getClassName(),
-         style: this.getStyle()
+         style: this.getStyle(),
+         ...this._props
      };
      return React.createElement(BadgeInner, props);
   }

@@ -1,6 +1,6 @@
 import { Box, Column, Text, Textarea, type FiboChild } from 'fiboui'
 import { editText } from './edit'
-import { INDENT, planEnter } from './indent'
+import { INDENT, mapReindentCaret, planEnter, reindent } from './indent'
 import { computeLabels } from './labels'
 import { runPreview, source, status } from './state'
 import { acceptActive, closeSuggest, moveSuggest, refreshSuggest } from './suggest'
@@ -16,8 +16,6 @@ const method = scheme.onSurface
 const punct = scheme.punctuation
 const gutter = scheme.onSurfaceVariant
 const gutterActive = scheme.onSurface
-const guide = scheme.guide
-const guideActive = scheme.guideActive
 
 const KEYWORDS = new Set([
   'return', 'const', 'let', 'var', 'function', 'if', 'else', 'true', 'false', 'null', 'new', 'import', 'from', 'export',
@@ -82,6 +80,22 @@ export function codeField(): FiboChild {
       },
       onScroll: syncScroll,
     })
+}
+
+/** Reindent the editor text. Does not run the preview. */
+export function indentEditor() {
+  const field = document.querySelector('.play-code textarea') as HTMLTextAreaElement | null
+  if (!field) return
+  const prev = field.value
+  const next = reindent(prev)
+  const start = mapReindentCaret(prev, next, field.selectionStart ?? 0)
+  const end = mapReindentCaret(prev, next, field.selectionEnd ?? start)
+  field.focus()
+  field.value = next
+  field.setSelectionRange(start, end)
+  closeSuggest()
+  caretLine = lineOf(next, end)
+  paintHighlight(next)
 }
 
 /** Replace the editor text and run the preview once. Used by the sample chips. */
@@ -183,18 +197,17 @@ function highlightHtml(text: string): string {
       ? `<span style="color:${comment};font-style:italic">  // ${escapeHtml(labels.get(index) ?? '')}</span>`
       : ''
     const num = active ? gutterActive : gutter
-    return `<div style="position:relative;height:22px;line-height:22px;font:13px/22px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre;background:${active ? scheme.surfaceContainer : 'transparent'}">${indentGuides(row, active)}<span style="display:inline-block;width:48px;padding-right:12px;text-align:right;color:${num};font-size:12px">${index + 1}</span>${body}${close}</div>`
+    return `<div style="position:relative;height:22px;line-height:22px;font:13px/22px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre;background:${active ? scheme.surfaceContainer : 'transparent'}">${indentGuides(row)}<span style="display:inline-block;width:48px;padding-right:12px;text-align:right;color:${num};font-size:12px">${index + 1}</span>${body}${close}</div>`
   }).join('')
 }
 
-function indentGuides(row: string, active: boolean): string {
+function indentGuides(row: string): string {
   const spaces = /^ */.exec(row)?.[0].length ?? 0
   const depth = Math.floor(spaces / 2)
   let html = ''
   for (let level = 1; level <= depth; level += 1) {
     const left = 48 + level * 15.6
-    const color = active && level === depth ? guideActive : guide
-    html += `<span style="position:absolute;left:${left}px;top:0;bottom:0;width:1px;background:${color}"></span>`
+    html += `<span style="position:absolute;left:${left}px;top:0;bottom:0;width:1px;background:${scheme.outlineVariant}"></span>`
   }
   return html
 }

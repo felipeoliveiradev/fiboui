@@ -188,37 +188,57 @@ export class ComputedSignal<T> implements Subscribable<T> {
   private effects = new Set<Effect>();
   private _value!: T;
   private _dirty = true;
+  private _disposed = false;
+  private _ready = false;
+  private _hasValue = false;
+  private _computing = false;
   private internalEffect: Effect;
 
   constructor(private fn: () => T) {
     this.internalEffect = new Effect(() => {
-      if (!this._dirty) {
-        this._dirty = true;
-        this.notify();
+      if (this._disposed || !this._ready || this._computing) {
+        return;
+      }
+      this._computing = true;
+      try {
+        const next = this.fn();
+        const hadValue = this._hasValue;
+        const prev = this._value;
+        this._value = next;
+        this._dirty = false;
+        this._hasValue = true;
+        if (hadValue && next !== prev) {
+          this.notify();
+        }
+      } finally {
+        this._computing = false;
       }
     });
   }
 
   get value(): T {
+    if (this._disposed) {
+      return this._value;
+    }
     const active = getActiveEffect();
-    if (active) {
+    if (active && active !== this.internalEffect) {
       active.track(this);
     }
-    if (this._dirty) {
-      const prevEffect = pushActive(this.internalEffect);
-      try {
-        this.internalEffect.cleanup();
-        this._value = this.fn();
-        this._dirty = false;
-      } finally {
-        pushActive(prevEffect);
-      }
+    if (this._computing) {
+      return this._value;
+    }
+    if (this._dirty || !this._ready) {
+      this._ready = true;
+      this.internalEffect.run();
     }
     return this._value;
   }
 
   subscribe(listener: Listener<T>): Unsubscribe {
     this.listeners.add(listener);
+    if (!this._disposed) {
+      void this.value;
+    }
     return () => this.listeners.delete(listener);
   }
 
@@ -230,9 +250,23 @@ export class ComputedSignal<T> implements Subscribable<T> {
     this.effects.delete(effect);
   }
 
+  /** Drop the internal effect and freeze the last evaluated value. */
+  dispose() {
+    if (this._disposed) {
+      return;
+    }
+    this._disposed = true;
+    this.internalEffect.dispose();
+    this.listeners.clear();
+    this.effects.clear();
+  }
+
   private _notifyDepth = 0;
 
   private notify() {
+    if (this._disposed) {
+      return;
+    }
     if (this._notifyDepth > 32) {
       if (typeof console !== 'undefined') {
         console.error('[fiboui] ComputedSignal update loop detected — aborting notify');

@@ -1,20 +1,46 @@
 import React, { ReactElement } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps } from '../../core/types';
+import {
+  collectInterpSignals,
+  hasInterpMarks,
+  resolveInterpString,
+} from '../../core/interpolate';
+
+function bindInterp(host: FiboBuilder, text: string | undefined): void {
+  if (typeof text !== 'string' || !hasInterpMarks(text)) return;
+  for (const sig of collectInterpSignals(text)) {
+    host.bindSignal(sig);
+  }
+}
+
+function resolveInterp(text: string | undefined): string | undefined {
+  if (typeof text !== 'string') return text;
+  return hasInterpMarks(text) ? resolveInterpString(text) : text;
+}
 
 const LabelInner = React.memo((props: any) => {
     const { text, htmlFor, required, className, style, ...rest } = props;
+    const hostClass = [
+      'fibo-label',
+      'fibo-text-label',
+      'peer-disabled:cursor-not-allowed',
+      'peer-disabled:opacity-70',
+      className,
+    ]
+      .filter(Boolean)
+      .join(' ');
 
     return React.createElement(
       'label',
       {
-        className: `fibo-label text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${className}`,
+        ...rest,
+        className: hostClass,
         htmlFor: htmlFor,
         style: style,
-        ...rest,
       },
       text,
-      required && React.createElement('span', { className: 'text-red-500 ml-0.5' }, '*')
+      required && React.createElement('span', { className: 'text-red-500 ml-0.5', 'aria-hidden': true }, '*')
     );
 });
 
@@ -25,11 +51,12 @@ class LabelBuilder extends FiboBuilder {
 
   constructor(text: string = '') {
     super();
-    this._text = text;
+    this.text(text);
   }
 
   text(value: string): this {
     this._text = value;
+    bindInterp(this, value);
     return this;
   }
 
@@ -45,7 +72,7 @@ class LabelBuilder extends FiboBuilder {
 
   build(): ReactElement {
     const props = {
-        text: this._text,
+        text: resolveInterp(this._text),
         htmlFor: this._htmlFor,
         required: this._required,
         className: this.getClassName(),

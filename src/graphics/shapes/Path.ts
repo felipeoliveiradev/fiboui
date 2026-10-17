@@ -1,62 +1,66 @@
 import React, { ReactElement } from 'react';
 import { ShapeBuilder, createShapeBuilder } from '../ShapeBuilder';
 
+function asPathD(value: unknown): string {
+  return typeof value === 'string' ? value : '';
+}
+
 class PathBuilder extends ShapeBuilder {
   private _d: string = '';
 
   d(pathData: string): this {
-    this._d = pathData;
+    this._d = asPathD(pathData);
+    return this;
+  }
+
+  /** Append a command; skip if any coordinate is non-finite (invalid SVG). */
+  private push(chunk: string, nums: number[]): this {
+    if (typeof this._d !== 'string') this._d = '';
+    for (let i = 0; i < nums.length; i += 1) {
+      if (!Number.isFinite(nums[i])) return this;
+    }
+    this._d += chunk;
     return this;
   }
 
   moveTo(x: number, y: number): this {
-    this._d += `M ${x} ${y} `;
-    return this;
+    return this.push(`M ${x} ${y} `, [x, y]);
   }
 
   lineTo(x: number, y: number): this {
-    this._d += `L ${x} ${y} `;
-    return this;
+    return this.push(`L ${x} ${y} `, [x, y]);
   }
 
   horizontalLineTo(x: number): this {
-    this._d += `H ${x} `;
-    return this;
+    return this.push(`H ${x} `, [x]);
   }
 
   verticalLineTo(y: number): this {
-    this._d += `V ${y} `;
-    return this;
+    return this.push(`V ${y} `, [y]);
   }
 
   curveTo(x1: number, y1: number, x2: number, y2: number, x: number, y: number): this {
-    this._d += `C ${x1} ${y1}, ${x2} ${y2}, ${x} ${y} `;
-    return this;
+    return this.push(`C ${x1} ${y1}, ${x2} ${y2}, ${x} ${y} `, [x1, y1, x2, y2, x, y]);
   }
 
   smoothCurveTo(x2: number, y2: number, x: number, y: number): this {
-    this._d += `S ${x2} ${y2}, ${x} ${y} `;
-    return this;
+    return this.push(`S ${x2} ${y2}, ${x} ${y} `, [x2, y2, x, y]);
   }
 
   quadraticCurveTo(x1: number, y1: number, x: number, y: number): this {
-    this._d += `Q ${x1} ${y1}, ${x} ${y} `;
-    return this;
+    return this.push(`Q ${x1} ${y1}, ${x} ${y} `, [x1, y1, x, y]);
   }
 
   smoothQuadraticCurveTo(x: number, y: number): this {
-    this._d += `T ${x} ${y} `;
-    return this;
+    return this.push(`T ${x} ${y} `, [x, y]);
   }
 
   arc(rx: number, ry: number, rotation: number, largeArc: 0 | 1, sweep: 0 | 1, x: number, y: number): this {
-    this._d += `A ${rx} ${ry} ${rotation} ${largeArc} ${sweep} ${x} ${y} `;
-    return this;
+    return this.push(`A ${rx} ${ry} ${rotation} ${largeArc} ${sweep} ${x} ${y} `, [rx, ry, rotation, largeArc, sweep, x, y]);
   }
 
   close(): this {
-    this._d += 'Z ';
-    return this;
+    return this.push('Z ', []);
   }
 
   private _pullX?: number;
@@ -99,41 +103,12 @@ class PathBuilder extends ShapeBuilder {
   }
 
   build(): ReactElement {
-    const hasLayers = this._below.length > 0 || this._children.length > 0 || this._over.length > 0;
-
+    const d = asPathD(this._d).trim() || undefined;
     const shapeElement = React.createElement('path', {
-      d: this._d.trim(),
-      fill: this._fill,
-      fillOpacity: this._fillOpacity,
-      stroke: this._stroke,
-      strokeWidth: this._strokeWidth,
-      strokeOpacity: this._strokeOpacity,
-      strokeDasharray: this._strokeDasharray,
-      strokeLinecap: this._strokeLinecap,
-      strokeLinejoin: this._strokeLinejoin,
-      opacity: this._opacity,
-      transform: this._transform,
-      filter: this._filter,
-      className: this._className,
-      style: this._style
+      d,
+      ...this.shapePaintProps(),
     });
-
-    if (!hasLayers) {
-      return shapeElement;
-    }
-
-    const groupChildren = [
-      ...this._below,
-      shapeElement,
-      ...this._children,
-      ...this._over
-    ];
-
-    return React.createElement(
-      'g',
-      { key: this._className || 'path-group' },
-      groupChildren
-    );
+    return this.wrapShape(shapeElement, 'path-group');
   }
 }
 

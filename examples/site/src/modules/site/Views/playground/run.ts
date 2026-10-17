@@ -1,4 +1,5 @@
 import * as fiboui from 'fiboui'
+import { loadPlayModule, resolveImportScope, takeImports } from './imports'
 
 export type PlayError = {
   message: string
@@ -25,17 +26,6 @@ for (const name of scopeNames) {
   else if (name[0] === name[0].toLowerCase() && prev[0] !== prev[0].toLowerCase()) buildersByLower.set(key, name)
 }
 
-/** Only a Button chain. TextField().type('email') and strings stay as written. */
-function fixButtonType(source: string): string {
-  return source.replace(
-    /Button(\s*\([^()\n]*\))((?:\s*\.\w+\s*\([^()\n]*\))*)\s*\.type\(\s*(['"])(submit|reset|button)\3\s*\)/g,
-    (_match, call: string, chain: string, _quote: string, kind: string) => {
-      const next = kind === 'submit' ? '.submit()' : kind === 'reset' ? '.reset()' : ".htmlType('button')"
-      return `Button${call}${chain}${next}`
-    },
-  )
-}
-
 const childrenLesson = `return Form()
   .children([
     TextField()
@@ -50,7 +40,7 @@ const childrenLesson = `return Form()
 
 function prepare(source: string): string {
   const stripped = insertArrayCommas(
-    fixButtonType(source.replace(/^\s*import\s.+from\s+['"][^'"]+['"];?\s*$/gm, '')),
+    source.replace(/^\s*import\s.+from\s+['"][^'"]+['"];?\s*$/gm, ''),
   ).trim()
   if (hasCodeReturn(stripped)) return stripped
   return `return (\n${stripped}\n)`
@@ -213,10 +203,15 @@ function skipRegex(source: string, start: number): number {
 
 function hasCodeReturn(source: string): boolean {
   let i = 0
+  let paren = 0
+  let bracket = 0
+  let brace = 0
+  let lastCode = ''
   while (i < source.length) {
     const char = source[i]
     if (char === "'" || char === '"' || char === '`') {
       i = skipString(source, i)
+      lastCode = '"'
       continue
     }
     if (char === '/' && source[i + 1] === '/') {
@@ -229,9 +224,28 @@ function hasCodeReturn(source: string): boolean {
       i = end < 0 ? source.length : end + 2
       continue
     }
-    if (source.startsWith('return', i) && !/[\w$]/.test(source[i - 1] ?? '') && !/[\w$]/.test(source[i + 6] ?? '')) {
+    if (char === '/' && /[(,[=:!&|?{};]/.test(lastCode || '(')) {
+      i = skipRegex(source, i)
+      lastCode = '/'
+      continue
+    }
+    if (char === '(') paren += 1
+    else if (char === ')') paren = Math.max(0, paren - 1)
+    else if (char === '[') bracket += 1
+    else if (char === ']') bracket = Math.max(0, bracket - 1)
+    else if (char === '{') brace += 1
+    else if (char === '}') brace = Math.max(0, brace - 1)
+    else if (
+      paren === 0 &&
+      bracket === 0 &&
+      brace === 0 &&
+      source.startsWith('return', i) &&
+      !/[\w$]/.test(source[i - 1] ?? '') &&
+      !/[\w$]/.test(source[i + 6] ?? '')
+    ) {
       return true
     }
+    if (!/\s/.test(char)) lastCode = char
     i += 1
   }
   return false
@@ -289,13 +303,28 @@ export function explain(message: string): { hint: string; lesson: string } {
   }
 }
 
-export function runPlay(source: string): PlayResult {
+/**
+ * Compile the editor snippet with `new Function`. Same-origin, not a sandbox:
+ * the author clicks Run (no URL-fed source). Do not auto-run query/hash payloads.
+ */
+export function runPlay(source: string, extra: Record<string, unknown> = {}): PlayResult {
   const body = prepare(source)
+  const names = scopeNames.slice()
+  const values: unknown[] = scopeValues.slice()
+  for (const [name, value] of Object.entries(extra)) {
+    if (!/^[A-Za-z_$][\w$]*$/.test(name)) continue
+    const index = names.indexOf(name)
+    if (index >= 0) values[index] = value
+    else {
+      names.push(name)
+      values.push(value)
+    }
+  }
   try {
-    const fn = new Function(...scopeNames, `"use strict";\n${body}`) as (
+    const fn = new Function(...names, `"use strict";\n${body}`) as (
       ...args: unknown[]
     ) => unknown
-    const node = fn(...scopeValues)
+    const node = fn(...values)
     if (node == null || (typeof node !== 'object' && typeof node !== 'function')) {
       return {
         ok: false,
@@ -312,4 +341,24 @@ export function runPlay(source: string): PlayResult {
     const taught = explain(message)
     return { ok: false, error: { message, hint: taught.hint, lesson: taught.lesson } }
   }
+}
+
+/** Resolve `import { Search } from 'lucide-react'` and then compile. */
+export async function runPlayAsync(source: string): Promise<PlayResult> {
+  const taken = takeImports(source)
+  if (taken.error) {
+    return { ok: false, error: { message: taken.error, hint: taken.error, lesson: '' } }
+  }
+  const resolved = await resolveImportScope(taken.specs, loadPlayModule)
+  if (!resolved.ok) {
+    return {
+      ok: false,
+      error: {
+        message: resolved.message,
+        hint: "Confere o nome do ícone. Exemplo: import { Search } from 'lucide-react'.",
+        lesson: '',
+      },
+    }
+  }
+  return runPlay(taken.body, resolved.scope)
 }

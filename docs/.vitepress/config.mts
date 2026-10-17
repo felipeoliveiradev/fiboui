@@ -25,6 +25,7 @@ export default defineConfig({
           { text: 'Theming System', link: '/guide/theming' },
           { text: 'Responsive / media queries', link: '/guide/responsive' },
           { text: 'SSR / hydration', link: '/guide/ssr' },
+          { text: 'Routing / Outlet', link: '/guide/routing' },
           { text: 'Animation', link: '/guide/animation' },
           { text: 'Scroll', link: '/guide/scroll' }
         ]
@@ -69,7 +70,7 @@ export default defineConfig({
     ],
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/vuejs/vitepress' }
+      { icon: 'github', link: 'https://github.com/felipeoliveiradev/fiboui' }
     ]
   }
 })

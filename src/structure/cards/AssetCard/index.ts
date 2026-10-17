@@ -10,6 +10,7 @@ import { Button } from '../../../interactive/Button';
 import { Card } from '../../Card';
 import { Badge } from '../../../content/Badge';
 import { Icons } from '../../../core/icons';
+import { Image } from '../../../content/Image';
 
 const AssetCardInner = React.memo((props: any) => {
     const { image, title, price, likes, timeLeft, className, style, ...rest } = props;
@@ -30,9 +31,10 @@ const AssetCardInner = React.memo((props: any) => {
       .children([
 
         Box().classNames(['relative', 'aspect-square', 'overflow-hidden', 'rounded-[20px]']).children([
-           Box()
-             .classNames(['w-full', 'h-full', 'bg-gray-200', 'bg-cover', 'bg-center'])
-             .style({ backgroundImage: `url(${image})` })
+           Image()
+             .src(image)
+             .alt(title || '')
+             .classNames(['w-full', 'h-full', 'object-cover', 'bg-gray-200'])
              .build(),
 
            Box()
@@ -129,6 +131,7 @@ class AssetCardBuilder extends FiboBuilder {
 
   build(): ReactElement {
     const props = {
+        ...this._props,
         image: this._image,
         title: this._title,
         price: this._price,
@@ -136,7 +139,6 @@ class AssetCardBuilder extends FiboBuilder {
         timeLeft: this._timeLeft,
         className: this.getClassName(),
         style: this.getStyle(),
-        ...this._props
     };
     return React.createElement(AssetCardInner, props);
   }

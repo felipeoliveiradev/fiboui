@@ -133,11 +133,19 @@ export const MaterialColorPalette: Record<string, Record<number | string, string
 };
 
 export function color(materialColor: MaterialColor, shade: Shade = Shade.S500): string {
-  const colorName = materialColor.toString();
-  const shadeValue = typeof shade === 'number' ? shade : shade.toString();
-  return MaterialColorPalette[colorName]?.[shadeValue] || '#000000';
+  const colorName = String(materialColor);
+  const family = MaterialColorPalette[colorName];
+  if (!family) {
+    throw new Error(`Unknown material color: ${colorName}`);
+  }
+  const shadeValue = typeof shade === 'number' ? shade : String(shade);
+  return family[shadeValue] ?? family[500];
 }
 
+const CSS_COLOR_LITERALS = new Set(['transparent', 'black', 'white']);
+
 export function getCSSVar(colorName: string): string {
-  return `var(--fibo-${colorName})`;
+  const name = String(colorName);
+  if (CSS_COLOR_LITERALS.has(name)) return name;
+  return `var(--fibo-${name})`;
 }

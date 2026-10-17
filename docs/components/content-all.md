@@ -10,7 +10,7 @@ import { Spinner } from '../../src/content/Spinner'
 import { Text } from '../../src/content/Text'
 
 const renderAlert = () =>
-  Box().flex().col().gap(4).children([
+  Box().flex().flexDirection('column').gap(4).children([
     Alert().title('Info').description('This is an info alert').intent('info'),
     Alert().title('Success').description('Operation successful').intent('success'),
     Alert().title('Error').description('Something went wrong').intent('error')
@@ -18,10 +18,10 @@ const renderAlert = () =>
 
 const renderAvatar = () =>
   Box().flex().gap(4).children([
-    Avatar().src('https://i.pravatar.cc/100').size('sm'),
-    Avatar().src('https://i.pravatar.cc/100').size('md'),
-    Avatar().src('https://i.pravatar.cc/100').size('lg'),
-    Avatar().initials('FO').bg('blue-500')
+    Avatar().image('https://i.pravatar.cc/100').size(32),
+    Avatar().image('https://i.pravatar.cc/100').size(48),
+    Avatar().image('https://i.pravatar.cc/100').size(64),
+    Avatar().initials('FO').bg('#3B82F6')
   ])
 
 const renderBadge = () =>
@@ -32,16 +32,16 @@ const renderBadge = () =>
   ])
 
 const renderProgress = () =>
-  Box().flex().col().gap(4).w('full').children([
+  Box().flex().flexDirection('column').gap(4).width('full').children([
     Progress().value(30),
-    Progress().value(75).variant('success')
+    Progress().value(75).color('#22c55e')
   ])
 
 const renderSkeleton = () =>
-  Box().flex().col().gap(2).w('300px').children([
-    Skeleton().variant('text').h(20),
-    Skeleton().variant('rect').h(100),
-    Skeleton().variant('circle').size(50)
+  Box().flex().flexDirection('column').gap(2).width('300px').children([
+    Skeleton().shape('rounded').height(20),
+    Skeleton().shape('square').height(100),
+    Skeleton().shape('circle').width(50).height(50)
   ])
 
 const renderSpinner = () =>
@@ -52,11 +52,11 @@ const renderSpinner = () =>
   ])
 
 const renderText = () =>
-  Box().flex().col().gap(2).children([
+  Box().flex().flexDirection('column').gap(2).children([
     Text('Heading 1').variant('h1'),
     Text('Heading 2').variant('h2'),
     Text('Body Text').variant('body'),
-    Text('Caption Text').variant('caption').color('gray-500')
+    Text('Caption Text').variant('caption').color('#6B7280')
   ])
 </script>
 

@@ -1,12 +1,9 @@
 import { FiboStyles, MotionStyles, Box } from 'fiboui'
-import { menuOpen } from '../state'
 import { face, siteTheme } from '../theme'
 import { Home } from './Home'
-import { MenuOverlay } from './MenuOverlay'
 
 export function SitePage() {
   return Box()
-    .bindSignal(menuOpen)
     .position('relative')
     .width('100%')
     .minHeight('100vh')
@@ -16,14 +13,8 @@ export function SitePage() {
     .color('on-background')
     .fontFamily(face)
     .theme(siteTheme)
-    .css(
-      menuOpen.value
-        ? { height: '100dvh', overflow: 'hidden', overscrollBehavior: 'none' }
-        : { overflowX: 'hidden' },
-    )
     .children([
       Home(),
-      MenuOverlay(),
       MotionStyles(),
       FiboStyles(),
     ])

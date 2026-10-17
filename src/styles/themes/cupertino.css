@@ -21,13 +21,34 @@
   --fibo-on-surface-variant: #8E8E93; 
   
   --fibo-error: #FF3B30;
+  --fibo-on-error: #FFFFFF;
   
-  --fibo-outline: #C7C7CC; 
+  --fibo-outline: #C7C7CC;
+  --fibo-primary-variant: #0055D4;
+  --fibo-secondary-variant: #3634A3;
+  --fibo-success: #34C759;
+  --fibo-warning: #FF9500;
+  --fibo-info: #5AC8FA;
+  --fibo-secondary-container: #E8E7FA;
+  --fibo-on-secondary-container: #2C2A8A;
+  --fibo-tertiary: #8944AB;
+  --fibo-on-tertiary: #FFFFFF;
+  --fibo-tertiary-container: #F5E6FA;
+  --fibo-on-tertiary-container: #5B1675;
+  --fibo-surface-container-low: #FFFFFF;
+  --fibo-error-container: #FF3B30;
+  --fibo-on-error-container: #FFFFFF;
   
   
   --fibo-font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
   
   
+  --fibo-space-xs: 4px;
+  --fibo-space-sm: 8px;
+  --fibo-space-md: 12px;
+  --fibo-space-lg: 20px;
+  --fibo-space-xl: 32px;
+
   --fibo-radius-xs: 6px;
   --fibo-radius-sm: 8px;
   --fibo-radius-md: 10px; 
@@ -39,10 +60,40 @@
   --fibo-elevation-1: 0 1px 3px rgba(0,0,0,0.05);
   --fibo-elevation-2: 0 4px 12px rgba(0,0,0,0.1);
   --fibo-elevation-3: 0 12px 32px rgba(0,0,0,0.15);
+  --fibo-shadow-sm: var(--fibo-elevation-1);
+  --fibo-shadow-md: var(--fibo-elevation-2);
+  --fibo-shadow-lg: var(--fibo-elevation-3);
   
   
   --fibo-transition-duration: 400ms;
   --fibo-transition-easing: cubic-bezier(0.25, 0.1, 0.25, 1);
+
+  --fibo-text-h1-size: 34px;
+  --fibo-text-h1-weight: 700;
+  --fibo-text-h1-tracking: 0.37px;
+  --fibo-text-h2-size: 28px;
+  --fibo-text-h2-weight: 700;
+  --fibo-text-h2-tracking: 0.36px;
+  --fibo-text-h3-size: 22px;
+  --fibo-text-h3-weight: 600;
+  --fibo-text-h3-tracking: 0.35px;
+  --fibo-text-h4-size: 20px;
+  --fibo-text-h4-weight: 600;
+  --fibo-text-h5-size: 17px;
+  --fibo-text-h5-weight: 600;
+  --fibo-text-h5-tracking: -0.41px;
+  --fibo-text-h6-size: 15px;
+  --fibo-text-h6-weight: 600;
+  --fibo-text-h6-tracking: -0.24px;
+  --fibo-text-body-size: 17px;
+  --fibo-text-body-weight: 400;
+  --fibo-text-body-tracking: -0.41px;
+  --fibo-text-caption-size: 13px;
+  --fibo-text-caption-weight: 400;
+  --fibo-text-caption-tracking: -0.08px;
+  --fibo-text-label-size: 15px;
+  --fibo-text-label-weight: 500;
+  --fibo-text-label-tracking: -0.24px;
 }
 
 

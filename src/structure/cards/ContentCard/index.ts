@@ -14,16 +14,19 @@ const ContentCardInner = React.memo((props: any) => {
         date,
         source,
         className,
-        style
+        style,
+        ...rest
     } = props;
 
     return Card()
-        .className(`overflow-hidden hover:shadow-lg transition-shadow duration-300 ${className}`)
+        .className(`overflow-hidden hover:shadow-lg transition-shadow duration-300 ${className || ''}`)
         .style(style)
+        .props(rest)
         .children([
 
             image ? Image()
                 .src(image)
+                .alt(title || '')
                 .className("w-full object-cover rounded-[20px] mb-4")
                 .style({ height: '200px' })
                 .build() : null,
@@ -98,6 +101,7 @@ class ContentCardBuilder extends FiboBuilder {
 
   build(): ReactElement {
     const props = {
+        ...this._props,
         image: this._image,
         title: this._title,
         description: this._description,
@@ -105,7 +109,6 @@ class ContentCardBuilder extends FiboBuilder {
         source: this._source,
         className: this.getClassName(),
         style: this.getStyle(),
-        ...this._props
     };
 
     return React.createElement(ContentCardInner, props);

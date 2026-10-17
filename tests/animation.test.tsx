@@ -18,11 +18,13 @@ import {
   scrollTo,
   signal,
   springEase,
+  useMountTransition,
   useSpring,
   useStagger,
   useTransition,
 } from '../src';
 import type { PseudoStateBuilder } from '../src';
+import { createRipple } from '../src/core/effects';
 
 function injectedCss(): string {
   return Array.from(document.querySelectorAll('style'))
@@ -36,6 +38,7 @@ function injectedCss(): string {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe('easing + spring', () => {
@@ -359,6 +362,7 @@ describe('hover callback inference', () => {
 
 describe('Signal.spring uses stiffness/damping (rAF path, opt-in)', () => {
   it('cancels the previous rAF when a new spring starts', () => {
+    stubReducedMotion(false);
     vi.stubGlobal('requestAnimationFrame', () => 7);
     const cancel = vi.fn();
     vi.stubGlobal('cancelAnimationFrame', cancel);
@@ -384,6 +388,151 @@ describe('stripes keyframes live in the static sheet', () => {
   it('defines @keyframes stripes for Progress', () => {
     render(<Reveal preset="fade" />);
     expect(`${getMotionCss()}\n${injectedCss()}`).toMatch(/@keyframes stripes/);
+  });
+});
+
+describe('Presence reduced-motion + animationend fallback', () => {
+  it('stamps fibo-motion-force when reducedMotion is never', () => {
+    stubReducedMotion(true);
+    const { container } = render(
+      <Presence show reducedMotion="never">
+        <span>panel</span>
+      </Presence>,
+    );
+    const wrap = container.querySelector('[data-fibo-presence]') as HTMLElement;
+    expect(wrap.className).toMatch(/fibo-motion-force/);
+    expect(wrap.className).toMatch(/fibo-anim-fadeIn/);
+  });
+
+  it('fluent reducedMotion(never) still plays enter under OS reduce', () => {
+    stubReducedMotion(true);
+    const { container } = render(
+      Presence(true).reducedMotion('never').enter('fadeIn').children('forced'),
+    );
+    const wrap = container.querySelector('[data-fibo-presence]') as HTMLElement;
+    expect(wrap.className).toMatch(/fibo-motion-force/);
+    expect(wrap.textContent).toBe('forced');
+  });
+
+  it('unmounts on exit even if animationend never fires', () => {
+    vi.useFakeTimers();
+    try {
+      const { rerender, container } = render(
+        <Presence show duration={200}>
+          <span>panel</span>
+        </Presence>,
+      );
+      rerender(
+        <Presence show={false} exit="fadeOut" duration={200}>
+          <span>panel</span>
+        </Presence>,
+      );
+      expect(container.textContent).toBe('panel');
+      act(() => {
+        vi.advanceTimersByTime(260);
+      });
+      expect(container.textContent).toBe('');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('Reveal progressive enhancement', () => {
+  it('is visible when scripting is none (no IntersectionObserver)', () => {
+    expect(getMotionCss()).toMatch(/@media \(scripting:\s*none\)/);
+    expect(getMotionCss()).toMatch(
+      /@media \(scripting:\s*none\)[\s\S]*\.fibo-reveal[\s\S]*opacity:\s*1/,
+    );
+  });
+});
+
+describe('rAF / reduced-motion numeric animation', () => {
+  it('Signal.animate snaps when requestAnimationFrame is missing (SSR)', () => {
+    const raf = window.requestAnimationFrame;
+    const caf = window.cancelAnimationFrame;
+    // @ts-expect-error SSR has no rAF
+    delete window.requestAnimationFrame;
+    // @ts-expect-error
+    delete window.cancelAnimationFrame;
+    const done = vi.fn();
+    const s = signal(0);
+    s.animate(10, { duration: 400, onComplete: done });
+    expect(s.value).toBe(10);
+    expect(done).toHaveBeenCalledTimes(1);
+    window.requestAnimationFrame = raf;
+    window.cancelAnimationFrame = caf;
+  });
+
+  it('Signal.spring snaps under prefers-reduced-motion', () => {
+    stubReducedMotion(true);
+    const raf = vi.fn(() => 1);
+    vi.stubGlobal('requestAnimationFrame', raf);
+    const s = signal(0);
+    s.spring(8, { stiffness: 200, damping: 22 });
+    expect(s.value).toBe(8);
+    expect(raf).not.toHaveBeenCalled();
+  });
+
+  it('useSpring / useTransition snap under reduced-motion', () => {
+    stubReducedMotion(true);
+    const raf = vi.spyOn(window, 'requestAnimationFrame');
+    function Probe() {
+      const spring = useSpring(42);
+      const trans = useTransition(7, { duration: 400 });
+      return (
+        <span data-testid="probe">
+          {spring}:{trans}
+        </span>
+      );
+    }
+    const { getByTestId } = render(<Probe />);
+    expect(getByTestId('probe').textContent).toBe('42:7');
+    expect(raf).not.toHaveBeenCalled();
+  });
+
+  it('useMountTransition skips enter/exit delays under reduced-motion', () => {
+    stubReducedMotion(true);
+    function Probe({ open }: { open: boolean }) {
+      const { shouldRender, stage } = useMountTransition(open, 400);
+      return (
+        <span data-testid="mount">
+          {shouldRender ? 'yes' : 'no'}:{stage}
+        </span>
+      );
+    }
+    const { rerender, getByTestId } = render(<Probe open />);
+    expect(getByTestId('mount').textContent).toBe('yes:entered');
+    rerender(<Probe open={false} />);
+    expect(getByTestId('mount').textContent).toBe('no:exited');
+  });
+});
+
+describe('createRipple', () => {
+  it('does not spawn a ripple when reduced-motion is set', () => {
+    stubReducedMotion(true);
+    const btn = document.createElement('button');
+    btn.style.position = 'relative';
+    document.body.appendChild(btn);
+    createRipple({ clientX: 10, clientY: 10 }, btn);
+    expect(btn.querySelectorAll('span').length).toBe(0);
+    btn.remove();
+  });
+
+  it('removes the circle on animationend and does not throw without document body attach', () => {
+    stubReducedMotion(false);
+    const btn = document.createElement('button');
+    Object.defineProperty(btn, 'clientWidth', { value: 40 });
+    Object.defineProperty(btn, 'clientHeight', { value: 40 });
+    btn.getBoundingClientRect = () =>
+      ({ left: 0, top: 0, width: 40, height: 40, right: 40, bottom: 40, x: 0, y: 0, toJSON: () => ({}) });
+    document.body.appendChild(btn);
+    createRipple({ clientX: 20, clientY: 20 }, btn);
+    const circle = btn.querySelector('span') as HTMLElement;
+    expect(circle).toBeTruthy();
+    fireEvent.animationEnd(circle);
+    expect(btn.querySelector('span')).toBeNull();
+    btn.remove();
   });
 });
 

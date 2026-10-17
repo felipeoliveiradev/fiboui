@@ -21,6 +21,9 @@ body,
 }
 
 .demo-track {
+  position: sticky;
+  top: 0;
+  z-index: 40;
   height: 6px;
   width: 100%;
   background: #2a2d38;
@@ -31,6 +34,7 @@ body,
 
 .demo-bar {
   height: 100%;
+  width: 100%;
   background: #c4b5fd;
 }
 

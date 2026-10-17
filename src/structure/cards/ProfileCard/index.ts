@@ -1,5 +1,6 @@
 import React, { ReactElement } from 'react';
 import { FiboBuilder, createBuilder } from '../../../core/builder';
+import { isDangerousUrl } from '../../../core/safeUrl';
 import { BaseProps } from '../../../core/types';
 import { Box } from '../../Box';
 import { Text } from '../../../content/Text';
@@ -11,8 +12,17 @@ import { Card } from '../../Card';
 import { Avatar } from '../../../content/Avatar';
 import { Icons } from '../../../core/icons';
 
+/** CSS background-image: http(s)/relative/blob; drop javascript:/data:/vbscript:/file:. */
+function safeCssImageUrl(url: unknown): string {
+  if (typeof url !== 'string') return '';
+  const trimmed = url.trim();
+  if (!trimmed || isDangerousUrl(trimmed)) return '';
+  return trimmed;
+}
+
 const ProfileCardInner = React.memo((props: any) => {
     const { banner, avatar, name, handle, stats, className, style, ...rest } = props;
+    const safeBanner = safeCssImageUrl(banner);
 
     return Card()
         .style({
@@ -30,7 +40,12 @@ const ProfileCardInner = React.memo((props: any) => {
         .children([
 
             Box()
-              .style({ height: '100px', backgroundImage: `url(${banner})`, backgroundSize: 'cover', backgroundPosition: 'center' })
+              .style({
+                height: '100px',
+                backgroundImage: safeBanner ? `url(${JSON.stringify(safeBanner)})` : undefined,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              })
               .build(),
 
             Column().padding(20).alignItems("center").style({ marginTop: '-50px' }).children([
@@ -123,6 +138,7 @@ class ProfileCardBuilder extends FiboBuilder {
 
   build(): ReactElement {
     const props = {
+        ...this._props,
         banner: this._banner,
         avatar: this._avatar,
         name: this._name,
@@ -130,7 +146,6 @@ class ProfileCardBuilder extends FiboBuilder {
         stats: this._stats,
         className: this.getClassName(),
         style: this.getStyle(),
-        ...this._props
     };
     return React.createElement(ProfileCardInner, props);
   }

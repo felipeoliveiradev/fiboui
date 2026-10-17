@@ -1,9 +1,11 @@
 import { Box, Button, Column, FiboStyles, MotionStyles, Row, Text, type FiboChild } from 'fiboui'
+import 'leaflet/dist/leaflet.css'
+import './preview.css'
 import { face, siteTheme } from '../../theme'
 import { TopBar } from '../NavBar'
-import { codeField, codeHighlight, codeStatus, showCode } from './editor'
+import { codeField, codeHighlight, codeStatus, indentEditor, showCode } from './editor'
 import { codeSuggest } from './suggest'
-import { buttonExample, formExample, helloExample } from './examples'
+import { buttonExample, formExample, helloExample, kitExample, mapExample } from './examples'
 import { output, reactCode, runPreview, showReact } from './state'
 import { scheme, typeScale } from './scheme'
 
@@ -83,8 +85,20 @@ function samples(): FiboChild {
       sample('Hello', helloExample),
       sample('Button', buttonExample),
       sample('Form', formExample),
-      Button('React')
+      sample('Map', mapExample),
+      sample('Kit', kitExample),
+      Button('Indent')
         .marginLeft('auto')
+        .height(28)
+        .paddingHorizontal(12)
+        .bg(scheme.surfaceContainerHigh)
+        .color(scheme.onSurface)
+        .border(`1px solid ${scheme.outline}`)
+        .rounded(6)
+        .fontSize(typeScale.labelMedium.fontSize)
+        .fontWeight(typeScale.labelMedium.fontWeight)
+        .onPress(() => indentEditor()),
+      Button('React')
         .height(28)
         .paddingHorizontal(12)
         .bg(scheme.surfaceContainerHigh)
@@ -142,6 +156,7 @@ function previewPane(): FiboChild {
             .textTransform('uppercase'),
         ]),
       Box()
+        .className('play-preview')
         .width('100%')
         .flex('1')
         .flexDirection('column')

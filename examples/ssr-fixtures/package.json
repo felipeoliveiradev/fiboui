@@ -6,7 +6,7 @@
   "scripts": {
     "start:vite": "node vite/server.js",
     "build:next": "next build ./next",
-    "start:next": "next start ./next -p 3015",
+    "start:next": "next start ./next -H 127.0.0.1 -p 3015",
     "test:e2e": "playwright test"
   },
   "dependencies": {

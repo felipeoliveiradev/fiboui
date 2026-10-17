@@ -12,14 +12,14 @@ import { Textarea } from '../../src/interactive/Textarea'
 
 const renderButtons = () =>
   Box().flex().gap(4).children([
-    Button('Primary').variant('primary'),
-    Button('Secondary').variant('secondary'),
-    Button('Outline').variant('outline'),
-    Button('Ghost').variant('ghost')
+    Button('Filled').variant('filled'),
+    Button('Outlined').variant('outlined'),
+    Button('Ghost').variant('ghost'),
+    Button('Soft').variant('soft')
   ])
 
 const renderCheckbox = () =>
-  Box().flex().col().gap(2).children([
+  Box().flex().flexDirection('column').gap(2).children([
     Checkbox().label('Accept Terms'),
     Checkbox().label('Checked').checked(true)
   ])
@@ -38,13 +38,13 @@ const renderSelect = () =>
   ]).placeholder('Choose a color')
 
 const renderSwitch = () =>
-  Box().flex().col().gap(4).children([
+  Box().flex().flexDirection('column').gap(4).children([
     Switch().label('Notifications'),
     Switch().label('Dark Mode').checked(true)
   ])
 
 const renderTextField = () =>
-  Box().flex().col().gap(4).maxW('300px').children([
+  Box().flex().flexDirection('column').gap(4).maxWidth('300px').children([
     TextField().placeholder('Username').label('Username'),
     TextField().placeholder('Password').type('password').label('Password'),
     TextField().placeholder('Error state').error('Invalid input')
@@ -83,3 +83,7 @@ const renderTextarea = () =>
 ## Textarea
 
 <ReactWrapper :component="renderTextarea" />
+
+## Form
+
+`Form` is exported from `fiboui` and from `fiboui/interactive` (`import { Form, required } from 'fiboui/interactive'`). See [Form](/components/interactive-form).

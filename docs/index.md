@@ -12,7 +12,7 @@ hero:
       link: /guide/getting-started
     - theme: alt
       text: View on GitHub
-      link: https:
+      link: https://github.com/felipeoliveiradev/fiboui
 
 features:
   - title: Builder Pattern
@@ -20,5 +20,7 @@ features:
   - title: React Under the Hood
     details: Fully compatible with the React ecosystem you know and love.
   - title: Theme System
-    details: Powerful theming engine with Web, Cupertino, and Material presets.
+    details: Powerful theming engine with Web, Cupertino, Material, and Noir presets.
+  - title: Subpath imports
+    details: Tree-shake with fiboui/core, fiboui/layout, fiboui/content, fiboui/interactive, fiboui/structure, fiboui/navigation, fiboui/theme, and fiboui/server. CSS is fiboui/style.css.
 ---

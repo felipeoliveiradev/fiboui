@@ -1,7 +1,8 @@
 const vscode = require('vscode');
+const { collectLineageRanges } = require('./lineageRanges');
 
 /**
- * Subtle left-border marks on `.children([` … `])` ranges so nested
+ * Subtle left-border marks on `.children([` / `.items([` … `])` ranges so nested
  * fluent trees read more like Flutter's indent lineage.
  */
 function createLineageGuides(context) {
@@ -46,18 +47,9 @@ function createLineageGuides(context) {
 
     const text = editor.document.getText();
     const rangesByBucket = colors.map(() => []);
-    const re = /\.children\s*\(\s*\[/g;
-    let m;
-    while ((m = re.exec(text))) {
-      const openBracket = text.indexOf('[', m.index);
-      if (openBracket < 0) continue;
-      const close = findMatching(text, openBracket, '[', ']');
-      if (close < 0) continue;
-      // only multi-line children blocks
-      const inner = text.slice(openBracket, close);
-      if (!inner.includes('\n')) continue;
-      const start = editor.document.positionAt(openBracket);
-      const end = editor.document.positionAt(close + 1);
+    for (const span of collectLineageRanges(text)) {
+      const start = editor.document.positionAt(span.start);
+      const end = editor.document.positionAt(span.end);
       const depth = Math.min(
         colors.length - 1,
         Math.max(0, Math.floor(start.character / 2) % colors.length)
@@ -83,40 +75,6 @@ function createLineageGuides(context) {
 
   schedule(vscode.window.activeTextEditor);
   return { refresh: () => schedule(vscode.window.activeTextEditor) };
-}
-
-function findMatching(text, openIdx, openCh, closeCh) {
-  let depth = 0;
-  let i = openIdx;
-  let inStr = null;
-  while (i < text.length) {
-    const c = text[i];
-    if (inStr) {
-      if (c === '\\') {
-        i += 2;
-        continue;
-      }
-      if (c === inStr) inStr = null;
-      i++;
-      continue;
-    }
-    if (c === '"' || c === "'" || c === '`') {
-      inStr = c;
-      i++;
-      continue;
-    }
-    if (c === '/' && text[i + 1] === '/') {
-      while (i < text.length && text[i] !== '\n') i++;
-      continue;
-    }
-    if (c === openCh) depth++;
-    else if (c === closeCh) {
-      depth--;
-      if (depth === 0) return i;
-    }
-    i++;
-  }
-  return -1;
 }
 
 module.exports = { createLineageGuides };

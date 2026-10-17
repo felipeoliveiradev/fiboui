@@ -1,12 +1,13 @@
+import type { ReactElement } from 'react'
 import type { PseudoStateBuilder } from 'fiboui'
 import { Row, Box, Button } from 'fiboui'
-import { toggleMenu } from '../state'
-import { chalk, pink } from '../theme'
+import { menuOpen, toggleMenu } from '../state'
+import { chalk, lime, pink } from '../theme'
 import { focusMark, logoLockup } from './Logo'
 import { point } from './ui'
 
 /** Born-style utility strip: logo left, focus center, menu right. */
-export function TopBar() {
+export function TopBar(): ReactElement {
   return Row()
     .width('100%')
     .height(44)
@@ -20,33 +21,45 @@ export function TopBar() {
       Box().flex('1'),
       focusMark(16),
       Box().flex('1'),
-      point(
-        Button('')
-          .variant('raw')
-          .width(34)
-          .height(34)
-          .padding('0')
-          .bg(pink)
-          .justifyContent('center')
-          .alignItems('center')
-          .overflow('hidden')
-          .hoverEffect('grow')
-          .pressEffect('shrink')
-          .hover((state: PseudoStateBuilder) => {
-            state.bg(chalk)
-          })
-          .onPress(toggleMenu),
-      ).children([
-        Box()
-          .display('grid')
-          .gridTemplateColumns('repeat(3, 5px)')
-          .gap(3)
-          .css({ pointerEvents: 'none' })
-          .children(Array.from({ length: 9 }, (_, i) => Box().key(`d${i}`).width(5).height(5).bg(chalk))),
-      ]),
+      Box()
+        .bindSignal(menuOpen)
+        .children(() => [menuButton()]),
     ])
 }
 
-export function NavBar() {
+function menuButton() {
+  const open = menuOpen.value
+  return point(
+    Button('')
+      .variant('raw')
+      .width(34)
+      .height(34)
+      .padding('0')
+      .bg(pink)
+      .justifyContent('center')
+      .alignItems('center')
+      .overflow('hidden')
+      .hoverEffect('grow')
+      .pressEffect('shrink')
+      .hover((state: PseudoStateBuilder) => {
+        state.bg(lime)
+      })
+      .props({
+        'aria-label': open ? 'Close menu' : 'Open menu',
+        'aria-expanded': open,
+        'aria-controls': 'site-menu',
+      })
+      .onPress(toggleMenu),
+  ).children([
+    Box()
+      .display('grid')
+      .gridTemplateColumns('repeat(3, 5px)')
+      .gap(3)
+      .css({ pointerEvents: 'none' })
+      .children(Array.from({ length: 9 }, (_, i) => Box().key(`d${i}`).width(5).height(5).bg(chalk))),
+  ])
+}
+
+export function NavBar(): ReactElement {
   return Box().display('none')
 }

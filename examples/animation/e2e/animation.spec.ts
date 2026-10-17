@@ -26,7 +26,7 @@ test.describe('CSS motion (no fiboui/motion)', () => {
     );
     expect(css).toMatch(/@keyframes stripes/);
     expect(css).toContain('prefers-reduced-motion');
-    expect(css).toMatch(/scale\(1\.05\)\s+translateY\(-4px\)/);
+    expect(css).toMatch(/scale\(1\.05\)\s+translate3d\(0,\s*-4px,\s*0\)/);
 
     const hover = page.locator('#hover-card');
     await hover.hover();

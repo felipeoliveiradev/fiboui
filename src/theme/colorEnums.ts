@@ -79,6 +79,7 @@ export enum ThemeType {
   Material = 'material',
   Cupertino = 'cupertino',
   Web = 'web',
+  Noir = 'noir',
 }
 
 export enum ThemeMode {

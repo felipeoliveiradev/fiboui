@@ -1,4 +1,4 @@
-import type { PseudoStateBuilder } from 'fiboui'
+import type { FiboChild, PseudoStateBuilder } from 'fiboui'
 import { Column, Row, Box, Text, Button } from 'fiboui'
 import { chalk, lime, line, muted, pink } from '../../theme'
 import { point } from '../ui'
@@ -9,7 +9,7 @@ function countFor(cat: 'wear' | 'desk' | 'print') {
   return products.filter((item) => item.category === cat).length
 }
 
-function cell(child: ReturnType<typeof Box> | ReturnType<typeof point>) {
+function cell(child: FiboChild) {
   return Box()
     .flexGrow(1)
     .flexShrink(1)

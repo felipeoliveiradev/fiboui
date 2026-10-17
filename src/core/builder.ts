@@ -35,11 +35,64 @@ import {
   promoteSurfaceLonghandsInStyle,
   withRestTransform,
 } from './smoothInteraction';
-import { camelToKebab, logicalLonghands, normalizeCssValue, type LogicalAxes } from './cssFluent';
+import {
+  camelToKebab,
+  kebabToCamel,
+  logicalLonghands,
+  normalizeCssProperties,
+  normalizeCssValue,
+  resolveBoxShorthand,
+  type LogicalAxes,
+} from './cssFluent';
 
 
 /** Typical sticky header height used when `.sticky(0)` / `.sticky(true)` has no size. */
 const DEFAULT_STICKY_OFFSET_PX = 64;
+
+/** Camel box longhands that later `.padding()` / `.margin()` must not clobber via !important shorthand. */
+const BOX_LONGHAND_CAMEL = [
+  'paddingTop',
+  'paddingRight',
+  'paddingBottom',
+  'paddingLeft',
+  'marginTop',
+  'marginRight',
+  'marginBottom',
+  'marginLeft',
+] as const;
+
+const BOX_LONGHAND_KEBAB = new Set([
+  'padding-top',
+  'padding-right',
+  'padding-bottom',
+  'padding-left',
+  'margin-top',
+  'margin-right',
+  'margin-bottom',
+  'margin-left',
+]);
+
+/**
+ * Fluent names that are not CSS properties. Naive camelToKebab('templateColumns')
+ * yields invalid `template-columns`; Grid already maps these, the CSS proxy must too.
+ */
+const CSS_METHOD_ALIASES: Record<string, string> = {
+  templateColumns: 'gridTemplateColumns',
+  templateRows: 'gridTemplateRows',
+  templateAreas: 'gridTemplateAreas',
+  autoFlow: 'gridAutoFlow',
+  autoColumns: 'gridAutoColumns',
+  autoRows: 'gridAutoRows',
+  cssFloat: 'float',
+};
+
+/** Declaration name for StyleManager / @media: `--vars`, `-ms-*`, Grid aliases. */
+function toCssDeclName(prop: string): string {
+  if (prop.startsWith('--')) return prop;
+  const aliased = CSS_METHOD_ALIASES[prop] ?? prop;
+  const kebab = camelToKebab(aliased);
+  return kebab.startsWith('ms-') ? `-${kebab}` : kebab;
+}
 const DEFAULT_STICKY_OFFSET = `${DEFAULT_STICKY_OFFSET_PX}px`;
 
 /**
@@ -97,8 +150,19 @@ export abstract class FiboBuilder {
    */
   protected _resetStyle = false;
 
+  /** Kebab box longhands already stamped (`padding-left`, …) so later shorthand cannot clobber them. */
+  protected _boxLonghands = new Set<string>();
+
   resetStyle(): this {
     this._resetStyle = true;
+    this._classNames = [];
+    this._style = {};
+    this._cssStyles = {};
+    this._boxLonghands.clear();
+    this._transforms = [];
+    this._animationConfig = undefined;
+    this._smoothSurface = false;
+    this._smoothNeedsRestTransform = false;
     this.addClassName('fibo-reset');
     return this;
   }
@@ -168,47 +232,122 @@ export abstract class FiboBuilder {
     return this;
   }
 
-  paddingHorizontal(value: string | number): this {
-    const finalValue = typeof value === 'number' ? `${value}px` : value;
+  private setBoxLonghand(property: string, value: string | number): this {
+    const finalValue = normalizeCssValue(kebabToCamel(property), value);
+    this._boxLonghands.add(property);
+    this.addClassName(_styleManager.register(property, finalValue));
+    return this;
+  }
 
-    const clsLeft = _styleManager.register('padding-left', finalValue);
-    const clsRight = _styleManager.register('padding-right', finalValue);
-    this._classNames.push(clsLeft, clsRight);
+  private setBoxShorthand(kind: 'padding' | 'margin', value: string | number): this {
+    const resolved = resolveBoxShorthand(kind, value, this._boxLonghands);
+    if (resolved.shorthand != null) {
+      this.addClassName(_styleManager.register(kind, resolved.shorthand));
+      return this;
+    }
+    for (const [property, val] of resolved.longhands) {
+      this.setBoxLonghand(property, val);
+    }
+    return this;
+  }
+
+  paddingHorizontal(value: string | number): this {
+    this.setBoxLonghand('padding-left', value);
+    this.setBoxLonghand('padding-right', value);
     return this;
   }
 
   paddingVertical(value: string | number): this {
-    const finalValue = typeof value === 'number' ? `${value}px` : value;
-    const clsTop = _styleManager.register('padding-top', finalValue);
-    const clsBottom = _styleManager.register('padding-bottom', finalValue);
-    this._classNames.push(clsTop, clsBottom);
+    this.setBoxLonghand('padding-top', value);
+    this.setBoxLonghand('padding-bottom', value);
     return this;
   }
 
+  padding(value: string | number): this {
+    return this.setBoxShorthand('padding', value);
+  }
+
   marginHorizontal(value: string | number): this {
-    const finalValue = typeof value === 'number' ? `${value}px` : value;
-    const clsLeft = _styleManager.register('margin-left', finalValue);
-    const clsRight = _styleManager.register('margin-right', finalValue);
-    this._classNames.push(clsLeft, clsRight);
+    this.setBoxLonghand('margin-left', value);
+    this.setBoxLonghand('margin-right', value);
     return this;
   }
 
   marginVertical(value: string | number): this {
-    const finalValue = typeof value === 'number' ? `${value}px` : value;
-    const clsTop = _styleManager.register('margin-top', finalValue);
-    const clsBottom = _styleManager.register('margin-bottom', finalValue);
-    this._classNames.push(clsTop, clsBottom);
+    this.setBoxLonghand('margin-top', value);
+    this.setBoxLonghand('margin-bottom', value);
     return this;
+  }
+
+  margin(value: string | number): this {
+    return this.setBoxShorthand('margin', value);
   }
 
   /** Inline layout wins over a host that hardcodes flex on the element (Form, Scaffold). */
   protected layoutStyle(patch: CSSProperties): this {
+    this.dropConflictingKeys(this._cssStyles, Object.keys(patch));
     this._style = { ...this._style, ...patch };
     return this;
   }
 
-  flexDirection(direction: 'row' | 'column'): this {
+  /** Last write of a key lives in one bag so getStyle() does not let earlier `.css()` beat later `.style()`. */
+  private dropConflictingKeys(bag: CSSProperties, keys: string[]): void {
+    const rec = bag as Record<string, unknown>;
+    for (const key of keys) {
+      delete rec[key];
+    }
+  }
+
+  private trackBoxLonghandsFrom(style: CSSProperties): void {
+    const rec = style as Record<string, unknown>;
+    for (const camel of BOX_LONGHAND_CAMEL) {
+      if (rec[camel] != null) {
+        this._boxLonghands.add(camelToKebab(camel));
+      }
+    }
+  }
+
+  flexDirection(direction: 'row' | 'column' | 'row-reverse' | 'column-reverse'): this {
     return this.layoutStyle({ flexDirection: direction });
+  }
+
+  /** Flutter `textDirection`. */
+  textDirection(direction: 'ltr' | 'rtl'): this {
+    return this.layoutStyle({ direction });
+  }
+
+  /** Flutter `textBaseline`. Both modes align on the flex baseline. */
+  textBaseline(baseline: 'alphabetic' | 'ideographic'): this {
+    return this.layoutStyle({
+      alignItems: 'baseline',
+      dominantBaseline: baseline === 'ideographic' ? 'ideographic' : 'alphabetic',
+    });
+  }
+
+  /** Flutter `clipBehavior`. `none` shows overflow; the other two clip. */
+  clip(behavior: 'none' | 'hardEdge' | 'antiAlias'): this {
+    return this.layoutStyle({ overflow: behavior === 'none' ? 'visible' : 'hidden' });
+  }
+
+  /**
+   * Flutter `mainAxisSize`. `min` hugs the current flex direction.
+   * `max` stretches along that same axis.
+   */
+  mainAxisSize(size: 'min' | 'max'): this {
+    const dir = this._style.flexDirection ?? 'row';
+    const vertical = dir === 'column' || dir === 'column-reverse';
+    if (size === 'max') {
+      return this.layoutStyle(vertical ? { height: '100%', flexGrow: 1 } : { width: '100%', flexGrow: 1 });
+    }
+    return this.layoutStyle(
+      vertical
+        ? { height: 'fit-content', flexGrow: 0 }
+        : { width: 'fit-content', flexGrow: 0 },
+    );
+  }
+
+  zIndex(value: number): this {
+    return this.layoutStyle({ zIndex: value });
   }
 
   alignItems(alignment: 'start' | 'center' | 'end' | 'stretch' | 'baseline'): this {
@@ -374,10 +513,7 @@ export abstract class FiboBuilder {
   }
 
   p(value: number | string): this {
-    const finalValue = typeof value === 'number' ? `${value}px` : value;
-    const cls = _styleManager.register('padding', finalValue);
-    this._classNames.push(cls);
-    return this;
+    return this.padding(value);
   }
 
   px(value: number | string): this {
@@ -397,10 +533,7 @@ export abstract class FiboBuilder {
   }
 
   m(value: number | string): this {
-    const finalValue = typeof value === 'number' ? `${value}px` : value;
-    const cls = _styleManager.register('margin', finalValue);
-    this._classNames.push(cls);
-    return this;
+    return this.margin(value);
   }
 
   mx(value: number | string): this {
@@ -621,18 +754,10 @@ export abstract class FiboBuilder {
 
   private registerMediaStyles(mq: string, styles?: CSSProperties): void {
     if (!styles) return;
-    const unitless = new Set([
-      'opacity', 'zIndex', 'z-index', 'flex', 'flexGrow', 'flexShrink',
-      'order', 'fontWeight', 'lineHeight',
-    ]);
-    for (const [key, raw] of Object.entries(styles)) {
-      if (raw === undefined || raw === null) continue;
-      const prop = key.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
-      const value =
-        typeof raw === 'number' && !unitless.has(key) && !unitless.has(prop)
-          ? `${raw}px`
-          : String(raw);
-      this._classNames.push(_styleManager.registerMedia(mq, prop, value));
+    const normalized = normalizeCssProperties(styles);
+    for (const [key, value] of Object.entries(normalized)) {
+      if (value === undefined || value === null || value === '') continue;
+      this._classNames.push(_styleManager.registerMedia(mq, toCssDeclName(key), String(value)));
     }
   }
 
@@ -937,12 +1062,20 @@ export abstract class FiboBuilder {
   }
 
   css(styles: CSSProperties): this {
-    this._cssStyles = { ...this._cssStyles, ...styles };
+    // Re-normalize the merged object so a later `padding` shorthand expands
+    // around existing axes instead of sitting beside them (spread clobber).
+    const incoming = normalizeCssProperties(styles);
+    this.dropConflictingKeys(this._style, Object.keys(incoming));
+    this._cssStyles = normalizeCssProperties({ ...this._cssStyles, ...incoming });
+    this.trackBoxLonghandsFrom(this._cssStyles);
     return this;
   }
 
   style(style: CSSProperties): this {
-    this._style = { ...this._style, ...style };
+    const incoming = normalizeCssProperties(style);
+    this.dropConflictingKeys(this._cssStyles, Object.keys(incoming));
+    this._style = normalizeCssProperties({ ...this._style, ...incoming });
+    this.trackBoxLonghandsFrom(this._style);
     return this;
   }
 
@@ -1256,8 +1389,14 @@ export abstract class FiboBuilder {
   }
 
   /** Scroll-reveal: IntersectionObserver toggles `.fibo-inview`. */
-  reveal(preset: string | { preset?: string; once?: boolean; rootMargin?: string; threshold?: number } = 'fadeUp'): this {
-    this._reveal = typeof preset === 'string' ? { preset, once: true } : { preset: 'fadeUp', once: true, ...preset };
+  reveal(
+    preset: string | { preset?: string; once?: boolean; rootMargin?: string; threshold?: number } = 'fadeUp',
+    options?: { once?: boolean; rootMargin?: string; threshold?: number }
+  ): this {
+    this._reveal =
+      typeof preset === 'string'
+        ? { preset, once: true, ...options }
+        : { preset: 'fadeUp', once: true, ...preset };
     this._usesCssMotion = true;
     ensureMotionCss();
     return this;
@@ -1623,7 +1762,7 @@ export abstract class FiboBuilder {
   }
 
   protected getStyle(): CSSProperties {
-    let finalStyle = { ...this._style, ...this._cssStyles };
+    let finalStyle = normalizeCssProperties({ ...this._style, ...this._cssStyles });
 
     // Late `.style()` after `.hover()` still needs longhands + rest transform.
     if (this._smoothSurface) {
@@ -1949,7 +2088,11 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
           const logical = logicalLonghands(prop as string);
           const props = logical ?? [prop as string];
           for (const name of props) {
-            const cssProp = camelToKebab(name);
+            const cssProp = toCssDeclName(name);
+            if (BOX_LONGHAND_KEBAB.has(cssProp)) {
+              (target as any).setBoxLonghand(cssProp, value);
+              continue;
+            }
             const finalValue = normalizeCssValue(name, value);
             target.className(_styleManager.register(cssProp, finalValue));
           }

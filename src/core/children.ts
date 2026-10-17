@@ -1,7 +1,9 @@
-import React, { ReactElement, ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 import type { FiboChild, FiboChildren } from './types';
+import type { BindableSignal } from './state';
+import { ValueBinder } from './ValueBinder';
 
-export function isBuildable(child: unknown): child is { build: () => ReactElement } {
+export function isBuildable(child: unknown): child is { build: () => ReactNode } {
   return (
     !!child &&
     typeof child === 'object' &&
@@ -10,13 +12,36 @@ export function isBuildable(child: unknown): child is { build: () => ReactElemen
   );
 }
 
+function isBindableSignal(value: unknown): value is BindableSignal<unknown> {
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    'value' in (value as object) &&
+    typeof (value as BindableSignal<unknown>).subscribe === 'function'
+  );
+}
+
+function bindSignalChild(val: unknown): ReactNode {
+  return buildChild(val);
+}
+
 export function buildChild(child: unknown): ReactNode {
   // Prefer assemble() over treating stamped builders as opaque elements.
   // Stamped proxies expose a fluent `.key` function when unset — Flight/RSC
   // rejects that as "Functions cannot be passed to Client Components".
   // Assembling yields host elements (div/p/…) with real string|null keys.
+  if (child == null || typeof child === 'boolean') {
+    return null;
+  }
   if (isBuildable(child)) {
     return child.build();
+  }
+  if (isBindableSignal(child)) {
+    return React.createElement(ValueBinder, {
+      signal: child,
+      builder: bindSignalChild,
+    });
   }
   if (React.isValidElement(child)) {
     return child;
@@ -51,6 +76,29 @@ export function withListKey(child: ReactNode, index: number): ReactNode {
   return React.cloneElement(child, { key: reactListKey(child, index) });
 }
 
+const MAX_BUILD_DEPTH = 32;
+
+/** Flatten arrays / Buildable.build() ReactNode so the result is spread-safe leaves. */
+function pushNormalized(value: unknown, out: ReactNode[], depth = 0): void {
+  if (depth > MAX_BUILD_DEPTH) {
+    return;
+  }
+  if (value == null || typeof value === 'boolean') {
+    return;
+  }
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i += 1) {
+      pushNormalized(value[i], out, depth + 1);
+    }
+    return;
+  }
+  if (isBuildable(value)) {
+    pushNormalized(value.build(), out, depth + 1);
+    return;
+  }
+  out.push(buildChild(value));
+}
+
 export function normalizeFiboChildren(children: FiboChildren | undefined | null): ReactNode[] {
   if (children === undefined || children === null) {
     return [];
@@ -58,6 +106,7 @@ export function normalizeFiboChildren(children: FiboChildren | undefined | null)
   const raw = typeof children === 'function'
     ? (children as () => FiboChild | FiboChild[])()
     : children;
-  const arr = Array.isArray(raw) ? raw : [raw];
-  return arr.map((item, index) => withListKey(buildChild(item), index));
+  const leaves: ReactNode[] = [];
+  pushNormalized(raw, leaves);
+  return leaves.map((item, index) => withListKey(item, index));
 }

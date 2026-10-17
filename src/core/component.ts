@@ -1,13 +1,15 @@
-import { ReactNode } from 'react';
+import React, { memo, ReactNode, CSSProperties } from 'react';
 import { ResponsiveStyles } from './types';
+import type { FiboChildren } from './types';
 import { normalizeFiboChildren } from './children';
+import { FIBO_BREAKPOINTS } from './breakpoints';
 
-export function processChildren(children: ReactNode | ReactNode[]): ReactNode[] {
+export function processChildren(children: FiboChildren | undefined | null): ReactNode[] {
   return normalizeFiboChildren(children);
 }
 
-export function mergeStyles(...styles: (React.CSSProperties | undefined)[]): React.CSSProperties {
-  return styles.reduce<React.CSSProperties>((acc, style) => {
+export function mergeStyles(...styles: (CSSProperties | undefined)[]): CSSProperties {
+  return styles.reduce<CSSProperties>((acc, style) => {
     if (style) {
       return { ...acc, ...style };
     }
@@ -16,24 +18,26 @@ export function mergeStyles(...styles: (React.CSSProperties | undefined)[]): Rea
 }
 
 export function applyResponsiveStyles(
-  baseStyle: React.CSSProperties,
+  baseStyle: CSSProperties,
   responsive?: ResponsiveStyles,
   width?: number
-): React.CSSProperties {
+): CSSProperties {
   if (!responsive) return baseStyle;
 
   if (width === undefined) {
     return baseStyle;
   }
   const viewport = width;
+  const md = FIBO_BREAKPOINTS.md;
+  const lg = FIBO_BREAKPOINTS.lg;
 
   let finalStyle = { ...baseStyle };
 
-  if (viewport < 768 && responsive.mobile) {
+  if (viewport < md && responsive.mobile) {
     finalStyle = { ...finalStyle, ...responsive.mobile };
-  } else if (viewport >= 768 && viewport < 1024 && responsive.tablet) {
+  } else if (viewport >= md && viewport < lg && responsive.tablet) {
     finalStyle = { ...finalStyle, ...responsive.tablet };
-  } else if (viewport >= 1024 && responsive.desktop) {
+  } else if (viewport >= lg && responsive.desktop) {
     finalStyle = { ...finalStyle, ...responsive.desktop };
   }
 
@@ -44,12 +48,15 @@ export function normalizeValue(value: string | number, unit = 'px'): string {
   return typeof value === 'number' ? `${value}${unit}` : value;
 }
 
-import React, { memo } from 'react';
-
 export function createFiboComponent<P extends object>(
   component: (props: P) => React.ReactNode,
-  propsAreEqual?: (prev: P, next: P) => boolean
+  propsAreEqual?: ((prev: P, next: P) => boolean) | false
 ) {
+  if (propsAreEqual === false) {
+    const Open = component as React.FC<P>;
+    return (props: P) => React.createElement(Open, props as any);
+  }
+
   const Memoized = memo(component, propsAreEqual);
 
   return (props: P) => React.createElement(Memoized, props as any);

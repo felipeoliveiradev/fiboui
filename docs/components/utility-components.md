@@ -71,9 +71,12 @@ RadioGroup()
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.value(value)` | `string` | Selected value |
+| `.value(value)` | `string` | Initial selection. Uncontrolled unless `.controlled(true)`. |
 | `.options(options)` | `Array<{label, value, disabled?}>` | Radio options |
 | `.onChange(handler)` | `(value: string) => void` | Change handler |
+| `.name(name)` | `string` | Name used by `Form` / `FormData`. Omit it and the group does not submit. |
+| `.controlled(on)` | `boolean` | `true` keeps React `value` and re-renders on each change |
+| `.rules(...rules)` | `FieldRule[]` | Checks collected on submit. See [Form](/components/interactive-form). |
 | `.direction(dir)` | `'vertical' \| 'horizontal'` | Layout direction |
 
 ---

@@ -1,7 +1,16 @@
 import React, { ReactElement, ReactNode } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
+import { isDangerousUrl } from '../../core/safeUrl';
 import { BaseProps } from '../../core/types';
 import { Box } from '../../structure/Box';
+
+/** CSS background-image: http(s)/relative/blob; drop javascript:/data:/vbscript:/file:. */
+function safeAvatarImage(url: unknown): string {
+  if (typeof url !== 'string') return '';
+  const trimmed = url.trim();
+  if (!trimmed || isDangerousUrl(trimmed)) return '';
+  return trimmed;
+}
 
 type AvatarShape = 'circle' | 'rounded' | 'square';
 type AvatarStatus = 'none' | 'online' | 'offline' | 'busy';
@@ -26,8 +35,9 @@ const UserGlyph = ({ size }: { size: number | string }) =>
   );
 
 const AvatarInner = React.memo((props: any) => {
-    const { image, size, border, shape, status, initials, icon, className, style } = props;
+    const { image, size, border, shape, status, initials, icon, alt, className, style, ...rest } = props;
 
+    const safeImage = safeAvatarImage(image);
     const sizeValue = typeof size === 'number' ? `${size}px` : size;
     const numericSize = typeof size === 'number' ? size : 40;
 
@@ -63,25 +73,31 @@ const AvatarInner = React.memo((props: any) => {
             .build()
         : null;
 
-    const face: ReactNode = image
+    const letters =
+      typeof initials === 'string' ? initials.trim().slice(0, 2).toUpperCase() : '';
+
+    const face: ReactNode = safeImage
       ? null
-      : initials
-        ? String(initials).slice(0, 2).toUpperCase()
+      : letters
+        ? letters
         : icon === 'user'
           ? React.createElement(UserGlyph, { size: sizeValue })
           : icon
             ? icon
             : null;
 
-    return Box()
-      .className(`fibo-avatar ${className || ''}`)
+    const accessibleName =
+      (typeof alt === 'string' && alt.trim()) ||
+      letters ||
+      'Avatar';
+
+    const innerFace = Box()
       .style({
-        position: 'relative',
-        width: sizeValue,
-        height: sizeValue,
+        width: '100%',
+        height: '100%',
         borderRadius: borderRadiusMap[shape as AvatarShape],
-        backgroundImage: image ? `url(${image})` : undefined,
-        backgroundColor: image ? undefined : (style?.backgroundColor || (initials ? '#ddd' : 'transparent')),
+        backgroundImage: safeImage ? `url(${JSON.stringify(safeImage)})` : undefined,
+        backgroundColor: safeImage ? undefined : (style?.backgroundColor || (letters ? '#ddd' : 'transparent')),
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         border: border,
@@ -94,9 +110,25 @@ const AvatarInner = React.memo((props: any) => {
         fontSize: numericSize * 0.42,
         fontWeight: 500,
         lineHeight: 1,
-        ...style
       })
-      .children([face, statusDot])
+      .children([face])
+      .build();
+
+    return Box()
+      .className(`fibo-avatar ${className || ''}`)
+      .props({
+        ...rest,
+        role: 'img',
+        'aria-label': accessibleName,
+      })
+      .style({
+        position: 'relative',
+        width: sizeValue,
+        height: sizeValue,
+        ...style,
+        overflow: 'visible',
+      })
+      .children([innerFace, statusDot])
       .build();
 });
 
@@ -108,9 +140,20 @@ class AvatarBuilder extends FiboBuilder {
   private _status: AvatarStatus = 'none';
   private _initials?: string;
   private _icon?: AvatarIcon;
+  private _alt?: string;
 
   image(url: string): this {
     this._image = url;
+    return this;
+  }
+
+  /** Alias for `.image()` — matches `Image().src()` and docs samples. */
+  src(url: string): this {
+    return this.image(url);
+  }
+
+  alt(text: string): this {
+    this._alt = text;
     return this;
   }
 
@@ -146,6 +189,7 @@ class AvatarBuilder extends FiboBuilder {
 
   build(): ReactElement {
     const props = {
+        ...this._props,
         image: this._image,
         size: this._size,
         border: this._border,
@@ -153,8 +197,9 @@ class AvatarBuilder extends FiboBuilder {
         status: this._status,
         initials: this._initials,
         icon: this._icon,
+        alt: this._alt,
         className: this.getClassName(),
-        style: this.getStyle()
+        style: this.getStyle(),
     };
     return React.createElement(AvatarInner, props);
   }
@@ -170,4 +215,5 @@ export interface AvatarProps extends BaseProps {
   status?: AvatarStatus;
   initials?: string;
   icon?: AvatarIcon;
+  alt?: string;
 }

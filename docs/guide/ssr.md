@@ -1,10 +1,10 @@
 # SSR and hydration
 
-FiboUI 2.2.1 is safe to `renderToString` / Next.js App Router / Vite SSR and then `hydrateRoot`. The first client render matches the server HTML. Browser-only values (viewport, `matchMedia`, `location`) apply **after** mount.
+FiboUI 2.6.4 is safe to `renderToString` / Next.js App Router / Vite SSR and then `hydrateRoot`. The first client render matches the server HTML. Browser-only values (viewport, `matchMedia`, `location`) apply **after** mount.
 
 ## Inject collected CSS
 
-`.hover()`, `.md()`, `.responsive()`, and custom keyframes register rules on a module-level `StyleManager`. Class names are a **stable hash of the CSS** (`fibo-ps-*`, `fibo-mq-*`) — same declarations always produce the same class, independent of call order, HMR, or a module-level counter.
+`.hover()`, `.md()`, `.responsive()`, and custom keyframes register rules on `StyleManager`. Class names are a **stable hash of the CSS** (`fibo-ps-*`, `fibo-mq-*`) — same declarations always produce the same class, independent of call order, HMR, or a counter. During SSR, collection is **request-local** so overlapping `renderToString` calls do not mix rules.
 
 During SSR the manager has no `document`. Collect rules by rendering, then emit the tag:
 
@@ -122,6 +122,8 @@ items.map((item) =>
 
 The first client render uses those props (default path `/`). After mount it syncs from `window`. `useLocation()` reads the router context, not `window`.
 
+Nested routes work: a parent with `children` is a layout (`exact` defaults to false). Put `<Outlet />` in that layout — it renders the matched child and provides current-route context. `javascript:` / `data:` `Link` hrefs are blocked. Full API: [Routing / Outlet](./routing.md).
+
 ## What is hydrate-safe vs after-mount
 
 | API | First render (SSR + hydrate) | After mount |
@@ -129,7 +131,8 @@ The first client render uses those props (default path `/`). After mount it sync
 | `.hover()` / `.press()` / `.focusRing()` / `.active()` | Hashed classes + CSS in `getStyleTag()` / `<FiboStyles />` | same |
 | `.responsive()` / `.md()` / `.media()` | CSS `@media` classes | same |
 | `.animate()` / `.stagger()` | CSS classes / `--fibo-i` | same |
-| `Presence` / `usePrefersReducedMotion()` | `false` (no `matchMedia`) | real `prefers-reduced-motion` |
+| `usePrefersReducedMotion()` | `false` (no `matchMedia`) | real `prefers-reduced-motion` |
+| `Presence` | `show` (boolean or `signal.value`) | same; reduced-motion snapshot is `false` until mount |
 | `.reveal()` / `.onScroll()` | markup without `.fibo-inview` | IntersectionObserver |
 | `.scrollProgress()` / `useScrollProgress()` | `--fibo-progress` unset / `0` | scroll listeners |
 | `FiboThemeProvider` / `.theme()` | wrapper class + inline `--fibo-*` vars | same (no documentElement) |

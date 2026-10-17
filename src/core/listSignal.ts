@@ -82,8 +82,10 @@ function itemMatches<T extends object>(
  * Reactive list — auto-stamps a UUID `_id` on every object.
  * Use `_id` for update/remove/find; your domain fields stay free of ids.
  *
- * `view('ship')` shows a subset. The full list stays in memory, so
- * `view('')` shows every item again. `add` always writes to the full list.
+ * `view('ship')` / `search('ship')` show a subset. The full list stays in memory, so
+ * `view('')` / `search('')` show every item again. `filter(fn)` is a one-shot snapshot
+ * of the full list. `viewWhere(fn)` is the live predicate (AND with the query);
+ * `viewWhere()` clears it. `add` always writes to the full list.
  *
  * ```ts
  * const todos = listSignal<{ title: string }>([])
@@ -96,32 +98,44 @@ function itemMatches<T extends object>(
  */
 export class ListSignal<T extends object> extends Signal<ListEntity<T>[]> {
   private _$length?: ComputedSignal<number>;
-  /** Full list. `.value` is this array, or a filtered slice while `view` is set. */
+  /** Full list. `.value` is this array, or a filtered slice while a view/filter is set. */
   private _source: ListEntity<T>[];
   private _query = '';
   private _keys?: (keyof T)[];
+  private _predicate?: (item: ListEntity<T>, index: number) => boolean;
 
   constructor(initial: Array<T | ListEntity<T>> = []) {
     const source = (Array.isArray(initial) ? initial : []).map((item) => ensureListId(item));
     super(source);
     this._source = source;
+    this.publish();
   }
 
   override get value(): ListEntity<T>[] {
     return super.value;
   }
 
-  /** Replaces the full list, then reapplies the current view. */
+  /**
+   * Replaces the full list, then reapplies the current view.
+   * In-place mutation of this array (`push` / `splice`) does not notify
+   * and does not write the stored list — assign a new array or use
+   * `add` / `update` / `remove`.
+   */
   override set value(next: ListEntity<T>[]) {
     this._source = next.map((item) => ensureListId(item));
     this.publish();
   }
 
-  /** Push the visible rows. An empty query shows `_source` itself. */
+  /** Push the visible rows. Always a copy so `.value.splice` cannot write `_source`. */
   private publish() {
-    const view = this._query
-      ? this._source.filter((item) => itemMatches(item, this._query, this._keys))
-      : this._source;
+    const hasView = Boolean(this._query) || Boolean(this._predicate);
+    const view = hasView
+      ? this._source.filter((item, index) => {
+          if (this._query && !itemMatches(item, this._query, this._keys)) return false;
+          if (this._predicate && !this._predicate(item, index)) return false;
+          return true;
+        })
+      : this._source.slice();
     super.value = view;
   }
 
@@ -220,7 +234,7 @@ export class ListSignal<T extends object> extends Signal<ListEntity<T>[]> {
 
   /**
    * Show only rows that match `query`. The full list stays stored.
-   * `view('')` or `view()` shows every item again.
+   * `view('')` or `view()` shows every item again (does not clear `viewWhere`).
    * `keys` limits the match to those fields (`['text']`).
    */
   view(query = '', keys?: (keyof T)[]): this {
@@ -230,13 +244,32 @@ export class ListSignal<T extends object> extends Signal<ListEntity<T>[]> {
     return this;
   }
 
-  /** One-shot search. Does not change what `.value` shows. */
-  search(query: string, keys?: (keyof T)[]): ListEntity<T>[] {
-    const q = query.trim().toLowerCase();
-    if (!q) return [...this._source];
-    return this._source.filter((item) => itemMatches(item, q, keys));
+  /**
+   * Live predicate on `publish()` (AND with `view`/`search` query).
+   * `viewWhere()` with no fn (or `null`) clears it.
+   */
+  viewWhere(
+    predicate?: ((item: ListEntity<T>, index: number) => boolean) | null
+  ): this {
+    this._predicate = typeof predicate === 'function' ? predicate : undefined;
+    this.publish();
+    return this;
   }
 
+  /**
+   * Same live view as `view()`, plus a copy of the visible rows.
+   * Bound List/Table update; `const hits = todos.search('x')` still works.
+   */
+  search(query: string, keys?: (keyof T)[]): ListEntity<T>[] {
+    this.view(query, keys);
+    return [...this.value];
+  }
+
+  /**
+   * One-shot snapshot of `_source` (Array.filter). Does not change `.value`.
+   * Safe inside `computed(() => todos.filter(fn))`.
+   * `todos.set(todos.filter(fn))` replaces the full list (clearDone).
+   */
   filter(predicate: (item: ListEntity<T>, index: number) => boolean): ListEntity<T>[] {
     return this._source.filter(predicate);
   }

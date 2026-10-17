@@ -19,12 +19,35 @@
   --fibo-surface-variant: #F1F5F9;
   --fibo-on-surface-variant: #64748B;
   
+  --fibo-error: #EF4444;
+  --fibo-on-error: #FFFFFF;
+  
   --fibo-outline: #E2E8F0;
+  --fibo-primary-variant: #1D4ED8;
+  --fibo-secondary-variant: #475569;
+  --fibo-success: #10B981;
+  --fibo-warning: #F59E0B;
+  --fibo-info: #06B6D4;
+  --fibo-secondary-container: #E2E8F0;
+  --fibo-on-secondary-container: #0F172A;
+  --fibo-tertiary: #7C3AED;
+  --fibo-on-tertiary: #FFFFFF;
+  --fibo-tertiary-container: #EDE9FE;
+  --fibo-on-tertiary-container: #4C1D95;
+  --fibo-surface-container-low: #FFFFFF;
+  --fibo-error-container: #EF4444;
+  --fibo-on-error-container: #FFFFFF;
   
   
   --fibo-font-family: 'Inter', system-ui, sans-serif;
   
   
+  --fibo-space-xs: 4px;
+  --fibo-space-sm: 8px;
+  --fibo-space-md: 16px;
+  --fibo-space-lg: 24px;
+  --fibo-space-xl: 32px;
+
   --fibo-radius-xs: 2px;
   --fibo-radius-sm: 4px;
   --fibo-radius-md: 6px;
@@ -36,6 +59,33 @@
   --fibo-elevation-1: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --fibo-elevation-2: 0 4px 6px -1px rgb(0 0 0 / 0.1);
   --fibo-elevation-3: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --fibo-shadow-sm: var(--fibo-elevation-1);
+  --fibo-shadow-md: var(--fibo-elevation-2);
+  --fibo-shadow-lg: var(--fibo-elevation-3);
+
+  --fibo-text-h1-size: 60px;
+  --fibo-text-h1-weight: 800;
+  --fibo-text-h1-tracking: -0.02em;
+  --fibo-text-h2-size: 48px;
+  --fibo-text-h2-weight: 700;
+  --fibo-text-h2-tracking: -0.01em;
+  --fibo-text-h3-size: 36px;
+  --fibo-text-h3-weight: 700;
+  --fibo-text-h4-size: 30px;
+  --fibo-text-h4-weight: 600;
+  --fibo-text-h5-size: 24px;
+  --fibo-text-h5-weight: 600;
+  --fibo-text-h6-size: 20px;
+  --fibo-text-h6-weight: 600;
+  --fibo-text-body-size: 16px;
+  --fibo-text-body-weight: 400;
+  --fibo-text-body-height: 1.5;
+  --fibo-text-caption-size: 14px;
+  --fibo-text-caption-weight: 400;
+  --fibo-text-caption-height: 1.4;
+  --fibo-text-label-size: 14px;
+  --fibo-text-label-weight: 500;
+  --fibo-text-label-tracking: 0.01em;
 }
 
 

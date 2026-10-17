@@ -7,12 +7,12 @@ const renderBasic = () =>
     .columns(3)
     .gap(4)
     .children([
-      Box().bg('red-100').h(20).flex().alignItems('center').justifyContent('center').children('1'),
-      Box().bg('green-100').h(20).flex().alignItems('center').justifyContent('center').children('2'),
-      Box().bg('blue-100').h(20).flex().alignItems('center').justifyContent('center').children('3'),
-      Box().bg('yellow-100').h(20).flex().alignItems('center').justifyContent('center').children('4'),
-      Box().bg('purple-100').h(20).flex().alignItems('center').justifyContent('center').children('5'),
-      Box().bg('pink-100').h(20).flex().alignItems('center').justifyContent('center').children('6')
+      Box().bg('#FEE2E2').height(80).flex().alignItems('center').justifyContent('center').children('1'),
+      Box().bg('#DCFCE7').height(80).flex().alignItems('center').justifyContent('center').children('2'),
+      Box().bg('#DBEAFE').height(80).flex().alignItems('center').justifyContent('center').children('3'),
+      Box().bg('#FEF9C3').height(80).flex().alignItems('center').justifyContent('center').children('4'),
+      Box().bg('#F3E8FF').height(80).flex().alignItems('center').justifyContent('center').children('5'),
+      Box().bg('#FCE7F3').height(80).flex().alignItems('center').justifyContent('center').children('6')
     ])
 
 
@@ -22,12 +22,12 @@ const renderSpanning = () =>
     .gap(4)
     .children([
       GridItem().colSpan(2).children(
-        Box().bg('blue-200').h(20).flex().alignItems('center').justifyContent('center').children('Span 2')
+        Box().bg('#BFDBFE').height(80).flex().alignItems('center').justifyContent('center').children('Span 2')
       ),
-      Box().bg('green-100').h(20).flex().alignItems('center').justifyContent('center').children('1'),
-      Box().bg('green-100').h(20).flex().alignItems('center').justifyContent('center').children('2'),
+      Box().bg('#DCFCE7').height(80).flex().alignItems('center').justifyContent('center').children('1'),
+      Box().bg('#DCFCE7').height(80).flex().alignItems('center').justifyContent('center').children('2'),
       GridItem().colSpan(4).children(
-        Box().bg('purple-200').h(20).flex().alignItems('center').justifyContent('center').children('Full Width')
+        Box().bg('#E9D5FF').height(80).flex().alignItems('center').justifyContent('center').children('Full Width')
       )
     ])
 
@@ -51,12 +51,12 @@ Grid()
   .columns(3)
   .gap(4)
   .children([
-    Box().bg('red-100').h(20).children('1'),
-    Box().bg('green-100').h(20).children('2'),
-    Box().bg('blue-100').h(20).children('3'),
-    Box().bg('yellow-100').h(20).children('4'),
-    Box().bg('purple-100').h(20).children('5'),
-    Box().bg('pink-100').h(20).children('6')
+    Box().bg('#FEE2E2').height(80).children('1'),
+    Box().bg('#DCFCE7').height(80).children('2'),
+    Box().bg('#DBEAFE').height(80).children('3'),
+    Box().bg('#FEF9C3').height(80).children('4'),
+    Box().bg('#F3E8FF').height(80).children('5'),
+    Box().bg('#FCE7F3').height(80).children('6')
   ])
 
 ```
@@ -73,12 +73,12 @@ Grid()
   .gap(4)
   .children([
     GridItem().colSpan(2).children(
-      Box().bg('blue-200').h(20).children('Span 2')
+      Box().bg('#BFDBFE').height(80).children('Span 2')
     ),
-    Box().bg('green-100').h(20).children('1'),
-    Box().bg('green-100').h(20).children('2'),
+    Box().bg('#DCFCE7').height(80).children('1'),
+    Box().bg('#DCFCE7').height(80).children('2'),
     GridItem().colSpan(4).children(
-      Box().bg('purple-200').h(20).children('Full Width')
+      Box().bg('#E9D5FF').height(80).children('Full Width')
     )
   ])
 
@@ -99,8 +99,8 @@ Creates a new `Grid` builder instance.
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.columns(count)` | `number` | Sets number of grid columns |
-| `.rows(count)` | `number` | Sets number of grid rows |
+| `.columns(count)` | `number` | `grid-template-columns: repeat(n, minmax(0, 1fr))` |
+| `.rows(count)` | `number` | `grid-template-rows: repeat(n, minmax(0, auto))` |
 | `.gap(value)` | `string \| number` | Sets gap between grid items |
 | `.columnGap(value)` | `string \| number` | Sets horizontal gap only |
 | `.rowGap(value)` | `string \| number` | Sets vertical gap only |
@@ -116,9 +116,9 @@ Creates a new `Grid` builder instance.
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.templateColumns(template)` | `string` | Custom grid-template-columns |
-| `.templateRows(template)` | `string` | Custom grid-template-rows |
-| `.autoFlow(flow)` | `'row' \| 'column' \| 'dense'` | Sets grid-auto-flow |
+| `.templateColumns(template)` | `string` | `style.gridTemplateColumns` — overrides numeric `.columns()` |
+| `.templateRows(template)` | `string` | `style.gridTemplateRows` — overrides numeric `.rows()` |
+| `.autoFlow(flow)` | `'row' \| 'column' \| 'dense'` | `style.gridAutoFlow` (`dense` → `dense`) |
 
 ### Inherited from FiboBuilder
 
@@ -138,12 +138,12 @@ GridItem() → GridItemBuilder
 
 | Method | Type | Description |
 | :--- | :--- | :--- |
-| `.colSpan(span)` | `number` | Number of columns to span |
-| `.rowSpan(span)` | `number` | Number of rows to span |
-| `.colStart(start)` | `number` | Starting column position |
-| `.colEnd(end)` | `number` | Ending column position |
-| `.rowStart(start)` | `number` | Starting row position |
-| `.rowEnd(end)` | `number` | Ending row position |
+| `.colSpan(span)` | `number` | Inline `gridColumn: span N` |
+| `.rowSpan(span)` | `number` | Inline `gridRow: span N` |
+| `.colStart(start)` | `number` | `style.gridColumnStart` |
+| `.colEnd(end)` | `number` | `style.gridColumnEnd` |
+| `.rowStart(start)` | `number` | `style.gridRowStart` |
+| `.rowEnd(end)` | `number` | `style.gridRowEnd` |
 
 ## Usage Examples
 

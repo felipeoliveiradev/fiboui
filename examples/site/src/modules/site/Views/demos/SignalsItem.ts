@@ -26,6 +26,10 @@ export function todoRow(item: ListEntity<Todo>) {
             if (!item.done) state.borderColor(pink)
           })
           .pressEffect('shrink')
+          .props({
+            'aria-label': item.done ? `Mark ${item.label} open` : `Mark ${item.label} done`,
+            'aria-pressed': item.done,
+          })
           .onPress(() => toggleTodo(item._id)),
       ).children(
         item.done
@@ -72,6 +76,7 @@ export function todoRow(item: ListEntity<Todo>) {
             state.color(chalk).bg('rgba(255,45,138,0.25)')
           })
           .pressEffect('shrink')
+          .props({ 'aria-label': `Remove ${item.label}` })
           .onPress(() => removeTodo(item._id)),
       ),
     ])

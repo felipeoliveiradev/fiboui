@@ -68,7 +68,10 @@ export function promoteSurfaceLonghandsInStyle(style: CSSProperties): CSSPropert
 export const REST_TRANSLATE_3D = 'translate3d(0, 0, 0)';
 
 export function withRestTransform(style: CSSProperties): CSSProperties {
-  if (style.transform != null && String(style.transform).trim() !== '') {
+  const raw = style.transform == null ? '' : String(style.transform).trim();
+  // `none` / empty still interpolates as a different transform list than
+  // translate3d(...) and jumps on hover. Treat them as missing.
+  if (raw !== '' && raw !== 'none') {
     return style;
   }
   return { ...style, transform: REST_TRANSLATE_3D };
@@ -85,18 +88,39 @@ export function toTranslate3d(
 function isPromotableBackground(value: string): boolean {
   const s = value.trim().toLowerCase();
   if (!s) return false;
+  // `none` is a shorthand reset, not a <color> — `background-color: none` is invalid.
+  if (s === 'none') return false;
   // Gradients / images are not color longhands — leave shorthand alone.
   if (
     s.includes('gradient(') ||
     s.includes('url(') ||
     s.includes('image(') ||
     s.includes('element(') ||
-    s.startsWith('repeat') ||
-    s.includes(' / ')
+    s.startsWith('repeat')
   ) {
     return false;
   }
+  // Layered shorthand uses ` / ` as the size separator *outside* functions
+  // (`red url(x) / cover`). Alpha slashes live inside `rgb()` / `light-dark()` /
+  // `color-mix()` parens and must still promote to `background-color`.
+  if (hasSlashOutsideParens(s)) {
+    return false;
+  }
   return true;
+}
+
+/** True when ` / ` appears at paren depth 0 (background-size), not inside a color fn. */
+function hasSlashOutsideParens(s: string): boolean {
+  let depth = 0;
+  for (let i = 0; i < s.length - 2; i++) {
+    const c = s[i];
+    if (c === '(') depth++;
+    else if (c === ')') depth = Math.max(0, depth - 1);
+    else if (depth === 0 && c === ' ' && s[i + 1] === '/' && s[i + 2] === ' ') {
+      return true;
+    }
+  }
+  return false;
 }
 
 function splitBorderShorthand(

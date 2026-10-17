@@ -1,10 +1,27 @@
 'use client';
 
-import React, { ReactElement, useEffect, useRef, useState } from 'react';
+import React, { ReactElement, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps } from '../../core/types';
+import {
+  collectInterpSignals,
+  hasInterpMarks,
+  resolveInterpString,
+} from '../../core/interpolate';
 import { twMerge } from 'tailwind-merge';
 import type { FieldRule } from '../Form/validators';
+
+function bindInterp(host: FiboBuilder, text: string | undefined): void {
+  if (typeof text !== 'string' || !hasInterpMarks(text)) return;
+  for (const sig of collectInterpSignals(text)) {
+    host.bindSignal(sig);
+  }
+}
+
+function resolveInterp(text: string | undefined): string | undefined {
+  if (typeof text !== 'string') return text;
+  return hasInterpMarks(text) ? resolveInterpString(text) : text;
+}
 
 interface CheckboxInnerProps {
   checked?: boolean;
@@ -43,6 +60,9 @@ const CheckboxInner = React.memo((props: CheckboxInnerProps) => {
     id,
   } = props;
 
+  const uniqueId = React.useId();
+  const inputId = id || uniqueId;
+  const errId = name ? `fibo-err-${name}` : `${inputId}-error`;
   const inputRef = useRef<HTMLInputElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
   const initialChecked = checked;
@@ -50,11 +70,11 @@ const CheckboxInner = React.memo((props: CheckboxInnerProps) => {
   const isChecked = controlled ? !!checked : localChecked;
   const isCheckedOrIndeterminate = isChecked || indeterminate;
 
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.indeterminate = !!indeterminate;
-    }
-  }, [indeterminate]);
+  // React has no `indeterminate` prop; checked writes and clicks clear the IDL flag.
+  useLayoutEffect(() => {
+    const el = inputRef.current;
+    if (el) el.indeterminate = !!indeterminate;
+  }, [indeterminate, isChecked]);
 
   // Uncontrolled: keep visual in sync when Form.reset / Form.set patches the DOM.
   useEffect(() => {
@@ -82,6 +102,9 @@ const CheckboxInner = React.memo((props: CheckboxInnerProps) => {
     if (!input) return;
     if (rules) {
       (input as unknown as { __fiboRules?: FieldRule[] }).__fiboRules = rules;
+      if (host) {
+        (host as unknown as { __fiboRules?: FieldRule[] }).__fiboRules = rules;
+      }
     }
     const span = host?.querySelector('.fibo-field-error') as HTMLElement | null;
     if (host) {
@@ -128,7 +151,7 @@ const CheckboxInner = React.memo((props: CheckboxInnerProps) => {
 
   const inputProps: Record<string, unknown> = {
     ref: inputRef,
-    id,
+    id: inputId,
     type: 'checkbox',
     name,
     value,
@@ -136,6 +159,13 @@ const CheckboxInner = React.memo((props: CheckboxInnerProps) => {
     className: 'sr-only',
     onChange: handleChange,
   };
+  if (indeterminate) {
+    inputProps['aria-checked'] = 'mixed';
+  }
+  if (error) {
+    inputProps['aria-invalid'] = true;
+    inputProps['aria-describedby'] = errId;
+  }
   if (controlled) {
     inputProps.checked = !!checked;
   } else {
@@ -151,13 +181,15 @@ const CheckboxInner = React.memo((props: CheckboxInnerProps) => {
     React.createElement(
       'label',
       {
-        className: 'fibo-checkbox flex items-center gap-2',
+        htmlFor: inputId,
+        className: 'fibo-checkbox group flex items-center gap-2',
       },
       React.createElement(
         'div',
         {
           className: twMerge(
             'fibo-checkbox-box w-5 h-5 rounded-[6px] border-2 flex items-center justify-center transition-all duration-200',
+            'group-focus-within:ring-2 group-focus-within:ring-offset-2 group-focus-within:ring-[var(--fibo-primary,#3B82F6)] group-has-[:focus-visible]:ring-2',
             disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
             isCheckedOrIndeterminate
               ? 'border-transparent bg-[var(--fibo-primary,#3B82F6)]'
@@ -175,7 +207,9 @@ const CheckboxInner = React.memo((props: CheckboxInnerProps) => {
     React.createElement(
       'span',
       {
+        id: errId,
         className: 'fibo-field-error text-[var(--fibo-error,#b91c1c)] text-xs mt-1 ml-1',
+        role: 'alert',
         style: { display: error ? '' : 'none' },
       },
       error || ''
@@ -232,6 +266,7 @@ class CheckboxBuilder extends FiboBuilder {
 
   label(text: string): this {
     this._label = text;
+    bindInterp(this, text);
     return this;
   }
 
@@ -242,6 +277,7 @@ class CheckboxBuilder extends FiboBuilder {
 
   error(val: string): this {
     this._error = val;
+    bindInterp(this, val);
     return this;
   }
 
@@ -256,13 +292,13 @@ class CheckboxBuilder extends FiboBuilder {
       checked: this._checked,
       controlled: this._controlled,
       onChange: this._onChange,
-      label: this._label,
+      label: resolveInterp(this._label),
       disabled: this._disabled,
       indeterminate: this._indeterminate,
       name: this._name,
       value: this._value,
       rules: this._rules,
-      error: this._error,
+      error: resolveInterp(this._error),
       className: this.getClassName(),
       style: this.getStyle(),
       ...(this._props as CheckboxInnerProps),

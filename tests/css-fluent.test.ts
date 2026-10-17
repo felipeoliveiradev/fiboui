@@ -40,4 +40,23 @@ describe('createCssFluentProxy', () => {
     expect(style.backdropFilter).toBe('blur(8px)')
     expect(style.padding).toBe('12px')
   })
+
+  it('keeps paddingHorizontal longhands when padding shorthand comes later', () => {
+    const store = new CssStyleStore()
+    const s = createCssFluentProxy(store)
+    s.paddingHorizontal(12).padding(0)
+    const style = s.toStyle()
+    expect(style.padding).toBeUndefined()
+    expect(style.paddingLeft).toBe('12px')
+    expect(style.paddingRight).toBe('12px')
+    expect(style.paddingTop).toBe('0px')
+    expect(style.paddingBottom).toBe('0px')
+  })
+
+  it('normalizes object style() values (boxShadow: 0 → none)', () => {
+    const store = new CssStyleStore()
+    const s = createCssFluentProxy(store)
+    s.style({ boxShadow: 0 as any })
+    expect(s.toStyle().boxShadow).toBe('none')
+  })
 })

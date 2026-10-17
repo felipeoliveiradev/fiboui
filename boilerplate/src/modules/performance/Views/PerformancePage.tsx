@@ -1,4 +1,5 @@
-import { Scaffold, ZStack, signal, Component, useStore, useNavigate, Button, Row, Text } from 'fiboui';
+import { Scaffold, ZStack, signal, Component, useStore } from 'fiboui';
+import { useEffect } from 'react';
 import { PerformanceViewModel } from '../ViewModels/PerformanceViewModel';
 import { MapBackground } from './components/MapBackground';
 import { FloatingHeader } from './components/FloatingHeader';
@@ -10,8 +11,10 @@ const tripsCount = signal(0);
 
 const PerformancePageComponent = () => {
   const vm = useStore(PerformanceViewModel);
-  const navigate = useNavigate();
-  const surfaceWhite = '#FFFFFF';
+
+  useEffect(() => {
+    return () => vm.dispose();
+  }, [vm]);
 
   const handleUpdate = () => {
     tripsCount.value += 1;
@@ -33,17 +36,27 @@ const PerformancePageComponent = () => {
       ]
     })
     .children([
-
-      BottomSheet({
-        sheetY: vm.sheetY,
-        earnings: vm.earnings
-      })
+      ZStack()
+        .width('100%')
+        .height('100%')
+        .className('relative')
+        .children([
+          MapBackground({ isOnline: vm.isOnline }),
+          GoButton({
+            isOnline: vm.isOnline,
+            sheetY: vm.sheetY,
+            onPress: handleToggle
+          }),
+          BottomSheet({
+            sheetY: vm.sheetY,
+            earnings: vm.earnings
+          })
+        ])
     ])
     .footerBar({
       fixed: true,
-      children: [BottomNavBar({})]
-    })
-    .build();
+      children: [BottomNavBar()]
+    });
 };
 
 export const PerformancePage = Component()(PerformancePageComponent);

@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import {
   Box,
   Button,
@@ -12,11 +13,15 @@ import {
 const open = signal(true);
 const hovers = signal(0);
 
-export function App() {
+export function App(): ReactElement {
   return Box()
     .className('demo-page')
     .children([
-      Box().id('progress').scrollProgress().className('demo-bar').height(6).children(''),
+      Box()
+        .className('demo-track')
+        .children(
+          Box().id('progress').scrollProgress().className('demo-bar').children(''),
+        ),
       Text('FiboUI motion').id('title').variant('h1').marginBottom(16),
       Box()
         .id('fade-in')

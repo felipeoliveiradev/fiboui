@@ -1,10 +1,15 @@
+import React from 'react';
 import { Box } from '../structure/Box';
 import { Button } from '../interactive/Button';
 
-export const StakentCard = ({ className = "", style = {} }: any): any => {
-    return Box()
+export const StakentCard = ({ className = "", style = {}, children }: any): any => {
+    const box = Box()
         .className(`bg-[#0B0C15] border border-white/5 rounded-[32px] overflow-hidden relative ${className}`)
         .style({ backgroundColor: '#0B0C15', ...style });
+    if (children != null && children !== '') {
+        box.children(children);
+    }
+    return box;
 };
 
 export const StakentButton = ({ text, icon, variant = 'primary', className = "", onClick }: any): React.ReactElement => {
@@ -22,25 +27,31 @@ export const StakentButton = ({ text, icon, variant = 'primary', className = "",
         baseClass += " bg-gradient-to-r from-[#818CF8] to-[#6366f1] text-white shadow-lg shadow-indigo-500/30 border-none";
     }
 
-    return Button(text)
+    return Button(text ?? '')
         .icon(icon)
         .className(`${baseClass} ${className}`)
         .onPress(onClick)
         .variant("text")
+        .type('button')
         .build();
 };
 
 export const StakentSidebarItem = ({ label, icon, active = false }: any): React.ReactElement => {
+    const current = active ? { 'aria-current': 'page' as const } : {};
     if (active) {
         return Button(label)
             .icon(icon ? Box().className(`${icon} w-5 h-5 text-white`).build() : null)
             .className("w-full justify-start text-sm font-bold text-white bg-[#6366f1] shadow-[0_4px_20px_rgba(99,102,241,0.4)] rounded-xl mb-1 py-3 px-4")
+            .type('button')
+            .props(current)
             .build();
     }
     return Button(label)
         .icon(icon ? Box().className(`${icon} w-5 h-5 text-gray-400 group-hover:text-white transition-colors`).build() : null)
         .variant("ghost")
         .className("w-full justify-start text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-xl group py-3 px-4")
+        .type('button')
+        .props(current)
         .build();
 };
 
@@ -53,5 +64,5 @@ export const StakentBadge = ({ text, type = 'default' }: any): React.ReactElemen
     } else if (type === 'new') {
         style = "bg-white text-black border-none";
     }
-    return Box().className(style).children(text).build();
-}
+    return Box().className(style).children(text ?? '').build();
+};

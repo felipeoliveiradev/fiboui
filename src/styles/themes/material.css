@@ -30,11 +30,25 @@
   --fibo-on-surface-variant: #49454F;
   
   --fibo-outline: #79747E;
+  --fibo-primary-variant: #4F378B;
+  --fibo-secondary-variant: #4A4458;
+  --fibo-success: #4CAF50;
+  --fibo-warning: #FF9800;
+  --fibo-info: #2196F3;
+  --fibo-surface-container-low: #FFFBFE;
+  --fibo-error-container: #B3261E;
+  --fibo-on-error-container: #FFFFFF;
   
   
   --fibo-font-family: 'Roboto', sans-serif;
   
   
+  --fibo-space-xs: 4px;
+  --fibo-space-sm: 8px;
+  --fibo-space-md: 16px;
+  --fibo-space-lg: 24px;
+  --fibo-space-xl: 32px;
+
   --fibo-radius-xs: 4px;
   --fibo-radius-sm: 8px;
   --fibo-radius-md: 12px;
@@ -46,6 +60,9 @@
   --fibo-elevation-1: 0px 1px 2px rgba(0,0,0,0.3), 0px 1px 3px 1px rgba(0,0,0,0.15);
   --fibo-elevation-2: 0px 1px 2px rgba(0,0,0,0.3), 0px 2px 6px 2px rgba(0,0,0,0.15);
   --fibo-elevation-3: 0px 4px 8px 3px rgba(0,0,0,0.15), 0px 1px 3px rgba(0,0,0,0.3);
+  --fibo-shadow-sm: var(--fibo-elevation-1);
+  --fibo-shadow-md: var(--fibo-elevation-2);
+  --fibo-shadow-lg: var(--fibo-elevation-3);
   
   
   --fibo-hover-opacity: 0.08;
@@ -55,6 +72,32 @@
   
   --fibo-transition-duration: 250ms;
   --fibo-transition-easing: cubic-bezier(0.4, 0.0, 0.2, 1);
+
+  --fibo-text-h1-size: 96px;
+  --fibo-text-h1-weight: 300;
+  --fibo-text-h1-tracking: -1.5px;
+  --fibo-text-h2-size: 60px;
+  --fibo-text-h2-weight: 300;
+  --fibo-text-h2-tracking: -0.5px;
+  --fibo-text-h3-size: 48px;
+  --fibo-text-h3-weight: 400;
+  --fibo-text-h4-size: 34px;
+  --fibo-text-h4-weight: 400;
+  --fibo-text-h4-tracking: 0.25px;
+  --fibo-text-h5-size: 24px;
+  --fibo-text-h5-weight: 400;
+  --fibo-text-h6-size: 20px;
+  --fibo-text-h6-weight: 500;
+  --fibo-text-h6-tracking: 0.15px;
+  --fibo-text-body-size: 16px;
+  --fibo-text-body-weight: 400;
+  --fibo-text-body-tracking: 0.5px;
+  --fibo-text-caption-size: 12px;
+  --fibo-text-caption-weight: 400;
+  --fibo-text-caption-tracking: 0.4px;
+  --fibo-text-label-size: 14px;
+  --fibo-text-label-weight: 500;
+  --fibo-text-label-tracking: 1.25px;
 }
 
 
