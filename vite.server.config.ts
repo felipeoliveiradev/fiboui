@@ -11,6 +11,7 @@ const SHIMS: Record<string, string> = {
   ValueBinder: path.resolve(__dirname, 'src/server-shims/passthrough.tsx'),
   Presence: path.resolve(__dirname, 'src/server-shims/passthrough.tsx'),
   ScaffoldInner: path.resolve(__dirname, 'src/server-shims/ScaffoldInner.tsx'),
+  ButtonInner: path.resolve(__dirname, 'src/server-shims/ButtonInner.tsx'),
 };
 
 function rscShims(): Plugin {
@@ -22,14 +23,16 @@ function rscShims(): Plugin {
       const base = path.basename(source).replace(/\.(tsx?|jsx?)$/, '');
       const shim = SHIMS[base];
       if (!shim) return null;
-      // Remap core/* and Scaffold hook island (absolute or relative).
+      // Remap core/* and client islands (absolute or relative).
       if (
         source.includes('/core/') ||
         source.includes('\\core\\') ||
         /(?:^|[./])core[/\\]/.test(source) ||
         source.includes('/layout/Scaffold/') ||
         source.includes('\\layout\\Scaffold\\') ||
-        /^\.\.?[/\\](StateWrapper|FineGrain|AnimatedWrapper|Reveal|ScrollProgress|ValueBinder|Presence|ScaffoldInner)/.test(
+        source.includes('/interactive/Button/') ||
+        source.includes('\\interactive\\Button\\') ||
+        /^\.\.?[/\\](StateWrapper|FineGrain|AnimatedWrapper|Reveal|ScrollProgress|ValueBinder|Presence|ScaffoldInner|ButtonInner)/.test(
           source
         )
       ) {

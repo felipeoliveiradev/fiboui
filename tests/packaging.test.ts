@@ -42,8 +42,9 @@ describe('library bundle', () => {
   it.skipIf(!existsSync(esmPath))('is ESM-only and does not import CSS', () => {
     const source = readFileSync(esmPath, 'utf8');
     expect(source).not.toMatch(/require\(/);
-    expect(source).not.toMatch(/style\.css/);
-    expect(source).not.toMatch(/base\.css/);
+    // Quoted module paths only — `el.style.cssText` is a DOM assignment, not a CSS import.
+    expect(source).not.toMatch(/['"][^'"]*style\.css['"]/);
+    expect(source).not.toMatch(/['"][^'"]*base\.css['"]/);
   });
 });
 
@@ -347,7 +348,9 @@ describe('built artifacts', () => {
     expect(dts).toContain('export declare const Column');
     expect(dts).toContain('export declare function createReactivityRoot');
     expect(dts).toContain('export declare function bindText');
-    expect(readFileSync(resolve(dist, 'index.js'), 'utf8')).not.toMatch(/style\.css|base\.css/);
+    expect(readFileSync(resolve(dist, 'index.js'), 'utf8')).not.toMatch(
+      /['"][^'"]*(?:style|base)\.css['"]/,
+    );
   });
 
   it.skipIf(!ready)('npm pack file list is dist-only (no src/)', () => {
