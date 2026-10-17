@@ -1,6 +1,6 @@
 # SSR and hydration
 
-FiboUI 2.7.0 is safe to `renderToString` / Next.js App Router / Vite SSR and then `hydrateRoot`. The first client render matches the server HTML. Browser-only values (viewport, `matchMedia`, `location`) apply **after** mount.
+FiboUI 2.7.1 is safe to `renderToString` / Next.js App Router / Vite SSR and then `hydrateRoot`. The first client render matches the server HTML. Browser-only values (viewport, `matchMedia`, `location`) apply **after** mount.
 
 ## Inject collected CSS
 
@@ -50,7 +50,7 @@ Use **either** `getStyleTag()` **or** `<FiboStyles />`, not both (duplicate `#fi
 
 ## Next.js App Router (14 / 15)
 
-**Zero JSX + no `'use client'` on the route.** App Router resolves `fiboui` via the `react-server` export (`dist/server.js`) — static builders with hook islands stubbed. Client bundles still ship `.observer()`, signals, Router, etc. under the default export.
+**Zero JSX + no `'use client'` on the route.** App Router resolves `fiboui` via the `react-server` export (`dist/server.js`) — static builders with hook islands stubbed. Client bundles still ship `.observer()`, signals, Router, etc. under the default export. Host listeners (`Button` ripple / `.onPress()`) stay on the client island; the RSC paint is the same `<button>` without functions so Flight can prerender.
 
 ```ts
 // app/layout.tsx (Server) — base sheet once

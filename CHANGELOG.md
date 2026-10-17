@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.7.1] - 2026-10-17
+
+### Fixed
+
+- **RSC Button** — Next App Router prerender no longer fails with `Event handlers cannot be passed to Client Component props`. The `react-server` entry paints the same `<button>` without `onClick` / `onMouseEnter`; the client island still runs material ripple and `.onPress()`.
+
 ## [2.7.0] - 2026-10-17
 
 Widget wave + audit passes that sat unreleased on 2.6.4 (`aab933c`). This is the npm publish of that work.

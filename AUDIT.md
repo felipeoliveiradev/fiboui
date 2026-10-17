@@ -1,6 +1,6 @@
 # FiboUI audit
 
-Package is **2.7.0**. Waves 8–27 shipped in this release.
+Package is **2.7.1**. Waves 8–27 shipped in 2.7.0; 2.7.1 is the RSC Button prerender fix.
 
 ---
 
