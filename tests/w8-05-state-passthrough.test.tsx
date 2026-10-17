@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { createElement } from 'react';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -24,6 +26,19 @@ function withUndefinedDocument<T>(fn: () => T): T {
 }
 
 describe('W8-05 RSC StateWrapper passthrough', () => {
+  it('RSC shims do not import React context APIs', () => {
+    const strip = (src: string) =>
+      src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+    for (const rel of [
+      '../src/server-shims/StateWrapper.tsx',
+      '../src/server-shims/ScaffoldInner.tsx',
+    ]) {
+      const src = strip(readFileSync(resolve(__dirname, rel), 'utf8'));
+      expect(src, rel).not.toMatch(/\bcreateContext\b/);
+      expect(src, rel).not.toMatch(/\buseContext\b/);
+    }
+  });
+
   it('reads .state() initial values from stateMap (not always undefined)', () => {
     function Child() {
       const [count] = useBuilderState<number>('count');

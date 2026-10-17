@@ -1,6 +1,10 @@
-import { createContext, createElement, useContext, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
-/** RSC stubs — real reactive wrappers live in the client bundle. */
+/** RSC stubs — real reactive wrappers live in the client bundle.
+ *  Request maps (not React context) so the published server bundle stays RSC-safe.
+ *  W8-05 reads .state()/.provide() from these maps during the wrapper render.
+ */
+
 function renderChild(children: ReactNode | (() => ReactNode)) {
   return typeof children === 'function' ? children() : children;
 }
@@ -22,6 +26,10 @@ function makeApi(map: Map<string, unknown>): BuilderStateApi {
     set: () => undefined,
   };
 }
+
+let currentMap = new Map<string, unknown>();
+let currentApi: BuilderStateApi | null = null;
+let currentProviders = new Map<string, unknown>();
 
 export function Observer({ children }: { children: ReactNode | (() => ReactNode) }) {
   return renderChild(children);
@@ -45,9 +53,13 @@ export function ObserverWrapper({
   return renderChild(children);
 }
 
-export const StateContext = createContext<Map<string, unknown>>(new Map());
-export const BuilderStateContext = createContext<BuilderStateApi | null>(null);
-export const ProviderContext = createContext<Map<string, unknown>>(new Map());
+function Passthrough({ children }: { children?: ReactNode; value?: unknown }) {
+  return children as any;
+}
+
+export const StateContext = { Provider: Passthrough };
+export const BuilderStateContext = { Provider: Passthrough };
+export const ProviderContext = { Provider: Passthrough };
 
 /** First paint of `.state()` — no useState. Setter is a no-op on the server. */
 export function StateWrapper({
@@ -57,12 +69,9 @@ export function StateWrapper({
   stateMap?: unknown;
   children: ReactNode;
 }) {
-  const map = asMap(stateMap);
-  return createElement(
-    BuilderStateContext.Provider,
-    { value: makeApi(map) },
-    createElement(StateContext.Provider, { value: map }, children),
-  );
+  currentMap = asMap(stateMap);
+  currentApi = makeApi(currentMap);
+  return children as any;
 }
 
 export function ProviderWrapper({
@@ -72,19 +81,22 @@ export function ProviderWrapper({
   providers?: unknown;
   children: ReactNode;
 }) {
-  return createElement(ProviderContext.Provider, { value: asMap(providers) }, children);
+  currentProviders = asMap(providers);
+  return children as any;
 }
 
 export function useBuilderState<T = unknown>(key: string): [T | undefined, (value: T) => void] {
-  const api = useContext(BuilderStateContext);
-  return [api?.get<T>(key), () => undefined];
+  return [currentApi?.get<T>(key), () => undefined];
 }
 
 export function useProvider<T>(key: string): T | undefined {
-  const providers = useContext(ProviderContext);
-  return providers?.get(key) as T | undefined;
+  return currentProviders.get(key) as T | undefined;
 }
 
 export function useStateContext() {
-  return useContext(StateContext);
+  return currentMap;
+}
+
+export function peekProviders(): Map<string, unknown> {
+  return currentProviders;
 }

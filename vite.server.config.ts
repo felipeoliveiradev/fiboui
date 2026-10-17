@@ -10,6 +10,7 @@ const SHIMS: Record<string, string> = {
   ScrollProgress: path.resolve(__dirname, 'src/server-shims/passthrough.tsx'),
   ValueBinder: path.resolve(__dirname, 'src/server-shims/passthrough.tsx'),
   Presence: path.resolve(__dirname, 'src/server-shims/passthrough.tsx'),
+  ScaffoldInner: path.resolve(__dirname, 'src/server-shims/ScaffoldInner.tsx'),
 };
 
 function rscShims(): Plugin {
@@ -21,12 +22,14 @@ function rscShims(): Plugin {
       const base = path.basename(source).replace(/\.(tsx?|jsx?)$/, '');
       const shim = SHIMS[base];
       if (!shim) return null;
-      // Only remap core/* client islands (absolute or relative).
+      // Remap core/* and Scaffold hook island (absolute or relative).
       if (
         source.includes('/core/') ||
         source.includes('\\core\\') ||
         /(?:^|[./])core[/\\]/.test(source) ||
-        /^\.\.?[/\\](StateWrapper|FineGrain|AnimatedWrapper|Reveal|ScrollProgress|ValueBinder|Presence)/.test(
+        source.includes('/layout/Scaffold/') ||
+        source.includes('\\layout\\Scaffold\\') ||
+        /^\.\.?[/\\](StateWrapper|FineGrain|AnimatedWrapper|Reveal|ScrollProgress|ValueBinder|Presence|ScaffoldInner)/.test(
           source
         )
       ) {

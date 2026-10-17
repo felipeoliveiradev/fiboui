@@ -135,6 +135,11 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './tests/setup.ts',
     include: ['tests/**/*.{test,spec}.{ts,tsx}'],
+    alias: [
+      { find: 'lucide-react', replacement: path.resolve(__dirname, 'tests/stubs/lucide-react.ts') },
+      { find: /^leaflet\/dist\/leaflet\.css$/, replacement: path.resolve(__dirname, 'tests/stubs/leaflet.css') },
+      { find: /^leaflet$/, replacement: path.resolve(__dirname, 'tests/stubs/leaflet.ts') },
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary'],

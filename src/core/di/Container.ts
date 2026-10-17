@@ -282,18 +282,23 @@ export const container: DIContainer = new Proxy({} as DIContainer, {
 
 // Node SSR: endSsrRequest → PluginManager.reset() (no window). Drop process
 // singletons so request N does not inherit N-1. After teardown so it cannot re-seed.
-void import('../plugin/PluginManager').then(({ PluginManager }) => {
-  const origReset = PluginManager.reset.bind(PluginManager);
-  PluginManager.reset = () => {
-    origReset();
-    try {
-      container.clear();
-    } catch {
-      // dispose() threw; services already dropped
+void import('../plugin/PluginManager')
+  .then(({ PluginManager }) => {
+    if (typeof PluginManager?.reset !== 'function' || typeof PluginManager?.run !== 'function') {
+      return;
     }
-  };
+    const origReset = PluginManager.reset.bind(PluginManager);
+    PluginManager.reset = () => {
+      origReset();
+      try {
+        container.clear();
+      } catch {
+        // dispose() threw; services already dropped
+      }
+    };
 
-  const origRun = PluginManager.run.bind(PluginManager);
-  PluginManager.run = (<T>(fn: () => T): T =>
-    DIContainer.run(() => origRun(fn))) as typeof PluginManager.run;
-});
+    const origRun = PluginManager.run.bind(PluginManager);
+    PluginManager.run = (<T>(fn: () => T): T =>
+      DIContainer.run(() => origRun(fn))) as typeof PluginManager.run;
+  })
+  .catch(() => undefined);
