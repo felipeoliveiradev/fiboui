@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "fiboui": "^2.7.0",
+    "fiboui": "^2.7.1",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.59.0",
     "react": "18.3.1",
