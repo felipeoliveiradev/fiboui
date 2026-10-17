@@ -46,13 +46,13 @@ describe('W16-02 component docs vs code', () => {
     expect(names.has('initials')).toBe(true)
   })
 
-  it('Text has text/nowrap, not content/underline/italic/truncate', () => {
+  it('Text has text/nowrap/italic/underline, not content/truncate', () => {
     const methods = ownMethods(Text('x'))
     expect(methods.has('text')).toBe(true)
     expect(methods.has('nowrap')).toBe(true)
+    expect(methods.has('italic')).toBe(true)
+    expect(methods.has('underline')).toBe(true)
     expect(methods.has('content')).toBe(false)
-    expect(methods.has('underline')).toBe(false)
-    expect(methods.has('italic')).toBe(false)
     expect(methods.has('truncate')).toBe(false)
   })
 
@@ -111,10 +111,10 @@ describe('W16-02 component docs vs code', () => {
   it('content-text.md does not advertise dead Text helpers', () => {
     const md = readDoc('content-text.md')
     expect(md).not.toMatch(/`\.content\(/)
-    expect(md).not.toMatch(/`\.underline\(\)`/)
-    expect(md).not.toMatch(/`\.italic\(\)`/)
     expect(md).not.toMatch(/`\.truncate\(\)`/)
     expect(md).toMatch(/`\.text\(/)
+    expect(md).toMatch(/`\.italic\(\)`/)
+    expect(md).toMatch(/`\.underline\(\)`/)
   })
 
   it('layout docs use width/height, not w/h/flex1/col', () => {

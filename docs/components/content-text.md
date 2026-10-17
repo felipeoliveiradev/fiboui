@@ -128,6 +128,10 @@ A plain `` `Count: ${count.value}` `` is frozen at construction. `` `Total: ${to
 | `.nowrap()` | `-` | `whitespace-nowrap` |
 | `.mono()` | `-` | `font-mono` |
 | `.muted()` | `-` | Muted color (`#9a9a9a`) |
+| `.italic()` | `-` | `font-style: italic` |
+| `.underline()` | `-` | `text-decoration: underline` |
+| `.bold()` | `-` | `font-weight: 700` |
+| `.strikethrough()` | `-` | `text-decoration: line-through` |
 | `.textDecoration('underline')` | CSS proxy | Underline |
 | `.fontStyle('italic')` | CSS proxy | Italic |
 

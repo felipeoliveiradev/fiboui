@@ -4,7 +4,17 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.7.0] - 2026-10-17
+
+Widget wave + audit passes that sat unreleased on 2.6.4 (`aab933c`). This is the npm publish of that work.
+
 ### Added
+
+- **Widgets — content** — `AsyncImage`, `Chart`, `ContentUnavailable`, `Gauge`, `MapView` (canvas / Leaflet / Google), `Markdown`, `NumericText`, `PdfView`, `RichEditor`, `RichText`, `SelectableText`, `VideoPlayer`, `WebView`.
+- **Widgets — interactive** — `Calendar`, `CodeScanner`, `ColorPicker`, `ContextMenu`, `DatePicker`, `DateRangePicker`, `DragTarget`, `Draggable`, `FilePicker`, `Hero`, `InteractiveViewer`, `Menu`, `OtpField`, `PhotosPicker`, `RangeSlider`, `SearchBar`, `SecureField`, `SegmentedButton`, `SensoryFeedback`, `Shake`, `ShareLink`, `Shortcuts`, `Slider`, `Stepper`, `TimePicker`, `Tooltip`, `WheelPicker`.
+- **Widgets — structure** — `Carousel`, `CheckboxTile`, `Dismissible`, `LazyGrid`, `OutlineGroup`, `PageView`, `RadioTile`, `RefreshIndicator`, `ReorderableList`, `Searchable`, `Section`, `SwipeRow`, `SwitchTile`, `Wizard`.
+- **Widgets — layout / nav / overlay** — `AspectRatio`, `Baseline`, `CustomScrollView`, `Inspector`, `KeyboardInset`, `LayoutBuilder`, `NavigationSplitView`, `OrientationBuilder`, `Overlay`, `PopScope`, `SafeArea`, `SliverAppBar`, `SliverList`, `ViewThatFits`, `Wrap`, `Anchor`, `BottomBar`, `Breadcrumbs`, `NavigationBar`, `NavigationRail`, `TabView`, `Toolbar`. Overlays live in `src/overlay`. Graphics: `MeshGradient`.
+- **Playground Kit** — demo chip for the new widgets; leaflet / lucide-react imports; preview height for Web / PDF / Empty / Inspector.
 
 - **`List().empty(...)`** — shown when there are no rows. String, node, builder, or a factory that re-runs on rebuild.
 - **`fiboui/interactive`** — re-exports `Form`, the validation helpers, and `FormErrorMode`.

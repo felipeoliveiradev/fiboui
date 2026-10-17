@@ -23,8 +23,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "declaration": true,
-    "declarationDir": "./dist",
+    "declaration": false,
     "outDir": "./dist",
     "baseUrl": ".",
     "paths": {

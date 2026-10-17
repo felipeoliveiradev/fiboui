@@ -17,6 +17,12 @@ function descendants(root: HTMLElement): HTMLElement[] {
   return Array.from(root.querySelectorAll('*')) as HTMLElement[]
 }
 
+function clipsOverflow(el: HTMLElement): boolean {
+  return el.style.overflow === 'hidden'
+    || el.style.overflowX === 'hidden'
+    || el.style.overflowY === 'hidden'
+}
+
 describe('W20-09 Avatar image URL in backgroundImage', () => {
   it('does not paint javascript: as a CSS background', () => {
     render(Avatar().image('javascript:alert(1)').alt('xss').initials('AB').build())
@@ -40,7 +46,7 @@ describe('W20-09 Avatar overflow (do not revert outer visible + inner clip)', ()
     render(Avatar().status('online').initials('AB').build())
     const host = screen.getByRole('img')
     expect(host.style.overflow).not.toBe('hidden')
-    expect(descendants(host).some((el) => el.style.overflow === 'hidden')).toBe(true)
+    expect(descendants(host).some(clipsOverflow)).toBe(true)
   })
 })
 

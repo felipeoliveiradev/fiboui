@@ -244,7 +244,9 @@ export class StyleManager {
     }
 
     const safeValue = value.replace(/[^a-zA-Z0-9-]/g, '_');
-    const className = `fibo-${property}-${safeValue}`;
+    // `--vars` / `-ms-*` are not valid in an unescaped class ident (`.fibo---headerHeight-48`).
+    const safeProp = /^[a-zA-Z][\w-]*$/.test(property) ? property : hashKey(property);
+    const className = `fibo-${safeProp}-${safeValue}`;
     const rule = `.${className} { ${property}: ${value} !important; }`;
 
     this.insert(rule);

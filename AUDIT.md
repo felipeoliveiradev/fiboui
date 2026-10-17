@@ -1,12 +1,12 @@
 # FiboUI audit
 
-Package is **2.6.4**. Version is **not** bumped. Nothing was published.
+Package is **2.7.0**. Waves 8–27 shipped in this release.
 
 ---
 
-## Unreleased on 2.6.4 — Waves 8–22
+## 2.7.0 — Waves 8–27
 
-Product P0/P1 hunts after Waves 1–7. CHANGELOG `[Unreleased]` is the user-facing list. The 2.0.0 tables below stay shipped history — do not re-open them. Version stays **2.6.4**. Waves 23–27 are still in flight.
+Product P0/P1 hunts after Waves 1–7. CHANGELOG `[2.7.0]` is the user-facing list. The 2.0.0 tables below stay shipped history — do not re-open them.
 
 Waves 1–7 already shipped empty state, Form validators (`url` / `integer` / `equalTo`, blur, submitting), TextField helper/clear, interp on Label/Alert/ListTile/Button/Banner/Card/fields, `listSignal.search()` / `.filter()` snapshot / `.viewWhere()`, SVG no inset drop-shadow, `FiboApp` StrictMode, JS `--fibo-elevation-*`, Plugin SSR reset, Grid CSS longhands, Avatar overflow, VirtualColumn cache by key, Combobox/RadioGroup/Progress/Table/Tags interp, `url()` http/https only, site computed subscribe, List empty interp.
 
@@ -35,7 +35,14 @@ Waves 1–7 already shipped empty state, Form validators (`url` / `integer` / `e
 | 21 | Box XSS / `role=button` / `as` / style merge. Card `.title()` / clickable / header / footer / `.as()`. ListTile leading/trailing interp; `onTap` / `href`. Banner action slot. Grid `.gridTemplateColumns()` + `rowGap` / `columnGap`. Tags unique keys / wrap / `onRemove`. InputCard dual `type` + `name` / `rules`. List key from `id`; virt empty reset; `onEndReached` IO guard (itemHover descendant CSS kept). |
 | 22 | Column / Row `.spacing(0)` + `.props({ style })` merge. Center inline flex. Spacer grow survives `props.style`. Line column / decorative vs separator. Container XSS / `as` / `maxWidth` / inline center. Scaffold `.props({ children })` keeps chrome; `boxSizing` default. Dashboard fluent slots win over props. VirtualColumn host `.id()` / `.props()`. StakentCard stays a fluent Box (`.children()`). |
 
-WIP kept (do not revert): List `itemHover` descendant CSS (`scope, scope *`); playground indent / editor / `PlaygroundPage`.
+### Shipped (Waves 23–27)
+
+| Wave | Product |
+|------|---------|
+| 23–26 | Last-write `.style()` vs `.css()` bags; computed notify + cycle guard; Link outside Router; basename / fragment dests; CSS custom-property `--` class idents hashed. |
+| 27 | Reveal two-arg (scroll vs password); barrel sweep around user widgets; KEEP user APIs (`Text.italic` / `underline`, MapView, SecureField, RadioTile.group). |
+
+WIP kept (do not revert): List `itemHover` descendant CSS (`scope, scope *`); playground indent / editor / `PlaygroundPage`. User widgets in content / interactive / layout / nav / overlay / structure stay.
 
 ### Honest leftover (not Waves 8–22 P0/P1)
 

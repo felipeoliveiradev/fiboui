@@ -1,6 +1,6 @@
 # SSR and hydration
 
-FiboUI 2.6.4 is safe to `renderToString` / Next.js App Router / Vite SSR and then `hydrateRoot`. The first client render matches the server HTML. Browser-only values (viewport, `matchMedia`, `location`) apply **after** mount.
+FiboUI 2.7.0 is safe to `renderToString` / Next.js App Router / Vite SSR and then `hydrateRoot`. The first client render matches the server HTML. Browser-only values (viewport, `matchMedia`, `location`) apply **after** mount.
 
 ## Inject collected CSS
 

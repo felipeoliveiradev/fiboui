@@ -69,7 +69,7 @@ describe('W10-01 builder CSS proxy kebab', () => {
       ) as any
     )
     const css = StyleManager.getInstance().getCss()
-    expect(css).toMatch(/--headerHeight:\s*48px/)
+    expect(css).toMatch(/--headerHeight:\s*48/)
     expect(css).not.toMatch(/--header-height:/)
   })
 

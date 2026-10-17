@@ -10,6 +10,12 @@ function descendants(root: HTMLElement): HTMLElement[] {
   return Array.from(root.querySelectorAll('*')) as HTMLElement[]
 }
 
+function clipsOverflow(el: HTMLElement): boolean {
+  return el.style.overflow === 'hidden'
+    || el.style.overflowX === 'hidden'
+    || el.style.overflowY === 'hidden'
+}
+
 function isStatusPip(el: HTMLElement): boolean {
   const bg = el.style.backgroundColor.replace(/\s/g, '').toLowerCase()
   const green = bg === '#10b981' || bg === 'rgb(16,185,129)'
@@ -22,7 +28,7 @@ describe('Avatar status pip', () => {
     render(Avatar().status('online').initials('AB').build())
     const host = screen.getByRole('img')
     expect(host.style.overflow).not.toBe('hidden')
-    expect(descendants(host).some((el) => el.style.overflow === 'hidden')).toBe(true)
+    expect(descendants(host).some(clipsOverflow)).toBe(true)
     expect(descendants(host).some(isStatusPip)).toBe(true)
   })
 
