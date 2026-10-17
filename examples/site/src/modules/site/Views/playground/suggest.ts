@@ -36,6 +36,9 @@ export function codeSuggest(): FiboChild {
     const menu = suggest.value
     if (!menu || menu.items.length === 0) return []
     windowStart = 0
+    const html = shellHtml(menu)
+    // Box drops dangerouslySetInnerHTML. Paint the rows after commit, same as the highlight layer.
+    queueMicrotask(() => paintSuggestHtml(menu, html))
     return [
       Box()
         .className('play-suggest')
@@ -43,6 +46,7 @@ export function codeSuggest(): FiboChild {
         .top(menu.top)
         .left(menu.left)
         .width('420px')
+        .height(`${Math.min(menu.items.length, VISIBLE) * ROW}px`)
         .maxHeight(`${ROW * VISIBLE}px`)
         .overflow('auto')
         .bg(scheme.surfaceContainerHighest)
@@ -51,7 +55,6 @@ export function codeSuggest(): FiboChild {
         .props({
           id: 'play-suggest-list',
           role: 'listbox',
-          dangerouslySetInnerHTML: { __html: shellHtml(menu) },
           onMouseDown: (event: Event) => event.preventDefault(),
           onClick: (event: MouseEvent) => {
             const row = (event.target as HTMLElement | null)?.closest('[data-name]') as HTMLElement | null
@@ -287,6 +290,17 @@ function functionsFor(partial: string): readonly string[] {
   const withImport = partial && 'import'.startsWith(partial) ? ['import', ...list] : list
   functionCache.set(partial, withImport)
   return withImport
+}
+
+function paintSuggestHtml(menu: PlaySuggest, html: string) {
+  const write = () => {
+    if (suggest.value !== menu) return true
+    const node = document.querySelector('.play-suggest') as HTMLElement | null
+    if (!node) return false
+    node.innerHTML = html
+    return true
+  }
+  if (!write()) requestAnimationFrame(write)
 }
 
 function shellHtml(menu: PlaySuggest): string {
