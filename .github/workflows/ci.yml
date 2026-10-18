@@ -38,6 +38,18 @@ jobs:
         env:
           CI: true
 
+  vscode-extension:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm --prefix extensions/vscode-fiboui test
+      - name: Package VSIX
+        working-directory: extensions/vscode-fiboui
+        run: npx --yes @vscode/vsce package --out /tmp/fiboui-ci.vsix
+
   gitleaks:
     runs-on: ubuntu-latest
     steps:

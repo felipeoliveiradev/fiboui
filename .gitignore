@@ -24,6 +24,7 @@ auth.json
 .secrets/
 
 # generated
+*.vsix
 docs/.vitepress/cache
 docs/.vitepress/dist
 .next

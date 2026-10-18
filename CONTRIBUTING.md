@@ -33,6 +33,19 @@ The workflow (`.github/workflows/publish.yml`) then:
 
 Concurrency group `npm-publish` prevents overlapping publishes.
 
+## Editor extension (VS Code + Cursor)
+
+The npm package and the editor extension are **separate versions**. Do not bump root `package.json` to ship `extensions/vscode-fiboui`.
+
+One VSIX (`felipeoliveiradev.fiboui`) includes editor support and **FiboUI Noir**. Cursor reads **Open VSX**, not the Visual Studio Marketplace.
+
+1. Add repo secrets **`VSCE_PAT`** (Azure DevOps Marketplace Manage) and **`OVSX_PAT`** (https://open-vsx.org/user-settings/tokens).
+2. Claim the Open VSX namespace once: `npx ovsx create-namespace felipeoliveiradev -p "$OVSX_PAT"` (not in CI).
+3. Bump `extensions/vscode-fiboui/package.json` `version` when you want a new editor release.
+4. Merge to `main`, or run **Actions → Publish extension**.
+
+Workflow: `.github/workflows/publish-extension.yml`. Details: `extensions/vscode-fiboui/PUBLISH.md`.
+
 ### Checklist before bumping
 
 - [ ] `npm test` and `npm run type-check` pass

@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **Editor marketplace pipeline** — GitHub Actions packages the VS Code / Cursor extension (editor support and **FiboUI Noir** in one VSIX) and publishes to the Visual Studio Marketplace (`VSCE_PAT`) and Open VSX / Cursor (`OVSX_PAT`). Each store is skipped when its secret is missing or that version already exists.
+
 ## [2.7.1] - 2026-10-17
 
 ### Fixed

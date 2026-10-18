@@ -41,6 +41,10 @@ Both ships are built **only** with FiboUI fluent builders — no JSX in the prod
 
 Fluent trees get Flutter-style **closing labels** (`// Column`, `// List`, `// Form`), **auto-indent** on Enter, **lineage guides** on `.children([…])`, snippets (`fcol`, `frow`, …), chain autocomplete, and the **FiboUI Noir** colour theme.
 
+After marketplace publish (`ext install felipeoliveiradev.fiboui`). VS Code uses the Visual Studio Marketplace; Cursor uses Open VSX. Same VSIX, both stores — see [`extensions/vscode-fiboui/PUBLISH.md`](./extensions/vscode-fiboui/PUBLISH.md).
+
+Local symlink while developing:
+
 ```bash
 ln -sfn "$(pwd)/extensions/vscode-fiboui" \
   "$HOME/.cursor/extensions/felipeoliveiradev.fiboui-0.1.0"

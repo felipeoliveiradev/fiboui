@@ -31,13 +31,15 @@ There is no separate function completion kind.
 
 ## Install from the Marketplace
 
-After the extension is published:
+Same VSIX on Visual Studio Marketplace (VS Code) and Open VSX (Cursor), including the **FiboUI Noir** theme:
 
 ```text
 ext install felipeoliveiradev.fiboui
 ```
 
 Or open Extensions and search for **FiboUI**.
+
+Publish steps and GitHub secrets (`VSCE_PAT`, `OVSX_PAT`): [`PUBLISH.md`](./PUBLISH.md).
 
 A gallery screenshot of the editor is not included in this package. After **Developer: Reload Window**, capture one from a fluent `.tsx` file if you want it on the Marketplace page.
 
