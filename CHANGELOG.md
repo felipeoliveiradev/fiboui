@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.8.1] - 2026-10-19
+
+### Fixed
+
+- **`leaflet` is a dependency.** `leafletEngine()` imports it from `dist/index.js`, so the module has to be installed with the package. Vite still leaves that import external; it is not copied into the bundle.
+
 ## [2.8.0] - 2026-10-19
 
 ### Added

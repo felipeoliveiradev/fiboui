@@ -12,19 +12,14 @@ export default defineConfig(({ command }) => ({
   },
   resolve: {
     dedupe: ['react', 'react-dom'],
-    alias: [
-      {
-        find: /^leaflet$/,
-        replacement: fileURLToPath(new URL('./node_modules/leaflet/dist/leaflet-src.js', import.meta.url)),
-      },
-      ...(command === 'serve'
+    alias:
+      command === 'serve'
         ? [
             {
               find: /^fiboui$/,
               replacement: fileURLToPath(new URL('../../src/index.ts', import.meta.url)),
             },
           ]
-        : []),
-    ],
+        : undefined,
   },
 }))
