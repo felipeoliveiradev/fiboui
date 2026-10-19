@@ -1,7 +1,15 @@
-import React, { type ComponentType, type ReactElement, type ReactNode } from 'react';
+import React, { type ComponentType, type ReactElement, type ReactNode, useSyncExternalStore } from 'react';
 import { buildChild } from './children';
 import type { FiboChild } from './types';
 import { FiboStyles } from './styleManager';
+import {
+  paintLiveSlots,
+  runBuildFrame,
+  Tracker,
+  type ComputedSignal,
+  type LiveSlot,
+  type Signal,
+} from './state';
 
 export type FiboPageBuild = () => FiboChild | ReactNode;
 
@@ -43,10 +51,16 @@ export function page(
   options: FiboPageOptions = {}
 ): FiboPageComponent {
   const { styles = true, meta } = options;
+  const cells: (Signal<unknown> | ComputedSignal<unknown>)[] = [];
+  const slots: LiveSlot[] = [];
+  let shape = '';
+  let version = 0;
+  let cached: ReactElement | null = null;
+  let cachedVersion = -1;
+  let tracker: Tracker | null = null;
+  const listeners = new Set<() => void>();
 
-  function FiboPage(): ReactElement {
-    // Build during render (SSR + client) so dynamic classes register before styles emit.
-    const tree = buildChild(build());
+  function decorate(tree: ReactNode): ReactElement {
     const nodes: ReactNode[] = [];
     if (typeof meta?.title === 'string' && meta.title.length > 0) {
       nodes.push(React.createElement('title', { key: 'fibo-title' }, meta.title));
@@ -61,10 +75,63 @@ export function page(
       );
     }
     nodes.push(tree);
-    if (styles) {
-      nodes.push(React.createElement(FiboStyles));
-    }
+    if (styles) nodes.push(React.createElement(FiboStyles));
     return React.createElement(React.Fragment, null, ...nodes);
+  }
+
+  function produce(): { tree: ReactNode; layout: boolean; shape: string; slotCount: number } {
+    if (!tracker) tracker = new Tracker(refresh);
+    let tree!: ReactNode;
+    const built = runBuildFrame(cells, slots, () => {
+      tree = tracker!.execute(() => buildChild(build()));
+    });
+    return { tree, ...built.outcome };
+  }
+
+  function refresh() {
+    const next = produce();
+    const same = next.shape === shape && !next.layout;
+    if (same && paintLiveSlots(slots, next.slotCount)) return;
+    shape = next.shape;
+    version += 1;
+    cached = decorate(next.tree);
+    cachedVersion = version;
+    for (const listener of listeners) listener();
+  }
+
+  function view(): ReactElement {
+    if (cached && cachedVersion === version) return cached;
+    const next = produce();
+    shape = next.shape;
+    cached = decorate(next.tree);
+    cachedVersion = version;
+    return cached;
+  }
+
+  function subscribe(listener: () => void) {
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+      if (listeners.size === 0 && tracker) {
+        tracker.dispose();
+        tracker = null;
+        cached = null;
+        cachedVersion = -1;
+      }
+    };
+  }
+
+  function getSnapshot() {
+    return version;
+  }
+
+  function getServerSnapshot() {
+    return 0;
+  }
+
+  function FiboPage(): ReactElement {
+    useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+    return view();
   }
 
   FiboPage.displayName = 'FiboPage';

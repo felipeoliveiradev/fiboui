@@ -96,6 +96,7 @@ export type { FiboPlugin, FiboContext, RouteDefinition, SidebarConfig } from './
 export { ValueBuilder } from './core/builder';
 export type { PseudoStateFn } from './core/builder';
 export { When, type WhenStyle } from './core/when';
+export * from './core/tokens';
 export type { PseudoStateBuilder } from './core/PseudoStateBuilder';
 
 export { FiboThemeProvider, useFiboTheme } from './theme/provider';

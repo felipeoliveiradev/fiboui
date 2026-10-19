@@ -1,7 +1,7 @@
 import React, { CSSProperties, ReactElement, ReactNode } from 'react';
 import { AlignAxis, FiboChild, FiboChildren, ResponsiveStyles } from './types';
 import { BreakpointKey, toMediaQuery } from './breakpoints';
-import { BindableSignal, Observable, Signal } from './state';
+import { BindableSignal, flushSignalReads, inBuildFrame, noteBuilder, Observable, Signal } from './state';
 import { Observer, SignalWrapper, ObserverWrapper, StateWrapper, ProviderWrapper } from './StateWrapper';
 import { isUsableReactKey, normalizeFiboChildren } from './children';
 import clsx from 'clsx';
@@ -12,6 +12,7 @@ import { AnimationOptions } from './animations';
 import { AnimatedWrapper } from './AnimatedWrapper';
 import { PseudoStateBuilder } from './PseudoStateBuilder';
 import { type When, whenPseudo, type WhenStyle } from './when';
+import { isSizeWord, sizeWordCss } from './tokens';
 import { resolveCssEase, springEase, type SpringOptions } from './easing';
 import {
   CustomMotion,
@@ -404,6 +405,16 @@ export abstract class FiboBuilder {
   protected isVerticalFlex(): boolean {
     const dir = this._style.flexDirection ?? 'row';
     return dir === 'column' || dir === 'column-reverse';
+  }
+
+  /**
+   * Both screen axes. `.align(Align.center)` and `.align('center')` do the same.
+   * `between` packs the main axis and starts the cross axis.
+   */
+  align(alignment: AlignAxis): this {
+    this.alignX(alignment);
+    this.alignY(alignment);
+    return this;
   }
 
   /**
@@ -866,16 +877,34 @@ export abstract class FiboBuilder {
     return this;
   }
 
+  /**
+   * A passed size is a lock: `min-*` plus `flex-shrink: 0`, so a flex parent
+   * (the Scaffold body) cannot divide the viewport across these children.
+   * `400`, `'320px'`, `Size.full`, and `Space.md` all count. `flex(1)` afterwards
+   * opts back into sharing space.
+   */
+  private lockAxis(axis: 'width' | 'height', min: string | undefined): this {
+    this.layoutStyle(
+      axis === 'width'
+        ? { flexShrink: 0, ...(min != null ? { minWidth: min } : {}) }
+        : { flexShrink: 0, ...(min != null ? { minHeight: min } : {}) },
+    );
+    return this;
+  }
+
   width(value: string | number): this {
     if (typeof value === 'number') {
-      return this.paint('width', `${value}px`);
+      this.paint('width', `${value}px`);
+      return this.lockAxis('width', `${value}px`);
     }
-    if (value.startsWith('w-') || value === 'full' || value === 'screen' || value === 'min' || value === 'max' || value === 'fit') {
+    if (value.startsWith('w-') || isSizeWord(value)) {
+      const word = value.startsWith('w-') ? value.slice(2) : value;
       const className = value.startsWith('w-') ? value : `w-${value}`;
       this._classNames.push(className);
-      return this;
+      return this.lockAxis('width', sizeWordCss(word, 'width'));
     }
-    return this.paint('width', value);
+    this.paint('width', value);
+    return this.lockAxis('width', value);
   }
 
   paint(property: string, value: string): this {
@@ -886,14 +915,17 @@ export abstract class FiboBuilder {
 
   height(value: string | number): this {
     if (typeof value === 'number') {
-      return this.paint('height', `${value}px`);
+      this.paint('height', `${value}px`);
+      return this.lockAxis('height', `${value}px`);
     }
-    if (value.startsWith('h-') || value === 'full' || value === 'screen' || value === 'min' || value === 'max' || value === 'fit') {
+    if (value.startsWith('h-') || isSizeWord(value)) {
+      const word = value.startsWith('h-') ? value.slice(2) : value;
       const className = value.startsWith('h-') ? value : `h-${value}`;
       this._classNames.push(className);
-      return this;
+      return this.lockAxis('height', sizeWordCss(word, 'height'));
     }
-    return this.paint('height', value);
+    this.paint('height', value);
+    return this.lockAxis('height', value);
   }
 
   gap(value: string | number): this {
@@ -2082,6 +2114,7 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
   return (...args: Args) => {
     const instance = new BuilderClass(...args);
     const displayName = BuilderClass.name.replace(/Builder$/, '') || 'Fibo';
+    noteBuilder(displayName);
     const assemble = () => assembleBuilder(instance);
     stampRenderable(instance, assemble, displayName);
 
@@ -2100,6 +2133,7 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
           // `buildChild` / `normalizeFiboChildren` assemble to host elements first.
           if (!(target as any).__fiboKeyFn) {
             const fluent = (value: string | number) => {
+              flushSignalReads();
               target.key(value);
               return receiver;
             };
@@ -2117,6 +2151,7 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
           const method = Object.getPrototypeOf(target).props;
           if (typeof method === 'function') {
             const fluent = (extra: Record<string, any>) => {
+              flushSignalReads();
               method.call(target, extra);
               return receiver;
             };
@@ -2137,6 +2172,7 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
           }
           if (!(target as any).__fiboType) {
             (target as any).__fiboType = (value: unknown, second?: unknown) => {
+              flushSignalReads();
               if (typeof value === 'string' || typeof value === 'number') {
                 method.call(target, value);
                 return receiver;
@@ -2152,10 +2188,16 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
         }
 
         if (Reflect.has(target, prop)) {
-          return Reflect.get(target, prop, receiver);
+          const value = Reflect.get(target, prop, receiver);
+          if (typeof value !== 'function' || !inBuildFrame() || prop === 'build') return value;
+          return (...args: unknown[]) => {
+            if (!(prop === 'text' && typeof args[0] === 'string')) flushSignalReads();
+            return value.apply(receiver, args);
+          };
         }
 
         return (value: any) => {
+          flushSignalReads();
           const logical = logicalLonghands(prop as string);
           const props = logical ?? [prop as string];
           for (const name of props) {

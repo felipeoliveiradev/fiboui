@@ -3,7 +3,7 @@
  * Static fluent builders + page() — no 'use client', no hooks.
  * Client-only APIs (.observer, Router, …) resolve via the default export.
  */
-export { page, withFiboStyles, createPage } from './core/page';
+export { page, withFiboStyles, createPage } from './core/page.server';
 export type { FiboPageBuild, FiboPageOptions } from './core/page';
 export { FiboStyles, MotionStyles, getCss, getStyleTag, endSsrRequest } from './core/styleManager';
 

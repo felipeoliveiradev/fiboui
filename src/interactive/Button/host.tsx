@@ -50,6 +50,7 @@ export function renderButtonHost(props: any, interactive: boolean): ReactElement
     style,
     type: htmlType = 'button',
     bare,
+    liveRef,
     onClick: restOnClick,
     children,
     ...rest
@@ -167,6 +168,7 @@ export function renderButtonHost(props: any, interactive: boolean): ReactElement
 
   const hostProps: Record<string, unknown> = {
     className: mergedClassName,
+    ref: liveRef,
     disabled,
     ...(interactive ? rest : dropEventHandlers(rest)),
     type: hostType,

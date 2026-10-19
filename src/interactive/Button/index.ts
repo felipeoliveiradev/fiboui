@@ -6,6 +6,7 @@ import {
   hasInterpMarks,
   resolveInterpString,
 } from '../../core/interpolate';
+import { allocLiveSlot, type LiveSlot } from '../../core/state';
 import { ButtonInner } from './ButtonInner';
 import {
   asHtmlButtonType,
@@ -50,6 +51,7 @@ function resolveInterpChild(child: ReactNode): ReactNode {
 
 class ButtonBuilder extends FiboBuilder {
   private _text: string | (() => string) = '';
+  private _live: LiveSlot | null = null;
   private _variant: ExtendedButtonVariant = 'elevated';
   private _size: ButtonSize = 'md';
   private _onPress?: () => void;
@@ -72,8 +74,10 @@ class ButtonBuilder extends FiboBuilder {
   text(value: string | (() => string)): this {
     this._text = value;
     if (typeof value === 'function') {
+      this._live = null;
       this.observer();
     } else {
+      this._live = allocLiveSlot(value);
       bindInterp(this, value);
     }
     return this;
@@ -208,6 +212,13 @@ class ButtonBuilder extends FiboBuilder {
       type: this.resolvedHtmlType(),
       bare: this.isReset(),
     };
+
+    if (this._live) {
+      const slot = this._live;
+      (props as { liveRef?: (node: HTMLElement | null) => void }).liveRef = (node) => {
+        slot.node = node;
+      };
+    }
 
     return React.createElement(ButtonInner, props);
   }

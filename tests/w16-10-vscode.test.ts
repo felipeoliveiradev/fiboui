@@ -16,4 +16,18 @@ describe('W16-10 vscode completions catalog', () => {
     expect(methods).toContain('insets')
     expect(methods).toContain('boxShadow')
   })
+
+  it('completes token members for chain arguments', () => {
+    const catalog = JSON.parse(readFileSync(join(ext, 'src/tokens.json'), 'utf8')) as {
+      tokens: Record<string, Record<string, string>>
+      methods: Record<string, string[]>
+    }
+    expect(catalog.methods.align).toContain('Align')
+    expect(catalog.tokens.Align.center).toBe('center')
+    expect(catalog.tokens.Effect.sweepToRight).toBe('sweepToRight')
+    expect(catalog.tokens.When.hover).toBe('hover')
+    const src = readFileSync(join(ext, 'src/completions.js'), 'utf8')
+    expect(src).toContain('tokens.json')
+    expect(src).toContain('argumentCompletions')
+  })
 })

@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.8.2] - 2026-10-19
+
+### Added
+
+- **Tokens for the closed sets** (`Align`, `Size`, `Space`, `Radius`, `Color`, `Motion`, `Effect`, variants, and the rest of the fluent vocabulary). Same shape as `When`. A raw string or number still works. `Space`, `Radius`, and `Color` read the active theme. The editor completes `Align.center` inside `.align(`.
+- **`.width()` / `.height()` lock the axis** (`min-width` / `min-height` and `flex-shrink: 0`). A size passed into the Scaffold body is kept, and the body scrolls. `.flex(1)` after the size opts back into sharing the viewport.
+- **`signal()` inside `page()` stays the same signal.** `Text(\`Menu ${count.value}\`)` and `Button(\`Menu ${count.value}\`)` write the text node in place. The scaffold does not render again. No `useEffect`. A read that changes layout still commits the tree. A signal created outside the page is unchanged.
+
 ## [2.8.1] - 2026-10-19
 
 ### Fixed

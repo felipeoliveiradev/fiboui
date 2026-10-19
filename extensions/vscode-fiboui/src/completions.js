@@ -1,6 +1,9 @@
 const vscode = require('vscode');
 const { FACTORIES, sliceLooksLikeBuilder } = require('./factories');
 const METHODS = require('./methods.json');
+const { tokens: TOKEN_SETS, methods: TOKEN_METHODS } = require('./tokens.json');
+
+const TOKEN_NAMES = Object.keys(TOKEN_SETS);
 
 const LANGUAGES = ['typescript', 'typescriptreact', 'javascript', 'javascriptreact'];
 const DOCUMENT_SELECTORS = LANGUAGES.flatMap((language) => [
@@ -19,6 +22,12 @@ function registerCompletions(context) {
         const line = document.lineAt(position).text;
         const prefix = line.slice(0, position.character);
 
+        const args = argumentCompletions(prefix);
+        if (args) {
+          if (!looksLikeBuilderContext(document, position)) return;
+          return args;
+        }
+
         // Chain: something.
         if (/\.\s*$/.test(prefix) || /\.[a-zA-Z0-9_]*$/.test(prefix)) {
           if (!looksLikeBuilderContext(document, position)) return;
@@ -35,10 +44,15 @@ function registerCompletions(context) {
         if (/(?:^|[\s(,=:>])[A-Z][A-Za-z0-9]*$/.test(prefix) || /(?:return|=>)\s+[A-Z]?[A-Za-z0-9]*$/.test(prefix)) {
           if (!fileMentionsFiboui(document)) return;
           const partial = prefix.match(/([A-Z][A-Za-z0-9]*)$/)?.[1] ?? '';
-          return FACTORIES.filter((f) => f.startsWith(partial)).map((name) => {
-            const item = new vscode.CompletionItem(name, vscode.CompletionItemKind.Class);
-            item.detail = 'fiboui factory';
-            item.insertText = new vscode.SnippetString(`${name}($0)`);
+          const names = [...FACTORIES, ...TOKEN_NAMES];
+          return names.filter((f) => f.startsWith(partial)).map((name) => {
+            const isToken = TOKEN_SETS[name] != null;
+            const item = new vscode.CompletionItem(
+              name,
+              isToken ? vscode.CompletionItemKind.Enum : vscode.CompletionItemKind.Class,
+            );
+            item.detail = isToken ? 'fiboui token' : 'fiboui factory';
+            item.insertText = new vscode.SnippetString(isToken ? `${name}.$0` : `${name}($0)`);
             item.sortText = `0_${name}`;
             return item;
           });
@@ -47,11 +61,46 @@ function registerCompletions(context) {
         return undefined;
       },
     },
-    '.', // trigger on dot
+    '.',
+    '(',
+    "'",
+    '"',
     ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
   );
 
   context.subscriptions.push(provider);
+}
+
+function argumentCompletions(prefix) {
+  const match = prefix.match(/\.([A-Za-z0-9_]+)\(\s*(?:([A-Z][A-Za-z0-9]*)\.)?['"]?([A-Za-z0-9_]*)$/);
+  if (!match) return;
+  const groups = TOKEN_METHODS[match[1]];
+  if (!groups) return;
+  const named = match[2];
+  const partial = match[3] ?? '';
+  const wanted = named ? groups.filter((group) => group === named) : groups;
+  const items = [];
+  for (const group of wanted) {
+    const body = TOKEN_SETS[group];
+    if (!body) continue;
+    for (const key of Object.keys(body)) {
+      if (named) {
+        if (partial && !key.startsWith(partial)) continue;
+        items.push(tokenItem(key, group, key));
+      } else if (!partial || key.startsWith(partial)) {
+        items.push(tokenItem(`${group}.${key}`, group, `${group}.${key}`));
+      }
+    }
+  }
+  return items;
+}
+
+function tokenItem(label, group, insert) {
+  const item = new vscode.CompletionItem(label, vscode.CompletionItemKind.EnumMember);
+  item.detail = `fiboui ${group}`;
+  item.insertText = insert;
+  item.sortText = `0_${label}`;
+  return item;
 }
 
 function fileMentionsFiboui(document) {
@@ -67,4 +116,4 @@ function looksLikeBuilderContext(document, position) {
   return sliceLooksLikeBuilder(slice);
 }
 
-module.exports = { registerCompletions, DOCUMENT_SELECTORS };
+module.exports = { registerCompletions, DOCUMENT_SELECTORS, argumentCompletions };

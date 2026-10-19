@@ -2,7 +2,7 @@ import React, { CSSProperties, ReactElement, ReactNode } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps, FiboChildren, TextType } from '../../core/types';
 import { FineGrainText } from '../../core/FineGrain';
-import type { BindableSignal } from '../../core/state';
+import { allocLiveSlot, type BindableSignal, type LiveSlot } from '../../core/state';
 import {
   collectInterpSignals,
   hasInterpMarks,
@@ -204,7 +204,7 @@ function resolveTextContent(text: unknown, children: unknown): ReactNode {
 }
 
 const TextInner = React.memo((props: any) => {
-  const { text, type, className, style, children, ...rest } = props;
+  const { text, type, className, style, children, liveRef, ...rest } = props;
   const safeType = safeTextType(type);
   const tag = ELEMENT_MAP[safeType] || 'p';
 
@@ -214,6 +214,7 @@ const TextInner = React.memo((props: any) => {
       className: `fibo-text fibo-text-${safeType} min-w-0 ${className || ''}`,
       style: textStyle(safeType, style),
       ...omitDangerous(rest),
+      ...(liveRef ? { ref: liveRef } : null),
     },
     resolveTextContent(text, children)
   );
@@ -224,6 +225,7 @@ type TextCase = 'uppercase' | 'lowercase' | 'capitalize' | 'none';
 
 class TextBuilder extends FiboBuilder {
   private _text: string | (() => string) = '';
+  private _live: LiveSlot | null = null;
   private _nodes?: ReactNode;
   private _type: TextType = 'body';
   private _lineLimit?: number;
@@ -253,6 +255,7 @@ class TextBuilder extends FiboBuilder {
     if (hasInterpMarks(value)) return this.setMarkedString(value);
     this._text = value;
     this._nodes = undefined;
+    this._live = allocLiveSlot(value);
     return this;
   }
 
@@ -534,7 +537,7 @@ class TextBuilder extends FiboBuilder {
       });
     }
 
-    const props = {
+    const props: Record<string, unknown> = {
       ...safeHost,
       ...chrome.attrs,
       text: this._text,
@@ -543,6 +546,12 @@ class TextBuilder extends FiboBuilder {
       style: passedStyle,
       children: childNodes ?? resolveInterpChild(extraChildren as ReactNode),
     };
+    if (this._live) {
+      const slot = this._live;
+      props.liveRef = (node: HTMLElement | null) => {
+        slot.node = node;
+      };
+    }
     return React.createElement(TextInner, props);
   }
 }
