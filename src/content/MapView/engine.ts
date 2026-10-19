@@ -1,3 +1,4 @@
+/// <reference path="./leaflet-ambient.d.ts" />
 import type { BindableSignal } from '../../core/state';
 import { type MapBounds, type MapMarker, project } from '../Chart/geometry';
 

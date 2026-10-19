@@ -3,11 +3,6 @@ declare module '*?raw' {
   export default src
 }
 
-declare module 'leaflet' {
-  const leaflet: unknown
-  export default leaflet
-}
-
 declare module 'lucide-react' {
   const lucide: unknown
   export default lucide
