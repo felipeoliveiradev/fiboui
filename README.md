@@ -148,12 +148,12 @@ Box()
   .children(() => [
     Text(`Count: ${count.value}`),
     Button('+').onPress(() => {
-      count.value += 1
+      count.change((n) => n + 1)
     }),
   ])
 ```
 
-`.bindSignal` re-assembles. Read `.value` inside a **function child** so updates are live. `` Text(`Total ${todos.$length}`) `` stays live without a function child. Forms and validation: [Form](docs/components/interactive-form.md).
+`.bindSignal` re-assembles. Read `.value` inside a **function child** so updates are live. `.value =`, `.set()`, `.change()`, and `.reset()` all notify the same way. `` Text(`Total ${todos.$length}`) `` stays live without a function child. Forms and validation: [Form](docs/components/interactive-form.md).
 
 ```mermaid
 sequenceDiagram
@@ -162,7 +162,7 @@ sequenceDiagram
   participant H as onPress
 
   UI->>S: .bindSignal(count)
-  H->>S: count.value += 1
+  H->>S: count.change(n => n + 1)
   S-->>UI: notify subscribers
   UI->>UI: re-assemble children()
 ```

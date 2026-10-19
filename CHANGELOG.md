@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.8.3] - 2026-10-19
+
+### Added
+
+- **`signal().set()` / `.change()` / `.reset()`** — extra writes on a plain signal, same notify path as `.value =`. `.change(n => n + 1)` takes an updater. `.reset()` restores the value passed to `signal(initial)`. `listSignal.update(id, patch)` stays the item patch.
+
 ## [2.8.2] - 2026-10-19
 
 ### Added

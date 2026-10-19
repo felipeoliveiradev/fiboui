@@ -23,21 +23,28 @@ Signals are reactive primitive values that automatically update components when 
 ```typescript
 import { signal } from 'fiboui'
 
-// Create a signal
 const count = signal(0)
 
-// Function children re-read `.value` on each rebuild.
-// A static `.children([...])` array freezes the number at build time.
+count.value          // read
+count.value = 5      // write (same as today)
+count.set(5)         // write
+count.change(8)      // write
+count.change((n) => n + 1)  // updater
+count.reset()        // back to 0
+
 Box()
   .bindSignal(count)
   .children(() => [
     Text(`Count: ${count.value}`),
     Button()
       .text('Increment')
-      .onPress(() => count.value++)
+      .onPress(() => count.change((n) => n + 1))
   ])
-
 ```
+
+`.value =`, `.set()`, `.change()`, and `.reset()` all go through the same notify path. A static `.children([...])` array still freezes the number at build time.
+
+`listSignal` keeps `.update(id, patch)` as the item patch. `.reset()` on a list restores the array you passed to `listSignal(...)`.
 
 Signals live in memory on the client. Do not read or write them during SSR to persist UI — wrap reactive trees in Client Components (`'use client'`). Subscriptions are cleaned up on unmount (including React StrictMode double-mount).
 
