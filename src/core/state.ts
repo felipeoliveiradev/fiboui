@@ -125,8 +125,11 @@ export class Tracker {
 export class Signal<T> implements Subscribable<T> {
   private listeners = new Set<Listener<T>>();
   private effects = new Set<Effect>();
+  private readonly _initial: T;
 
-  constructor(private _value: T) { }
+  constructor(private _value: T) {
+    this._initial = _value;
+  }
 
   get value(): T {
     const active = getActiveEffect();
@@ -141,6 +144,30 @@ export class Signal<T> implements Subscribable<T> {
       this._value = newValue;
       this.notify();
     }
+  }
+
+  /** Replace the value. Same notify path as `.value = next`. */
+  set(next: T): this {
+    this.value = next;
+    return this;
+  }
+
+  /**
+   * Write a value, or an updater `(prev) => next`.
+   * Function-valued signals should use `.set()` / `.value =` so the function is stored, not called.
+   * Not named `update`: `listSignal.update(id, patch)` is the item patch.
+   */
+  change(next: T | ((prev: T) => T)): this {
+    const value =
+      typeof next === 'function' ? (next as (prev: T) => T)(this._value) : next;
+    this.value = value;
+    return this;
+  }
+
+  /** Restore the value passed to `signal(initial)`. */
+  reset(): this {
+    this.value = this._initial;
+    return this;
   }
 
   subscribe(listener: Listener<T>): Unsubscribe {
