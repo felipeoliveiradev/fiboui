@@ -1,3 +1,5 @@
+import { takeFormula, type CompiledFormula } from './formula';
+
 export type Listener<T> = (value: T) => void;
 export type Unsubscribe = () => void;
 
@@ -140,6 +142,11 @@ export class Signal<T> implements Subscribable<T> {
     return this._value;
   }
 
+  /** Current value without tracking. Replays use this so a node does not subscribe twice. */
+  peek(): T {
+    return this._value;
+  }
+
   set value(newValue: T) {
     if (this._value !== newValue) {
       this._value = newValue;
@@ -206,11 +213,25 @@ export class Signal<T> implements Subscribable<T> {
   }
 }
 
+/** A sentence split into fixed text and the signals that filled it. */
+export type LivePart = string | Subscribable<unknown>;
+
 /** DOM text written in place when a template reads a signal. The host stays mounted. */
 export type LiveSlot = {
   node: HTMLElement | null;
   value: string;
   next: string;
+  signals: Subscribable<unknown>[];
+  /** Pieces of the sentence. Null when the string cannot be split safely. */
+  parts: LivePart[] | null;
+  unsubs?: Unsubscribe[];
+  wired?: Subscribable<unknown>[];
+};
+
+type BuildOwner = {
+  _isObserver?: boolean;
+  _ownsReads?: boolean;
+  _signals?: { size: number };
 };
 
 export type BuildOutcome = {
@@ -218,6 +239,12 @@ export type BuildOutcome = {
   layout: boolean;
   shape: string;
   slotCount: number;
+  /** Reads no single node could replay. The page function owns these. */
+  roots: Subscribable<unknown>[];
+};
+
+type WireHost = {
+  adoptWire?: (signals: Subscribable<unknown>[], replay: () => void) => void;
 };
 
 type BuildFrame = {
@@ -228,6 +255,10 @@ type BuildFrame = {
   shape: string[];
   slots: LiveSlot[];
   slotIndex: number;
+  owner: BuildOwner | null;
+  roots: Subscribable<unknown>[];
+  formulas: CompiledFormula[];
+  formulaCursor: number;
 };
 
 let buildFrame: BuildFrame | null = null;
@@ -240,11 +271,111 @@ function noteSignalRead(signal: Subscribable<unknown>) {
   buildFrame?.pending.push(signal);
 }
 
+function readValue(signal: Subscribable<unknown>): unknown {
+  const peeked = signal as { peek?: () => unknown; value?: unknown };
+  if (typeof peeked.peek === 'function') return peeked.peek();
+  return peeked.value;
+}
+
+/**
+ * Split `result` on the values that were just read, left to right.
+ * Each value must appear once in what remains, so "Pontos 0" becomes
+ * ["Pontos ", signal, ""] and "0 pontos: 0" is left to the page function.
+ */
+export function compileParts(result: string, signals: Subscribable<unknown>[]): LivePart[] | null {
+  if (signals.length === 0) return null;
+  let rest = result;
+  const parts: LivePart[] = [];
+  for (const signal of signals) {
+    const sample = String(readValue(signal));
+    if (sample.length === 0) return null;
+    let count = 0;
+    let at = -1;
+    let from = 0;
+    while (from <= rest.length) {
+      const found = rest.indexOf(sample, from);
+      if (found < 0) break;
+      if (count === 0) at = found;
+      count += 1;
+      if (count > 1) return null;
+      from = found + sample.length;
+    }
+    if (count !== 1 || at < 0) return null;
+    parts.push(rest.slice(0, at));
+    parts.push(signal);
+    rest = rest.slice(at + sample.length);
+  }
+  parts.push(rest);
+  return parts;
+}
+
+/** Join a sentence from its pieces, reading each signal now. */
+export function renderParts(parts: LivePart[]): string {
+  let out = '';
+  for (const part of parts) {
+    out += typeof part === 'string' ? part : String(readValue(part));
+  }
+  return out;
+}
+
+function rememberRoot(frame: BuildFrame, signal: Subscribable<unknown>) {
+  frame.layout = true;
+  if (!frame.roots.includes(signal)) frame.roots.push(signal);
+}
+
+/**
+ * A fluent call consumed the reads in its arguments.
+ * Direct `method(signal.value)` and a string built from those reads
+ * (`method(\`${signal.value}px\`)`, `Text(\`Menu ${signal.value}\`)`)
+ * replay on that node. `method(signal.value + 1)` stays on the function
+ * that wrote the formula.
+ */
+export function claimSignalReads(
+  owner: object,
+  args: unknown[],
+  replay: (next: unknown[]) => void,
+  method?: string,
+): void {
+  const frame = buildFrame;
+  if (!frame || frame.pending.length === 0) return;
+  const reads = frame.pending.slice();
+  frame.pending = [];
+  const host = owner as WireHost;
+  const direct =
+    reads.length === args.length &&
+    reads.every((signal, index) => Object.is(readValue(signal), args[index]));
+  if (direct && host.adoptWire) {
+    host.adoptWire(reads, () => replay(reads.map(readValue)));
+    return;
+  }
+  if (args.length === 1 && typeof args[0] === 'string' && host.adoptWire) {
+    const parts = compileParts(args[0], reads);
+    if (parts) {
+      host.adoptWire(reads, () => replay([renderParts(parts)]));
+      return;
+    }
+  }
+  if (method && args.length === 1 && host.adoptWire) {
+    const readable = reads as Array<{ peek?: () => unknown; value?: unknown }>;
+    const hit = takeFormula(frame.formulas, frame.formulaCursor, method, readable, args[0]);
+    if (hit) {
+      frame.formulaCursor = hit.next;
+      const evalFormula = hit.eval;
+      host.adoptWire(reads, () => replay([evalFormula(readable)]));
+      return;
+    }
+  }
+  for (const signal of reads) rememberRoot(frame, signal);
+}
+
 /** A fluent call that is not `Text`/`Button` text consumed the read. */
 export function flushSignalReads() {
   const frame = buildFrame;
   if (!frame || frame.pending.length === 0) return;
   frame.layout = true;
+  for (const signal of frame.pending) {
+    if (!frame.roots.includes(signal)) frame.roots.push(signal);
+  }
   frame.pending = [];
 }
 
@@ -252,22 +383,57 @@ export function noteBuilder(name: string) {
   buildFrame?.shape.push(name);
 }
 
+function ownerTracksItself(owner: BuildOwner | null): boolean {
+  if (!owner) return false;
+  if (owner._isObserver) return true;
+  return owner._ownsReads === true;
+}
+
 /**
- * `Text(\`Menu ${count.value}\`)` — the read already happened in the argument.
- * Reuse the slot so the next build writes the text node and skips React.
+ * Run `build()` as `owner` so a read inside `.observer()` / `.bindSignal()`
+ * stays on that builder. The page does not subscribe to it.
+ */
+export function withBuildOwner<T>(owner: object, fn: () => T): T {
+  const host = owner as BuildOwner;
+  const frame = buildFrame;
+  if (!frame) return fn();
+  const prev = frame.owner;
+  const pendingStart = frame.pending.length;
+  const rootStart = frame.roots.length;
+  frame.owner = host;
+  try {
+    return fn();
+  } finally {
+    if (ownerTracksItself(host)) {
+      frame.pending.splice(pendingStart);
+      frame.roots.splice(rootStart);
+    }
+    frame.owner = prev;
+  }
+}
+
+/**
+ * `Text(\`Menu ${count.value}\`)` at the page root — the read already happened.
+ * A read inside `.observer()` or `.bindSignal()` is not a page slot: that
+ * builder already re-renders its own branch.
  */
 export function allocLiveSlot(next: string): LiveSlot | null {
   const frame = buildFrame;
   if (!frame || frame.pending.length === 0) return null;
+  const signals = frame.pending.slice();
   frame.pending = [];
+  if (ownerTracksItself(frame.owner)) return null;
   const index = frame.slotIndex;
   frame.slotIndex += 1;
+  const parts = compileParts(next, signals);
   let slot = frame.slots[index];
   if (!slot) {
-    slot = { node: null, value: next, next };
+    slot = { node: null, value: next, next, signals, parts };
     frame.slots[index] = slot;
   } else {
     slot.next = next;
+    slot.signals = signals;
+    slot.parts = parts;
   }
   return slot;
 }
@@ -298,7 +464,8 @@ export function paintLiveSlots(slots: LiveSlot[], count: number): boolean {
 export function runBuildFrame<T>(
   cells: any[],
   slots: LiveSlot[],
-  fn: () => T
+  fn: () => T,
+  formulas: CompiledFormula[] = [],
 ): { result: T; outcome: BuildOutcome } {
   const frame: BuildFrame = {
     cells,
@@ -308,18 +475,29 @@ export function runBuildFrame<T>(
     shape: [],
     slots,
     slotIndex: 0,
+    owner: null,
+    roots: [],
+    formulas,
+    formulaCursor: 0,
   };
   const prev = buildFrame;
   buildFrame = frame;
   try {
     const result = fn();
-    if (frame.pending.length > 0) frame.layout = true;
+    if (frame.pending.length > 0) {
+      frame.layout = true;
+      for (const signal of frame.pending) {
+        if (!frame.roots.includes(signal)) frame.roots.push(signal);
+      }
+      frame.pending = [];
+    }
     return {
       result,
       outcome: {
         layout: frame.layout,
         shape: frame.shape.join('\n') + '#' + frame.slotIndex,
         slotCount: frame.slotIndex,
+        roots: frame.roots,
       },
     };
   } finally {
@@ -376,6 +554,11 @@ export class ComputedSignal<T> implements Subscribable<T> {
     });
   }
 
+  /** Current value without tracking and without joining the page frame. */
+  peek(): T {
+    return this._value;
+  }
+
   get value(): T {
     if (this._disposed) {
       return this._value;
@@ -390,7 +573,11 @@ export class ComputedSignal<T> implements Subscribable<T> {
     }
     if (this._dirty || !this._ready) {
       this._ready = true;
+      const frame = buildFrame;
+      const mark = frame ? frame.pending.length : 0;
       this.internalEffect.run();
+      // Dependencies belong to this computed. The page only saw `left`.
+      if (frame) frame.pending.splice(mark);
     }
     return this._value;
   }

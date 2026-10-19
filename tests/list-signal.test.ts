@@ -181,4 +181,29 @@ describe('listSignal', () => {
     todos.add({ title: 'New', done: false })
     expect(todos.value.map((t) => t.title)).toEqual(['Ship', 'New'])
   })
+
+  it('patches one item without a structure tick', () => {
+    const list = listSignal<Todo>([{ title: 'A' }, { title: 'B' }])
+    const idA = list.value[0]._id
+    const idB = list.value[1]._id
+    let structure = 0
+    let itemA = 0
+    const titles: string[] = []
+    list.subscribeStructure(() => { structure += 1 })
+    list.subscribeItem(idA, () => { itemA += 1 })
+    list.subscribe((rows) => { titles.push(rows[0].title) })
+    const version = list.structureVersion()
+
+    list.update(idA, { title: 'A1' })
+    expect(itemA).toBe(1)
+    expect(list.itemVersion(idB)).toBe(0)
+    expect(structure).toBe(0)
+    expect(list.structureVersion()).toBe(version)
+    expect(titles[titles.length - 1]).toBe('A1')
+
+    list.add({ title: 'C' })
+    expect(structure).toBe(1)
+    expect(list.structureVersion()).toBe(version + 1)
+    expect(itemA).toBe(1)
+  })
 })

@@ -1,7 +1,7 @@
 import React, { CSSProperties, ReactElement, ReactNode } from 'react';
 import { AlignAxis, FiboChild, FiboChildren, ResponsiveStyles } from './types';
 import { BreakpointKey, toMediaQuery } from './breakpoints';
-import { BindableSignal, flushSignalReads, inBuildFrame, noteBuilder, Observable, Signal } from './state';
+import { BindableSignal, claimSignalReads, flushSignalReads, inBuildFrame, noteBuilder, Observable, Signal, Subscribable, withBuildOwner } from './state';
 import { Observer, SignalWrapper, ObserverWrapper, StateWrapper, ProviderWrapper } from './StateWrapper';
 import { isUsableReactKey, normalizeFiboChildren } from './children';
 import clsx from 'clsx';
@@ -117,6 +117,10 @@ export abstract class FiboBuilder {
   protected _providers: Map<string, any> = new Map();
   protected _observers: Set<Observable<any>> = new Set();
   protected _signals: Set<BindableSignal<any>> = new Set();
+  /** Explicit `.bindSignal()` / `.observer()` owns nested reads. A direct wire does not. */
+  protected _ownsReads = false;
+  /** @internal Direct `method(signal.value)` calls replayed when that signal changes. */
+  protected _replays: Array<() => void> = [];
   protected _isObserver: boolean = false;
 
   protected _gesture?: GestureBuilder;
@@ -1068,7 +1072,24 @@ export abstract class FiboBuilder {
 
   bindSignal<T>(signal: BindableSignal<T>): this {
     this._signals.add(signal);
+    this._ownsReads = true;
     return this;
+  }
+
+  /**
+   * @internal Wire a direct `method(signal.value)` to this node.
+   * Does not claim reads that happen later in a children function.
+   */
+  adoptWire(signals: Subscribable<unknown>[], replay: () => void): void {
+    for (const signal of signals) {
+      this._signals.add(signal as unknown as BindableSignal<any>);
+    }
+    this._replays.push(replay);
+  }
+
+  /** @internal */
+  runReplays(): void {
+    for (const replay of this._replays) replay();
   }
 
   translateX(value: Signal<number> | number): this {
@@ -1965,7 +1986,8 @@ function assembleBuilder(target: FiboBuilder): ReactElement {
   const listKey = listKeyOf(target);
 
   const assemble = () => {
-    let element = target.build();
+    target.runReplays();
+    let element = withBuildOwner(target, () => target.build());
 
     const animatedProps = (target as any)._animatedProps;
     const animationConfig = (target as any)._animationConfig;
@@ -2133,7 +2155,9 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
           // `buildChild` / `normalizeFiboChildren` assemble to host elements first.
           if (!(target as any).__fiboKeyFn) {
             const fluent = (value: string | number) => {
-              flushSignalReads();
+              claimSignalReads(target, [value], (next) => {
+                target.key(next[0] as string | number);
+              }, 'key');
               target.key(value);
               return receiver;
             };
@@ -2151,7 +2175,9 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
           const method = Object.getPrototypeOf(target).props;
           if (typeof method === 'function') {
             const fluent = (extra: Record<string, any>) => {
-              flushSignalReads();
+              claimSignalReads(target, [extra], (next) => {
+                method.call(target, next[0]);
+              }, 'props');
               method.call(target, extra);
               return receiver;
             };
@@ -2172,11 +2198,14 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
           }
           if (!(target as any).__fiboType) {
             (target as any).__fiboType = (value: unknown, second?: unknown) => {
-              flushSignalReads();
               if (typeof value === 'string' || typeof value === 'number') {
+                claimSignalReads(target, [value], (next) => {
+                  method.call(target, next[0]);
+                }, 'type');
                 method.call(target, value);
                 return receiver;
               }
+              flushSignalReads();
               return component(value, second);
             };
           }
@@ -2190,25 +2219,33 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
         if (Reflect.has(target, prop)) {
           const value = Reflect.get(target, prop, receiver);
           if (typeof value !== 'function' || !inBuildFrame() || prop === 'build') return value;
-          return (...args: unknown[]) => {
-            if (!(prop === 'text' && typeof args[0] === 'string')) flushSignalReads();
-            return value.apply(receiver, args);
-          };
+          return (...args: unknown[]) =>
+            withBuildOwner(target, () => {
+              if (!(prop === 'text' && typeof args[0] === 'string')) {
+                claimSignalReads(target, args, (next) => {
+                  value.apply(target, next);
+                }, typeof prop === 'string' ? prop : undefined);
+              }
+              return value.apply(receiver, args);
+            });
         }
 
         return (value: any) => {
-          flushSignalReads();
-          const logical = logicalLonghands(prop as string);
-          const props = logical ?? [prop as string];
-          for (const name of props) {
-            const cssProp = toCssDeclName(name);
-            if (BOX_LONGHAND_KEBAB.has(cssProp)) {
-              (target as any).setBoxLonghand(cssProp, value);
-              continue;
+          const apply = (next: unknown) => {
+            const logical = logicalLonghands(prop as string);
+            const props = logical ?? [prop as string];
+            for (const name of props) {
+              const cssProp = toCssDeclName(name);
+              if (BOX_LONGHAND_KEBAB.has(cssProp)) {
+                (target as any).setBoxLonghand(cssProp, next);
+                continue;
+              }
+              const finalValue = normalizeCssValue(name, next);
+              target.paint(cssProp, finalValue);
             }
-            const finalValue = normalizeCssValue(name, value);
-            target.paint(cssProp, finalValue);
-          }
+          };
+          claimSignalReads(target, [value], (next) => apply(next[0]), typeof prop === 'string' ? prop : undefined);
+          apply(value);
           return receiver;
         };
       },

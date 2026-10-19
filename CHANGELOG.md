@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.8.4] - 2026-10-19
+
+### Fixed
+
+- **Each node owns the signals it read, on every fluent method.** `Box().width(n.value)` and `Box().width(\`${n.value}px\`)` replay on that box. `Text(\`Pontos ${n.value}\`)` and `Button(\`Menu ${n.value}\`)` keep the sentence and write that text node. The page function does not run again. A sibling and an `.observer()` branch stay put.
+- **`page` reads the formula by itself.** `Box().width(n.value + 1)` stays on that box. The text of the page function is scanned once. Sum, subtract, multiply, divide, and a written number replay there. A local that is not a signal still belongs to the page function.
+- **`List().items(listSignal)` updates one row.** `update` / `replace` rewrite that `_id`. `add` / `remove` / `set` / `view` mount or unmount rows. A row that stays does not run `renderItem` again. `.subscribe` still hears every mutation. A read inside `.observer()` stays on that box, so the page function does not run again.
+- **`computed` stays on the node that read it.** `Text(\`${left.value} left\`)` writes that text. Reads inside the computed (the list, another signal) do not subscribe the page. A sibling stays.
+
 ## [2.8.3] - 2026-10-19
 
 ### Added

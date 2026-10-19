@@ -103,6 +103,11 @@ export class ListSignal<T extends object> extends Signal<ListEntity<T>[]> {
   private _query = '';
   private _keys?: (keyof T)[];
   private _predicate?: (item: ListEntity<T>, index: number) => boolean;
+  /** Membership and order. Item patches do not move this. */
+  private _structureVersion = 0;
+  private _itemVersions = new Map<string, number>();
+  private _structureListeners = new Set<() => void>();
+  private _itemListeners = new Map<string, Set<() => void>>();
 
   constructor(initial: Array<T | ListEntity<T>> = []) {
     const source = (Array.isArray(initial) ? initial : []).map((item) => ensureListId(item));
@@ -123,11 +128,57 @@ export class ListSignal<T extends object> extends Signal<ListEntity<T>[]> {
    */
   override set value(next: ListEntity<T>[]) {
     this._source = next.map((item) => ensureListId(item));
-    this.publish();
+    this.publish('structure');
   }
 
-  /** Push the visible rows. Always a copy so `.value.splice` cannot write `_source`. */
-  private publish() {
+  /** Who is in the list, and in what order. `add` / `remove` / `set` / `view` move this. */
+  structureVersion(): number {
+    return this._structureVersion;
+  }
+
+  /** Content of one `_id`. `update` / `replace` move only that id. */
+  itemVersion(id: string): number {
+    return this._itemVersions.get(id) ?? 0;
+  }
+
+  subscribeStructure(listener: () => void): () => void {
+    this._structureListeners.add(listener);
+    return () => {
+      this._structureListeners.delete(listener);
+    };
+  }
+
+  subscribeItem(id: string, listener: () => void): () => void {
+    let set = this._itemListeners.get(id);
+    if (!set) {
+      set = new Set();
+      this._itemListeners.set(id, set);
+    }
+    set.add(listener);
+    return () => {
+      set.delete(listener);
+      if (set.size === 0) this._itemListeners.delete(id);
+    };
+  }
+
+  private emitStructure() {
+    this._structureVersion += 1;
+    for (const listener of this._structureListeners) listener();
+  }
+
+  private emitItem(id: string) {
+    this._itemVersions.set(id, (this._itemVersions.get(id) ?? 0) + 1);
+    const set = this._itemListeners.get(id);
+    if (!set) return;
+    for (const listener of set) listener();
+  }
+
+  /**
+   * Push the visible rows. Always a copy so `.value.splice` cannot write `_source`.
+   * `silent` still notifies `.subscribe` (the whole array changed in memory).
+   * `structure` is membership. `items` is one row's fields.
+   */
+  private publish(kind: 'silent' | 'structure' | 'items' = 'silent', itemIds: readonly string[] = []) {
     const hasView = Boolean(this._query) || Boolean(this._predicate);
     const view = hasView
       ? this._source.filter((item, index) => {
@@ -136,6 +187,10 @@ export class ListSignal<T extends object> extends Signal<ListEntity<T>[]> {
           return true;
         })
       : this._source.slice();
+    if (kind === 'structure') this.emitStructure();
+    else if (kind === 'items') {
+      for (const id of itemIds) this.emitItem(id);
+    }
     super.value = view;
   }
 
@@ -192,13 +247,15 @@ export class ListSignal<T extends object> extends Signal<ListEntity<T>[]> {
     matcher: ListMatcher<ListEntity<T>>,
     patch: Partial<T> | ((item: ListEntity<T>) => T | ListEntity<T>)
   ): this {
-    let changed = false;
+    const ids: string[] = [];
     const next = this._source.map((item, index) => {
       if (!matchItem(item, index, matcher)) return item;
-      changed = true;
+      ids.push(item._id);
       return applyPatch(item, patch);
     });
-    if (changed) this.value = next;
+    if (ids.length === 0) return this;
+    this._source = next;
+    this.publish('items', ids);
     return this;
   }
 
@@ -211,7 +268,9 @@ export class ListSignal<T extends object> extends Signal<ListEntity<T>[]> {
     next[idx] = hasOwnId(item as object)
       ? (item as ListEntity<T>)
       : ({ ...(item as object), _id: prev._id } as ListEntity<T>);
-    this.value = next;
+    this._source = next;
+    if (next[idx]._id !== prev._id) this.publish('structure');
+    else this.publish('items', [prev._id]);
     return this;
   }
 
@@ -240,7 +299,7 @@ export class ListSignal<T extends object> extends Signal<ListEntity<T>[]> {
   view(query = '', keys?: (keyof T)[]): this {
     this._query = query.trim().toLowerCase();
     this._keys = keys;
-    this.publish();
+    this.publish('structure');
     return this;
   }
 
@@ -252,7 +311,7 @@ export class ListSignal<T extends object> extends Signal<ListEntity<T>[]> {
     predicate?: ((item: ListEntity<T>, index: number) => boolean) | null
   ): this {
     this._predicate = typeof predicate === 'function' ? predicate : undefined;
-    this.publish();
+    this.publish('structure');
     return this;
   }
 

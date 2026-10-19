@@ -8,11 +8,13 @@ import React, {
   useState,
   useLayoutEffect,
   useEffect,
+  useSyncExternalStore,
 } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { buildChild, isUsableReactKey } from '../../core/children';
 import { BaseProps, FiboChild, FiboChildren } from '../../core/types';
 import type { BindableSignal } from '../../core/state';
+import { ListSignal } from '../../core/listSignal';
 import { Box } from '../Box';
 import {
   createListItemPseudoStateBuilder,
@@ -171,9 +173,53 @@ function pseudoBlock(scope: string, selector: string, css: string): string {
   return out;
 }
 
+const LiveListRow = React.memo(function LiveListRow(props: {
+  list: ListSignal<any>;
+  id: string;
+  index: number;
+  renderItem?: (item: any, index: number) => ReactNode;
+  onItemPress?: (item: any, index: number) => void;
+  rowStyle: CSSProperties;
+  rowClass: string[];
+  extra?: Record<string, unknown>;
+}) {
+  const version = useSyncExternalStore(
+    (notify) => props.list.subscribeItem(props.id, notify),
+    () => props.list.itemVersion(props.id),
+    () => props.list.itemVersion(props.id),
+  );
+  void version;
+  const item = props.list.find(props.id);
+  if (item == null) return null;
+  const built = Box()
+    .style(props.rowStyle)
+    .classNames(props.rowClass)
+    .children(resolveListItem(item, props.index, props.renderItem))
+    .build() as React.ReactElement;
+  const press = typeof props.onItemPress === 'function'
+    ? {
+        className: `${built.props.className ?? ''} cursor-pointer`,
+        onClick: () => props.onItemPress!(item, props.index),
+      }
+    : {};
+  return React.cloneElement(built, {
+    ...(props.extra ?? {}),
+    ...press,
+  });
+}, (prev, next) => (
+  prev.list === next.list
+  && prev.id === next.id
+  && prev.renderItem === next.renderItem
+  && prev.onItemPress === next.onItemPress
+  && prev.rowStyle === next.rowStyle
+  && prev.rowClass === next.rowClass
+  && prev.extra === next.extra
+));
+
 const ListInner = React.memo((props: any) => {
   const {
-    items,
+    items: incomingItems,
+    liveList,
     renderItem,
     variant,
     separator,
@@ -192,6 +238,31 @@ const ListInner = React.memo((props: any) => {
     empty,
     onItemPress,
   } = props;
+
+  const structureVersion = useSyncExternalStore(
+    (notify) => (liveList ? liveList.subscribeStructure(notify) : () => {}),
+    () => (liveList ? liveList.structureVersion() : 0),
+    () => (liveList ? liveList.structureVersion() : 0),
+  );
+  void structureVersion;
+  const items = liveList ? liveList.value : incomingItems;
+
+  const rowAt = (item: any, index: number, extra?: Record<string, unknown>) => {
+    if (liveList && item && typeof item._id === 'string' && item._id.length > 0) {
+      return React.createElement(LiveListRow, {
+        key: item._id,
+        list: liveList,
+        id: item._id,
+        index,
+        renderItem,
+        onItemPress,
+        rowStyle: rowChrome.style,
+        rowClass: rowChrome.classNames,
+        extra,
+      });
+    }
+    return listRow(item, index, extra);
+  };
 
   const listRow = (item: any, index: number, extra?: Record<string, unknown>) => {
     const built = Box()
@@ -453,6 +524,14 @@ const ListInner = React.memo((props: any) => {
     floating: ['hover:bg-white', 'hover:shadow-sm', ...customItemClasses]
   };
 
+  const rowChrome = React.useMemo(
+    () => ({
+      style: itemContainerStyles[variant as ListVariant],
+      classNames: variantClasses[variant as ListVariant],
+    }),
+    [variant, separator, resetItemStyles, itemStyleProp, customItemHover, customItemActive, customItemFocus],
+  );
+
   if (itemCount === 0 && empty != null) {
     return Box()
       .className(className)
@@ -517,7 +596,7 @@ const ListInner = React.memo((props: any) => {
           const actualIndex = startIndex + i;
           const rowKey = listItemKey(item, actualIndex);
 
-          return listRow(item, actualIndex, {
+          return rowAt(item, actualIndex, {
             ref: (el: HTMLDivElement | null) => {
               if (el) {
                 itemRefs.current.set(rowKey, el);
@@ -554,7 +633,7 @@ const ListInner = React.memo((props: any) => {
     })
     .children(
       React.createElement(React.Fragment, {}, [
-        ...items.map((item: any, index: number) => listRow(item, index)),
+        ...items.map((item: any, index: number) => rowAt(item, index)),
 
         onEndReached && (
           React.createElement('div', {
@@ -573,8 +652,10 @@ const ListInner = React.memo((props: any) => {
 
 class ListBuilder<T = any> extends FiboBuilder {
   private _items: T[] = [];
-  /** Live source (`listSignal` / `signal`). Read on each rebuild. */
+  /** Plain `signal(array)`. Read on each rebuild. */
   private _source?: BindableSignal<T[]>;
+  /** `listSignal`. Rows subscribe by `_id`. The list shell only hears membership. */
+  private _liveList?: ListSignal<any>;
   private _renderItem?: (item: T, index: number) => ReactNode;
   private _onItemPress?: (item: T, index: number) => void;
   private _variant: ListVariant = 'default';
@@ -604,6 +685,12 @@ class ListBuilder<T = any> extends FiboBuilder {
    * - **Live fn**: `List().items(() => todos.value).bindSignal(todos)` — fn re-runs on rebuild
    */
   items(items: T[] | FiboChildren | BindableSignal<T[]> | (() => T[])): this {
+    if (items instanceof ListSignal) {
+      this._liveList = items;
+      this._source = undefined;
+      return this;
+    }
+    this._liveList = undefined;
     if (isListSource<T>(items)) {
       this._source = items;
       this.bindSignal(items);
@@ -793,13 +880,17 @@ class ListBuilder<T = any> extends FiboBuilder {
   }
 
   build(): ReactElement {
-    const items = this._source
-      ? this._source.value
-      : this._itemsFn
-        ? materializeListEntries<T>(this._itemsFn())
-        : this._items;
+    const liveList = this._liveList;
+    const items = liveList
+      ? []
+      : this._source
+        ? this._source.value
+        : this._itemsFn
+          ? materializeListEntries<T>(this._itemsFn())
+          : this._items;
     const props = {
       items,
+      liveList,
       renderItem: this._renderItem,
       onItemPress: this._onItemPress,
       variant: this._variant,

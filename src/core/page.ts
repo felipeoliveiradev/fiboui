@@ -2,13 +2,15 @@ import React, { type ComponentType, type ReactElement, type ReactNode, useSyncEx
 import { buildChild } from './children';
 import type { FiboChild } from './types';
 import { FiboStyles } from './styleManager';
+import { compileFormulas } from './formula';
 import {
   paintLiveSlots,
+  renderParts,
   runBuildFrame,
-  Tracker,
   type ComputedSignal,
   type LiveSlot,
   type Signal,
+  type Subscribable,
 } from './state';
 
 export type FiboPageBuild = () => FiboChild | ReactNode;
@@ -53,12 +55,69 @@ export function page(
   const { styles = true, meta } = options;
   const cells: (Signal<unknown> | ComputedSignal<unknown>)[] = [];
   const slots: LiveSlot[] = [];
+  const formulas = compileFormulas(build.toString());
   let shape = '';
   let version = 0;
   let cached: ReactElement | null = null;
   let cachedVersion = -1;
-  let tracker: Tracker | null = null;
+  let patching = false;
+  let wiredRoots: Subscribable<unknown>[] = [];
+  let rootUnsubs: Array<() => void> = [];
   const listeners = new Set<() => void>();
+
+  function sameDeps(a: Subscribable<unknown>[], b: Subscribable<unknown>[]): boolean {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    return true;
+  }
+
+  function syncSubs(count: number) {
+    for (let i = 0; i < slots.length; i++) {
+      const slot = slots[i];
+      if (!slot) continue;
+      if (i >= count) {
+        slot.unsubs?.forEach((unsub) => unsub());
+        slot.unsubs = [];
+        slot.wired = undefined;
+        continue;
+      }
+      if (slot.wired && sameDeps(slot.wired, slot.signals)) continue;
+      slot.unsubs?.forEach((unsub) => unsub());
+      slot.unsubs = slot.signals.map((sig) => sig.subscribe(() => onSlot(sig)));
+      slot.wired = slot.signals;
+    }
+  }
+
+  function syncRoots(next: Subscribable<unknown>[]) {
+    if (sameDeps(wiredRoots, next)) return;
+    rootUnsubs.forEach((unsub) => unsub());
+    rootUnsubs = next.map((sig) => sig.subscribe(() => onSlot()));
+    wiredRoots = next;
+  }
+
+  function patchLocal(origin: Subscribable<unknown>): boolean {
+    let hit = false;
+    for (let i = 0; i < slots.length; i++) {
+      const slot = slots[i];
+      if (!slot?.signals.includes(origin)) continue;
+      hit = true;
+      if (!slot.parts || !slot.node) return false;
+      slot.next = renderParts(slot.parts);
+    }
+    if (!hit) return false;
+    return paintLiveSlots(slots, slots.length);
+  }
+
+  function onSlot(origin?: Subscribable<unknown>) {
+    if (patching) return;
+    patching = true;
+    try {
+      if (origin && patchLocal(origin)) return;
+      refresh();
+    } finally {
+      patching = false;
+    }
+  }
 
   function decorate(tree: ReactNode): ReactElement {
     const nodes: ReactNode[] = [];
@@ -79,17 +138,24 @@ export function page(
     return React.createElement(React.Fragment, null, ...nodes);
   }
 
-  function produce(): { tree: ReactNode; layout: boolean; shape: string; slotCount: number } {
-    if (!tracker) tracker = new Tracker(refresh);
+  function produce(): {
+    tree: ReactNode;
+    layout: boolean;
+    shape: string;
+    slotCount: number;
+    roots: Subscribable<unknown>[];
+  } {
     let tree!: ReactNode;
     const built = runBuildFrame(cells, slots, () => {
-      tree = tracker!.execute(() => buildChild(build()));
-    });
+      tree = buildChild(build());
+    }, formulas);
     return { tree, ...built.outcome };
   }
 
   function refresh() {
     const next = produce();
+    syncSubs(next.slotCount);
+    syncRoots(next.roots);
     const same = next.shape === shape && !next.layout;
     if (same && paintLiveSlots(slots, next.slotCount)) return;
     shape = next.shape;
@@ -105,6 +171,8 @@ export function page(
     shape = next.shape;
     cached = decorate(next.tree);
     cachedVersion = version;
+    syncSubs(next.slotCount);
+    syncRoots(next.roots);
     return cached;
   }
 
@@ -112,9 +180,16 @@ export function page(
     listeners.add(listener);
     return () => {
       listeners.delete(listener);
-      if (listeners.size === 0 && tracker) {
-        tracker.dispose();
-        tracker = null;
+      if (listeners.size === 0) {
+        for (const slot of slots) {
+          slot?.unsubs?.forEach((unsub) => unsub());
+          if (!slot) continue;
+          slot.unsubs = [];
+          slot.wired = undefined;
+        }
+        rootUnsubs.forEach((unsub) => unsub());
+        rootUnsubs = [];
+        wiredRoots = [];
         cached = null;
         cachedVersion = -1;
       }

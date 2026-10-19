@@ -16,7 +16,7 @@ function read(rel: string): string {
 
 describe('extension marketplace pipeline', () => {
   it('keeps the npm library version independent of the editor extension', () => {
-    expect(rootPkg.version).toBe('2.8.3');
+    expect(rootPkg.version).toBe('2.8.4');
     const ext = JSON.parse(read('extensions/vscode-fiboui/package.json'));
     expect(ext.version).toBe('0.1.0');
     expect(ext.name).toBe('fiboui');
