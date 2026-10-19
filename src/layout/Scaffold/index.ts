@@ -11,7 +11,7 @@ import {
 } from '../../core/interpolate';
 import type { FiboChild, FiboChildren } from '../../core/types';
 import { ScaffoldInner } from './ScaffoldInner';
-import type { ScaffoldConfig } from './host';
+import type { FabAt, ScaffoldConfig } from './host';
 
 interface LayoutBarConfig {
   fixed?: boolean;
@@ -87,6 +87,17 @@ class ScaffoldBuilder extends FiboBuilder {
   private _footerBar?: FiboChild | LayoutBarConfig;
   private _sideBarLeft?: FiboChild | LayoutBarConfig;
   private _sideBarRight?: FiboChild | LayoutBarConfig;
+  private _drawer?: FiboChild;
+  private _endDrawer?: FiboChild;
+  private _drawerWidth = 280;
+  private _fab?: FiboChild;
+  private _fabAt: FabAt = 'end';
+  private _bottomSheet?: FiboChild;
+  private _footerButtons?: FiboChildren;
+  private _extendBody = false;
+  private _extendBehindHeader = false;
+  private _avoidKeyboard = true;
+  private _onDrawer?: (side: 'start' | 'end', open: boolean) => void;
 
   children(children: FiboChildren): this {
     bindInterpTree(this, children);
@@ -126,6 +137,11 @@ class ScaffoldBuilder extends FiboBuilder {
     return this;
   }
 
+  /** Flutter `Scaffold.appBar`. Same slot as `.headerBar()`. */
+  appBar(config: FiboChild | LayoutBarConfig): this {
+    return this.headerBar(config);
+  }
+
   footerBar(config: FiboChild | LayoutBarConfig): this {
     this._bindBar(config);
     this._footerBar = config;
@@ -141,6 +157,75 @@ class ScaffoldBuilder extends FiboBuilder {
   sideBarRight(config: FiboChild | LayoutBarConfig): this {
     this._bindBar(config);
     this._sideBarRight = config;
+    return this;
+  }
+
+  /** Flutter drawer. Starts closed. Open it with `useScaffold().openDrawer()`. */
+  drawer(child: FiboChild): this {
+    this._bindBar(child);
+    this._drawer = child;
+    return this;
+  }
+
+  /** Flutter endDrawer. */
+  endDrawer(child: FiboChild): this {
+    this._bindBar(child);
+    this._endDrawer = child;
+    return this;
+  }
+
+  drawerWidth(px: number): this {
+    this._drawerWidth = px;
+    return this;
+  }
+
+  /** Flutter floatingActionButton. */
+  fab(child: FiboChild): this {
+    this._bindBar(child);
+    this._fab = child;
+    return this;
+  }
+
+  /** Where the button sits. Dock locations overlap the footer. */
+  fabAt(location: FabAt): this {
+    this._fabAt = location;
+    return this;
+  }
+
+  /** Flutter bottomSheet. Hidden until `useScaffold().showSheet()`. */
+  bottomSheet(child: FiboChild): this {
+    this._bindBar(child);
+    this._bottomSheet = child;
+    return this;
+  }
+
+  /** Flutter persistentFooterButtons. */
+  footerButtons(children: FiboChildren): this {
+    this._bindBar(children as FiboChild);
+    this._footerButtons = children;
+    return this;
+  }
+
+  /** Body draws under the footer. */
+  extendBody(on = true): this {
+    this._extendBody = on;
+    return this;
+  }
+
+  /** Body draws under the header. */
+  extendBehindHeader(on = true): this {
+    this._extendBehindHeader = on;
+    return this;
+  }
+
+  /** Lift the page above the keyboard. On by default. */
+  avoidKeyboard(on = true): this {
+    this._avoidKeyboard = on;
+    return this;
+  }
+
+  onDrawer(handler: (side: 'start' | 'end', open: boolean) => void): this {
+    this._onDrawer = handler;
     return this;
   }
 
@@ -247,6 +332,7 @@ class ScaffoldBuilder extends FiboBuilder {
 
         React.createElement('main', {
           key: 'scaffold-body',
+          className: 'fibo-scaffold-body',
           style: {
             flex: 1,
             display: 'flex',
@@ -278,47 +364,137 @@ class ScaffoldBuilder extends FiboBuilder {
       ].filter(Boolean)
     );
 
+    const headerNode = showHeader && React.createElement('div', {
+      key: 'header-bar',
+      className: 'z-30 fibo-scaffold-header',
+      style: {
+        height: s.header?.height,
+        position: this._extendBehindHeader
+          ? 'absolute'
+          : s.header?.position || (headerBar!.fixed ? 'sticky' : 'static'),
+        top: 0,
+        left: this._extendBehindHeader ? 0 : undefined,
+        right: this._extendBehindHeader ? 0 : undefined,
+        zIndex: 30,
+        ...chromeNoShrink,
+      }
+    }, headerBar!.content);
+
+    const footerNode = showFooter && React.createElement('div', {
+      key: 'footer-bar',
+      className: 'z-30 fibo-scaffold-footer',
+      style: {
+        height: s.footer?.height,
+        position: s.footer?.position || (footerBar!.fixed ? 'sticky' : 'static'),
+        zIndex: 30,
+        ...chromeNoShrink,
+      }
+    }, footerBar!.content);
+
+    const isDock = this._fabAt === 'startDock' || this._fabAt === 'centerDock' || this._fabAt === 'endDock';
+    const fabNode = this._fab
+      ? React.createElement(
+          'div',
+          {
+            key: 'scaffold-fab',
+            className: `fibo-scaffold-fab fibo-fab-${this._fabAt}`,
+            'data-scaffold-fab': this._fabAt,
+          },
+          resolveInterpChild(buildChild(this._fab)),
+        )
+      : null;
+
+    const sheetNode = this._bottomSheet
+      ? React.createElement(
+          'div',
+          {
+            key: 'scaffold-sheet',
+            className: 'fibo-scaffold-sheet',
+            'data-scaffold-sheet': 'true',
+            hidden: true,
+          },
+          resolveInterpChild(buildChild(this._bottomSheet)),
+        )
+      : null;
+
+    const buttonNode = this._footerButtons
+      ? React.createElement(
+          'div',
+          { key: 'footer-buttons', className: 'fibo-scaffold-footer-buttons' },
+          ...normalizeFiboChildren(this._footerButtons).map(resolveInterpChild),
+        )
+      : null;
+
+    const drawerPane = (side: 'start' | 'end', child?: FiboChild) =>
+      child
+        ? React.createElement(
+            'div',
+            {
+              key: `drawer-${side}`,
+              className: 'fibo-scaffold-drawer',
+              'data-scaffold-drawer': side,
+              'data-open': 'false',
+              role: 'dialog',
+              'aria-hidden': true,
+              tabIndex: -1,
+              style: { width: this._drawerWidth },
+            },
+            resolveInterpChild(buildChild(child)),
+          )
+        : null;
+
+    const bottomNode =
+      sheetNode || buttonNode || footerNode || (isDock && fabNode)
+        ? React.createElement(
+            'div',
+            { key: 'scaffold-bottom', className: 'fibo-scaffold-bottom' },
+            [sheetNode, buttonNode, footerNode, isDock ? fabNode : null].filter(Boolean),
+          )
+        : null;
+
     const verticalStack = React.createElement(React.Fragment, null, [
-      showHeader && React.createElement('div', {
-        key: 'header-bar',
-        className: 'z-30',
-        style: {
-          height: s.header?.height,
-          position: s.header?.position || (headerBar!.fixed ? 'sticky' : 'static'),
-          top: 0,
-          backgroundColor: 'var(--fibo-surface, #ffffff)',
-          zIndex: 30,
-          borderBottom: '1px solid var(--fibo-outline, #e0e0e0)',
-          ...chromeNoShrink,
-        }
-      }, headerBar!.content),
-
+      headerNode,
       middleSection,
-
-      showFooter && React.createElement('div', {
-        key: 'footer-bar',
-        className: 'z-30',
-        style: {
-          height: s.footer?.height,
-          position: s.footer?.position || (footerBar!.fixed ? 'sticky' : 'static'),
-          bottom: 0,
-          backgroundColor: 'var(--fibo-surface, #ffffff)',
-          zIndex: 30,
-          borderTop: '1px solid var(--fibo-outline, #e0e0e0)',
-          ...chromeNoShrink,
-        }
-      }, footerBar!.content)
+      bottomNode,
+      (this._drawer || this._endDrawer) && React.createElement('div', {
+        key: 'scaffold-scrim',
+        className: 'fibo-scaffold-scrim',
+        'data-scaffold-scrim': 'true',
+        'data-open': 'false',
+      }),
+      drawerPane('start', this._drawer),
+      drawerPane('end', this._endDrawer),
+      this._drawer && React.createElement('div', {
+        key: 'edge-start',
+        className: 'fibo-scaffold-edge fibo-scaffold-edge-start',
+        'data-scaffold-edge': 'start',
+      }),
+      this._endDrawer && React.createElement('div', {
+        key: 'edge-end',
+        className: 'fibo-scaffold-edge fibo-scaffold-edge-end',
+        'data-scaffold-edge': 'end',
+      }),
+      !isDock ? fabNode : null,
+      React.createElement('div', {
+        key: 'scaffold-snack',
+        className: 'fibo-scaffold-snack',
+        'data-scaffold-snack': 'true',
+        role: 'status',
+        'aria-live': 'polite',
+      }),
     ].filter(Boolean));
 
     let contentTree: ReactElement = React.createElement('div', {
       key: 'vertical-stack',
+      className: 'fibo-scaffold-stack',
       style: {
         display: 'flex',
         flexDirection: 'column',
         flex: 1,
         minHeight: '100%',
         height: '100%',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        position: 'relative',
       }
     }, verticalStack);
 
@@ -379,6 +555,10 @@ class ScaffoldBuilder extends FiboBuilder {
       style: extraStyle ? { ...this.getStyle(), ...extraStyle } : this.getStyle(),
       children: contentTree,
       overlays: renderedOverlays,
+      extendBody: this._extendBody,
+      extendBehindHeader: this._extendBehindHeader,
+      avoidKeyboard: this._avoidKeyboard,
+      onDrawerChanged: this._onDrawer,
       ...restProps,
     };
 
@@ -387,6 +567,10 @@ class ScaffoldBuilder extends FiboBuilder {
 }
 
 export const Scaffold = createBuilder(ScaffoldBuilder);
+
+export { useScaffold } from './behavior';
+export type { FabAt } from './host';
+export type { ScaffoldHandle, SnackAction } from './behavior';
 
 export interface ScaffoldProps {
   theme?: any;

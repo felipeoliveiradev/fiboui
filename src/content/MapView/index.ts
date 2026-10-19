@@ -28,6 +28,7 @@ interface MapViewProps {
   className?: string;
   style?: React.CSSProperties;
   onSelect?: (marker: MapMarker) => void;
+  opened?: BindableSignal<string | null> | null;
 }
 
 function isBasemap(value: unknown): value is MapBasemap {
@@ -90,6 +91,7 @@ const MapHost = React.memo(function MapHost(props: MapViewProps) {
       basemap: liveBasemap ?? resolveBasemap(latest.current.basemap, host),
       palette: livePalette,
       onSelect: latest.current.onSelect,
+      opened: latest.current.opened ?? null,
     });
     const mounted = props.engine.mount({ host, ...snapshot() });
     const adopt = (next: MapSession) => {
@@ -124,8 +126,9 @@ const MapHost = React.memo(function MapHost(props: MapViewProps) {
       basemap: liveBasemap ?? resolveBasemap(props.basemap, ref.current),
       palette: livePalette,
       onSelect: props.onSelect,
+      opened: props.opened ?? null,
     });
-  }, [props.markers, props.bounds, props.width, props.height, props.basemap, props.onSelect, liveBasemap, livePalette]);
+  }, [props.markers, props.bounds, props.width, props.height, props.basemap, props.onSelect, props.opened, liveBasemap, livePalette]);
 
   return React.createElement('div', {
     ref,
@@ -153,6 +156,7 @@ class MapViewBuilder extends FiboBuilder {
   private _width = 360;
   private _height = 240;
   private _onSelect?: (marker: MapMarker) => void;
+  private _opened: BindableSignal<string | null> | null = null;
   private _engine: MapEngine = canvasEngine;
   private _basemap: MapBasemap | BindableSignal<MapBasemap> | null = null;
   private _themeSignal: BindableSignal<FiboTheme> | null = null;
@@ -212,6 +216,12 @@ class MapViewBuilder extends FiboBuilder {
     return this;
   }
 
+  /** Opens the marker popup when this signal's value is a marker id. */
+  opened(source: BindableSignal<string | null>): this {
+    this._opened = source;
+    return this;
+  }
+
   /**
    * Tile set. Omitted, a parent `.theme('noir')` (or this map's) selects `dark`.
    * Otherwise the map stays on streets.
@@ -244,6 +254,7 @@ class MapViewBuilder extends FiboBuilder {
       palette: this._theme ? paletteFromTheme(this._theme) : null,
       themeSignal: this._themeSignal,
       onSelect: this._onSelect,
+      opened: this._opened,
       className: [this.getClassName(), extraClass].filter(Boolean).join(' ') || undefined,
       style: { ...this.getStyle(), ...(extraStyle as React.CSSProperties | undefined) },
       ...rest,

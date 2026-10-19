@@ -105,7 +105,9 @@ export default defineConfig({
         id === 'react-dom' ||
         id === 'scheduler' ||
         id.startsWith('react/') ||
-        id.startsWith('react-dom/'),
+        id.startsWith('react-dom/') ||
+        id === 'leaflet' ||
+        id.startsWith('leaflet/'),
       output: {
         // Keep hook islands in a dedicated chunk with 'use client' so App Router
         // can call Column()/page() from Server Components (RSC). Static builders

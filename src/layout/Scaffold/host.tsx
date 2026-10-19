@@ -1,5 +1,16 @@
-import React, { ReactElement } from 'react';
+import React, { ReactElement, type Ref } from 'react';
 import { ProviderWrapper } from '../../core/StateWrapper';
+
+export type FabAt =
+  | 'start'
+  | 'center'
+  | 'end'
+  | 'startTop'
+  | 'centerTop'
+  | 'endTop'
+  | 'startDock'
+  | 'centerDock'
+  | 'endDock';
 
 export interface ScaffoldConfig {
   theme?: any;
@@ -9,6 +20,11 @@ export interface ScaffoldConfig {
   style?: React.CSSProperties;
   children?: React.ReactNode;
   overlays?: React.ReactNode[];
+  rootRef?: Ref<HTMLDivElement>;
+  extendBody?: boolean;
+  extendBehindHeader?: boolean;
+  avoidKeyboard?: boolean;
+  onDrawerChanged?: (side: 'start' | 'end', open: boolean) => void;
   [key: string]: any;
 }
 
@@ -25,6 +41,11 @@ export function renderScaffoldHost(
     style,
     children,
     overlays = [],
+    rootRef,
+    extendBody,
+    extendBehindHeader,
+    avoidKeyboard,
+    onDrawerChanged: _onDrawerChanged,
     ...rest
   } = props;
 
@@ -111,6 +132,10 @@ export function renderScaffoldHost(
     {
       className: ['fibo-scaffold', className].filter(Boolean).join(' '),
       style: hostStyle,
+      ref: rootRef,
+      'data-extend-body': extendBody ? 'true' : undefined,
+      'data-extend-header': extendBehindHeader ? 'true' : undefined,
+      'data-keyboard': avoidKeyboard === false ? undefined : 'on',
       ...rest,
       ...(locale ? { lang: locale } : {}),
     },

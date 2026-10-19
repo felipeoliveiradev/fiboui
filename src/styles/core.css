@@ -120,6 +120,14 @@ body {
   to { background-position: 40px 0; }
 }
 
+/* Focus stays inside the control. A Tailwind ring-offset paints outside the box and
+   spills past a parent background when the control sits on the edge. */
+.group:focus-within .fibo-checkbox-box,
+.group:focus-within .fibo-switch-track,
+.group:focus-within .fibo-radio-circle {
+  box-shadow: inset 0 0 0 2px var(--fibo-primary, #3b82f6) !important;
+}
+
 .fibo-ripple-container {
   position: absolute;
   top: 0;
@@ -130,4 +138,140 @@ body {
   border-radius: inherit;
   pointer-events: none;
   z-index: 0;
+}
+
+/* Scaffold slots. Drawer, snack, and sheet toggle data attributes.
+   The body does not re-render. */
+.fibo-scaffold-bottom {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 30;
+}
+
+.fibo-scaffold[data-extend-body='true'] .fibo-scaffold-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.fibo-scaffold-footer-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 16px;
+}
+
+.fibo-scaffold-sheet {
+  max-height: 50vh;
+  overflow: auto;
+  background: var(--fibo-surface, #fff);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.fibo-scaffold-sheet[hidden] {
+  display: none;
+}
+
+.fibo-scaffold-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 55;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.fibo-scaffold-scrim[data-open='true'] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fibo-scaffold-drawer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 60;
+  overflow: auto;
+  background: var(--fibo-surface, #fff);
+  transition: transform 180ms ease;
+  will-change: auto;
+}
+
+.fibo-scaffold-drawer[data-scaffold-drawer='start'] {
+  left: 0;
+  transform: translate3d(-100%, 0, 0);
+}
+
+.fibo-scaffold-drawer[data-scaffold-drawer='end'] {
+  right: 0;
+  transform: translate3d(100%, 0, 0);
+}
+
+.fibo-scaffold-drawer[data-open='true'] {
+  transform: translate3d(0, 0, 0);
+}
+
+.fibo-scaffold-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  z-index: 50;
+  touch-action: pan-y;
+}
+
+.fibo-scaffold-edge-start { left: 0; }
+.fibo-scaffold-edge-end { right: 0; }
+
+.fibo-scaffold-fab {
+  position: absolute;
+  z-index: 45;
+  pointer-events: none;
+}
+
+.fibo-scaffold-fab > * { pointer-events: auto; }
+
+.fibo-fab-end { right: 16px; bottom: 16px; }
+.fibo-fab-center { left: 50%; bottom: 16px; transform: translateX(-50%); }
+.fibo-fab-start { left: 16px; bottom: 16px; }
+.fibo-fab-endTop { right: 16px; top: 16px; }
+.fibo-fab-centerTop { left: 50%; top: 16px; transform: translateX(-50%); }
+.fibo-fab-startTop { left: 16px; top: 16px; }
+
+.fibo-scaffold-bottom > .fibo-fab-endDock,
+.fibo-scaffold-bottom > .fibo-fab-centerDock,
+.fibo-scaffold-bottom > .fibo-fab-startDock {
+  top: 0;
+  bottom: auto;
+}
+
+.fibo-fab-endDock { right: 16px; transform: translateY(-50%); }
+.fibo-fab-centerDock { left: 50%; transform: translate(-50%, -50%); }
+.fibo-fab-startDock { left: 16px; transform: translateY(-50%); }
+
+.fibo-scaffold-snack {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 70;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--fibo-inverse-surface, #1c1c1c);
+  color: var(--fibo-inverse-on-surface, #fff);
+}
+
+.fibo-scaffold-snack[data-open='true'] { display: flex; }
+
+.fibo-scaffold-snack button {
+  background: none;
+  border: 0;
+  color: inherit;
+  font-weight: 700;
+  cursor: pointer;
 }

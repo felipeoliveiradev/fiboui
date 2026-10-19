@@ -92,7 +92,11 @@ export interface MapMarker {
   lat: number;
   lng: number;
   label?: string;
+  /** Stable id so a list row can open this pin. */
+  id?: string;
   color?: string;
+  /** HTML card shown in the pin popup. Falls back to `label`. */
+  popup?: string;
 }
 
 /** Equirectangular position in 0..1. Y grows downward. */

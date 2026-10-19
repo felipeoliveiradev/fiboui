@@ -8,7 +8,7 @@ import {
   hasInterpMarks,
   resolveInterpString,
 } from '../../core/interpolate';
-import { twMerge } from 'tailwind-merge';
+import { fiboCn as twMerge } from '../../core/cn';
 import type { FieldRule } from '../Form/validators';
 
 function bindInterp(host: FiboBuilder, text: string | undefined): void {
@@ -22,9 +22,6 @@ function resolveInterp(text: string | undefined): string | undefined {
   if (typeof text !== 'string') return text;
   return hasInterpMarks(text) ? resolveInterpString(text) : text;
 }
-
-const TOGGLE_FOCUS_RING =
-  'group-focus-within:ring-2 group-focus-within:ring-offset-2 group-focus-within:ring-[var(--fibo-primary,#3B82F6)] group-has-[:focus-visible]:ring-2';
 
 interface RadioOption {
   label: string;
@@ -194,7 +191,6 @@ const RadioGroupInner = React.memo((props: RadioGroupInnerProps) => {
 
       const circleClasses = twMerge(
         'fibo-radio-circle relative flex items-center justify-center w-[18px] h-[18px] rounded-full transition-all duration-200',
-        TOGGLE_FOCUS_RING,
         isSelected
           ? 'border-[5px] border-[var(--fibo-primary,#3B82F6)]'
           : 'border-2 border-gray-300'

@@ -2,7 +2,7 @@
 
 import React, { ReactElement, useEffect, useRef, useState } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
-import { twMerge } from 'tailwind-merge';
+import { fiboCn as twMerge } from '../../core/cn';
 import { BaseProps } from '../../core/types';
 import { Signal } from '../../core/state';
 import type { FieldRule } from '../Form/validators';
@@ -575,7 +575,7 @@ class TextFieldBuilder extends FiboBuilder {
 
     const props = {
       containerClass,
-      fieldClass: fieldClasses,
+      fieldClass: twMerge(fieldClasses, ...this._classNames.filter((name) => name.startsWith('fibo-'))),
       bare: this.isReset(),
       containerStyle: this.isReset()
         ? { height: 'fit-content', ...this.getStyle() }

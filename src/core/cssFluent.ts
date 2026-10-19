@@ -334,6 +334,8 @@ export type CssFluentMethods = {
 
 export type CssFluentProxy = CssFluentMethods &
   LogicalAxes & {
+    /** Shorthand for `backgroundColor` (FiboBuilder / List / Checkbox state paints). */
+    bg(color: string): CssFluentProxy;
     toStyle(): CSSProperties;
     toCSSString(): string;
   };
@@ -409,6 +411,12 @@ export function createCssFluentProxy(host: CssFluentHost): CssFluentProxy {
 export class CssStyleStore implements CssFluentHost {
   protected _style: CSSProperties = {};
 
+  /** Shorthand for `backgroundColor` (same as FiboBuilder / ListItemStyleBuilder). */
+  bg(color: string): this {
+    this.setProp('backgroundColor', color);
+    return this;
+  }
+
   setProp(prop: string, value: string | number): void {
     if (prop === 'padding' || prop === 'margin') {
       applyBoxShorthandToStyle(this._style, prop, value);
@@ -482,4 +490,25 @@ export class CssStyleStore implements CssFluentHost {
       .join('; ')
       .concat(Object.keys(this._style).length ? ';' : '');
   }
+}
+
+/**
+ * Resolve a style object or fluent callback into `CSSProperties`.
+ * Same shape as `List().itemStyle(...)` — works for Checkbox / Switch state paints.
+ *
+ * ```ts
+ * resolveFluentCss((s) => s.bg('#c8ff00').borderColor('transparent'))
+ * resolveFluentCss({ backgroundColor: '#c8ff00' })
+ * ```
+ */
+export function resolveFluentCss(
+  input: CSSProperties | ((builder: CssFluentProxy) => void | CssFluentProxy)
+): CSSProperties {
+  if (typeof input === 'function') {
+    const host = new CssStyleStore();
+    const proxy = createCssFluentProxy(host);
+    input(proxy);
+    return host.toStyle();
+  }
+  return normalizeCssProperties(input);
 }

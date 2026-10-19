@@ -4,6 +4,7 @@ export * from './Container';
 export * from './Row';
 export * from './Spacer';
 export * from './Scaffold';
+export * from './AppBar';
 export * from './Header';
 export * from './Sidebar';
 export * from './DashboardLayout';

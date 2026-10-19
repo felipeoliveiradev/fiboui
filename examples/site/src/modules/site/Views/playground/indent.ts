@@ -2,7 +2,7 @@
 
 const CHILDREN_OPEN = /\.(children|items)\s*\(\s*\[\s*$/
 const CHILDREN_EMPTY = /\.(children|items)(?:\s*\(\s*(?:\[\s*\])?\s*\))?\s*$/
-const STYLE_CALLBACK = /\.(itemStyle|itemHover)\s*\(\s*\([^)]*\)\s*=>\s*(\{\s*)?$/
+const STYLE_CALLBACK = /\.(itemStyle|when)\s*\(\s*\([^)]*\)\s*=>\s*(\{\s*)?$/
 const CHAIN_LINE = /^\s*\.[A-Za-z_$]/
 const OPEN_CALL = /(?:\.\w+|[A-Z][A-Za-z0-9]*)\s*\(\s*$/
 
@@ -48,7 +48,7 @@ export function suggestIndent(prevLine: string, nextLine: string, baseIndent: st
   if (CHILDREN_OPEN.test(trimmed)) return baseIndent + INDENT
   if (CHILDREN_EMPTY.test(trimmed) && !nextTrim) return baseIndent + INDENT
   if (STYLE_CALLBACK.test(trimmed)) return baseIndent + INDENT
-  if (/\.(itemStyle|itemHover)\b.*=>\s*\{\s*$/.test(trimmed)) return baseIndent + INDENT
+  if (/\.(itemStyle|when)\b.*=>\s*\{\s*$/.test(trimmed)) return baseIndent + INDENT
   if (/=>\s*(\{\s*)?$/.test(trimmed) || /\{\s*$/.test(trimmed)) return baseIndent + INDENT
   if (OPEN_CALL.test(trimmed)) return baseIndent + INDENT
   if (isFactoryEmptyLine(trimmed) && nextIsChainOrEmpty) return baseIndent + INDENT

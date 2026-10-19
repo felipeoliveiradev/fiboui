@@ -8,8 +8,13 @@ import {
   hasInterpMarks,
   resolveInterpString,
 } from '../../core/interpolate';
-import { twMerge } from 'tailwind-merge';
+import {
+  resolveFluentCss,
+} from '../../core/cssFluent';
+import { fiboCn as twMerge } from '../../core/cn';
 import type { FieldRule } from '../Form/validators';
+import { isToggleWhen, type When, type WhenStyle } from '../../core/when';
+import { togglePaintSlot } from '../togglePaint';
 
 function bindInterp(host: FiboBuilder, text: string | undefined): void {
   if (typeof text !== 'string' || !hasInterpMarks(text)) return;
@@ -36,6 +41,9 @@ interface CheckboxInnerProps {
   error?: string;
   className?: string;
   style?: React.CSSProperties;
+  checkedStyle?: React.CSSProperties;
+  uncheckedStyle?: React.CSSProperties;
+  indeterminateStyle?: React.CSSProperties;
   id?: string;
 }
 
@@ -57,6 +65,9 @@ const CheckboxInner = React.memo((props: CheckboxInnerProps) => {
     error,
     className,
     style,
+    checkedStyle,
+    uncheckedStyle,
+    indeterminateStyle,
     id,
   } = props;
 
@@ -68,7 +79,6 @@ const CheckboxInner = React.memo((props: CheckboxInnerProps) => {
   const initialChecked = checked;
   const [localChecked, setLocalChecked] = useState(initialChecked);
   const isChecked = controlled ? !!checked : localChecked;
-  const isCheckedOrIndeterminate = isChecked || indeterminate;
 
   // React has no `indeterminate` prop; checked writes and clicks clear the IDL flag.
   useLayoutEffect(() => {
@@ -172,6 +182,22 @@ const CheckboxInner = React.memo((props: CheckboxInnerProps) => {
     inputProps.defaultChecked = initialChecked;
   }
 
+  const defaultCheckedPaint = 'border-transparent bg-[var(--fibo-primary,#3B82F6)]';
+  const defaultUncheckedPaint = 'border-gray-300 bg-transparent';
+
+  let stateStyle: React.CSSProperties | undefined;
+  let statePaintClass: string | undefined;
+  if (indeterminate) {
+    stateStyle = indeterminateStyle ?? checkedStyle;
+    statePaintClass = stateStyle ? undefined : defaultCheckedPaint;
+  } else if (isChecked) {
+    stateStyle = checkedStyle;
+    statePaintClass = checkedStyle ? undefined : defaultCheckedPaint;
+  } else {
+    stateStyle = uncheckedStyle;
+    statePaintClass = uncheckedStyle ? undefined : defaultUncheckedPaint;
+  }
+
   return React.createElement(
     'div',
     {
@@ -189,13 +215,10 @@ const CheckboxInner = React.memo((props: CheckboxInnerProps) => {
         {
           className: twMerge(
             'fibo-checkbox-box w-5 h-5 rounded-[6px] border-2 flex items-center justify-center transition-all duration-200',
-            'group-focus-within:ring-2 group-focus-within:ring-offset-2 group-focus-within:ring-[var(--fibo-primary,#3B82F6)] group-has-[:focus-visible]:ring-2',
             disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
-            isCheckedOrIndeterminate
-              ? 'border-transparent bg-[var(--fibo-primary,#3B82F6)]'
-              : 'border-gray-300 bg-transparent'
+            statePaintClass
           ),
-          style,
+          style: stateStyle ? { ...style, ...stateStyle } : style,
           'aria-hidden': true,
         },
         icon
@@ -228,6 +251,9 @@ class CheckboxBuilder extends FiboBuilder {
   private _value: string = 'on';
   private _rules?: FieldRule[];
   private _error?: string;
+  private _checkedStyle?: React.CSSProperties;
+  private _uncheckedStyle?: React.CSSProperties;
+  private _indeterminateStyle?: React.CSSProperties;
 
   checked(value: boolean): this {
     this._checked = value;
@@ -261,6 +287,28 @@ class CheckboxBuilder extends FiboBuilder {
 
   onChange(handler: (checked: boolean) => void): this {
     this._onChange = handler;
+    return this;
+  }
+
+  /**
+   * Paint for a `When` state. `on` / `off` / `mixed` replace the box fill.
+   * `hover` / `focus` / `active` are CSS pseudos on this node.
+   *
+   * ```ts
+   * Checkbox()
+   *   .when(When.on, (s) => s.bg('#c8ff00').borderColor('transparent'))
+   *   .when(When.off, (s) => s.bg('transparent').borderColor('rgba(255,255,255,0.16)'))
+   * ```
+   */
+  when(state: When, style: WhenStyle): this {
+    if (!isToggleWhen(state) || typeof style === 'string') {
+      return super.when(state, style);
+    }
+    const css = resolveFluentCss(style);
+    const slot = togglePaintSlot(state);
+    if (slot === 'on') this._checkedStyle = css;
+    else if (slot === 'off') this._uncheckedStyle = css;
+    else this._indeterminateStyle = css;
     return this;
   }
 
@@ -301,6 +349,9 @@ class CheckboxBuilder extends FiboBuilder {
       error: resolveInterp(this._error),
       className: this.getClassName(),
       style: this.getStyle(),
+      checkedStyle: this._checkedStyle,
+      uncheckedStyle: this._uncheckedStyle,
+      indeterminateStyle: this._indeterminateStyle,
       ...(this._props as CheckboxInnerProps),
     };
     return React.createElement(CheckboxInner, props);

@@ -9,4 +9,5 @@ export * from './provider';
 export * from './colorEnums';
 export * from './themeTypes';
 export * from './colorPalette';
+export * from './tone';
 export * from './useTheme';

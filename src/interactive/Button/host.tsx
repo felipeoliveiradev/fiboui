@@ -1,5 +1,5 @@
 import React, { ReactElement, ReactNode } from 'react';
-import { twMerge } from 'tailwind-merge';
+import { fiboCn as twMerge } from '../../core/cn';
 import { ButtonVariant } from '../../core/types';
 
 export type ExtendedButtonVariant =
@@ -103,7 +103,7 @@ export function renderButtonHost(props: any, interactive: boolean): ReactElement
       'bg-[var(--fibo-secondary-container)] text-[var(--fibo-on-secondary-container)] shadow-sm border-none';
   } else if (variant === 'raw') {
     variantClass =
-      'bg-transparent border-none shadow-none p-0 h-auto gap-0 text-inherit font-inherit hover:bg-transparent';
+      'bg-transparent border-none shadow-none p-0 h-auto gap-0 text-inherit font-inherit hover:bg-transparent items-stretch [&>*]:h-full [&>*]:self-stretch';
     shapeClass = '';
   }
 

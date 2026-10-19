@@ -4,8 +4,17 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.8.0] - 2026-10-19
+
 ### Added
 
+- **`leafletEngine()`** loads the `leaflet` package on the client when no namespace is passed. `MapView()` stays a builder, including on the server.
+- **`AppBar` and `ToolbarItem`** — `.appBar(AppBar().items([...]))`. A `ToolbarItem` sits at `.leading()`, `.principal()`, or `.trailing()` (several trailing items share the actions slot). `.onPress()`, `.tooltip()`, `.disabled()`, `.size({ width, height })` locks each axis on its own, like Flutter `SizedBox`. `.openDrawer()` / `.openEndDrawer()` are handled by the scaffold, so the page does not call `useScaffold()`.
+- **`Scaffold` slots** — `.fab()` / `.fabAt()`, `.drawer()` / `.endDrawer()`, `.bottomSheet()`, `.footerButtons()`, `.extendBody()`, `.extendBehindHeader()`, `.avoidKeyboard()`. `useScaffold()` opens them. Drawer, snack bar, sheet, and keyboard inset update the DOM directly, so the body does not re-render.
+- **`tone(color, level)`** — the color, its steps (`-8`…`8`), and `tone.sheet(color)`: `on`, `container`, `secondary`, `tertiary`, `opposite`, `near`, `sides`, `three`, `four`, `mute`. CSS `color-mix` / `hsl(from)` so tokens work. Ink is computed in JavaScript. No state.
+- **User paint wins** — `.height()`, `.width()`, `.bg()`, and any other CSS method write an inline style plus a `fibo-*` class in the same Tailwind group as the host utility (`h-auto`, `h-14`, `bg-transparent`). `fiboCn` drops the host class. Same rule on every component that merges chrome with the builder classes.
+- **`.when(When, style)`** — one paint method. `When` is the closed set: `hover`, `focus`, `active`, `visited`, `disabled`, `on` / `checked`, `off` / `unchecked`, `indeterminate` / `mixed`. On `List`, `hover` / `focus` / `active` paint each row. On Checkbox and Switch, `on` / `off` replace the default fill.
+- **`.alignX()` / `.alignY()`** — screen-axis alignment (horizontal / vertical). Same meaning on `Row` and `Column`: X is left–right, Y is top–bottom. Prefer these over remembering main/cross. `centerX` / `centerY` now go through the same mapping (so they stay correct when `flexDirection` is column).
 - **Editor marketplace pipeline** — GitHub Actions packages the VS Code / Cursor extension (editor support and **FiboUI Noir** in one VSIX) and publishes to the Visual Studio Marketplace (`VSCE_PAT`) and Open VSX / Cursor (`OVSX_PAT`). Each store is skipped when its secret is missing or that version already exists.
 
 ## [2.7.1] - 2026-10-17

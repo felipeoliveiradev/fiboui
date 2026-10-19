@@ -1,5 +1,5 @@
-import { afterEach, describe, it, expect } from 'vitest'
-import { act, cleanup, render, screen } from '@testing-library/react'
+import { afterEach, describe, it, expect, vi } from 'vitest'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { List, ListTile, Text, listSignal } from '../src/index'
 
 afterEach(() => {
@@ -275,5 +275,20 @@ describe('List().empty()', () => {
     expect(container.querySelector('.fibo-list-virtualized')).toBeNull()
     expect(container.querySelector('.fibo-list-item')).toBeNull()
     expect(container.querySelector('.fibo-list-empty')).toBeTruthy()
+  })
+
+  it('onPress receives the row item', () => {
+    const onPress = vi.fn()
+    render(
+      List()
+        .items([{ id: 'a', title: 'Alpha' }])
+        .onPress(onPress)
+        .renderItem((row: { title: string }) => Text(row.title))
+        .build() as any
+    )
+    fireEvent.click(screen.getByText('Alpha'))
+    expect(onPress).toHaveBeenCalledOnce()
+    expect(onPress.mock.calls[0][0]).toMatchObject({ id: 'a', title: 'Alpha' })
+    expect(onPress.mock.calls[0][1]).toBe(0)
   })
 })

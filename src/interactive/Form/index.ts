@@ -3,7 +3,7 @@
 import React, { FormEvent, ReactElement, ReactNode, useEffect, useRef, useState } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { BaseProps, FiboChildren } from '../../core/types';
-import { twMerge } from 'tailwind-merge';
+import { fiboCn as twMerge } from '../../core/cn';
 import { isDangerousUrl } from '../../core/safeUrl';
 import {
   runFieldRules,

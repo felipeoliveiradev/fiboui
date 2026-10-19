@@ -1,3 +1,4 @@
+import type { BindableSignal } from '../../core/state';
 import { type MapBounds, type MapMarker, project } from '../Chart/geometry';
 
 export type MapBasemap = 'light' | 'dark' | 'streets' | 'satellite';
@@ -21,6 +22,8 @@ export interface MapEngineContext {
   basemap: MapBasemap;
   palette: MapPalette | null;
   onSelect?: (marker: MapMarker) => void;
+  /** Marker id to reveal. The engine subscribes; the host does not touch the DOM. */
+  opened?: BindableSignal<string | null> | null;
 }
 
 export function paletteFromTheme(theme: {
@@ -92,7 +95,9 @@ interface LeafletDivIcon {
 
 interface LeafletMarker {
   addTo(map: unknown): LeafletMarker;
-  bindPopup?(text: string): LeafletMarker;
+  bindPopup?(html: string, options?: object): LeafletMarker;
+  openPopup?(): LeafletMarker;
+  getLatLng?(): { lat: number; lng: number };
   on?(event: string, handler: () => void): LeafletMarker;
   remove(): void;
 }
@@ -100,6 +105,7 @@ interface LeafletMarker {
 interface LeafletMap {
   setView(center: [number, number], zoom: number): void;
   fitBounds?(bounds: [[number, number], [number, number]]): void;
+  panTo?(center: [number, number]): void;
   getPane?(name: string): HTMLElement | undefined;
   remove(): void;
 }
@@ -278,20 +284,45 @@ export interface LeafletEngineOptions {
   attribution?: string;
 }
 
+let leafletModule: Promise<LeafletNamespace | null> | null = null;
+
+function loadLeaflet(): Promise<LeafletNamespace | null> {
+  if (!leafletModule) {
+    leafletModule = import('leaflet')
+      .then((mod) => {
+        const value = (mod as { default?: LeafletNamespace }).default ?? (mod as unknown as LeafletNamespace)
+        return value
+      })
+      .catch(() => null);
+  }
+  return leafletModule;
+}
+
 /**
  * Leaflet adapter. FiboUI does not bundle Leaflet.
- * Load `leaflet` and its CSS in the app, then pass the namespace or expose `window.L`.
+ * On the client, `leafletEngine()` loads the `leaflet` package itself.
+ * Pass `leaflet` to use a namespace you already have. The map stays a builder.
  */
 export function leafletEngine(options: LeafletEngineOptions = {}): MapEngine {
   return {
     name: 'leaflet',
     mount(ctx) {
-      const leaflet = options.leaflet ?? (globalThis as { L?: LeafletNamespace }).L;
-      if (!leaflet) {
-        ctx.host.dataset.mapEngine = 'leaflet';
-        ctx.host.textContent = 'Leaflet is not loaded.';
-        return { update() {}, destroy() {} };
-      }
+      const ready = options.leaflet ?? (globalThis as { L?: LeafletNamespace }).L;
+      if (ready) return openLeaflet(ready, options, ctx);
+      if (typeof window === 'undefined') return { update() {}, destroy() {} };
+      return loadLeaflet().then((leaflet) => {
+        if (!leaflet) {
+          ctx.host.dataset.mapEngine = 'leaflet';
+          ctx.host.textContent = 'Leaflet is not loaded.';
+          return { update() {}, destroy() {} };
+        }
+        return openLeaflet(leaflet, options, ctx);
+      });
+    },
+  };
+}
+
+function openLeaflet(leaflet: LeafletNamespace, options: LeafletEngineOptions, ctx: MapEngineContext): MapSession {
       const map = leaflet.map(ctx.host, { zoomControl: true });
       let tiles: { remove?(): void } | null = null;
       let tileUrl = '';
@@ -319,10 +350,29 @@ export function leafletEngine(options: LeafletEngineOptions = {}): MapEngine {
       applyTiles(ctx.basemap, ctx.palette);
       let framed = '';
       const placed: LeafletMarker[] = [];
+      const pins = new Map<string, LeafletMarker>();
+      let openedStop = () => {};
+      let openedSource: BindableSignal<string | null> | null = null;
+      const reveal = (id: string | null) => {
+        if (!id) return;
+        const pin = pins.get(id);
+        if (!pin) return;
+        const at = pin.getLatLng?.();
+        if (at) map.panTo?.([at.lat, at.lng]);
+        pin.openPopup?.();
+      };
+      const follow = (source: BindableSignal<string | null> | null | undefined) => {
+        const nextSource = source ?? null;
+        if (nextSource === openedSource) return;
+        openedStop();
+        openedSource = nextSource;
+        openedStop = nextSource ? nextSource.subscribe((id) => reveal(id)) : () => {};
+      };
       const sync = (next: Omit<MapEngineContext, 'host'>) => {
         applyTiles(next.basemap, next.palette);
         for (const marker of placed) marker.remove();
         placed.length = 0;
+        pins.clear();
         for (const marker of next.markers) {
           const fallback = next.palette?.primary || '#F59E0B';
           const color = /^#[0-9A-Fa-f]{3,8}$/.test(marker.color ?? '') ? marker.color! : fallback;
@@ -333,7 +383,11 @@ export function leafletEngine(options: LeafletEngineOptions = {}): MapEngine {
             html: `<span style="display:block;width:14px;height:14px;background:${color};border:2px solid #fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg)"></span>`,
           });
           const pin = leaflet.marker([marker.lat, marker.lng], icon ? { icon } : undefined).addTo(map);
-          if (marker.label) pin.bindPopup?.(marker.label);
+          const card = marker.popup || marker.label;
+          if (card) {
+            pin.bindPopup?.(card, { maxWidth: 280, minWidth: 220, autoPan: true });
+          }
+          if (marker.id) pins.set(marker.id, pin);
           if (next.onSelect) pin.on?.('click', () => next.onSelect?.(marker));
           placed.push(pin);
         }
@@ -349,17 +403,18 @@ export function leafletEngine(options: LeafletEngineOptions = {}): MapEngine {
             map.setView(centerOf(next.bounds), zoomFor(next.bounds));
           }
         }
+        follow(next.opened);
+        reveal(openedSource?.value ?? null);
       };
       sync(ctx);
       return {
         update: sync,
         destroy() {
+          openedStop();
           for (const marker of placed) marker.remove();
           map.remove();
         },
       };
-    },
-  };
 }
 
 export interface GoogleEngineOptions {

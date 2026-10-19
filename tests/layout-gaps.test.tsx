@@ -43,7 +43,7 @@ describe('layout gaps', () => {
     const { container } = render(AspectRatio(1).width(120).build())
     const el = container.querySelector('.fibo-aspect-ratio') as HTMLElement
     expect(el.style.aspectRatio).toBe('1')
-    expect(el.style.width).toBe('')
+    expect(el.style.width).toBe('120px')
   })
 
   it('wraps with flex and gap from spacing', () => {

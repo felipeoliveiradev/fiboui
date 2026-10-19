@@ -1,6 +1,14 @@
 import React, { ReactElement, ReactNode } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
-import { ChildrenProps, FiboChildren, MainAxisAlignment, CrossAxisAlignment } from '../../core/types';
+import {
+  AlignAxis,
+  ChildrenProps,
+  FiboChildren,
+  MainAxisAlignment,
+  CrossAxisAlignment,
+  toCrossAxis,
+  toMainAxis,
+} from '../../core/types';
 import {
   collectInterpSignals,
   hasInterpMarks,
@@ -75,6 +83,16 @@ class ColumnBuilder extends FiboBuilder {
   crossAxisAlignment(alignment: CrossAxisAlignment): this {
     this._crossAxisAlignment = alignment;
     return this;
+  }
+
+  /** Horizontal screen axis → cross axis on a Column. */
+  alignX(alignment: AlignAxis): this {
+    return this.crossAxisAlignment(toCrossAxis(alignment));
+  }
+
+  /** Vertical screen axis → main axis on a Column. */
+  alignY(alignment: AlignAxis): this {
+    return this.mainAxisAlignment(toMainAxis(alignment));
   }
 
   spacing(value: string | number): this {

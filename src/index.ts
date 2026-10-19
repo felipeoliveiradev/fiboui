@@ -7,6 +7,7 @@ export type {
   BaseProps,
   ChildrenProps,
   Alignment,
+  AlignAxis,
   MainAxisAlignment,
   CrossAxisAlignment,
   LayoutProps,
@@ -14,6 +15,7 @@ export type {
   ButtonVariant,
   StatusType,
 } from './core/types';
+export { toMainAxis, toCrossAxis } from './core/types';
 export {
   signal,
   computed,
@@ -93,6 +95,7 @@ export { PluginManager } from './core/plugin/PluginManager';
 export type { FiboPlugin, FiboContext, RouteDefinition, SidebarConfig } from './core/plugin/types';
 export { ValueBuilder } from './core/builder';
 export type { PseudoStateFn } from './core/builder';
+export { When, type WhenStyle } from './core/when';
 export type { PseudoStateBuilder } from './core/PseudoStateBuilder';
 
 export { FiboThemeProvider, useFiboTheme } from './theme/provider';
@@ -113,13 +116,17 @@ export {
 } from './theme/themeData';
 export type { FiboThemePreset, ThemeInput, FiboThemePatch } from './theme/themeData';
 export type { FiboTheme, ThemeColors, ThemeTypography } from './theme/types';
+export { tone, toneScale, TONE_LEVELS, type ToneLevel, type ToneSheet, type ToneFn } from './theme/tone';
 
 export { Center } from './layout/Center';
 export { Column } from './layout/Column';
 export { Container } from './layout/Container';
 export { Row } from './layout/Row';
 export { Spacer } from './layout/Spacer';
-export { Scaffold } from './layout/Scaffold';
+export { Scaffold, useScaffold } from './layout/Scaffold';
+export { AppBar, ToolbarItem } from './layout/AppBar';
+export type { ToolbarPlace } from './layout/AppBar';
+export type { FabAt, ScaffoldHandle, SnackAction } from './layout/Scaffold';
 export { Header } from './layout/Header';
 export { Sidebar } from './layout/Sidebar';
 export { DashboardLayout } from './layout/DashboardLayout';

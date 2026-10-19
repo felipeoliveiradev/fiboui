@@ -131,7 +131,7 @@ export function SignalsView() {
         .itemStyle((row) => {
           row.padding('12px 0').bg('transparent').rounded(0).borderBottom(line)
         })
-        .itemHover((row) => {
+        .when('hover', (row) => {
           row.bg('transparent')
         })
         .renderItem((item) => todoRow(item)),

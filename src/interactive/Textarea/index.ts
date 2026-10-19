@@ -2,7 +2,7 @@
 
 import React, { ReactElement, useEffect, useRef, useState } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
-import { twMerge } from 'tailwind-merge';
+import { fiboCn as twMerge } from '../../core/cn';
 import { BaseProps } from '../../core/types';
 import {
   collectInterpSignals,

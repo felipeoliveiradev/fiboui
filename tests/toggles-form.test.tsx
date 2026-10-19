@@ -1,5 +1,7 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Button } from '../src/interactive/Button'
 import { Checkbox } from '../src/interactive/Checkbox'
@@ -75,7 +77,7 @@ describe('unnamed controls omit FormData keys', () => {
 })
 
 describe('focus ring on decorative control', () => {
-  it('Checkbox box, Switch track, and Radio circle have :focus-within / focus-visible ring classes', () => {
+  it('Checkbox box, Switch track, and Radio circle keep the focus ring inside the control', () => {
     render(
       <>
         {Checkbox().label('RingBox').build()}
@@ -89,9 +91,16 @@ describe('focus ring on decorative control', () => {
     const circle = document.querySelector('.fibo-radio-circle') as HTMLElement
     for (const el of [box, track, circle]) {
       expect(el).toBeTruthy()
-      expect(el.className).toMatch(/focus-within:ring/)
+      expect(el.className).not.toMatch(/focus-within:ring/)
+      expect(el.className).not.toMatch(/ring-offset/)
       expect(el.getAttribute('aria-hidden')).toBe('true')
     }
+
+    const css = readFileSync(resolve(__dirname, '../src/styles/core.css'), 'utf8')
+    expect(css).toContain('.group:focus-within .fibo-checkbox-box')
+    expect(css).toContain('.group:focus-within .fibo-switch-track')
+    expect(css).toContain('.group:focus-within .fibo-radio-circle')
+    expect(css).toContain('box-shadow: inset 0 0 0 2px var(--fibo-primary, #3b82f6) !important')
   })
 })
 

@@ -15,7 +15,6 @@ import { BaseProps, FiboChild, FiboChildren } from '../../core/types';
 import type { BindableSignal } from '../../core/state';
 import { Box } from '../Box';
 import {
-  ListItemPseudoStateBuilder,
   createListItemPseudoStateBuilder,
 } from './ListItemPseudoStateBuilder';
 import {
@@ -24,6 +23,7 @@ import {
   normalizeItemStyleObject,
 } from './ListItemStyleBuilder';
 import { camelToKebab, type CssFluentProxy } from '../../core/cssFluent';
+import { type When, type WhenStyle } from '../../core/when';
 import {
   collectInterpSignals,
   hasInterpMarks,
@@ -190,7 +190,27 @@ const ListInner = React.memo((props: any) => {
     customItemFocus,
     itemStyle: itemStyleProp,
     empty,
+    onItemPress,
   } = props;
+
+  const listRow = (item: any, index: number, extra?: Record<string, unknown>) => {
+    const built = Box()
+      .style(itemContainerStyles[variant as ListVariant])
+      .classNames(variantClasses[variant as ListVariant])
+      .children(resolveListItem(item, index, renderItem))
+      .build() as React.ReactElement;
+    const press = typeof onItemPress === 'function'
+      ? {
+          className: `${built.props.className ?? ''} cursor-pointer`,
+          onClick: () => onItemPress(item, index),
+        }
+      : {};
+    return React.cloneElement(built, {
+      key: listItemKey(item, index),
+      ...press,
+      ...extra,
+    });
+  };
 
   const reactId = React.useId();
   // useId() may include colons (e.g. `:r1:`) — invalid / awkward in CSS selectors & HTML ids.
@@ -495,26 +515,17 @@ const ListInner = React.memo((props: any) => {
         },
         visibleItems.map((item: any, i: number) => {
           const actualIndex = startIndex + i;
-          const renderedItem = resolveListItem(item, actualIndex, renderItem);
           const rowKey = listItemKey(item, actualIndex);
 
-          return React.cloneElement(
-            Box()
-              .style(itemContainerStyles[variant as ListVariant])
-              .classNames(variantClasses[variant as ListVariant])
-              .children(renderedItem)
-              .build() as React.ReactElement,
-            {
-              key: rowKey,
-              ref: (el: HTMLDivElement | null) => {
-                if (el) {
-                  itemRefs.current.set(rowKey, el);
-                } else {
-                  itemRefs.current.delete(rowKey);
-                }
+          return listRow(item, actualIndex, {
+            ref: (el: HTMLDivElement | null) => {
+              if (el) {
+                itemRefs.current.set(rowKey, el);
+              } else {
+                itemRefs.current.delete(rowKey);
               }
-            }
-          );
+            },
+          });
         })
       ),
       onEndReached && React.createElement('div', {
@@ -543,16 +554,7 @@ const ListInner = React.memo((props: any) => {
     })
     .children(
       React.createElement(React.Fragment, {}, [
-        ...items.map((item: any, index: number) =>
-          React.cloneElement(
-            Box()
-              .style(itemContainerStyles[variant as ListVariant])
-              .classNames(variantClasses[variant as ListVariant])
-              .children(resolveListItem(item, index, renderItem))
-              .build(),
-            { key: listItemKey(item, index) }
-          )
-        ),
+        ...items.map((item: any, index: number) => listRow(item, index)),
 
         onEndReached && (
           React.createElement('div', {
@@ -574,6 +576,7 @@ class ListBuilder<T = any> extends FiboBuilder {
   /** Live source (`listSignal` / `signal`). Read on each rebuild. */
   private _source?: BindableSignal<T[]>;
   private _renderItem?: (item: T, index: number) => ReactNode;
+  private _onItemPress?: (item: T, index: number) => void;
   private _variant: ListVariant = 'default';
   private _separator: boolean = false;
   private _onEndReached?: () => void;
@@ -639,6 +642,24 @@ class ListBuilder<T = any> extends FiboBuilder {
   renderItem(fn: (item: T, index: number) => ReactNode): this {
     this._renderItem = fn;
     return this;
+  }
+
+  /**
+   * Same press for every row. The row is the target; the click reaches it
+   * from the item. A row that needs its own action keeps that inside `renderItem`.
+   *
+   * ```ts
+   * List().items(todos).onPress((todo) => toggle(todo.id)).renderItem((todo) => TodoItem(todo))
+   * ```
+   */
+  onPress(handler: (item: T, index: number) => void): this {
+    this._onItemPress = handler;
+    return this;
+  }
+
+  /** Alias of `.onPress()`. */
+  onTap(handler: (item: T, index: number) => void): this {
+    return this.onPress(handler);
   }
 
   /**
@@ -709,7 +730,7 @@ class ListBuilder<T = any> extends FiboBuilder {
    * ```ts
    * List()
    *   .itemStyle((s) => s.padding(14).bg('#fff').rounded(12))
-   *   .itemHover((h) => h.bg('#f3f4f6'))
+   *   .when(When.hover, (h) => h.bg('#f3f4f6'))
    *   .children([ListTile().title('A'), ListTile().title('B')])
    * ```
    */
@@ -738,48 +759,36 @@ class ListBuilder<T = any> extends FiboBuilder {
     return this.itemStyle((s) => s.insets(value));
   }
 
-  itemHover(
-    callback:
-      | ((builder: ListItemPseudoStateBuilder & CssFluentProxy) => void | ListItemPseudoStateBuilder | CssFluentProxy)
-      | string
-  ): this {
-    if (typeof callback === 'function') {
-      const builder = createListItemPseudoStateBuilder();
-      callback(builder);
-      this._customItemHover = builder.toCSSString();
-    } else {
-      this._customItemHover = callback;
+  /**
+   * Row paint for `When.hover` / `When.focus` / `When.active`.
+   * Other states fall through to the node pseudo (the list box itself).
+   */
+  when(state: When, style: WhenStyle): this {
+    if (state === 'hover' || state === 'focus' || state === 'active') {
+      return this.paintItem(state, style);
     }
-    return this;
+    return super.when(state, style);
   }
 
-  itemActive(
-    callback:
-      | ((builder: ListItemPseudoStateBuilder & CssFluentProxy) => void | ListItemPseudoStateBuilder | CssFluentProxy)
-      | string
-  ): this {
-    if (typeof callback === 'function') {
+  private paintItem(state: 'hover' | 'focus' | 'active', style: WhenStyle): this {
+    let css: string;
+    if (typeof style === 'function') {
       const builder = createListItemPseudoStateBuilder();
-      callback(builder);
-      this._customItemActive = builder.toCSSString();
+      style(builder);
+      css = builder.toCSSString();
+    } else if (typeof style === 'string') {
+      css = style;
     } else {
-      this._customItemActive = callback;
-    }
-    return this;
-  }
-
-  itemFocus(
-    callback:
-      | ((builder: ListItemPseudoStateBuilder & CssFluentProxy) => void | ListItemPseudoStateBuilder | CssFluentProxy)
-      | string
-  ): this {
-    if (typeof callback === 'function') {
       const builder = createListItemPseudoStateBuilder();
-      callback(builder);
-      this._customItemFocus = builder.toCSSString();
-    } else {
-      this._customItemFocus = callback;
+      for (const [key, value] of Object.entries(style)) {
+        if (value == null) continue;
+        builder.css(key, String(value));
+      }
+      css = builder.toCSSString();
     }
+    if (state === 'hover') this._customItemHover = css;
+    else if (state === 'active') this._customItemActive = css;
+    else this._customItemFocus = css;
     return this;
   }
 
@@ -792,6 +801,7 @@ class ListBuilder<T = any> extends FiboBuilder {
     const props = {
       items,
       renderItem: this._renderItem,
+      onItemPress: this._onItemPress,
       variant: this._variant,
       separator: this._separator,
       loading: this._loading,

@@ -8,7 +8,7 @@ import {
   resolveInterpString,
 } from '../../core/interpolate';
 import { isDangerousUrl, mergeRel } from '../../core/safeUrl';
-import { twMerge } from 'tailwind-merge';
+import { fiboCn as twMerge } from '../../core/cn';
 
 function bindInterp(host: FiboBuilder, text: string | undefined): void {
   if (typeof text !== 'string' || !hasInterpMarks(text)) return;

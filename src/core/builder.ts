@@ -1,5 +1,5 @@
 import React, { CSSProperties, ReactElement, ReactNode } from 'react';
-import { FiboChild, FiboChildren, ResponsiveStyles } from './types';
+import { AlignAxis, FiboChild, FiboChildren, ResponsiveStyles } from './types';
 import { BreakpointKey, toMediaQuery } from './breakpoints';
 import { BindableSignal, Observable, Signal } from './state';
 import { Observer, SignalWrapper, ObserverWrapper, StateWrapper, ProviderWrapper } from './StateWrapper';
@@ -11,6 +11,7 @@ import { GestureBuilder } from './gestures/GestureBuilders';
 import { AnimationOptions } from './animations';
 import { AnimatedWrapper } from './AnimatedWrapper';
 import { PseudoStateBuilder } from './PseudoStateBuilder';
+import { type When, whenPseudo, type WhenStyle } from './when';
 import { resolveCssEase, springEase, type SpringOptions } from './easing';
 import {
   CustomMotion,
@@ -396,6 +397,36 @@ export abstract class FiboBuilder {
       | 'spaceAround'
       | 'spaceEvenly'
   ): this {
+    return this.applyMainAlign(justify);
+  }
+
+  /** True when flexDirection is column / column-reverse (default is row). */
+  protected isVerticalFlex(): boolean {
+    const dir = this._style.flexDirection ?? 'row';
+    return dir === 'column' || dir === 'column-reverse';
+  }
+
+  /**
+   * Horizontal (screen X) alignment. Same meaning on Row and Column:
+   * left / center / right of the container — not “main axis”.
+   */
+  alignX(alignment: AlignAxis): this {
+    return this.isVerticalFlex()
+      ? this.applyCrossAlign(alignment)
+      : this.applyMainAlign(alignment);
+  }
+
+  /**
+   * Vertical (screen Y) alignment. Same meaning on Row and Column:
+   * top / center / bottom of the container — not “cross axis”.
+   */
+  alignY(alignment: AlignAxis): this {
+    return this.isVerticalFlex()
+      ? this.applyMainAlign(alignment)
+      : this.applyCrossAlign(alignment);
+  }
+
+  protected applyMainAlign(alignment: AlignAxis | string): this {
     const map: Record<string, CSSProperties['justifyContent']> = {
       start: 'flex-start',
       center: 'center',
@@ -410,7 +441,22 @@ export abstract class FiboBuilder {
       spaceAround: 'space-around',
       spaceEvenly: 'space-evenly',
     };
-    return this.layoutStyle({ justifyContent: map[justify] ?? (justify as CSSProperties['justifyContent']) });
+    const justify = map[alignment];
+    if (!justify) return this;
+    return this.layoutStyle({ display: 'flex', justifyContent: justify });
+  }
+
+  protected applyCrossAlign(alignment: AlignAxis | string): this {
+    const map: Record<string, CSSProperties['alignItems']> = {
+      start: 'flex-start',
+      center: 'center',
+      end: 'flex-end',
+      stretch: 'stretch',
+      baseline: 'baseline',
+    };
+    const align = map[alignment];
+    if (!align) return this;
+    return this.layoutStyle({ display: 'flex', alignItems: align });
   }
 
   flex(value?: number | string): this {
@@ -461,12 +507,14 @@ export abstract class FiboBuilder {
     });
   }
 
+  /** Center on the horizontal screen axis (uses `.alignX('center')`). */
   centerX(): this {
-    return this.layoutStyle({ display: 'flex', justifyContent: 'center' });
+    return this.alignX('center');
   }
 
+  /** Center on the vertical screen axis (uses `.alignY('center')`). */
   centerY(): this {
-    return this.layoutStyle({ display: 'flex', alignItems: 'center' });
+    return this.alignY('center');
   }
 
   spaceBetween(): this {
@@ -560,6 +608,7 @@ export abstract class FiboBuilder {
 
     const cls = _styleManager.register('background-color', colorValue as string);
     this._classNames.push(cls);
+    this.layoutStyle({ backgroundColor: colorValue as string });
     return this;
   }
 
@@ -819,36 +868,32 @@ export abstract class FiboBuilder {
 
   width(value: string | number): this {
     if (typeof value === 'number') {
-
-      const cls = _styleManager.register('width', `${value}px`);
-      this._classNames.push(cls);
+      return this.paint('width', `${value}px`);
     }
-    else if (typeof value === 'string' && (value.startsWith('w-') || value === 'full' || value === 'screen' || value === 'min' || value === 'max' || value === 'fit')) {
+    if (value.startsWith('w-') || value === 'full' || value === 'screen' || value === 'min' || value === 'max' || value === 'fit') {
       const className = value.startsWith('w-') ? value : `w-${value}`;
       this._classNames.push(className);
+      return this;
     }
-    else {
-      const cls = _styleManager.register('width', value);
-      this._classNames.push(cls);
-    }
+    return this.paint('width', value);
+  }
+
+  paint(property: string, value: string): this {
+    this.addClassName(_styleManager.register(property, value));
+    this.layoutStyle({ [kebabToCamel(property)]: value } as CSSProperties);
     return this;
   }
 
   height(value: string | number): this {
     if (typeof value === 'number') {
-
-      const cls = _styleManager.register('height', `${value}px`);
-      this._classNames.push(cls);
+      return this.paint('height', `${value}px`);
     }
-    else if (typeof value === 'string' && (value.startsWith('h-') || value === 'full' || value === 'screen' || value === 'min' || value === 'max' || value === 'fit')) {
+    if (value.startsWith('h-') || value === 'full' || value === 'screen' || value === 'min' || value === 'max' || value === 'fit') {
       const className = value.startsWith('h-') ? value : `h-${value}`;
       this._classNames.push(className);
+      return this;
     }
-    else {
-      const cls = _styleManager.register('height', value);
-      this._classNames.push(cls);
-    }
-    return this;
+    return this.paint('height', value);
   }
 
   gap(value: string | number): this {
@@ -1589,6 +1634,32 @@ export abstract class FiboBuilder {
     return builder;
   }
 
+  /**
+   * Paint for a `When` state. Hover / focus / active / visited / disabled
+   * write a CSS pseudo on this node. `on` / `off` are for Checkbox and Switch.
+   *
+   * ```ts
+   * Row().when(When.hover, (s) => s.bg('#c8ff00'))
+   * ```
+   */
+  when(state: When, style: WhenStyle): this {
+    const pseudo = whenPseudo(state);
+    if (!pseudo) return this;
+    if (pseudo === 'hover' || pseudo === 'focus' || pseudo === 'active') {
+      this.ensureInteractiveTransition();
+    }
+    const builder = new PseudoStateBuilder(pseudo, this);
+    if (typeof style === 'function') {
+      style(builder);
+    } else if (style && typeof style === 'object') {
+      for (const [key, value] of Object.entries(style)) {
+        if (value == null) continue;
+        builder.css(key, value as string | number);
+      }
+    }
+    return this;
+  }
+
   focus(): PseudoStateBuilder;
   focus(callback: PseudoStateFn): this;
   focus(callback?: PseudoStateFn): this | PseudoStateBuilder {
@@ -2094,7 +2165,7 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
               continue;
             }
             const finalValue = normalizeCssValue(name, value);
-            target.className(_styleManager.register(cssProp, finalValue));
+            target.paint(cssProp, finalValue);
           }
           return receiver;
         };

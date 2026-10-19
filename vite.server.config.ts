@@ -69,7 +69,9 @@ export default defineConfig({
         id === 'react-dom' ||
         id === 'scheduler' ||
         id.startsWith('react/') ||
-        id.startsWith('react-dom/'),
+        id.startsWith('react-dom/') ||
+        id === 'leaflet' ||
+        id.startsWith('leaflet/'),
       output: {
         banner: '',
       },

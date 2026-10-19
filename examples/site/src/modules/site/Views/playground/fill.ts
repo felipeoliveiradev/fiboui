@@ -19,7 +19,7 @@ const PROP: Fill = { text: '', start: 0, end: 0 }
 const FN_NAMES = new Set([
   'onSubmit', 'onInvalid', 'onChange', 'onCommit', 'onPress', 'onHover', 'onClick', 'onAdd',
   'onToggle', 'onEndReached', 'onPanStart', 'onPanUpdate', 'onPanEnd',
-  'beforeSubmit', 'afterSubmit', 'renderItem', 'itemStyle', 'itemHover', 'itemActive', 'itemFocus',
+  'beforeSubmit', 'afterSubmit', 'renderItem', 'itemStyle', 'when',
   'hover', 'active', 'press', 'visited', 'focusWithin', 'firstChild', 'lastChild', 'disabledState',
   'groupHover', 'groupFocus', 'groupActive', 'groupFocusWithin',
   'computed', 'signal', 'rule',

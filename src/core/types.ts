@@ -39,6 +39,56 @@ export type Alignment = 'start' | 'center' | 'end' | 'stretch';
 export type MainAxisAlignment = 'start' | 'center' | 'end' | 'spaceBetween' | 'spaceAround' | 'spaceEvenly';
 export type CrossAxisAlignment = Alignment;
 
+/**
+ * Screen-axis alignment for `.alignX()` / `.alignY()`.
+ * Always means left–right (X) or top–bottom (Y), not main/cross flex axis.
+ * Space values (`between`, …) pack along that screen axis when it is the flex
+ * main axis; on the cross axis they fall back to `start`.
+ */
+export type AlignAxis =
+  | 'start'
+  | 'center'
+  | 'end'
+  | 'stretch'
+  | 'baseline'
+  | 'between'
+  | 'around'
+  | 'evenly'
+  | 'space-between'
+  | 'space-around'
+  | 'space-evenly'
+  | 'spaceBetween'
+  | 'spaceAround'
+  | 'spaceEvenly';
+
+/** Map screen-axis values onto Flutter main-axis packing. */
+export function toMainAxis(alignment: AlignAxis): MainAxisAlignment {
+  if (alignment === 'start' || alignment === 'center' || alignment === 'end') return alignment;
+  if (alignment === 'between' || alignment === 'space-between' || alignment === 'spaceBetween') {
+    return 'spaceBetween';
+  }
+  if (alignment === 'around' || alignment === 'space-around' || alignment === 'spaceAround') {
+    return 'spaceAround';
+  }
+  if (alignment === 'evenly' || alignment === 'space-evenly' || alignment === 'spaceEvenly') {
+    return 'spaceEvenly';
+  }
+  return 'start';
+}
+
+/** Map screen-axis values onto Flutter cross-axis alignment. */
+export function toCrossAxis(alignment: AlignAxis): CrossAxisAlignment {
+  if (
+    alignment === 'start' ||
+    alignment === 'center' ||
+    alignment === 'end' ||
+    alignment === 'stretch'
+  ) {
+    return alignment;
+  }
+  return 'start';
+}
+
 export interface LayoutProps extends BaseProps {
   width?: string | number;
   height?: string | number;

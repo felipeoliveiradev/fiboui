@@ -22,6 +22,27 @@ describe('PseudoStateBuilder backgroundColor', () => {
     expect(html).toMatch(/fibo-ps-/)
   })
 
+  it('when(hover) is hover paint', () => {
+    StyleManager.resetForTests()
+    const html = renderToString(
+      withFiboStyles(
+        Box().when('hover', (h) => h.bg('#c8ff00')).children([]),
+      ) as never,
+    )
+    const css = StyleManager.getInstance().getCss()
+    expect(css).toMatch(/\.fibo-ps-[a-z0-9]+:hover\s*\{[^}]*background-color:\s*#c8ff00/i)
+    expect(html).toMatch(/fibo-ps-/)
+  })
+
+  it('hover color also paints descendants so a child Text color yields', () => {
+    StyleManager.resetForTests()
+    renderToString(
+      withFiboStyles(Box().when('hover', (h) => h.color('#000')).children([])) as never,
+    )
+    const css = StyleManager.getInstance().getCss()
+    expect(css).toMatch(/\.fibo-ps-[a-z0-9]+:hover \* \{[^}]*color:\s*#000 !important/i)
+  })
+
   it('hover.bg and hover.backgroundColor are the same longhand', () => {
     StyleManager.resetForTests()
     renderToString(

@@ -157,7 +157,7 @@ describe('playground indent', () => {
   it('indents the body of renderItem and other arrows', () => {
     expect(suggestIndent('      .renderItem((item) =>', '', '      ')).toBe('        ')
     expect(suggestIndent('        .onPress(() =>', '', '        ')).toBe('          ')
-    expect(suggestIndent('    .itemHover((ih) =>', '', '    ')).toBe('      ')
+    expect(suggestIndent('    .when(\'hover\', (s) =>', '', '    ')).toBe('      ')
   })
 
   it('opens a blank line inside children brackets and leaves the closer aligned', () => {

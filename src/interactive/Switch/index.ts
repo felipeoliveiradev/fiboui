@@ -8,8 +8,13 @@ import {
   hasInterpMarks,
   resolveInterpString,
 } from '../../core/interpolate';
-import { twMerge } from 'tailwind-merge';
+import {
+  resolveFluentCss,
+} from '../../core/cssFluent';
+import { fiboCn as twMerge } from '../../core/cn';
 import type { FieldRule } from '../Form/validators';
+import { isToggleWhen, type When, type WhenStyle } from '../../core/when';
+import { togglePaintSlot } from '../togglePaint';
 
 function bindInterp(host: FiboBuilder, text: string | undefined): void {
   if (typeof text !== 'string' || !hasInterpMarks(text)) return;
@@ -35,6 +40,8 @@ interface SwitchInnerProps {
   error?: string;
   className?: string;
   style?: React.CSSProperties;
+  checkedStyle?: React.CSSProperties;
+  uncheckedStyle?: React.CSSProperties;
   id?: string;
 }
 
@@ -55,6 +62,8 @@ const SwitchInner = React.memo((props: SwitchInnerProps) => {
     error,
     className,
     style,
+    checkedStyle,
+    uncheckedStyle,
     id,
   } = props;
 
@@ -112,11 +121,14 @@ const SwitchInner = React.memo((props: SwitchInnerProps) => {
     onChange?.(next);
   };
 
+  const stateStyle = isChecked ? checkedStyle : uncheckedStyle;
+  const defaultTrackPaint = isChecked
+    ? 'bg-[var(--fibo-primary,#3B82F6)]'
+    : 'bg-gray-200';
   const trackClasses = twMerge(
     'fibo-switch-track w-[44px] h-[24px] rounded-full relative transition-colors duration-200 ease-in-out',
-    'group-focus-within:ring-2 group-focus-within:ring-offset-2 group-focus-within:ring-[var(--fibo-primary,#3B82F6)] group-has-[:focus-visible]:ring-2',
     disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
-    isChecked ? 'bg-[var(--fibo-primary,#3B82F6)]' : 'bg-gray-200'
+    stateStyle ? undefined : defaultTrackPaint
   );
 
   const thumbClasses = twMerge(
@@ -162,7 +174,7 @@ const SwitchInner = React.memo((props: SwitchInnerProps) => {
         'div',
         {
           className: trackClasses,
-          style,
+          style: stateStyle ? { ...style, ...stateStyle } : style,
           'aria-hidden': true,
         },
         React.createElement('div', { className: thumbClasses })
@@ -198,6 +210,8 @@ class SwitchBuilder extends FiboBuilder {
   private _value: string = 'on';
   private _rules?: FieldRule[];
   private _error?: string;
+  private _checkedStyle?: React.CSSProperties;
+  private _uncheckedStyle?: React.CSSProperties;
 
   checked(value: boolean): this {
     this._checked = value;
@@ -226,6 +240,26 @@ class SwitchBuilder extends FiboBuilder {
 
   onChange(handler: (checked: boolean) => void): this {
     this._onChange = handler;
+    return this;
+  }
+
+  /**
+   * Paint for a `When` state. `on` / `off` replace the track fill.
+   * `hover` / `focus` / `active` are CSS pseudos on this node.
+   *
+   * ```ts
+   * Switch()
+   *   .when(When.on, (s) => s.bg('#c8ff00'))
+   *   .when(When.off, (s) => s.bg('rgba(255,255,255,0.16)'))
+   * ```
+   */
+  when(state: When, style: WhenStyle): this {
+    if (!isToggleWhen(state) || state === 'indeterminate' || state === 'mixed' || typeof style === 'string') {
+      return super.when(state, style);
+    }
+    const css = resolveFluentCss(style);
+    if (togglePaintSlot(state) === 'on') this._checkedStyle = css;
+    else this._uncheckedStyle = css;
     return this;
   }
 
@@ -265,6 +299,8 @@ class SwitchBuilder extends FiboBuilder {
       error: resolveInterp(this._error),
       className: this.getClassName(),
       style: this.getStyle(),
+      checkedStyle: this._checkedStyle,
+      uncheckedStyle: this._uncheckedStyle,
       ...(this._props as SwitchInnerProps),
     };
     return React.createElement(SwitchInner, props);

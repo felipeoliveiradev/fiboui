@@ -221,14 +221,14 @@ describe('W21-09 List virtualization sentinel', () => {
   })
 })
 
-describe('W21-09 List itemHover descendant CSS lock', () => {
+describe('W21-09 List when() descendant CSS lock', () => {
   it('keeps inheritable hover/active/focus on descendants (scope selector *)', () => {
     render(
       List()
         .items([{ text: 'Buy' }])
-        .itemHover((h) => h.color('#111').bg('#eee'))
-        .itemActive((a) => a.color('#222'))
-        .itemFocus((f) => f.color('#333'))
+        .when('hover', (h) => h.color('#111').bg('#eee'))
+        .when('active', (a) => a.color('#222'))
+        .when('focus', (f) => f.color('#333'))
         .renderItem((item: { text: string }) => Text(item.text))
         .build() as any
     )

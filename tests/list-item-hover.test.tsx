@@ -7,12 +7,12 @@ afterEach(() => {
   cleanup()
 })
 
-describe('List itemHover', () => {
+describe('List when(hover)', () => {
   it('sends inheritable text styles to descendants and keeps paint on the row', () => {
     render(
       List()
         .items([{ text: 'Buy' }])
-        .itemHover((row) => row.background('transparent').color('#000').fontWeight(800).letterSpacing('0.04em'))
+        .when('hover', (row) => row.background('transparent').color('#000').fontWeight(800).letterSpacing('0.04em'))
         .renderItem((item: { text: string }) => Text(item.text).color('#fff'))
         .build() as any,
     )
@@ -35,7 +35,7 @@ describe('List itemHover', () => {
     render(
       List()
         .items([{ text: 'Buy' }])
-        .itemHover((row) => row.background('red').opacity(0.8).transform('scale(1.01)'))
+        .when('hover', (row) => row.background('red').opacity(0.8).transform('scale(1.01)'))
         .renderItem((item: { text: string }) => Text(item.text))
         .build() as any,
     )

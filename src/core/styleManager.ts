@@ -270,9 +270,26 @@ export class StyleManager {
     }
 
     const className = `fibo-ps-${hashKey(key)}`;
+    // `color` (and the other inherited text props) on :hover of a row does not
+    // repaint a child Text: that child has its own `color: … !important`.
+    // The pseudo also targets descendants so the parent's paint wins.
+    const inherited =
+      property === 'color' ||
+      property === 'font-size' ||
+      property === 'font-weight' ||
+      property === 'font-family' ||
+      property === 'font-style' ||
+      property === 'line-height' ||
+      property === 'letter-spacing' ||
+      property === 'text-align' ||
+      property === 'text-decoration' ||
+      property === 'text-transform';
+    const self = `.${className}:${pseudoState}`;
     const rule = isGroup
       ? `.group:${pseudoState} .${className} { ${property}: ${value} !important; }`
-      : `.${className}:${pseudoState} { ${property}: ${value} !important; }`;
+      : inherited
+        ? `${self}, ${self} * { ${property}: ${value} !important; }`
+        : `${self} { ${property}: ${value} !important; }`;
 
     this.insert(rule);
     this.cache.set(key, className);
