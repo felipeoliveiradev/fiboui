@@ -4,6 +4,33 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.9.0] - 2026-10-20
+
+### Added
+- **Gestures** — `Tap` / `SpatialTap` / `LongPress` / `Drag` (`minimumDistance`, `axis`, `predictedEnd*`) / `Magnify` / `Rotate`; `Simultaneous` / `Exclusive` (arena) / `Sequence`; real `GestureMask`. Builder: `.gesture` / `.simultaneousGesture` / `.highPriorityGesture` / `.onPress` / `.onTapGesture` / `.onLongPressGesture`.
+- **Hit testing** — `.contentShape` (+ `circle` via `clip-path`), `fibo-hit-film`, auto-rectangle on first gesture; `.allowsHitTesting(false)`.
+- **View chrome** — `.frame` + `Size.infinity` + `StackAlign`, `.offset` / `.clipped` / `.clipShape` / `.fixedSize` / `.layoutPriority` / `.overlay` / `.background` / `.onGeometryChange` / `.scaleEffect` / `.rotationEffect` / `.mask` / `.compositingGroup` / `.containerRelativeFrame` / `.alignmentGuide` / `.matchedGeometryEffect`.
+- **PreferenceKey** — `PreferenceKey({ defaultValue, reduce })`, `.preference(key, value)`, `.onPreferenceChange(key, fn)` (child → ancestor bus).
+- **`.safeAreaInset(edge, content)`** — reserve a bar on an edge (≠ `SafeArea` pad, ≠ `proxy.safeAreaInsets` read).
+- **`withAnimation` / `withTransaction` / `transaction()`** — scoped view-transition sugar (≠ `.animate` presets, ≠ `Presence`).
+- **`Scaffold.navigationTitle`** — fills existing `Header` via `headerBar` (no new chrome component). Builder `.navigationTitle` only sets data/`aria-label`.
+- **Enums** — `Edge` / `EdgeSet`, `ContentShape` / `ClipShape`, `CoordinateSpace`, `DragAxis`, `GestureMaskEnum`, `ScrollAnchor`, `ContainerRelativeAxis`; `.padding(EdgeSet, n)` / `.padding(EdgeInsets)`.
+- **Layout** — `GeometryReader` + `GeometryProxy` (`safeAreaInsets`, `frame(in:)`, named `coordinateSpace`); `ScrollViewReader` + `.scrollTarget` / `.scrollTargetLayout` / `.scrollPosition`; `VirtualRow`; `ScrollView.refreshable` (PTR).
+- **List** — static row cache; Tap `React.memo`.
+- Docs: `docs/guide/gestures.md`, `docs/guide/stacks.md`, `docs/guide/preferences.md`, `docs/guide/api-map.md` (anti-dupe).
+
+### Changed
+- **ZStack** — base = size driver; `.fit('content'|'expand')` default `content`; base fixed frame promoted to host.
+- Prefer `frame → clipShape → contentShape → gesture` over Box + `.css({ overflow })`.
+- **One name per stack** — `Row` / `Column` / `VirtualColumn` / `VirtualRow` (no HStack/VStack/Lazy* aliases).
+- **`alignmentGuide(guide, compute)`** — SwiftUI order; shifts view so the named guide sits at `compute` (number or `(dims) => number`); sets `--fibo-align-{guide}`.
+- **`matchedGeometryEffect(id, { namespace, isSource })`** — measures + stores rect; `view-transition-name`; `matchedGeometryRect()` helper.
+- **`containerRelativeFrame`** — sizes from nearest sized ancestor via `ResizeObserver` (`span/count`), not only CSS `%`.
+- **`GeometryProxy.safeAreaInsets`** — resolves `env(safe-area-inset-*)` via a padded probe element (root `getPropertyValue` was always empty).
+
+### Fixed
+- Double-tap 500ms + `dblclick` fallback; tap+longPress composition; full-box taps; ScrollView slop.
+
 ## [2.8.5] - 2026-10-20
 
 ### Fixed

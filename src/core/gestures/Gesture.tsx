@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, ReactNode } from 'react';
-import { PanRecognizer, PanCallback } from './Pan';
+import { PanRecognizer, PanCallback, PanOptions } from './Pan';
 
 interface GestureProps {
   onPanStart?: PanCallback;
@@ -14,7 +14,7 @@ export type PanSessionCallbacks = {
   onStart?: PanCallback;
   onUpdate?: PanCallback;
   onEnd?: PanCallback;
-};
+} & PanOptions;
 
 function pointerFromReact(e: React.PointerEvent): PointerEvent {
   const native = e.nativeEvent;
@@ -34,14 +34,20 @@ export function usePanSession(callbacks: PanSessionCallbacks) {
   const callbacksRef = useRef(callbacks);
   callbacksRef.current = callbacks;
 
+  const minimumDistance = callbacks.minimumDistance ?? 0;
+  const axis = callbacks.axis ?? 'free';
+
   const recognizer = useMemo(
     () =>
-      new PanRecognizer({
-        onStart: (event) => callbacksRef.current.onStart?.(event),
-        onUpdate: (event) => callbacksRef.current.onUpdate?.(event),
-        onEnd: (event) => callbacksRef.current.onEnd?.(event),
-      }),
-    []
+      new PanRecognizer(
+        {
+          onStart: (event) => callbacksRef.current.onStart?.(event),
+          onUpdate: (event) => callbacksRef.current.onUpdate?.(event),
+          onEnd: (event) => callbacksRef.current.onEnd?.(event),
+        },
+        { minimumDistance, axis }
+      ),
+    [minimumDistance, axis]
   );
 
   const session = useMemo(() => {

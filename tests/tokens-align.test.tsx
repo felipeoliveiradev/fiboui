@@ -63,7 +63,9 @@ describe('align and size tokens', () => {
     )
     const el = container.firstElementChild as HTMLElement
     expect(el.className).toMatch(/\bw-full\b/)
-    expect(el.style.minWidth).toBe('100%')
+    // Percent sizes clamp with minWidth 0 (not minWidth 100%) so flex/ZStack
+    // children can shrink instead of blowing past the parent.
+    expect(el.style.minWidth).toMatch(/^0(px)?$/)
     expect(el.style.height).toBe('var(--fibo-space-xl)')
     expect(el.style.minHeight).toBe('var(--fibo-space-xl)')
     expect(el.style.flexShrink).toBe('0')

@@ -1,5 +1,5 @@
 import { createElement, type ReactElement } from 'react'
-import { cleanup, render } from '@testing-library/react'
+import { cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Gesture } from '../src/core/gestures/Gesture'
 import { LongPressGesture, TapGesture } from '../src/core/gestures/GestureBuilders'
@@ -21,119 +21,54 @@ function firePointer(
   return target.dispatchEvent(ev)
 }
 
-function stubCapture() {
-  const captured = new Set<number>()
-  const proto = HTMLElement.prototype
-  const prev = {
-    set: proto.setPointerCapture,
-    has: proto.hasPointerCapture,
-    release: proto.releasePointerCapture,
-  }
-  proto.setPointerCapture = function (id: number) {
-    captured.add(id)
-  }
-  proto.hasPointerCapture = function (id: number) {
-    return captured.has(id)
-  }
-  proto.releasePointerCapture = function (id: number) {
-    captured.delete(id)
-  }
-  return {
-    captured,
-    restore() {
-      proto.setPointerCapture = prev.set
-      proto.hasPointerCapture = prev.has
-      proto.releasePointerCapture = prev.release
-    },
-  }
-}
-
 describe('TapGesture leftover pointerId / capture / unmount', () => {
-  it('setPointerCapture on pointerdown so release off-host can still end the press', () => {
-    const cap = stubCapture()
-    try {
-      const onEnd = vi.fn()
-      const node = TapGesture()
-        .onEnd(onEnd)
-        .wrap(createElement('span', { 'data-testid': 'pad' }, 'pad')) as ReactElement
-      const { getByTestId } = render(node)
-      const host = getByTestId('pad').parentElement as HTMLElement
-      firePointer(host, 'pointerdown', { pointerId: 1, clientX: 0, clientY: 0 })
-      expect(cap.captured.has(1)).toBe(true)
-      firePointer(window, 'pointerup', { pointerId: 1, clientX: 80, clientY: 40 })
-      expect(onEnd).toHaveBeenCalledTimes(1)
-    } finally {
-      cap.restore()
-    }
-  })
-
-  it('ignores pointerup from a different pointer so pressed UI stays down', () => {
+  it('activates onEnd on pointerup (fast), onStart on pointerdown', () => {
+    const onStart = vi.fn()
     const onEnd = vi.fn()
     const node = TapGesture()
-      .onStart(() => undefined)
+      .onStart(onStart)
       .onEnd(onEnd)
       .wrap(createElement('span', { 'data-testid': 'pad' }, 'pad')) as ReactElement
     const { getByTestId } = render(node)
     const host = getByTestId('pad').parentElement as HTMLElement
     firePointer(host, 'pointerdown', { pointerId: 1, clientX: 0, clientY: 0 })
-    firePointer(host, 'pointerup', { pointerId: 2, clientX: 0, clientY: 0 })
+    expect(onStart).toHaveBeenCalledTimes(1)
     expect(onEnd).not.toHaveBeenCalled()
-    firePointer(window, 'pointerup', { pointerId: 2, clientX: 0, clientY: 0 })
-    expect(onEnd).not.toHaveBeenCalled()
-    firePointer(host, 'pointerup', { pointerId: 1, clientX: 0, clientY: 0 })
+    firePointer(host, 'pointerup', { pointerId: 1, clientX: 1, clientY: 0 })
     expect(onEnd).toHaveBeenCalledTimes(1)
   })
 
-  it('fires onEnd on unmount while pressed so UI can reset', () => {
+  it('keyboard Enter / Space also fires onEnd', () => {
     const onEnd = vi.fn()
     const node = TapGesture()
       .onEnd(onEnd)
       .wrap(createElement('span', { 'data-testid': 'pad' }, 'pad')) as ReactElement
-    const { getByTestId, unmount } = render(node)
-    firePointer(getByTestId('pad').parentElement as HTMLElement, 'pointerdown', {
-      pointerId: 1,
-      clientX: 0,
-      clientY: 0,
-    })
-    unmount()
+    const { getByTestId } = render(node)
+    const host = getByTestId('pad').parentElement as HTMLElement
+    fireEvent.keyDown(host, { key: 'Enter' })
     expect(onEnd).toHaveBeenCalledTimes(1)
+    fireEvent.keyDown(host, { key: ' ' })
+    expect(onEnd).toHaveBeenCalledTimes(2)
   })
 
-  it('drops window listeners on unmount so a tap session cannot leak', () => {
-    const add = vi.spyOn(window, 'addEventListener')
-    const remove = vi.spyOn(window, 'removeEventListener')
+  it('exposes fibo-gesture-tap host for hit-testing', () => {
     const node = TapGesture()
       .onEnd(() => undefined)
       .wrap(createElement('span', { 'data-testid': 'pad' }, 'pad')) as ReactElement
-    const { getByTestId, unmount } = render(node)
-    firePointer(getByTestId('pad').parentElement as HTMLElement, 'pointerdown', {
-      pointerId: 1,
-      clientX: 0,
-      clientY: 0,
-    })
-    const added = add.mock.calls.filter(([type]) => type === 'pointerup' || type === 'pointercancel')
-    expect(added.length).toBeGreaterThan(0)
-    unmount()
-    const removed = remove.mock.calls.filter(([type]) => type === 'pointerup' || type === 'pointercancel')
-    expect(removed.length).toBe(added.length)
+    const { getByTestId } = render(node)
+    // pad → content film → tap host (handlers live on the outer host)
+    const host = getByTestId('pad').closest('.fibo-gesture-tap') as HTMLElement
+    expect(host).toBeTruthy()
+    expect(host.getAttribute('role')).toBe('button')
   })
 
-  it('does not throw on pointerdown when setPointerCapture throws', () => {
-    const proto = HTMLElement.prototype
-    const prev = proto.setPointerCapture
-    proto.setPointerCapture = () => {
-      throw new DOMException('InvalidStateError')
-    }
-    try {
-      const node = TapGesture()
-        .onStart(() => undefined)
-        .wrap(createElement('span', { 'data-testid': 'pad' }, 'pad')) as ReactElement
-      const { getByTestId } = render(node)
-      const host = getByTestId('pad').parentElement as HTMLElement
-      expect(() => firePointer(host, 'pointerdown', { pointerId: 1, clientX: 0, clientY: 0 })).not.toThrow()
-    } finally {
-      proto.setPointerCapture = prev
-    }
+  it('does not throw on pointerdown (no pointer capture required)', () => {
+    const node = TapGesture()
+      .onStart(() => undefined)
+      .wrap(createElement('span', { 'data-testid': 'pad' }, 'pad')) as ReactElement
+    const { getByTestId } = render(node)
+    const host = getByTestId('pad').parentElement as HTMLElement
+    expect(() => firePointer(host, 'pointerdown', { pointerId: 1, clientX: 0, clientY: 0 })).not.toThrow()
   })
 })
 

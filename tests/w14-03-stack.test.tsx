@@ -78,22 +78,20 @@ describe('W14-03 ZStack leftover — live interp children', () => {
 })
 
 describe('W14-03 ZStack leftover — alignment longhands', () => {
-  it('places top/bottom on the horizontal center, not the start/end corner', () => {
+  it('places top/bottom on the overlay content slot', () => {
     const { container: topRoot } = render(
-      ZStack().alignment('top').children([Text('T')]).build()
+      ZStack().alignment('top').children([Text('T'), Text('over')]).build()
     )
-    const top = topRoot.querySelector('.fibo-zstack') as HTMLElement
-    expect(tokens(top)).toContain('items-start')
-    expect(tokens(top)).toContain('justify-items-center')
-    expect(tokens(top)).not.toContain('place-items-start')
+    const topSlot = topRoot.querySelector('.fibo-zstack-overlay-content') as HTMLElement
+    expect(topSlot.style.alignItems).toBe('flex-start')
+    expect(topSlot.style.justifyContent).toBe('center')
 
     const { container: bottomRoot } = render(
-      ZStack().alignment('bottom').children([Text('B')]).build()
+      ZStack().alignment('bottom').children([Text('B'), Text('over')]).build()
     )
-    const bottom = bottomRoot.querySelector('.fibo-zstack') as HTMLElement
-    expect(tokens(bottom)).toContain('items-end')
-    expect(tokens(bottom)).toContain('justify-items-center')
-    expect(tokens(bottom)).not.toContain('place-items-end')
+    const bottomSlot = bottomRoot.querySelector('.fibo-zstack-overlay-content') as HTMLElement
+    expect(bottomSlot.style.alignItems).toBe('flex-end')
+    expect(bottomSlot.style.justifyContent).toBe('center')
   })
 })
 
@@ -107,9 +105,12 @@ describe('W14-03 ZStack leftover — host class lock', () => {
     )
     const el = screen.getByTestId('zs-host')
     expect(el.className).toMatch(/\bfibo-zstack\b/)
-    expect(el.className).toMatch(/\bgrid\b/)
-    expect(el.className).toMatch(/col-start-1/)
+    expect(el.className).toMatch(/\brelative\b/)
     expect(el.className).toMatch(/\bextra-zs\b/)
+    expect(tokens(el)).toContain('w-auto')
+    const layer = el.querySelector(':scope > .fibo-zstack-layer') as HTMLElement
+    expect(layer).toBeTruthy()
+    expect(layer.className).toMatch(/fibo-zstack-layer-base/)
     expect(el).toHaveTextContent('hello-zs')
   })
 })

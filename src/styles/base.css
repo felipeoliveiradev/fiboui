@@ -21,8 +21,40 @@ body {
   transition: background-color var(--fibo-transition-duration, 300ms), color var(--fibo-transition-duration, 300ms);
 }
 
+/* ZStack — base shrink-wraps; overlays fill + clip to that box. */
+.fibo-zstack-layer {
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.fibo-zstack-layer-base {
+  line-height: 0;
+}
+
+.fibo-zstack-layer-overlay {
+  overflow: hidden;
+  max-height: 100%;
+}
+
+.fibo-zstack-overlay-content {
+  /* Full slot + min-width:0 so long Text cannot expand past the poster. */
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  max-height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
 /* `.resetStyle()` — every CSS property on the host and its descendants
-   goes back to the browser default. Styles chained after it win again. */
+   goes back to the browser default. Styles chained after it win again.
+   Do not rely on grid placement on a reset host inside ZStack — the stack
+   wraps each child in `.fibo-zstack-layer` for that reason. */
 .fibo-reset,
 .fibo-reset *,
 .fibo-theme-material .fibo-reset,

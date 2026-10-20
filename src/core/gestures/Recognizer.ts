@@ -17,7 +17,14 @@ export interface GestureEvent {
   delta: Offset;
   velocity: Offset;
   location: Offset;
+  /** SwiftUI-style projection: translation + velocity × dt (≈150ms). */
+  predictedEndTranslation?: Offset;
+  /** location + (predictedEndTranslation − translation). */
+  predictedEndLocation?: Offset;
 }
+
+/** Axis lock for {@link DragGesture}. */
+export type DragAxis = 'free' | 'horizontal' | 'vertical';
 
 export abstract class GestureRecognizer {
   state: GestureState = GestureState.Possible;

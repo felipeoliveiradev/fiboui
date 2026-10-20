@@ -16,19 +16,24 @@ const JS_SUBPATHS = [
   'server',
 ] as const;
 
+/** Collect exported names from dts-bundle-generator output (declare + export {}). */
 function namedExports(src: string): string[] {
-  const exported: string[] = [];
+  const exported = new Set<string>();
   for (const m of src.matchAll(/export\s+(?:type\s+)?\{([^}]+)\}/g)) {
     for (const part of m[1].split(',')) {
       const token = part.trim().split(/\s+as\s+/).pop()?.trim();
-      if (token) exported.push(token);
+      if (token) exported.add(token);
     }
   }
-  return exported;
-}
-
-function entryFile(name: string): string {
-  return name === 'server' ? 'src/server-entry.ts' : `src/${name}-entry.ts`;
+  for (const m of src.matchAll(
+    /export\s+declare\s+(?:function|const|class|type|interface|enum)\s+(\w+)/g,
+  )) {
+    exported.add(m[1]);
+  }
+  for (const m of src.matchAll(/export\s+(?:type|interface|class|enum|const|function)\s+(\w+)/g)) {
+    exported.add(m[1]);
+  }
+  return [...exported];
 }
 
 describe('W15-10 subpath types (not the full index.d.ts)', () => {
@@ -57,18 +62,13 @@ describe('W15-10 subpath types (not the full index.d.ts)', () => {
     existsSync(resolve(ROOT, 'dist', `${name}.d.ts`)),
   );
 
-  it.skipIf(!ready)('subpath .d.ts re-export only that entry’s names from index.js', () => {
+  it.skipIf(!ready)('subpath .d.ts are real bundles (dts-bundle-generator), not index re-exports', () => {
     for (const name of JS_SUBPATHS) {
       const dts = readFileSync(resolve(ROOT, 'dist', `${name}.d.ts`), 'utf8');
       expect(dts, name).not.toMatch(/export\s+\*\s+from/);
       expect(dts, name).not.toContain('index.d.ts');
-      expect(dts, name).toMatch(/from ['"]\.\/index\.js['"]/);
-
-      const entryNames = namedExports(
-        readFileSync(resolve(ROOT, entryFile(name)), 'utf8'),
-      );
-      const dtsNames = namedExports(dts);
-      expect(dtsNames.sort(), name).toEqual([...entryNames].sort());
+      // Bundled .d.ts — no thin re-export from ./index.js
+      expect(dts, name).toMatch(/dts-bundle-generator|export declare/);
     }
   });
 

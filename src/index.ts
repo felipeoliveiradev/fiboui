@@ -100,6 +100,97 @@ export { PluginManager } from './core/plugin/PluginManager';
 export type { FiboPlugin, FiboContext, RouteDefinition, SidebarConfig } from './core/plugin/types';
 export { ValueBuilder } from './core/builder';
 export type { PseudoStateFn } from './core/builder';
+export {
+  wrapFrame,
+  resolveFrameSize,
+  isFixedNumericFrame,
+  type FrameSpec,
+  type FrameSize,
+} from './core/frame';
+export {
+  TapGesture,
+  SpatialTapGesture,
+  LongPressGesture,
+  DragGesture,
+  MagnifyGesture,
+  MagnificationGesture,
+  RotateGesture,
+  SimultaneousGesture,
+  ExclusiveGesture,
+  SequenceGesture,
+  GestureBuilder,
+} from './core/gestures/GestureBuilders';
+export type {
+  GestureMask,
+  TapLocation,
+  MagnifyValue,
+  RotateValue,
+  DragAxis,
+} from './core/gestures/GestureBuilders';
+export {
+  wrapOffset,
+  wrapClipped,
+  wrapClipShape,
+  wrapContentShape,
+  wrapFixedSize,
+  wrapLayoutPriority,
+  wrapLayer,
+  wrapOnGeometryChange,
+  wrapMask,
+  wrapCompositingGroup,
+  wrapContainerRelativeFrame,
+  wrapAlignmentGuide,
+  wrapMatchedGeometry,
+  matchedGeometryKeys,
+  matchedGeometryRect,
+  HitFilm,
+  HIT_FILM_STYLE,
+  type ClipShapeName,
+  type ContentShapeName,
+  type OffsetSpec,
+  type FixedSizeSpec,
+  type LayerSpec,
+  type GeometryRect,
+  type ContainerRelativeFrameSpec,
+  type AlignmentGuideSpec,
+  type AlignmentGuideName,
+  type AlignmentGuideDims,
+  type MatchedGeometrySpec,
+} from './core/viewChrome';
+export {
+  PreferenceKey,
+  wrapPreference,
+  wrapOnPreferenceChange,
+  reducePreferences,
+  type PreferenceKeyDef,
+  type PreferenceWriteSpec,
+  type PreferenceReadSpec,
+} from './core/preferenceKey';
+export {
+  wrapSafeAreaInset,
+  type SafeAreaInsetEdge,
+  type SafeAreaInsetSpec,
+} from './core/safeAreaInset';
+export {
+  withAnimation,
+  withTransaction,
+  transaction,
+  type Transaction,
+} from './core/transaction';
+export {
+  Edge,
+  EdgeSet,
+  ContentShape,
+  ClipShape,
+  CoordinateSpace,
+  DragAxis as DragAxisEnum,
+  GestureMaskEnum,
+  ScrollAnchor,
+  ContainerRelativeAxis,
+  applyEdgeSet,
+  resolveEdgeInsets,
+  type EdgeInsetsValue,
+} from './core/swiftuiEnums';
 export { When, type WhenStyle } from './core/when';
 export * from './core/tokens';
 export type { PseudoStateBuilder } from './core/PseudoStateBuilder';
@@ -137,9 +228,12 @@ export { Header } from './layout/Header';
 export { Sidebar } from './layout/Sidebar';
 export { DashboardLayout } from './layout/DashboardLayout';
 export { ZStack } from './layout/Stack';
+export type { ZStackAlignment, ZStackFit, ZStackProps } from './layout/Stack';
 export { Line } from './layout/Line';
-export { ScrollView, ScrollController } from './layout/ScrollView';
+export { ScrollView, ScrollController, ScrollViewReader } from './layout/ScrollView';
+export type { ScrollViewProxy } from './layout/ScrollView';
 export { VirtualColumn } from './layout/VirtualColumn';
+export { VirtualRow } from './layout/VirtualRow';
 export { SafeArea } from './layout/SafeArea';
 export { ViewThatFits } from './layout/ViewThatFits';
 export { AspectRatio } from './layout/AspectRatio';
@@ -147,7 +241,8 @@ export { Overlay } from './layout/Overlay';
 export { Wrap } from './layout/Wrap';
 export { Baseline } from './layout/Baseline';
 export { OrientationBuilder } from './layout/OrientationBuilder';
-export { LayoutBuilder } from './layout/LayoutBuilder';
+export { LayoutBuilder, GeometryReader } from './layout/LayoutBuilder';
+export type { LayoutSize, GeometryProxy, EdgeInsets } from './layout/LayoutBuilder';
 export { KeyboardInset } from './layout/KeyboardInset';
 export { PopScope } from './layout/PopScope';
 export { NavigationSplitView } from './layout/NavigationSplitView';

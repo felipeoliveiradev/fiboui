@@ -1,5 +1,5 @@
 import { type ReactElement } from 'react'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ScrollView } from '../src'
 
@@ -42,16 +42,14 @@ describe('ScrollView scrollAnchor and refreshable', () => {
     expect(el.style.scrollSnapAlign).toBe('end')
   })
 
-  it('refreshable prepends a Refresh button that calls the handler', () => {
+  it('refreshable wraps content in PullToRefresh (not a stub Refresh button)', () => {
     const handler = vi.fn()
     render(
       ScrollView().children('kept-child').refreshable(handler).build() as ReactElement,
     )
     expect(screen.getByText('kept-child')).toBeInTheDocument()
-    const button = screen.getByRole('button', { name: 'Refresh' })
-    const inner = document.querySelector('.fibo-scroll-inner')
-    expect(inner?.firstElementChild).toBe(button)
-    fireEvent.click(button)
-    expect(handler).toHaveBeenCalledTimes(1)
+    const ptr = document.querySelector('.fibo-pull-to-refresh')
+    expect(ptr).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Refresh' })).toBeNull()
   })
 })

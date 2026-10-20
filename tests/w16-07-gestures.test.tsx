@@ -100,6 +100,7 @@ describe('usePanSession pointer identity (coverage gap vs W8-02 recognizer-only)
     const onUpdate = vi.fn()
     const onEnd = vi.fn()
     const node = DragGesture()
+      .minimumDistance(0)
       .onUpdate(onUpdate)
       .onEnd(onEnd)
       .wrap(createElement('span', { 'data-testid': 'pad' }, 'pad')) as ReactElement

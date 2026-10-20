@@ -7,8 +7,11 @@ import {
   resolveInterpString,
 } from '../../core/interpolate';
 import { ScrollController } from './ScrollController';
+import { PullToRefresh } from './PullToRefresh';
 
 export { ScrollController } from './ScrollController';
+export { ScrollViewReader } from './ScrollViewReader';
+export type { ScrollViewProxy } from './ScrollViewReader';
 
 type ScrollDirection = 'vertical' | 'horizontal' | 'both';
 type ScrollbarVisibility = 'hidden' | 'visible' | 'auto';
@@ -106,6 +109,8 @@ class ScrollViewBuilder extends FiboBuilder {
   private _controller?: ScrollController;
   private _anchor?: ScrollAnchor;
   private _refresh?: () => void;
+  private _scrollTargetLayout = false;
+  private _scrollPosition?: string;
 
   children(children: FiboChildren): this {
     bindInterpTree(this, children);
@@ -152,6 +157,25 @@ class ScrollViewBuilder extends FiboBuilder {
 
   refreshable(handler: () => void): this {
     this._refresh = handler;
+    return this;
+  }
+
+  /**
+   * SwiftUI `scrollTargetLayout` — children participate as scroll targets
+   * (snap + `data-scroll-target-layout`).
+   */
+  scrollTargetLayout(enabled: boolean = true): this {
+    this._scrollTargetLayout = enabled;
+    if (enabled && !this._anchor) this._anchor = 'start';
+    return this;
+  }
+
+  /**
+   * SwiftUI `scrollPosition(id:)` — initial / programmatic target id
+   * (`data-scroll-position`). Pair with `.scrollTarget(id)` on children.
+   */
+  scrollPosition(id: string): this {
+    this._scrollPosition = id;
     return this;
   }
 
@@ -260,36 +284,50 @@ class ScrollViewBuilder extends FiboBuilder {
       }
     }
 
+    const scrollPositionId = this._scrollPosition;
+
     const attachRef = mergeRefs<HTMLDivElement>(
       (node) => {
         controller?.attach(node);
+        if (node && scrollPositionId) {
+          requestAnimationFrame(() => {
+            const safe =
+              typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
+                ? CSS.escape(scrollPositionId)
+                : scrollPositionId.replace(/"/g, '\\"');
+            const target = node.querySelector(
+              `[data-scroll-id="${safe}"]`
+            ) as HTMLElement | null;
+            target?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+          });
+        }
       },
       userRef as Ref<HTMLDivElement> | undefined,
     );
 
     const refresh = this._refresh;
-    const content = refresh
-      ? [
-          React.createElement(
-            'button',
-            { type: 'button', onClick: () => refresh() },
-            'Refresh',
-          ),
-          ...nodes,
-        ]
-      : nodes;
 
     const inner = React.createElement(
       'div',
       { className: 'fibo-scroll-inner', style: innerStyle },
-      ...content,
+      ...nodes,
     );
 
-    return React.createElement(
+    if (this._scrollTargetLayout) {
+      classNames.push('fibo-scroll-target-layout');
+      if (scrollStyles.scrollSnapType == null) {
+        scrollStyles.scrollSnapType = snapTypeFor(direction);
+      }
+    }
+
+    const scrollHost = React.createElement(
       'div',
       {
         ...dom,
         ...(this._anchor ? { 'data-scroll-anchor': this._anchor } : {}),
+        ...(this._scrollTargetLayout ? { 'data-scroll-target-layout': '1' } : {}),
+        ...(scrollPositionId ? { 'data-scroll-position': scrollPositionId } : {}),
+        'data-fibo-scroll-host': '',
         className: classNames.filter(Boolean).join(' '),
         style: scrollStyles,
         ref: attachRef,
@@ -297,6 +335,16 @@ class ScrollViewBuilder extends FiboBuilder {
       },
       inner,
     );
+
+    if (!refresh || direction === 'horizontal') {
+      return scrollHost;
+    }
+
+    // Vertical / both: real pull-to-refresh (no stub button).
+    return React.createElement(PullToRefresh, {
+      onRefresh: refresh,
+      children: scrollHost,
+    });
   }
 }
 

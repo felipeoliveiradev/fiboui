@@ -8,12 +8,61 @@ import { isUsableReactKey, normalizeFiboChildren } from './children';
 import clsx from 'clsx';
 import { _styleManager, MotionStyles, ensureMotionCss } from './styleManager';
 import { cssToTailwind } from '@metagptx/css-to-tailwind';
-import { GestureBuilder } from './gestures/GestureBuilders';
+import {
+  GestureBuilder,
+  LongPressGesture,
+  TapGesture,
+  type TapLocation,
+} from './gestures/GestureBuilders';
 import { AnimationOptions } from './animations';
 import { AnimatedWrapper } from './AnimatedWrapper';
 import { PseudoStateBuilder } from './PseudoStateBuilder';
 import { type When, whenPseudo, type WhenStyle } from './when';
-import { isSizeWord, sizeWordCss } from './tokens';
+import { isSizeWord, sizeWordCss, StackAlign } from './tokens';
+import { wrapFrame, type FrameSpec } from './frame';
+import {
+  wrapAlignmentGuide,
+  wrapClipped,
+  wrapClipShape,
+  wrapCompositingGroup,
+  wrapContainerRelativeFrame,
+  wrapContentShape,
+  wrapFixedSize,
+  wrapLayer,
+  wrapLayoutPriority,
+  wrapMask,
+  wrapMatchedGeometry,
+  wrapOffset,
+  wrapOnGeometryChange,
+  type AlignmentGuideName,
+  type AlignmentGuideSpec,
+  type ClipShapeName,
+  type ContainerRelativeFrameSpec,
+  type ContentShapeName,
+  type FixedSizeSpec,
+  type GeometryRect,
+  type LayerSpec,
+  type MatchedGeometrySpec,
+  type OffsetSpec,
+} from './viewChrome';
+import {
+  wrapOnPreferenceChange,
+  wrapPreference,
+  type PreferenceKeyDef,
+  type PreferenceReadSpec,
+  type PreferenceWriteSpec,
+} from './preferenceKey';
+import {
+  wrapSafeAreaInset,
+  type SafeAreaInsetEdge,
+  type SafeAreaInsetSpec,
+} from './safeAreaInset';
+import {
+  applyEdgeSet,
+  resolveEdgeInsets,
+  type EdgeInsetsValue,
+  type EdgeSet as EdgeSetType,
+} from './swiftuiEnums';
 import { resolveCssEase, springEase, type SpringOptions } from './easing';
 import {
   CustomMotion,
@@ -124,7 +173,29 @@ export abstract class FiboBuilder {
   protected _replays: Array<() => void> = [];
   protected _isObserver: boolean = false;
 
-  protected _gesture?: GestureBuilder;
+  /** Normal-priority gestures (SwiftUI `.gesture`). Last = outermost. */
+  protected _gestures: GestureBuilder[] = [];
+  /** SwiftUI `.simultaneousGesture` — bubble / no stopPropagation. */
+  protected _simultaneousGestures: GestureBuilder[] = [];
+  /** SwiftUI `.highPriorityGesture` — wrapped last (outermost / capture wins). */
+  protected _highPriorityGestures: GestureBuilder[] = [];
+  protected _offset?: OffsetSpec;
+  protected _clipped = false;
+  protected _clipShape?: ClipShapeName | string;
+  protected _contentShape?: ContentShapeName | string;
+  protected _fixedSize?: FixedSizeSpec;
+  protected _layoutPriority?: number;
+  protected _layers: LayerSpec[] = [];
+  protected _onGeometryChange?: (rect: GeometryRect) => void;
+  protected _compositingGroup = false;
+  protected _viewMask?: string;
+  protected _containerRelativeFrame?: ContainerRelativeFrameSpec;
+  protected _alignmentGuide?: AlignmentGuideSpec;
+  protected _matchedGeometry?: MatchedGeometrySpec;
+  protected _preferences: PreferenceWriteSpec[] = [];
+  protected _preferenceReaders: PreferenceReadSpec[] = [];
+  protected _safeAreaInsets: SafeAreaInsetSpec[] = [];
+  protected _navigationTitle?: string;
   protected _animationConfig?: Partial<AnimationOptions>;
   protected _animatedProps = new Map<string, Signal<any>>();
   protected _transforms: string[] = [];
@@ -150,6 +221,12 @@ export abstract class FiboBuilder {
 
   /** Shrink-wrap: skip the default `w-full` / `self-stretch` on Row and Column. */
   protected _hug = false;
+
+  /**
+   * SwiftUI `.frame(...)` wrappers (outer → inner order of application).
+   * Applied in `assembleBuilder` so every widget gets the same DX.
+   */
+  protected _frames: FrameSpec[] = [];
 
   /**
    * Unset every CSS property on this component and what it renders inside.
@@ -185,6 +262,217 @@ export abstract class FiboBuilder {
 
   protected isHug(): boolean {
     return this._hug;
+  }
+
+  /**
+   * SwiftUI `View.frame` — invisible box around this view.
+   *
+   * ```ts
+   * Image(url).frame({ width: 300, height: 400 })
+   * Text('★★★★').frame({
+   *   maxWidth: Size.infinity,
+   *   maxHeight: Size.infinity,
+   *   alignment: StackAlign.topTrailing,
+   * })
+   * ```
+   *
+   * Chainable: each `.frame()` wraps the previous (same as SwiftUI).
+   */
+  frame(spec: FrameSpec): this {
+    this._frames.push({ ...spec });
+    return this;
+  }
+
+  /**
+   * SwiftUI `.offset(x:y:)` — visual translate; layout size stays.
+   * `.offset(8)` ≡ `{ x: 8, y: 8 }`; `.offset({ x: 4 })` only horizontal.
+   */
+  offset(value: number | OffsetSpec): this {
+    if (typeof value === 'number') {
+      this._offset = { x: value, y: value };
+    } else {
+      this._offset = { ...value };
+    }
+    return this;
+  }
+
+  /** SwiftUI `.clipped()` — overflow hidden to bounds. */
+  clipped(): this {
+    this._clipped = true;
+    return this;
+  }
+
+  /**
+   * SwiftUI `.clipShape` — `'circle' | 'rounded' | 'square'` or any CSS radius
+   * (`'8px'`, `'50%'`). Clips drawing; hit-testing still follows layout unless
+   * you also set {@link contentShape}.
+   */
+  clipShape(shape: ClipShapeName | string): this {
+    this._clipShape = shape;
+    return this;
+  }
+
+  /**
+   * SwiftUI `.contentShape` — region used for hit-testing (tap / long-press).
+   * Default `'rectangle'` = full frame box, even over transparent pixels.
+   *
+   * ```ts
+   * ZStack()…frame({ width: 300, height: 400 })
+   *   .clipShape('8px')
+   *   .contentShape('rectangle')
+   *   .onTapGesture(open)
+   * ```
+   */
+  contentShape(shape: ContentShapeName | string = 'rectangle'): this {
+    this._contentShape = shape;
+    return this;
+  }
+
+  /**
+   * SwiftUI `.fixedSize(horizontal:vertical:)` — hug content on those axes.
+   * Defaults both axes when called with no args.
+   */
+  fixedSize(spec: FixedSizeSpec | boolean = true): this {
+    if (spec === true) this._fixedSize = { horizontal: true, vertical: true };
+    else if (spec === false) this._fixedSize = undefined;
+    else this._fixedSize = { ...spec };
+    return this;
+  }
+
+  /**
+   * SwiftUI `.layoutPriority` — higher resists compression and claims free space.
+   * Web: flex-grow / flex-shrink (not a full multi-axis proposal solver).
+   */
+  layoutPriority(value: number): this {
+    this._layoutPriority = value;
+    return this;
+  }
+
+  /** SwiftUI `.compositingGroup()`. */
+  compositingGroup(): this {
+    this._compositingGroup = true;
+    return this;
+  }
+
+  /** SwiftUI `.mask` — shape name or CSS mask-image value. */
+  mask(shapeOrCss: ClipShapeName | 'rectangle' | string): this {
+    this._viewMask = shapeOrCss;
+    return this;
+  }
+
+  /** SwiftUI `containerRelativeFrame`. */
+  containerRelativeFrame(
+    axis: ContainerRelativeFrameSpec['axis'] | ContainerRelativeFrameSpec = 'both',
+    count?: number,
+    span?: number
+  ): this {
+    if (typeof axis === 'object') {
+      this._containerRelativeFrame = { ...axis };
+    } else {
+      this._containerRelativeFrame = { axis, count, span };
+    }
+    return this;
+  }
+
+  /**
+   * SwiftUI `alignmentGuide` — named guide + absolute value or compute from size.
+   * ```ts
+   * Text('Hi').alignmentGuide('leading', (d) => d.width / 2)
+   * ```
+   */
+  alignmentGuide(
+    guide: AlignmentGuideName,
+    compute: number | ((dims: { width: number; height: number }) => number)
+  ): this {
+    this._alignmentGuide = { guide, compute };
+    return this;
+  }
+
+  /**
+   * SwiftUI `matchedGeometryEffect` — shared view-transition id + measured rect.
+   * ```ts
+   * Image(url).matchedGeometryEffect('hero', { namespace: 'gallery', isSource: true })
+   * ```
+   */
+  matchedGeometryEffect(
+    id: string,
+    namespaceOrOpts?: string | { namespace?: string; isSource?: boolean }
+  ): this {
+    if (typeof namespaceOrOpts === 'string') {
+      this._matchedGeometry = { id, namespace: namespaceOrOpts };
+    } else {
+      this._matchedGeometry = { id, ...namespaceOrOpts };
+    }
+    return this;
+  }
+
+  /** SwiftUI `.preference(key:value:)` — contribute upward to `.onPreferenceChange`. */
+  preference<T>(key: PreferenceKeyDef<T>, value: T): this {
+    this._preferences.push({ key, value });
+    return this;
+  }
+
+  /** SwiftUI `.onPreferenceChange` — reduce descendant preferences. */
+  onPreferenceChange<T>(key: PreferenceKeyDef<T>, onChange: (value: T) => void): this {
+    this._preferenceReaders.push({ key, onChange });
+    return this;
+  }
+
+  /**
+   * SwiftUI `.safeAreaInset(edge:)` — reserve a bar on one edge; content fills the rest.
+   * Distinct from `SafeArea` (notch padding) and `proxy.safeAreaInsets` (read-only).
+   */
+  safeAreaInset(
+    edge: SafeAreaInsetEdge,
+    content: SafeAreaInsetSpec['content'],
+    spacing?: number
+  ): this {
+    this._safeAreaInsets.push({ edge, content, spacing });
+    return this;
+  }
+
+  /**
+   * SwiftUI `.navigationTitle` — stores title for Scaffold (see `Scaffold.navigationTitle`).
+   * On non-Scaffold builders, sets `aria-label` / data attribute only (no extra chrome bar).
+   */
+  navigationTitle(title: string): this {
+    this._navigationTitle = title;
+    this._props['data-fibo-navigation-title'] = title;
+    if (!this._props['aria-label']) {
+      this._props['aria-label'] = title;
+    }
+    return this;
+  }
+
+  /**
+   * SwiftUI `.overlay(alignment:) { }` — layer above this view.
+   * ```ts
+   * Image(url).overlay(Text('NEW'), StackAlign.topTrailing)
+   * ```
+   */
+  overlay(
+    child: FiboChild | (() => FiboChild),
+    alignment: StackAlign | keyof typeof StackAlign = StackAlign.center
+  ): this {
+    this._layers.push({ kind: 'overlay', child, alignment });
+    return this;
+  }
+
+  /**
+   * SwiftUI `.background(alignment:) { }` — layer behind this view.
+   */
+  background(
+    child: FiboChild | (() => FiboChild),
+    alignment: StackAlign | keyof typeof StackAlign = StackAlign.center
+  ): this {
+    this._layers.push({ kind: 'background', child, alignment });
+    return this;
+  }
+
+  /** SwiftUI `onGeometryChange` — fires on mount + resize. */
+  onGeometryChange(handler: (rect: GeometryRect) => void): this {
+    this._onGeometryChange = handler;
+    return this;
   }
 
   id(value: string): this {
@@ -270,8 +558,42 @@ export abstract class FiboBuilder {
     return this;
   }
 
-  padding(value: string | number): this {
-    return this.setBoxShorthand('padding', value);
+  /**
+   * SwiftUI `.padding`:
+   * - `.padding(8)` — all sides
+   * - `.padding(EdgeSet.horizontal, 12)` — Edge.Set + value
+   * - `.padding({ top: 8, leading: 12 })` — EdgeInsets
+   */
+  padding(value: string | number): this;
+  padding(edges: EdgeSetType, value: string | number): this;
+  padding(insets: EdgeInsetsValue): this;
+  padding(
+    valueOrEdges: string | number | EdgeSetType | EdgeInsetsValue,
+    maybeValue?: string | number
+  ): this {
+    if (maybeValue !== undefined && typeof valueOrEdges === 'string') {
+      const box = applyEdgeSet(valueOrEdges as EdgeSetType, maybeValue);
+      if (box.top != null) this.setBoxLonghand('padding-top', box.top);
+      if (box.right != null) this.setBoxLonghand('padding-right', box.right);
+      if (box.bottom != null) this.setBoxLonghand('padding-bottom', box.bottom);
+      if (box.left != null) this.setBoxLonghand('padding-left', box.left);
+      return this;
+    }
+    if (valueOrEdges != null && typeof valueOrEdges === 'object') {
+      const box = resolveEdgeInsets(valueOrEdges as EdgeInsetsValue);
+      if (box.top != null) this.setBoxLonghand('padding-top', box.top);
+      if (box.right != null) this.setBoxLonghand('padding-right', box.right);
+      if (box.bottom != null) this.setBoxLonghand('padding-bottom', box.bottom);
+      if (box.left != null) this.setBoxLonghand('padding-left', box.left);
+      return this;
+    }
+    return this.setBoxShorthand('padding', valueOrEdges as string | number);
+  }
+
+  /** SwiftUI `.padding` with {@link EdgeSet} — alias clarity. */
+  /** @deprecated Prefer `.padding(EdgeSet, n)` — same implementation. */
+  paddingEdges(edges: EdgeSetType, value: string | number): this {
+    return this.padding(edges, value);
   }
 
   marginHorizontal(value: string | number): this {
@@ -887,12 +1209,20 @@ export abstract class FiboBuilder {
    * (the Scaffold body) cannot divide the viewport across these children.
    * `400`, `'320px'`, `Size.full`, and `Space.md` all count. `flex(1)` afterwards
    * opts back into sharing space.
+   *
+   * Percentages / `auto` do not lock `min-*` — `minWidth: 100%` on a flex
+   * child fights clamping and lets long text blow past the ZStack box.
    */
   private lockAxis(axis: 'width' | 'height', min: string | undefined): this {
+    const lockMin =
+      min != null &&
+      min !== '' &&
+      min !== 'auto' &&
+      !String(min).includes('%');
     this.layoutStyle(
       axis === 'width'
-        ? { flexShrink: 0, ...(min != null ? { minWidth: min } : {}) }
-        : { flexShrink: 0, ...(min != null ? { minHeight: min } : {}) },
+        ? { flexShrink: 0, ...(lockMin ? { minWidth: min } : { minWidth: 0 }) }
+        : { flexShrink: 0, ...(lockMin ? { minHeight: min } : { minHeight: 0 }) },
     );
     return this;
   }
@@ -1123,6 +1453,11 @@ export abstract class FiboBuilder {
     return this;
   }
 
+  /** SwiftUI `scaleEffect` — alias of {@link scale}. */
+  scaleEffect(value: Signal<number> | number): this {
+    return this.scale(value);
+  }
+
   rotate(degrees: Signal<number> | number): this {
     if (degrees instanceof Signal) {
       this._animatedProps.set('rotate', degrees);
@@ -1132,9 +1467,124 @@ export abstract class FiboBuilder {
     return this;
   }
 
-  gesture(gesture: GestureBuilder): this {
-    this._gesture = gesture;
+  /** SwiftUI `rotationEffect` — alias of {@link rotate} (degrees). */
+  rotationEffect(degrees: Signal<number> | number): this {
+    return this.rotate(degrees);
+  }
+
+  /**
+   * SwiftUI `.allowsHitTesting` — when `false`, this view and descendants
+   * ignore pointer hits (`pointer-events: none`).
+   */
+  allowsHitTesting(value: boolean = true): this {
+    this._style = {
+      ...this._style,
+      pointerEvents: value ? 'auto' : 'none',
+    };
     return this;
+  }
+
+  /**
+   * SwiftUI scroll target id — used by {@link ScrollViewReader} `.scrollTo(id)`.
+   * Sets `data-scroll-id` on the host.
+   */
+  scrollTarget(id: string): this {
+    this._props = { ...this._props, 'data-scroll-id': id };
+    return this;
+  }
+
+  /**
+   * SwiftUI: taps on *containers* (ZStack / Column / …) only hit drawn content
+   * unless `.contentShape(Rectangle())` is set. We default that shape when the
+   * first gesture is attached and the caller did not set one — same as the
+   * usual SwiftUI fix, without forcing it on chrome-only views.
+   */
+  protected ensureGestureContentShape(): void {
+    if (this._contentShape == null) {
+      this._contentShape = 'rectangle';
+    }
+  }
+
+  /**
+   * SwiftUI `.gesture` — attach Tap / LongPress / Drag / Magnify / Rotate / …
+   * Chainable: each call wraps the previous (outermost = last).
+   */
+  gesture(gesture: GestureBuilder): this {
+    this.ensureGestureContentShape();
+    this._gestures.push(gesture);
+    return this;
+  }
+
+  /** SwiftUI `.simultaneousGesture` — runs alongside other gestures (no steal). */
+  simultaneousGesture(gesture: GestureBuilder): this {
+    this.ensureGestureContentShape();
+    gesture.bubble(true);
+    this._simultaneousGestures.push(gesture);
+    return this;
+  }
+
+  /** SwiftUI `.highPriorityGesture` — recognized before the view's own gestures. */
+  highPriorityGesture(gesture: GestureBuilder): this {
+    this.ensureGestureContentShape();
+    this._highPriorityGestures.push(gesture);
+    return this;
+  }
+
+  /**
+   * Sugar for {@link TapGesture}`.onEnd(handler)`.
+   * Note: `Button` / `List` / `ListTile` keep domain-specific `.onPress`.
+   */
+  onPress(handler: () => void): this {
+    return this.gesture(TapGesture().onEnd(handler));
+  }
+
+  /** Flutter-style alias of {@link onPress}. */
+  onTap(handler: () => void): this {
+    return this.onPress(handler);
+  }
+
+  /**
+   * SwiftUI `onTapGesture(count:perform:)` — default count 1.
+   * Pass a location callback for SpatialTap behavior.
+   */
+  onTapGesture(
+    countOrHandler: number | ((location?: TapLocation) => void) | (() => void),
+    handler?: ((location?: TapLocation) => void) | (() => void)
+  ): this {
+    if (typeof countOrHandler === 'function') {
+      return this.gesture(TapGesture().onEnd(countOrHandler));
+    }
+    const fn = handler ?? (() => undefined);
+    return this.gesture(TapGesture().count(countOrHandler).onEnd(fn));
+  }
+
+  /**
+   * SwiftUI `onLongPressGesture(minimumDuration:perform:onPressingChanged:)`.
+   */
+  onLongPressGesture(
+    handlerOrOpts:
+      | (() => void)
+      | {
+          minimumDuration?: number;
+          maximumDistance?: number;
+          perform: () => void;
+          onPressingChanged?: (pressing: boolean) => void;
+        },
+    onPressingChanged?: (pressing: boolean) => void
+  ): this {
+    if (typeof handlerOrOpts === 'function') {
+      const g = LongPressGesture().onEnd(handlerOrOpts);
+      if (onPressingChanged) g.onPressingChanged(onPressingChanged);
+      return this.gesture(g);
+    }
+    const g = LongPressGesture({
+      duration: handlerOrOpts.minimumDuration,
+      maximumDistance: handlerOrOpts.maximumDistance,
+    }).onEnd(handlerOrOpts.perform);
+    if (handlerOrOpts.onPressingChanged) {
+      g.onPressingChanged(handlerOrOpts.onPressingChanged);
+    }
+    return this.gesture(g);
   }
 
   animation(config: Partial<AnimationOptions>): this {
@@ -1993,6 +2443,108 @@ function assembleBuilder(target: FiboBuilder): ReactElement {
     target.runReplays();
     let element = withBuildOwner(target, () => target.build());
 
+    const frames = (target as any)._frames as FrameSpec[] | undefined;
+    if (frames && frames.length > 0) {
+      for (const spec of frames) {
+        element = wrapFrame(element, spec);
+      }
+    }
+
+    // SwiftUI-ish wrap order (inner → outer), matching common chains:
+    // frame → clipped/clipShape → mask → compositingGroup → overlay → offset →
+    // fixedSize → layoutPriority → CRF / alignGuide / matchedGeo → contentShape → geometry → gestures.
+    if ((target as any)._clipped) {
+      element = wrapClipped(element);
+    }
+
+    const clipShape = (target as any)._clipShape as string | undefined;
+    if (clipShape) {
+      element = wrapClipShape(element, clipShape);
+    }
+
+    const mask = (target as any)._viewMask as string | undefined;
+    if (mask) {
+      element = wrapMask(element, mask);
+    }
+
+    if ((target as any)._compositingGroup) {
+      element = wrapCompositingGroup(element);
+    }
+
+    const layers = (target as any)._layers as LayerSpec[] | undefined;
+    if (layers && layers.length > 0) {
+      for (const layer of layers) {
+        element = wrapLayer(element, layer);
+      }
+    }
+
+    const offset = (target as any)._offset as OffsetSpec | undefined;
+    if (offset) {
+      element = wrapOffset(element, offset);
+    }
+
+    const fixedSize = (target as any)._fixedSize as FixedSizeSpec | undefined;
+    if (fixedSize) {
+      element = wrapFixedSize(element, fixedSize);
+    }
+
+    const layoutPriority = (target as any)._layoutPriority as number | undefined;
+    if (layoutPriority != null && layoutPriority !== 0) {
+      element = wrapLayoutPriority(element, layoutPriority);
+    }
+
+    const crf = (target as any)._containerRelativeFrame as
+      | ContainerRelativeFrameSpec
+      | undefined;
+    if (crf) {
+      element = wrapContainerRelativeFrame(element, crf);
+    }
+
+    const alignmentGuide = (target as any)._alignmentGuide as AlignmentGuideSpec | undefined;
+    if (alignmentGuide) {
+      element = wrapAlignmentGuide(element, alignmentGuide);
+    }
+
+    const matchedGeometry = (target as any)._matchedGeometry as MatchedGeometrySpec | undefined;
+    if (matchedGeometry) {
+      element = wrapMatchedGeometry(element, matchedGeometry);
+    }
+
+    // Preference writes inside readers so same-node `.preference` + `.onPreferenceChange` works.
+    const preferences = (target as any)._preferences as PreferenceWriteSpec[] | undefined;
+    if (preferences && preferences.length > 0) {
+      for (const pref of preferences) {
+        element = wrapPreference(element, pref);
+      }
+    }
+    const preferenceReaders = (target as any)._preferenceReaders as
+      | PreferenceReadSpec[]
+      | undefined;
+    if (preferenceReaders && preferenceReaders.length > 0) {
+      for (const reader of preferenceReaders) {
+        element = wrapOnPreferenceChange(element, reader);
+      }
+    }
+
+    const safeAreaInsets = (target as any)._safeAreaInsets as SafeAreaInsetSpec[] | undefined;
+    if (safeAreaInsets && safeAreaInsets.length > 0) {
+      for (const inset of safeAreaInsets) {
+        element = wrapSafeAreaInset(element, inset);
+      }
+    }
+
+    const contentShape = (target as any)._contentShape as string | undefined;
+    if (contentShape) {
+      element = wrapContentShape(element, contentShape);
+    }
+
+    const onGeometryChange = (target as any)._onGeometryChange as
+      | ((rect: GeometryRect) => void)
+      | undefined;
+    if (onGeometryChange) {
+      element = wrapOnGeometryChange(element, onGeometryChange);
+    }
+
     const animatedProps = (target as any)._animatedProps;
     const animationConfig = (target as any)._animationConfig;
     if (animatedProps && animatedProps.size > 0) {
@@ -2038,9 +2590,31 @@ function assembleBuilder(target: FiboBuilder): ReactElement {
       );
     }
 
-    const gesture = (target as any)._gesture;
-    if (gesture) {
-      element = gesture.wrap(element);
+    // Gesture stack (inner → outer): simultaneous → normal → highPriority
+    // (highPriority outermost so it wins recognition first, SwiftUI-style).
+    const simultaneous = (target as any)._simultaneousGestures as
+      | GestureBuilder[]
+      | undefined;
+    if (simultaneous && simultaneous.length > 0) {
+      for (const gesture of simultaneous) {
+        element = gesture.wrap(element) as ReactElement;
+      }
+    }
+
+    const gestures = (target as any)._gestures as GestureBuilder[] | undefined;
+    if (gestures && gestures.length > 0) {
+      for (const gesture of gestures) {
+        element = gesture.wrap(element) as ReactElement;
+      }
+    }
+
+    const highPriority = (target as any)._highPriorityGestures as
+      | GestureBuilder[]
+      | undefined;
+    if (highPriority && highPriority.length > 0) {
+      for (const gesture of highPriority) {
+        element = gesture.wrap(element) as ReactElement;
+      }
     }
 
     return element;

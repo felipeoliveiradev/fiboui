@@ -8,6 +8,7 @@ import {
 } from '../../core/interpolate';
 import { normalizeCssProperties, normalizeCssValue, parseBoxShorthand } from '../../core/cssFluent';
 import { _styleManager } from '../../core/styleManager';
+import type { EdgeInsetsValue, EdgeSet } from '../../core/swiftuiEnums';
 
 function bindInterp(host: FiboBuilder, text: string | undefined): void {
   if (typeof text !== 'string' || !hasInterpMarks(text)) return;
@@ -236,7 +237,17 @@ class ContainerBuilder extends FiboBuilder {
     return super.props(value);
   }
 
-  padding(value: string | number): this {
+  padding(value: string | number): this;
+  padding(edges: EdgeSet, value: string | number): this;
+  padding(insets: EdgeInsetsValue): this;
+  padding(
+    valueOrEdges: string | number | EdgeSet | EdgeInsetsValue,
+    maybeValue?: string | number
+  ): this {
+    if (maybeValue !== undefined || (valueOrEdges != null && typeof valueOrEdges === 'object')) {
+      return super.padding(valueOrEdges as never, maybeValue as never);
+    }
+    const value = valueOrEdges as string | number;
     const v = normalizeCssValue('padding', value);
     const [top, right, bottom, left] = parseBoxShorthand(v);
     if (!this._boxLonghands.has('padding-top')) this._userPad.top = top;

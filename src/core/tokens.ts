@@ -34,16 +34,26 @@ export const Align = {
 
 export type Align = (typeof Align)[keyof typeof Align];
 
-/** Words `.width()` / `.height()` already accept. A number or `'320px'` skips this. */
+/**
+ * Words `.width()` / `.height()` / `.frame()` already accept.
+ * A number or `'320px'` skips this.
+ *
+ * `Size.infinity` ≡ SwiftUI `.infinity` — fill the parent's proposed size.
+ */
 export const Size = {
   full: 'full',
   screen: 'screen',
   fit: 'fit',
   min: 'min',
   max: 'max',
+  /** SwiftUI `.infinity` — expand to the space the parent proposes (`100%`). */
+  infinity: 'infinity',
 } as const;
 
 export type Size = (typeof Size)[keyof typeof Size];
+
+/** @deprecated Prefer `Size.infinity` — same token. */
+export const infinity = Size.infinity;
 
 /** Theme spacing. `.padding(Space.md)`, `.gap(Space.sm)`, `.height(Space.xl)`. */
 export const Space = {
@@ -134,6 +144,10 @@ export type Clip = (typeof Clip)[keyof typeof Clip];
 export const Baseline = { alphabetic: 'alphabetic', ideographic: 'ideographic' } as const;
 export type Baseline = (typeof Baseline)[keyof typeof Baseline];
 
+/**
+ * Corner / edge alignment for `ZStack`, `.frame({ alignment })`, overlays.
+ * SwiftUI aliases (`topTrailing`, `leading`, …) resolve to the FiboUI names.
+ */
 export const StackAlign = {
   center: 'center',
   top: 'top',
@@ -144,8 +158,51 @@ export const StackAlign = {
   topRight: 'topRight',
   bottomLeft: 'bottomLeft',
   bottomRight: 'bottomRight',
+  /** SwiftUI `leading` → `left` */
+  leading: 'left',
+  /** SwiftUI `trailing` → `right` */
+  trailing: 'right',
+  /** SwiftUI `topLeading` → `topLeft` */
+  topLeading: 'topLeft',
+  /** SwiftUI `topTrailing` → `topRight` */
+  topTrailing: 'topRight',
+  /** SwiftUI `bottomLeading` → `bottomLeft` */
+  bottomLeading: 'bottomLeft',
+  /** SwiftUI `bottomTrailing` → `bottomRight` */
+  bottomTrailing: 'bottomRight',
 } as const;
 export type StackAlign = (typeof StackAlign)[keyof typeof StackAlign];
+
+/** Flex longhands for a {@link StackAlign} value (frame / ZStack overlay slot). */
+export function stackAlignFlex(
+  align: StackAlign | keyof typeof StackAlign = 'center'
+): { alignItems: string; justifyContent: string } {
+  const resolved =
+    typeof align === 'string' && align in StackAlign
+      ? StackAlign[align as keyof typeof StackAlign]
+      : (align as StackAlign);
+  switch (resolved) {
+    case 'top':
+      return { alignItems: 'flex-start', justifyContent: 'center' };
+    case 'bottom':
+      return { alignItems: 'flex-end', justifyContent: 'center' };
+    case 'left':
+      return { alignItems: 'center', justifyContent: 'flex-start' };
+    case 'right':
+      return { alignItems: 'center', justifyContent: 'flex-end' };
+    case 'topLeft':
+      return { alignItems: 'flex-start', justifyContent: 'flex-start' };
+    case 'topRight':
+      return { alignItems: 'flex-start', justifyContent: 'flex-end' };
+    case 'bottomLeft':
+      return { alignItems: 'flex-end', justifyContent: 'flex-start' };
+    case 'bottomRight':
+      return { alignItems: 'flex-end', justifyContent: 'flex-end' };
+    case 'center':
+    default:
+      return { alignItems: 'center', justifyContent: 'center' };
+  }
+}
 
 export const Theme = { material: 'material', cupertino: 'cupertino', web: 'web', noir: 'noir' } as const;
 export type Theme = (typeof Theme)[keyof typeof Theme];
@@ -371,6 +428,7 @@ export function isSizeWord(value: string): value is Size {
 /** CSS length a size word locks to, so a flex parent cannot squash it. */
 export function sizeWordCss(word: string, axis: 'width' | 'height'): string | undefined {
   if (word === Size.full) return '100%';
+  if (word === Size.infinity) return '100%';
   if (word === Size.screen) return axis === 'width' ? '100vw' : '100vh';
   if (word === Size.fit) return 'fit-content';
   if (word === Size.min) return 'min-content';

@@ -7,6 +7,7 @@ import {
 } from '../../core/interpolate';
 import { isDangerousUrl } from '../../core/safeUrl';
 import { BaseProps } from '../../core/types';
+import { isFixedNumericFrame, type FrameSpec } from '../../core/frame';
 
 type ImageFit = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
 type ClipShape = 'circle' | 'rounded' | 'square';
@@ -44,6 +45,9 @@ const ImageInner = React.memo((props: any) => {
     } = props;
 
     const finalStyle: React.CSSProperties = { ...style };
+    // Block — after `.resetStyle()` (`all: unset`) img becomes inline and can
+    // leave a baseline gap / odd shrink-wrap inside ZStack base layers.
+    finalStyle.display = finalStyle.display ?? 'block';
     if (fit) {
       finalStyle.objectFit = fit;
     }
@@ -87,7 +91,9 @@ class ImageBuilder extends FiboBuilder {
   private _alt: string = '';
   private _fit: ImageFit = 'cover';
   private _resizable: boolean = false;
-  private _clipShape?: ClipShape;
+  /** Image-native clip (Tailwind / borderRadius on `<img>`). Distinct from
+   * {@link FiboBuilder.clipShape} chrome wrapper. */
+  private _imageClipShape?: ClipShape;
   private _frameWidth?: number;
   private _frameHeight?: number;
   private _foregroundStyle?: string;
@@ -124,15 +130,27 @@ class ImageBuilder extends FiboBuilder {
     return this;
   }
 
-  frame(dimensions: { width: number; height: number }): this {
-    this._frameWidth = dimensions.width;
-    this._frameHeight = dimensions.height;
-    return this;
+  /**
+   * Fixed numeric `{ width, height }` still paints on the `<img>` (tests +
+   * object-fit). Any flexible SwiftUI frame (`maxWidth: Size.infinity`, …)
+   * goes through {@link FiboBuilder.frame} (wrapper).
+   */
+  frame(dimensions: FrameSpec): this {
+    if (isFixedNumericFrame(dimensions)) {
+      this._frameWidth = dimensions.width;
+      this._frameHeight = dimensions.height;
+      return this;
+    }
+    return super.frame(dimensions);
   }
 
-  clipShape(shape: ClipShape): this {
-    this._clipShape = shape;
-    return this;
+  /** Named shapes paint on `<img>`; other radii use base chrome wrapper. */
+  clipShape(shape: ClipShape | string): this {
+    if (shape === 'circle' || shape === 'rounded' || shape === 'square') {
+      this._imageClipShape = shape;
+      return this;
+    }
+    return super.clipShape(shape);
   }
 
   foregroundStyle(style: string): this {
@@ -143,9 +161,9 @@ class ImageBuilder extends FiboBuilder {
   build(): ReactElement {
     const classes = ['fibo-image', ...this._classNames];
 
-    if (this._clipShape === 'circle') {
+    if (this._imageClipShape === 'circle') {
       classes.push('rounded-full');
-    } else if (this._clipShape === 'rounded') {
+    } else if (this._imageClipShape === 'rounded') {
       classes.push('rounded-lg');
     }
 
@@ -161,7 +179,7 @@ class ImageBuilder extends FiboBuilder {
         alt: resolveInterp(this._alt),
         fit: this._fit,
         resizable: this._resizable,
-        clipShape: this._clipShape,
+        clipShape: this._imageClipShape,
         frameWidth: this._frameWidth,
         frameHeight: this._frameHeight,
         className: className,

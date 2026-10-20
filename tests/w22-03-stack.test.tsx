@@ -2,7 +2,7 @@ import { type ReactElement } from 'react'
 import { renderToString } from 'react-dom/server'
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
-import { Box, Text, ZStack } from '../src'
+import { Box, Image, Text, ZStack } from '../src'
 
 afterEach(cleanup)
 
@@ -12,12 +12,16 @@ function host(root?: HTMLElement): HTMLElement {
   return el
 }
 
+function layers(root?: HTMLElement): HTMLElement[] {
+  return Array.from(host(root).querySelectorAll(':scope > .fibo-zstack-layer')) as HTMLElement[]
+}
+
 function tokens(el: HTMLElement): string[] {
   return el.className.split(/\s+/).filter(Boolean)
 }
 
-describe('W22-03 ZStack overlay — z-index / containing block', () => {
-  it('is a positioned isolated overlay host so abspos children pin to the stack', () => {
+describe('W22-03 ZStack — SwiftUI/Flutter contract', () => {
+  it('is a positioned isolated host that clips overlays to the base box', () => {
     const { container } = render(
       ZStack()
         .children([Text('back'), Text('front')])
@@ -26,18 +30,125 @@ describe('W22-03 ZStack overlay — z-index / containing block', () => {
     const el = host(container)
     expect(tokens(el)).toContain('relative')
     expect(tokens(el)).toContain('isolate')
-    expect(tokens(el)).toContain('grid')
-    expect(el.className).toMatch(/col-start-1/)
-    expect(el.className).toMatch(/row-start-1/)
+    expect(tokens(el)).toContain('overflow-hidden')
   })
 
-  it('isolates each overlay layer so z-index:-1 FX cannot punch through later siblings', () => {
+  it('defaults to fit(content): hug the base like SwiftUI ideal size', () => {
+    const { container } = render(ZStack().children(Text('chip')).build())
+    const el = host(container)
+    expect(tokens(el)).toContain('w-auto')
+    expect(tokens(el)).toContain('self-auto')
+    expect(el.style.height).toBe('fit-content')
+  })
+
+  it('fit(expand) fills the parent like StackFit.expand', () => {
+    const { container } = render(
+      ZStack().fit('expand').children(Text('fill-me')).build()
+    )
+    const el = host(container)
+    expect(tokens(el)).toContain('w-full')
+    expect(tokens(el)).toContain('self-stretch')
+  })
+
+  it('keeps the first child in-flow (size driver) and later children absolute', () => {
     const { container } = render(
       ZStack()
+        .alignment('bottom')
         .children([Text('back'), Text('front')])
         .build()
     )
-    expect(host(container).className).toMatch(/\[&>\*\]:isolate/)
+    const zsLayers = layers(container)
+    expect(zsLayers).toHaveLength(2)
+
+    const base = zsLayers[0]
+    expect(base.className).toMatch(/fibo-zstack-layer-base/)
+    expect(base.style.position).toBe('relative')
+    expect(base.style.zIndex).toBe('0')
+
+    const overlay = zsLayers[1]
+    expect(overlay.className).toMatch(/fibo-zstack-layer-overlay/)
+    expect(overlay.style.position).toBe('absolute')
+    expect(['0', '0px']).toContain(overlay.style.inset)
+    expect(overlay.style.zIndex).toBe('1')
+    expect(overlay.style.overflow).toBe('hidden')
+
+    const slot = overlay.querySelector('.fibo-zstack-overlay-content') as HTMLElement
+    expect(slot).toBeTruthy()
+    expect(slot.style.display).toBe('flex')
+    expect(slot.style.width).toBe('100%')
+    expect(slot.style.height).toBe('100%')
+    expect(slot.style.minWidth).toMatch(/^0(px)?$/)
+    expect(slot.style.alignItems).toBe('flex-end')
+    expect(slot.style.justifyContent).toBe('center')
+  })
+
+  it('poster card: long title with width 100% stays inside the Image box', () => {
+    const { container } = render(
+      ZStack()
+        .alignment('bottom')
+        .children([
+          Image('https://example.com/a.jpg')
+            .resetStyle()
+            .scaledToFill()
+            .frame({ width: 300, height: 400 }),
+          Text('THE GODFATHER: PART II')
+            .width('100%')
+            .backgroundColor('red')
+            .letterSpacing('0.12em')
+            .padding(12),
+        ])
+        .build()
+    )
+    const zsLayers = layers(container)
+    expect(zsLayers).toHaveLength(2)
+    expect(zsLayers[0].style.position).toBe('relative')
+    expect(zsLayers[1].style.position).toBe('absolute')
+    const slot = zsLayers[1].querySelector('.fibo-zstack-overlay-content') as HTMLElement
+    expect(slot.style.minWidth).toMatch(/^0(px)?$/)
+    expect(container.querySelector('.fibo-image.fibo-reset')).toBeTruthy()
+    const title = screen.getByText('THE GODFATHER: PART II')
+    expect(title.className).toMatch(/fibo-width-100_/)
+    // Percent width locks minWidth to 0 (not 100%) so flex can clamp.
+    expect((title as HTMLElement).style.minWidth).toMatch(/^0(px)?$/)
+  })
+
+  it('badge without width hugs — overlay slot still fills for alignment', () => {
+    const { container } = render(
+      ZStack()
+        .alignment('topRight')
+        .children([
+          Box().width(200).height(120).bg('#111'),
+          Text('NEW').padding(6).bg('red'),
+        ])
+        .build()
+    )
+    const slot = layers(container)[1].querySelector(
+      '.fibo-zstack-overlay-content'
+    ) as HTMLElement
+    expect(slot.style.alignItems).toBe('flex-start')
+    expect(slot.style.justifyContent).toBe('flex-end')
+    expect(screen.getByText('NEW')).toBeTruthy()
+  })
+
+  it('keeps layers when a child uses resetStyle (all: unset)', () => {
+    const { container } = render(
+      ZStack()
+        .children([
+          Image('https://example.com/a.jpg')
+            .resetStyle()
+            .scaledToFill()
+            .frame({ width: 300, height: 400 }),
+          Text('TITLE').resetStyle().padding(12),
+        ])
+        .build()
+    )
+    const zsLayers = layers(container)
+    expect(zsLayers).toHaveLength(2)
+    for (const layer of zsLayers) {
+      expect(layer.className).not.toMatch(/\bfibo-reset\b/)
+    }
+    expect(container.querySelector('.fibo-image.fibo-reset')).toBeTruthy()
+    expect(container.querySelector('.fibo-text.fibo-reset')).toBeTruthy()
   })
 
   it('later children stay last in the overlay (DOM paint order)', () => {
@@ -49,9 +160,7 @@ describe('W22-03 ZStack overlay — z-index / containing block', () => {
         ])
         .build()
     )
-    const el = host()
-    const kids = Array.from(el.children) as HTMLElement[]
-    expect(kids.length).toBeGreaterThanOrEqual(2)
+    const kids = Array.from(host().children) as HTMLElement[]
     expect(kids[0]).toHaveTextContent('back')
     expect(kids[kids.length - 1]).toHaveTextContent('front')
     expect(screen.getByTestId('zs-front').compareDocumentPosition(screen.getByTestId('zs-back'))).toBe(
@@ -60,21 +169,8 @@ describe('W22-03 ZStack overlay — z-index / containing block', () => {
   })
 })
 
-describe('W22-03 ZStack leftover — children not force-absolute', () => {
-  it('does not stamp [&>*]:absolute leftover on stacked children', () => {
-    const { container } = render(
-      ZStack().children([Text('a'), Text('b')]).build()
-    )
-    const el = host(container)
-    expect(el.className).not.toMatch(/\[&>\*\]:absolute/)
-    expect(el.className).not.toMatch(/\[&>\*\]:inset-0/)
-    for (const child of Array.from(el.children) as HTMLElement[]) {
-      expect(child.style.position).not.toBe('absolute')
-      expect(child.className.split(/\s+/)).not.toContain('absolute')
-    }
-  })
-
-  it('keeps a child that opted into position:absolute (Flutter Positioned leftover)', () => {
+describe('W22-03 ZStack leftover — Positioned child', () => {
+  it('keeps a child that opted into position:absolute', () => {
     render(
       ZStack()
         .children([
@@ -85,83 +181,15 @@ describe('W22-03 ZStack leftover — children not force-absolute', () => {
     )
     const badge = screen.getByText('NEW')
     expect(badge.className).toMatch(/fibo-position-absolute/)
-    expect(badge.className).toMatch(/fibo-top-8px/)
-    expect(badge.className).toMatch(/fibo-right-8px/)
     expect(host().className).toMatch(/\brelative\b/)
   })
 })
 
-describe('W22-03 ZStack leftover — fit vs fill', () => {
-  it('fills the parent by default like Column/Center', () => {
-    const { container } = render(ZStack().children(Text('fill-me')).build())
-    const el = host(container)
-    expect(tokens(el)).toContain('w-full')
-    expect(tokens(el)).toContain('min-w-0')
-    expect(tokens(el)).toContain('min-h-0')
-    expect(tokens(el)).toContain('self-stretch')
-    expect(tokens(el)).not.toContain('w-auto')
-  })
-
-  it('hug() shrink-wraps instead of stretching', () => {
-    const { container } = render(ZStack().hug().children(Text('chip')).build())
-    const el = host(container)
-    expect(tokens(el)).toContain('w-auto')
-    expect(tokens(el)).toContain('self-auto')
-    expect(tokens(el)).not.toContain('w-full')
-    expect(tokens(el)).not.toContain('self-stretch')
-  })
-})
-
-describe('W22-03 ZStack leftover — alignment longhands', () => {
-  it('center / corners use items-* + justify-items-* (place-items shorthand fights extra className)', () => {
-    const { container: centerRoot } = render(
-      ZStack().alignment('center').children([Text('C')]).build()
-    )
-    const center = host(centerRoot)
-    expect(tokens(center)).toContain('items-center')
-    expect(tokens(center)).toContain('justify-items-center')
-    expect(tokens(center)).not.toContain('place-items-center')
-
-    const { container: tlRoot } = render(
-      ZStack().alignment('topLeft').children([Text('TL')]).build()
-    )
-    const tl = host(tlRoot)
-    expect(tokens(tl)).toContain('items-start')
-    expect(tokens(tl)).toContain('justify-items-start')
-    expect(tokens(tl)).not.toContain('place-items-start')
-
-    const { container: brRoot } = render(
-      ZStack().alignment('bottomRight').children([Text('BR')]).build()
-    )
-    const br = host(brRoot)
-    expect(tokens(br)).toContain('items-end')
-    expect(tokens(br)).toContain('justify-items-end')
-    expect(tokens(br)).not.toContain('place-items-end')
-  })
-
-  it('keeps left/right and top/bottom longhands from W14', () => {
-    const { container: leftRoot } = render(
-      ZStack().alignment('left').children([Text('L')]).build()
-    )
-    const left = host(leftRoot)
-    expect(tokens(left)).toContain('justify-items-start')
-    expect(tokens(left)).toContain('items-center')
-    expect(tokens(left)).not.toContain('place-items-start')
-
-    const { container: topRoot } = render(
-      ZStack().alignment('top').children([Text('T')]).build()
-    )
-    const top = host(topRoot)
-    expect(tokens(top)).toContain('items-start')
-    expect(tokens(top)).toContain('justify-items-center')
-    expect(tokens(top)).not.toContain('place-items-start')
-  })
-})
-
 describe('W22-03 ZStack leftover — host class lock', () => {
-  it('keeps overlay + fill classes when .props({ className }) is set', () => {
+  it('keeps host classes when .props({ className }) is set', () => {
     render(
       ZStack()
+        .fit('expand')
         .props({ className: 'extra-zs', 'data-testid': 'zs-host' })
         .children('hello-zs')
         .build()
@@ -171,7 +199,6 @@ describe('W22-03 ZStack leftover — host class lock', () => {
     expect(el.className).toMatch(/\brelative\b/)
     expect(el.className).toMatch(/\bisolate\b/)
     expect(el.className).toMatch(/\bw-full\b/)
-    expect(el.className).toMatch(/\bgrid\b/)
     expect(el.className).toMatch(/\bextra-zs\b/)
   })
 

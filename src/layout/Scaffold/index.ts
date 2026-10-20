@@ -10,6 +10,7 @@ import {
   resolveInterpString,
 } from '../../core/interpolate';
 import type { FiboChild, FiboChildren } from '../../core/types';
+import { Header } from '../Header';
 import { ScaffoldInner } from './ScaffoldInner';
 import type { FabAt, ScaffoldConfig } from './host';
 
@@ -140,6 +141,16 @@ class ScaffoldBuilder extends FiboBuilder {
   /** Flutter `Scaffold.appBar`. Same slot as `.headerBar()`. */
   appBar(config: FiboChild | LayoutBarConfig): this {
     return this.headerBar(config);
+  }
+
+  /**
+   * SwiftUI `.navigationTitle` — fills the header bar via existing `Header` chrome.
+   * Does **not** add a sixth title component; if `.headerBar()` / `.appBar()` is already
+   * set, this is a no-op (explicit chrome wins).
+   */
+  navigationTitle(title: string | FiboChild): this {
+    if (this._headerBar) return this;
+    return this.headerBar(Header().title(title).sticky());
   }
 
   footerBar(config: FiboChild | LayoutBarConfig): this {

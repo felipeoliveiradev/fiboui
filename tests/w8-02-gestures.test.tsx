@@ -136,20 +136,68 @@ describe('Gesture pan session', () => {
 describe('DragGesture / TapGesture', () => {
   it('DragGesture fires onEnd on unmount during a drag', () => {
     const onEnd = vi.fn()
-    const node = DragGesture().onEnd(onEnd).wrap(createElement('span', { 'data-testid': 'pad' }, 'pad')) as ReactElement
+    // minimumDistance 0 so pointerdown enters Began (SwiftUI: no onEnded until recognized).
+    const node = DragGesture()
+      .minimumDistance(0)
+      .onEnd(onEnd)
+      .wrap(createElement('span', { 'data-testid': 'pad' }, 'pad')) as ReactElement
     const { getByTestId, unmount } = render(node)
-    firePointer(getByTestId('pad').parentElement as HTMLElement, 'pointerdown', { pointerId: 1, clientX: 0, clientY: 0 })
+    firePointer(getByTestId('pad').parentElement as HTMLElement, 'pointerdown', {
+      pointerId: 1,
+      clientX: 0,
+      clientY: 0,
+    })
     unmount()
     expect(onEnd).toHaveBeenCalledTimes(1)
   })
 
-  it('TapGesture onEnd runs on pointercancel so pressed UI can reset', () => {
+  it('TapGesture onEnd fires on pointerup (fast), click does not double-fire', () => {
     const onEnd = vi.fn()
-    const node = TapGesture().onEnd(onEnd).wrap(createElement('span', { 'data-testid': 'pad' }, 'pad')) as ReactElement
+    const onStart = vi.fn()
+    const node = TapGesture()
+      .onStart(onStart)
+      .onEnd(onEnd)
+      .wrap(createElement('span', { 'data-testid': 'pad' }, 'pad')) as ReactElement
     const { getByTestId } = render(node)
     const host = getByTestId('pad').parentElement as HTMLElement
-    fireEvent.pointerDown(host, { pointerId: 1 })
-    fireEvent.pointerCancel(host, { pointerId: 1 })
+    fireEvent.pointerDown(host, { pointerId: 1, clientX: 0, clientY: 0 })
+    expect(onStart).toHaveBeenCalledTimes(1)
+    fireEvent.pointerUp(host, { pointerId: 1, clientX: 2, clientY: 1 })
+    expect(onEnd).toHaveBeenCalledTimes(1)
+    fireEvent.click(host)
+    expect(onEnd).toHaveBeenCalledTimes(1)
+  })
+
+  it('TapGesture ignores scroll (moved past slop) and pointercancel', () => {
+    const onEnd = vi.fn()
+    const node = TapGesture()
+      .onEnd(onEnd)
+      .wrap(createElement('span', { 'data-testid': 'pad' }, 'pad')) as ReactElement
+    const { getByTestId } = render(node)
+    const host = getByTestId('pad').parentElement as HTMLElement
+    // jsdom/RTL often drops clientX on PointerEvent — stamp coords onto Event.
+    const fire = (type: string, init: { pointerId: number; clientX: number; clientY: number }) => {
+      const ev = new Event(type, { bubbles: true, cancelable: true })
+      Object.assign(ev, init)
+      host.dispatchEvent(ev)
+    }
+    fire('pointerdown', { pointerId: 1, clientX: 0, clientY: 0 })
+    fire('pointermove', { pointerId: 1, clientX: 40, clientY: 0 })
+    fire('pointerup', { pointerId: 1, clientX: 40, clientY: 0 })
+    expect(onEnd).not.toHaveBeenCalled()
+
+    fire('pointerdown', { pointerId: 2, clientX: 0, clientY: 0 })
+    fire('pointercancel', { pointerId: 2, clientX: 0, clientY: 0 })
+    expect(onEnd).not.toHaveBeenCalled()
+  })
+
+  it('TapGesture click fallback when pointerup never arrived', () => {
+    const onEnd = vi.fn()
+    const node = TapGesture()
+      .onEnd(onEnd)
+      .wrap(createElement('span', { 'data-testid': 'pad' }, 'pad')) as ReactElement
+    const { getByTestId } = render(node)
+    fireEvent.click(getByTestId('pad').parentElement as HTMLElement)
     expect(onEnd).toHaveBeenCalledTimes(1)
   })
 })

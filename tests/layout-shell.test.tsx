@@ -137,18 +137,20 @@ describe('Scaffold overflow and overlay drawer', () => {
 })
 
 describe('ZStack alignment', () => {
-  it('places left/right on the vertical center, not the start/end corner', () => {
-    const { container: leftRoot } = render(ZStack().alignment('left').children([Text('L')]).build())
-    const left = leftRoot.querySelector('.fibo-zstack') as HTMLElement
-    expect(left.className).toMatch(/justify-items-start/)
-    expect(left.className).toMatch(/items-center/)
-    expect(left.className).not.toMatch(/place-items-start/)
+  it('places left/right on the overlay content slot', () => {
+    const { container: leftRoot } = render(
+      ZStack().alignment('left').children([Text('L'), Text('over')]).build()
+    )
+    const leftSlot = leftRoot.querySelector('.fibo-zstack-overlay-content') as HTMLElement
+    expect(leftSlot.style.justifyContent).toBe('flex-start')
+    expect(leftSlot.style.alignItems).toBe('center')
 
-    const { container: rightRoot } = render(ZStack().alignment('right').children([Text('R')]).build())
-    const right = rightRoot.querySelector('.fibo-zstack') as HTMLElement
-    expect(right.className).toMatch(/justify-items-end/)
-    expect(right.className).toMatch(/items-center/)
-    expect(right.className).not.toMatch(/place-items-end/)
+    const { container: rightRoot } = render(
+      ZStack().alignment('right').children([Text('R'), Text('over')]).build()
+    )
+    const rightSlot = rightRoot.querySelector('.fibo-zstack-overlay-content') as HTMLElement
+    expect(rightSlot.style.justifyContent).toBe('flex-end')
+    expect(rightSlot.style.alignItems).toBe('center')
   })
 })
 

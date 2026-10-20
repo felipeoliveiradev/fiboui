@@ -264,7 +264,26 @@ const ListInner = React.memo((props: any) => {
     return listRow(item, index, extra);
   };
 
+  // Reuse row hosts when the *item reference* is unchanged (hoist `.items(MOVIES)`
+  // outside `page()`). Avoids rebuilding ZStack/Image/gesture trees on unrelated
+  // page-signal ticks. Live rows use LiveListRow instead.
+  const staticRowCacheRef = useRef(
+    new Map<string, { item: unknown; renderItem: unknown; node: React.ReactElement }>()
+  );
+
   const listRow = (item: any, index: number, extra?: Record<string, unknown>) => {
+    const key = listItemKey(item, index);
+    const cached = staticRowCacheRef.current.get(key);
+    if (
+      cached &&
+      cached.item === item &&
+      cached.renderItem === renderItem &&
+      extra == null &&
+      onItemPress == null
+    ) {
+      return cached.node;
+    }
+
     const built = Box()
       .style(itemContainerStyles[variant as ListVariant])
       .classNames(variantClasses[variant as ListVariant])
@@ -276,11 +295,15 @@ const ListInner = React.memo((props: any) => {
           onClick: () => onItemPress(item, index),
         }
       : {};
-    return React.cloneElement(built, {
-      key: listItemKey(item, index),
+    const node = React.cloneElement(built, {
+      key,
       ...press,
       ...extra,
     });
+    if (extra == null) {
+      staticRowCacheRef.current.set(key, { item, renderItem, node });
+    }
+    return node;
   };
 
   const reactId = React.useId();
