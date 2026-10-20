@@ -1,59 +1,10 @@
 /// <reference types="vitest/config" />
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import path from 'path';
 
-const SUBPATH_ENTRIES: Record<string, string> = {
-  core: 'src/core-entry.ts',
-  layout: 'src/layout-entry.ts',
-  content: 'src/content-entry.ts',
-  interactive: 'src/interactive-entry.ts',
-  structure: 'src/structure-entry.ts',
-  navigation: 'src/navigation-entry.ts',
-  theme: 'src/theme-entry.ts',
-  server: 'src/server-entry.ts',
-};
-
-function entryExportNames(rel: string): { values: string[]; types: string[] } {
-  const src = readFileSync(path.resolve(__dirname, rel), 'utf8');
-  const values: string[] = [];
-  const types: string[] = [];
-  for (const m of src.matchAll(/export\s+(type\s+)?\{([^}]+)\}/g)) {
-    const bucket = m[1] ? types : values;
-    for (const part of m[2].split(',')) {
-      const name = part.trim().split(/\s+as\s+/).pop()?.trim();
-      if (name) bucket.push(name);
-    }
-  }
-  return { values, types };
-}
-
-/** Dedicated subpath .d.ts — curated names from index.d.ts, not `export *`. */
-function writeSubpathDts(): void {
-  const dist = path.resolve(__dirname, 'dist');
-  mkdirSync(dist, { recursive: true });
-  for (const [name, rel] of Object.entries(SUBPATH_ENTRIES)) {
-    const { values, types } = entryExportNames(rel);
-    const lines: string[] = [];
-    if (values.length) {
-      lines.push(`export { ${values.join(', ')} } from './index.js';`);
-    }
-    if (types.length) {
-      lines.push(`export type { ${types.join(', ')} } from './index.js';`);
-    }
-    writeFileSync(path.resolve(dist, `${name}.d.ts`), `${lines.join('\n')}\n`);
-  }
-}
-
-function subpathDts(): Plugin {
-  return {
-    name: 'fiboui-subpath-dts',
-    closeBundle() {
-      writeSubpathDts();
-    },
-  };
-}
+/** Subpath `.d.ts` files are produced by `npm run build:dts` (`scripts/build-dts.mjs`), not during Vite build. */
 
 /** Vite/esbuild strips the source directive; island modules go in the `client` chunk that gets the banner. */
 function hasUseClientDirective(id: string): boolean {
@@ -70,10 +21,7 @@ function hasUseClientDirective(id: string): boolean {
 }
 
 export default defineConfig({
-  plugins: [
-    react(),
-    subpathDts(),
-  ],
+  plugins: [react()],
   resolve: {
     alias: [
       { find: '@', replacement: path.resolve(__dirname, './src') },

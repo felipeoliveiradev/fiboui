@@ -56,7 +56,6 @@ export function page(
   const cells: (Signal<unknown> | ComputedSignal<unknown>)[] = [];
   const slots: LiveSlot[] = [];
   const formulas = compileFormulas(build.toString());
-  let shape = '';
   let version = 0;
   let cached: ReactElement | null = null;
   let cachedVersion = -1;
@@ -152,23 +151,20 @@ export function page(
     return { tree, ...built.outcome };
   }
 
+  /**
+   * A root signal changed. Do not rebuild here — `produce()` must run inside
+   * React render (`view()`), or hooks in the page function throw.
+   */
   function refresh() {
-    const next = produce();
-    syncSubs(next.slotCount);
-    syncRoots(next.roots);
-    const same = next.shape === shape && !next.layout;
-    if (same && paintLiveSlots(slots, next.slotCount)) return;
-    shape = next.shape;
     version += 1;
-    cached = decorate(next.tree);
-    cachedVersion = version;
+    cached = null;
+    cachedVersion = -1;
     for (const listener of listeners) listener();
   }
 
   function view(): ReactElement {
     if (cached && cachedVersion === version) return cached;
     const next = produce();
-    shape = next.shape;
     cached = decorate(next.tree);
     cachedVersion = version;
     syncSubs(next.slotCount);

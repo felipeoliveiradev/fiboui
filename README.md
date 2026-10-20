@@ -134,6 +134,95 @@ Return them. Nest them. **Skip `.build()`.**
 
 ---
 
+## Who owns a signal
+
+**One rule:** each `.value` read has exactly **one** owner. Prefer the leaf node that displays or styles from it — not the page function, not a parent wrapper.
+
+**Decision tree (short):**
+
+1. **Display** a number or string → `Text(\`${n.value} left\`)`.
+2. **Format** decimals / money → `Format.fixed(price)` / `Format.euro(price)` (not `n.value.toFixed(2)`).
+3. **CSS lengths from a signal** → `Box().width(Unit.px(width))`.
+4. **Count + word** → `Text(Plural.of(n, 'task', 'tasks'))`.
+5. **Style** from a raw number → `Box().width(n.value)` (or `n.value + 1` on **that** box).
+6. **Branch** that changes **shape** → a small `.observer()` around **that branch only**.
+7. **List / table rows** → `listSignal` + `List` / `Table` / `Tags`.
+
+### Print helpers (live)
+
+| Helper | Example | Result |
+| --- | --- | --- |
+| `Format.fixed` | `Format.fixed(price)` | `12.50` |
+| `Format.euro` | `Format.euro(price)` | `€ 12.50` |
+| `Format.currency` | `Format.currency(price, 'USD')` | `$12.50` |
+| `Format.percent` | `Format.percent(rate)` | `12%` |
+| `Format.integer` | `Format.integer(n)` | `13` |
+| `Format.compact` | `Format.compact(1200)` | `1.2K` |
+| `Unit.px` / `rem` / `%` | `Unit.px(width)` | `100px` |
+| `Plural.of` | `Plural.of(n, 'task', 'tasks')` | `3 tasks` |
+
+`Transform` is an alias of `Format`.
+
+In **development**, the console warns once with `[fiboui]` for **page roots** and **unsplit** string templates. Optional: `fiboDevStats()` returns `{ produces, replays, pageRoots, warns }` so you can inspect ownership in the console.
+
+### Good patterns
+
+```tsx
+// Count in the label — the Text node owns the read
+Text(`${left.value} left`)
+
+// Decimals / money / units / plurals — helpers own the print
+Text(Format.euro(price))
+Box().width(Unit.px(width))
+Text(Plural.of(count, 'task', 'tasks'))
+
+// Switch owns checked; only the Live/Idle label observes shape
+Row().children([
+  Switch().checked(isOnline),
+  Box()
+    .observer()
+    .children(() => [
+      isOnline.value ? Text('Live').color('lime') : Text('Idle').color('muted'),
+    ]),
+])
+
+// listSignal: each row updates by _id without re-running the page
+List().items(todos).renderItem((todo) => TodoRow(todo))
+```
+
+### Bad patterns
+
+```tsx
+// ❌ Bare read in page() — the signal becomes a page root (dev warns; page re-runs)
+page(() => {
+  if (online.value) return Column().children([/* … */])
+  return Column().children([/* … */])
+})
+
+// ❌ One observer for the whole sidebar — everything inside re-runs together
+Column()
+  .observer()
+  .children(() => sidebarChildren(online.value, count.value))
+
+// ❌ bare toFixed — use Format.fixed / Format.euro instead
+Text(`€ ${n.value.toFixed(2)}`)
+```
+
+
+Prefer a subpath when you only need a slice (smaller types): `fiboui/core`, `fiboui/layout`, `fiboui/structure`, …
+
+Local pack for a sibling app (Turbopack-friendly tarball in-repo):
+
+```bash
+npm run pack:local
+# → .pack/fiboui-<version>.tgz  (includes JS + split .d.ts)
+# in the app (sibling repo):
+#   "fiboui": "file:../fiboui/.pack/fiboui-<version>.tgz"
+# or an absolute path to that file
+```
+
+---
+
 ## Signal flow
 
 <img src="./docs/brand/flow-signals.png" width="960" alt="signal → bindSignal → function children → UI" />

@@ -1,6 +1,7 @@
-import React, { ReactElement } from 'react';
+import React, { ReactElement, useSyncExternalStore } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { FineGrainText } from '../../core/FineGrain';
+import { ListSignal } from '../../core/listSignal';
 import type { BindableSignal } from '../../core/state';
 import { BaseProps } from '../../core/types';
 import {
@@ -106,44 +107,89 @@ function tagRemoveButton(
   );
 }
 
+function renderTagNode(
+  item: object,
+  index: number,
+  key: string | number,
+  onRemove?: (item: TagItem, index: number) => void,
+): React.ReactNode {
+  const title = tagTitle(item);
+  const removable = typeof onRemove === 'function';
+  const removeBtn = removable
+    ? tagRemoveButton(title, (event: React.MouseEvent) => {
+        event.stopPropagation();
+        onRemove!(item as TagItem, index);
+      })
+    : null;
+
+  if (hasInterpMarks(title)) {
+    const live = React.createElement(FineGrainText, {
+      key: removable ? 't' : key,
+      as: 'span',
+      className: removable ? undefined : 'fibo-tag',
+      compute: () => resolveInterpString(title),
+    });
+    if (!removable) return live;
+    return React.createElement('span', { key, className: 'fibo-tag' }, live, removeBtn);
+  }
+
+  const text = resolveInterp(title) ?? title;
+  if (!removable) {
+    return React.createElement('span', { key, className: 'fibo-tag' }, text);
+  }
+  return React.createElement('span', { key, className: 'fibo-tag' }, text, removeBtn);
+}
+
+const LiveTag = React.memo(function LiveTag(props: {
+  list: ListSignal<any>;
+  id: string;
+  index: number;
+  onRemove?: (item: TagItem, index: number) => void;
+}) {
+  const version = useSyncExternalStore(
+    (notify) => props.list.subscribeItem(props.id, notify),
+    () => props.list.itemVersion(props.id),
+    () => props.list.itemVersion(props.id),
+  );
+  void version;
+  const item = props.list.find(props.id);
+  if (item == null || typeof item !== 'object') return null;
+  return renderTagNode(item, props.index, props.id, props.onRemove);
+}, (prev, next) => (
+  prev.list === next.list
+  && prev.id === next.id
+  && prev.onRemove === next.onRemove
+));
+
 const TagsInner = React.memo((props: any) => {
-    const { items, className, style, onRemove, ...rest } = props;
-    const removable = typeof onRemove === 'function';
+    const { items: incomingItems, liveList, className, style, onRemove, ...rest } = props;
     const seen = new Set<string>();
 
-    const tags: React.ReactNode[] = (Array.isArray(items) ? items : []).flatMap((item: unknown, index: number): React.ReactNode[] => {
+    const structureVersion = useSyncExternalStore(
+      (notify) => (liveList ? liveList.subscribeStructure(notify) : () => {}),
+      () => (liveList ? liveList.structureVersion() : 0),
+      () => (liveList ? liveList.structureVersion() : 0),
+    );
+    void structureVersion;
+
+    const items = liveList ? liveList.value : (Array.isArray(incomingItems) ? incomingItems : []);
+
+    const tags: React.ReactNode[] = items.flatMap((item: unknown, index: number): React.ReactNode[] => {
       if (item == null || typeof item !== 'object') return [];
-      const title = tagTitle(item);
+      if (liveList && typeof (item as { _id?: unknown })._id === 'string' && (item as { _id: string })._id.length > 0) {
+        const id = (item as { _id: string })._id;
+        return [
+          React.createElement(LiveTag, {
+            key: id,
+            list: liveList,
+            id,
+            index,
+            onRemove,
+          }),
+        ];
+      }
       const key = uniqueTagKey(item, index, seen);
-      const removeBtn = removable
-        ? tagRemoveButton(title, (event: React.MouseEvent) => {
-            event.stopPropagation();
-            onRemove(item, index);
-          })
-        : null;
-
-      if (hasInterpMarks(title)) {
-        const live = React.createElement(FineGrainText, {
-          key: removable ? 't' : key,
-          as: 'span',
-          className: removable ? undefined : 'fibo-tag',
-          compute: () => resolveInterpString(title),
-        });
-        if (!removable) return [live];
-        return [
-          React.createElement('span', { key, className: 'fibo-tag' }, live, removeBtn),
-        ];
-      }
-
-      const text = resolveInterp(title) ?? title;
-      if (!removable) {
-        return [
-          React.createElement('span', { key, className: 'fibo-tag' }, text),
-        ];
-      }
-      return [
-        React.createElement('span', { key, className: 'fibo-tag' }, text, removeBtn),
-      ];
+      return [renderTagNode(item, index, key, onRemove)];
     });
 
     return React.createElement(
@@ -159,8 +205,10 @@ const TagsInner = React.memo((props: any) => {
 
 class TagsBuilder extends FiboBuilder {
   private _items: TagItem[] = [];
-  /** Live source (`listSignal` / `signal`). Read on each rebuild. */
+  /** Plain `signal(array)`. Read on each rebuild. */
   private _source?: BindableSignal<TagItem[]>;
+  /** `listSignal`. Tags subscribe by `_id`. */
+  private _liveList?: ListSignal<any>;
 
   constructor(items: TagItem[] = []) {
     super();
@@ -168,6 +216,12 @@ class TagsBuilder extends FiboBuilder {
   }
 
   items(items: TagItem[] | BindableSignal<TagItem[]>): this {
+    if (items instanceof ListSignal) {
+      this._liveList = items;
+      this._source = undefined;
+      return this;
+    }
+    this._liveList = undefined;
     if (isListSource<TagItem>(items)) {
       this._source = items;
       this.bindSignal(items);
@@ -195,9 +249,11 @@ class TagsBuilder extends FiboBuilder {
     } = this._props ?? {};
     const extraClassName = typeof extraClass === 'string' ? extraClass : '';
 
+    const liveList = this._liveList;
     const props = {
         ...hostProps,
-        items: this._source ? this._source.value : this._items,
+        items: liveList ? [] : (this._source ? this._source.value : this._items),
+        liveList,
         className: [className, extraClassName].filter(Boolean).join(' '),
         style: {
           display: 'flex',

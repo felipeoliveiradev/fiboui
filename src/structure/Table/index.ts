@@ -1,7 +1,8 @@
-import React, { ReactElement, ReactNode } from 'react';
+import React, { ReactElement, ReactNode, useSyncExternalStore } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { buildChild } from '../../core/children';
 import { FineGrainText } from '../../core/FineGrain';
+import { ListSignal } from '../../core/listSignal';
 import type { BindableSignal } from '../../core/state';
 import { BaseProps } from '../../core/types';
 import {
@@ -129,9 +130,82 @@ function nextSort(current: ColumnSort | null, index: number): ColumnSort {
   return { index, dir: current.dir === 'ascending' ? 'descending' : 'ascending' };
 }
 
+function tableRowClass(variant: TableVariant, striped: boolean, index: number): string {
+  return `group transition-all duration-200 border-b border-gray-50 last:border-b-0 ${
+    striped && index % 2 !== 0 ? 'bg-gray-50/30' : 'bg-transparent'
+  } ${variant === 'clean' ? 'hover:bg-white hover:shadow-md hover:scale-[1.002] hover:z-10 relative' : 'hover:bg-gray-50/50'}`;
+}
+
+function tableRowElement(
+  row: any,
+  index: number,
+  columns: TableColumn[],
+  variant: TableVariant,
+  striped: boolean,
+  padding: string,
+): React.ReactElement {
+  return React.createElement(
+    'tr',
+    {
+      key: tableRowKey(row, index),
+      className: tableRowClass(variant, striped, index),
+    },
+    columns.map((col: any, j: number) =>
+      React.createElement(
+        'td',
+        {
+          key: j,
+          style: {
+            textAlign: col.align || 'left',
+            padding,
+            borderTop: variant === 'default' ? '1px solid #F3F4F6' : 'none',
+          },
+          className: 'text-sm text-gray-900 font-medium',
+        },
+        tableCellNode(rawCellValue(row, col)),
+      ),
+    ),
+  );
+}
+
+const LiveTableRow = React.memo(function LiveTableRow(props: {
+  list: ListSignal<any>;
+  id: string;
+  index: number;
+  columns: TableColumn[];
+  variant: TableVariant;
+  striped: boolean;
+  padding: string;
+}) {
+  const version = useSyncExternalStore(
+    (notify) => props.list.subscribeItem(props.id, notify),
+    () => props.list.itemVersion(props.id),
+    () => props.list.itemVersion(props.id),
+  );
+  void version;
+  const row = props.list.find(props.id);
+  if (row == null) return null;
+  return tableRowElement(
+    row,
+    props.index,
+    props.columns,
+    props.variant,
+    props.striped,
+    props.padding,
+  );
+}, (prev, next) => (
+  prev.list === next.list
+  && prev.id === next.id
+  && prev.columns === next.columns
+  && prev.variant === next.variant
+  && prev.striped === next.striped
+  && prev.padding === next.padding
+));
+
 const TableInner = React.memo((props: any) => {
     const {
-        data,
+        data: incomingData,
+        liveList,
         columns,
         variant,
         density,
@@ -146,6 +220,13 @@ const TableInner = React.memo((props: any) => {
 
     const tableSortable = Boolean(sortable);
     const [sort, setSort] = React.useState<ColumnSort | null>(null);
+
+    const structureVersion = useSyncExternalStore(
+      (notify) => (liveList ? liveList.subscribeStructure(notify) : () => {}),
+      () => (liveList ? liveList.structureVersion() : 0),
+      () => (liveList ? liveList.structureVersion() : 0),
+    );
+    void structureVersion;
 
     const tableStyles: React.CSSProperties = {
        width: '100%',
@@ -168,7 +249,9 @@ const TableInner = React.memo((props: any) => {
         relaxed: '24px 32px'
     };
     const padding = cellPadding[density as TableDensity];
-    const sourceRows = Array.isArray(data) ? data : [];
+    const sourceRows = liveList
+      ? liveList.value
+      : (Array.isArray(incomingData) ? incomingData : []);
     const rows = React.useMemo(() => {
         if (!sort) return sourceRows;
         const col = columns?.[sort.index] as TableColumn | undefined;
@@ -176,11 +259,11 @@ const TableInner = React.memo((props: any) => {
         const sign = sort.dir === 'ascending' ? 1 : -1;
         return sourceRows
             .map((row: any, index: number) => ({ row, index }))
-            .sort((a, b) => {
+            .sort((a: { row: any; index: number }, b: { row: any; index: number }) => {
                 const cmp = compareSortKeys(sortKey(a.row, col), sortKey(b.row, col));
                 return cmp === 0 ? a.index - b.index : sign * cmp;
             })
-            .map((entry) => entry.row);
+            .map((entry: { row: any; index: number }) => entry.row);
     }, [sourceRows, columns, sort, tableSortable]);
 
     return Box()
@@ -225,29 +308,21 @@ const TableInner = React.memo((props: any) => {
              ),
 
              React.createElement('tbody', { key: 'tbody' },
-                 rows.map((row: any, i: number) =>
-                     React.createElement('tr', {
-                         key: tableRowKey(row, i),
-
-                         className: `group transition-all duration-200 border-b border-gray-50 last:border-b-0 ${
-                             striped && i % 2 !== 0 ? 'bg-gray-50/30' : 'bg-transparent'
-                         } ${variant === 'clean' ? 'hover:bg-white hover:shadow-md hover:scale-[1.002] hover:z-10 relative' : 'hover:bg-gray-50/50'}`
-                     },
-                     columns.map((col: any, j: number) =>
-                         React.createElement('td', {
-                             key: j,
-                             style: {
-                                 textAlign: col.align || 'left',
-                                 padding: padding,
-                                 borderTop: variant === 'default' ? '1px solid #F3F4F6' : 'none'
-                             },
-                             className: 'text-sm text-gray-900 font-medium'
-                         },
-                          tableCellNode(rawCellValue(row, col))
-                         )
-                     )
-                     )
-                 )
+                 rows.map((row: any, i: number) => {
+                   if (liveList && row && typeof row._id === 'string' && row._id.length > 0) {
+                     return React.createElement(LiveTableRow, {
+                       key: row._id,
+                       list: liveList,
+                       id: row._id,
+                       index: i,
+                       columns,
+                       variant,
+                       striped: Boolean(striped),
+                       padding,
+                     });
+                   }
+                   return tableRowElement(row, i, columns, variant, Boolean(striped), padding);
+                 })
              )
           ])
        ).build();
@@ -255,8 +330,10 @@ const TableInner = React.memo((props: any) => {
 
 class TableBuilder<T = any> extends FiboBuilder {
   private _data: T[] = [];
-  /** Live source (`listSignal` / `signal`). Read on each rebuild. */
+  /** Plain `signal(array)`. Read on each rebuild. */
   private _source?: BindableSignal<T[]>;
+  /** `listSignal`. Rows subscribe by `_id`. */
+  private _liveList?: ListSignal<any>;
   private _columns: TableColumn<T>[] = [];
   private _variant: TableVariant = 'clean';
   private _density: TableDensity = 'standard';
@@ -265,6 +342,12 @@ class TableBuilder<T = any> extends FiboBuilder {
   private _sortable: boolean = false;
 
   data(items: T[] | BindableSignal<T[]>): this {
+    if (items instanceof ListSignal) {
+      this._liveList = items;
+      this._source = undefined;
+      return this;
+    }
+    this._liveList = undefined;
     if (isListSource<T>(items)) {
       this._source = items;
       this.bindSignal(items);
@@ -308,8 +391,10 @@ class TableBuilder<T = any> extends FiboBuilder {
   }
 
   build(): ReactElement {
+     const liveList = this._liveList;
      const props = {
-         data: this._source ? this._source.value : this._data,
+         data: liveList ? [] : (this._source ? this._source.value : this._data),
+         liveList,
          columns: this._columns,
          variant: this._variant,
          density: this._density,

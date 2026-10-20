@@ -1,6 +1,7 @@
 import React, { CSSProperties, ReactElement, ReactNode } from 'react';
 import { AlignAxis, FiboChild, FiboChildren, ResponsiveStyles } from './types';
 import { BreakpointKey, toMediaQuery } from './breakpoints';
+import { noteFiboDev } from './devStats';
 import { BindableSignal, claimSignalReads, flushSignalReads, inBuildFrame, noteBuilder, Observable, Signal, Subscribable, withBuildOwner } from './state';
 import { Observer, SignalWrapper, ObserverWrapper, StateWrapper, ProviderWrapper } from './StateWrapper';
 import { isUsableReactKey, normalizeFiboChildren } from './children';
@@ -1089,7 +1090,10 @@ export abstract class FiboBuilder {
 
   /** @internal */
   runReplays(): void {
-    for (const replay of this._replays) replay();
+    for (const replay of this._replays) {
+      noteFiboDev('replay');
+      replay();
+    }
   }
 
   translateX(value: Signal<number> | number): this {
@@ -2125,9 +2129,14 @@ type KnownKeys<T> = {
   [K in keyof T]: string extends K ? never : number extends K ? never : K
 } extends { [_ in keyof T]: infer U } ? U : never;
 
-type StyleBuilder<T> = T &
+/**
+ * Fluent CSS methods on every builder. Returns `any` (not `StyleBuilder<T>`) so
+ * declaration emit stays small — recursive `StyleBuilder` blew `index.d.ts` past 20MB.
+ * Runtime still returns the same proxy; call chains type-check via `any`.
+ */
+export type StyleBuilder<T> = T &
   LogicalAxes & {
-    [K in KnownKeys<CSSProperties>]-?: (value: CSSProperties[K]) => StyleBuilder<T>;
+    [K in KnownKeys<CSSProperties>]-?: (value: CSSProperties[K]) => any;
   } & ReactElement;
 
 export function createBuilder<T extends FiboBuilder, Args extends any[]>(

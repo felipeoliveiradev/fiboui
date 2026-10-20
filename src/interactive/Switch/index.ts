@@ -12,9 +12,19 @@ import {
   resolveFluentCss,
 } from '../../core/cssFluent';
 import { fiboCn as twMerge } from '../../core/cn';
+import type { BindableSignal } from '../../core/state';
 import type { FieldRule } from '../Form/validators';
 import { isToggleWhen, type When, type WhenStyle } from '../../core/when';
 import { togglePaintSlot } from '../togglePaint';
+
+function isCheckedSignal(value: unknown): value is BindableSignal<boolean> {
+  return (
+    value != null
+    && typeof value === 'object'
+    && typeof (value as BindableSignal<boolean>).subscribe === 'function'
+    && 'value' in (value as object)
+  );
+}
 
 function bindInterp(host: FiboBuilder, text: string | undefined): void {
   if (typeof text !== 'string' || !hasInterpMarks(text)) return;
@@ -202,6 +212,7 @@ const SwitchInner = React.memo((props: SwitchInnerProps) => {
 
 class SwitchBuilder extends FiboBuilder {
   private _checked: boolean = false;
+  private _checkedSignal?: BindableSignal<boolean>;
   private _controlled = false;
   private _onChange?: (checked: boolean) => void;
   private _label?: string;
@@ -213,7 +224,18 @@ class SwitchBuilder extends FiboBuilder {
   private _checkedStyle?: React.CSSProperties;
   private _uncheckedStyle?: React.CSSProperties;
 
-  checked(value: boolean): this {
+  /**
+   * Static boolean, or a signal — then this switch owns that signal and
+   * stays controlled.
+   */
+  checked(value: boolean | BindableSignal<boolean>): this {
+    if (isCheckedSignal(value)) {
+      this._checkedSignal = value;
+      this.bindSignal(value);
+      this._controlled = true;
+      return this;
+    }
+    this._checkedSignal = undefined;
     this._checked = value;
     return this;
   }
@@ -287,8 +309,9 @@ class SwitchBuilder extends FiboBuilder {
   }
 
   build(): ReactElement {
+    const checked = this._checkedSignal ? this._checkedSignal.value : this._checked;
     const props: SwitchInnerProps = {
-      checked: this._checked,
+      checked,
       controlled: this._controlled,
       onChange: this._onChange,
       label: resolveInterp(this._label),

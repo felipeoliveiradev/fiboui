@@ -4,6 +4,30 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.8.5] - 2026-10-20
+
+### Fixed
+
+- **`page` rebuilds only inside React render.** A root signal marks the page dirty and notifies. `produce()` runs in `view()`, so hooks in the page function (`useRouter`, `useState`) stay valid.
+- **Dev warns when ownership is wrong.** A page root, an unsplit string template, and a failed live text slot each print once in development. A read inside `.observer()` / `.bindSignal()` does not warn or become a page root. Nested fluent calls (`.border()`, `.color()`) keep that owner — they do not steal it and false-warn.
+- **`Table().data(listSignal)` and `Tags().items(listSignal)` update one row / tag** by `_id`, same contract as `List`.
+- **Live text split rejects bare `toFixed` fragments.** `1.5` inside `1.50` does not claim the node — use `Format.fixed` / `Format.euro` (dev warns).
+
+### Added
+
+- **`Format`** — `fixed`, `euro`, `currency`, `percent`, `integer`, `compact` for live `Text` (alias `Transform`). Prefer these over `n.value.toFixed(2)`.
+- **`Unit`** — `px`, `rem`, `em`, `percent`, `vh`, `vw` for live sizes (`Box().width(Unit.px(w))`).
+- **`Plural`** — `of` / `word` for live count labels (`Plural.of(n, 'task', 'tasks')`).
+- **`fiboDevStats()`** — returns `{ produces, replays, pageRoots, warns }` for ownership debugging in development.
+- **`npm run pack:local`** — builds and writes `fiboui-<version>.tgz` under `.pack/` for sibling apps.
+- **`Switch().checked(signal)`** — the switch owns that signal and stays controlled.
+
+### Changed
+
+- **README** — signal ownership decision tree, good/bad examples, helpers table, and local pack path under `.pack/`.
+- **Subpath `.d.ts` are real bundles** — `build:dts` runs `dts-bundle-generator` per entry (`core`, `layout`, …), not re-exports of `index.d.ts`.
+- **`StyleBuilder` d.ts size** — CSS fluent methods return `any` in types so `index.d.ts` stays ~180KB instead of tens of MB. Runtime chaining is unchanged.
+
 ## [2.8.4] - 2026-10-19
 
 ### Fixed

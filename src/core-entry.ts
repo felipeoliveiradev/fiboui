@@ -21,6 +21,11 @@ export { listSignal, collection, ListSignal } from './core/listSignal';
 export type { ListItemId, ListMatcher, ListEntity } from './core/listSignal';
 export { ensureListId } from './core/listSignal';
 export { interp } from './core/interpolate';
+export { fiboDevStats, resetFiboDevStats } from './core/devStats';
+export type { FiboDevStats } from './core/devStats';
+export { Format, Transform } from './core/format';
+export { Unit } from './core/unit';
+export { Plural } from './core/plural';
 
 export { useSignal, useReactiveStore, useObservable } from './core/hooks';
 export { useBuilderState, Observer, ProviderWrapper, useProvider } from './core/StateWrapper';

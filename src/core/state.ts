@@ -1,4 +1,6 @@
+import { noteFiboDev } from './devStats';
 import { takeFormula, type CompiledFormula } from './formula';
+import { warnDev } from './warn';
 
 export type Listener<T> = (value: T) => void;
 export type Unsubscribe = () => void;
@@ -214,7 +216,44 @@ export class Signal<T> implements Subscribable<T> {
 }
 
 /** A sentence split into fixed text and the signals that filled it. */
-export type LivePart = string | Subscribable<unknown>;
+export type LivePart =
+  | string
+  | Subscribable<unknown>
+  | { signal: Subscribable<unknown>; format: (value: unknown) => string };
+
+function isFormattedPart(
+  part: LivePart,
+): part is { signal: Subscribable<unknown>; format: (value: unknown) => string } {
+  return (
+    !!part
+    && typeof part === 'object'
+    && 'signal' in part
+    && 'format' in part
+    && typeof (part as { format?: unknown }).format === 'function'
+  );
+}
+
+/** Remember how the last pending signal was printed (`Format.fixed`, …). */
+export function notePendingFormat(format: (value: unknown) => string): void {
+  const frame = buildFrame;
+  if (!frame || frame.pending.length === 0) return;
+  frame.formats.set(frame.pending[frame.pending.length - 1], format);
+}
+
+function sampleFor(signal: Subscribable<unknown>): string {
+  const raw = readValue(signal);
+  const format = buildFrame?.formats.get(signal);
+  return format ? format(raw) : String(raw);
+}
+
+function partFor(signal: Subscribable<unknown>): LivePart {
+  const format = buildFrame?.formats.get(signal);
+  if (format) {
+    buildFrame?.formats.delete(signal);
+    return { signal, format };
+  }
+  return signal;
+}
 
 /** DOM text written in place when a template reads a signal. The host stays mounted. */
 export type LiveSlot = {
@@ -259,6 +298,8 @@ type BuildFrame = {
   roots: Subscribable<unknown>[];
   formulas: CompiledFormula[];
   formulaCursor: number;
+  /** `Format.fixed(sig)` (and friends) attach a printer to the last pending read. */
+  formats: Map<Subscribable<unknown>, (value: unknown) => string>;
 };
 
 let buildFrame: BuildFrame | null = null;
@@ -281,13 +322,14 @@ function readValue(signal: Subscribable<unknown>): unknown {
  * Split `result` on the values that were just read, left to right.
  * Each value must appear once in what remains, so "Pontos 0" becomes
  * ["Pontos ", signal, ""] and "0 pontos: 0" is left to the page function.
+ * `Format.fixed(sig)` prints the formatted sample so `€ 1.50` still splits.
  */
 export function compileParts(result: string, signals: Subscribable<unknown>[]): LivePart[] | null {
   if (signals.length === 0) return null;
   let rest = result;
   const parts: LivePart[] = [];
   for (const signal of signals) {
-    const sample = String(readValue(signal));
+    const sample = sampleFor(signal);
     if (sample.length === 0) return null;
     let count = 0;
     let at = -1;
@@ -301,8 +343,16 @@ export function compileParts(result: string, signals: Subscribable<unknown>[]): 
       from = found + sample.length;
     }
     if (count !== 1 || at < 0) return null;
+    const after = rest[at + sample.length];
+    if (
+      after !== undefined
+      && /\d/.test(after)
+      && /^-?\d/.test(sample)
+    ) {
+      return null;
+    }
     parts.push(rest.slice(0, at));
-    parts.push(signal);
+    parts.push(partFor(signal));
     rest = rest.slice(at + sample.length);
   }
   parts.push(rest);
@@ -313,14 +363,29 @@ export function compileParts(result: string, signals: Subscribable<unknown>[]): 
 export function renderParts(parts: LivePart[]): string {
   let out = '';
   for (const part of parts) {
-    out += typeof part === 'string' ? part : String(readValue(part));
+    if (typeof part === 'string') {
+      out += part;
+    } else if (isFormattedPart(part)) {
+      out += part.format(readValue(part.signal));
+    } else {
+      out += String(readValue(part));
+    }
   }
   return out;
 }
 
 function rememberRoot(frame: BuildFrame, signal: Subscribable<unknown>) {
   frame.layout = true;
-  if (!frame.roots.includes(signal)) frame.roots.push(signal);
+  if (!frame.roots.includes(signal)) {
+    frame.roots.push(signal);
+    noteFiboDev('pageRoot');
+    warnDev(
+      'page-root',
+      'A signal became a page root. The page function will run again on each change. ' +
+        'Put the read on Text/Button (`Text(`${n.value}`)`) or on a fluent method ' +
+        '(`Box().width(n.value)`), use computed() for formatting, or wrap the branch in .observer().',
+    );
+  }
 }
 
 /**
@@ -354,6 +419,15 @@ export function claimSignalReads(
       host.adoptWire(reads, () => replay([renderParts(parts)]));
       return;
     }
+    // Inside .observer() / .bindSignal() the branch already owns the read.
+    // A border/color string that only used the value for a choice is fine —
+    // do not warn or promote it to a page root.
+    if (ownerTracksItself(frame.owner)) return;
+    warnDev(
+      'string-parts',
+      'Could not split a string onto its signals (ambiguous or formatted value). ' +
+        'Use Format.fixed(sig), computed(() => …), or Text().bindSignal(sig, v => …).',
+    );
   }
   if (method && args.length === 1 && host.adoptWire) {
     const readable = reads as Array<{ peek?: () => unknown; value?: unknown }>;
@@ -365,6 +439,7 @@ export function claimSignalReads(
       return;
     }
   }
+  if (ownerTracksItself(frame.owner)) return;
   for (const signal of reads) rememberRoot(frame, signal);
 }
 
@@ -372,10 +447,7 @@ export function claimSignalReads(
 export function flushSignalReads() {
   const frame = buildFrame;
   if (!frame || frame.pending.length === 0) return;
-  frame.layout = true;
-  for (const signal of frame.pending) {
-    if (!frame.roots.includes(signal)) frame.roots.push(signal);
-  }
+  for (const signal of frame.pending) rememberRoot(frame, signal);
   frame.pending = [];
 }
 
@@ -392,12 +464,19 @@ function ownerTracksItself(owner: BuildOwner | null): boolean {
 /**
  * Run `build()` as `owner` so a read inside `.observer()` / `.bindSignal()`
  * stays on that builder. The page does not subscribe to it.
+ *
+ * If an observer / bindSignal owner is already active, keep it. A nested
+ * `Button().border(...)` must not steal that ownership — otherwise a string
+ * that only used the value for a choice warns and looks like a page root.
  */
 export function withBuildOwner<T>(owner: object, fn: () => T): T {
   const host = owner as BuildOwner;
   const frame = buildFrame;
   if (!frame) return fn();
   const prev = frame.owner;
+  if (ownerTracksItself(prev) && prev !== host) {
+    return fn();
+  }
   const pendingStart = frame.pending.length;
   const rootStart = frame.roots.length;
   frame.owner = host;
@@ -426,6 +505,13 @@ export function allocLiveSlot(next: string): LiveSlot | null {
   const index = frame.slotIndex;
   frame.slotIndex += 1;
   const parts = compileParts(next, signals);
+  if (!parts) {
+    warnDev(
+      'live-slot-parts',
+      'Text/Button template could not own its signals. Prefer Format.fixed(sig), ' +
+        'computed(() => …), or Text().bindSignal(sig, v => …).',
+    );
+  }
   let slot = frame.slots[index];
   if (!slot) {
     slot = { node: null, value: next, next, signals, parts };
@@ -467,6 +553,7 @@ export function runBuildFrame<T>(
   fn: () => T,
   formulas: CompiledFormula[] = [],
 ): { result: T; outcome: BuildOutcome } {
+  noteFiboDev('produce');
   const frame: BuildFrame = {
     cells,
     index: 0,
@@ -479,6 +566,7 @@ export function runBuildFrame<T>(
     roots: [],
     formulas,
     formulaCursor: 0,
+    formats: new Map(),
   };
   const prev = buildFrame;
   buildFrame = frame;
@@ -487,7 +575,16 @@ export function runBuildFrame<T>(
     if (frame.pending.length > 0) {
       frame.layout = true;
       for (const signal of frame.pending) {
-        if (!frame.roots.includes(signal)) frame.roots.push(signal);
+        if (!frame.roots.includes(signal)) {
+          frame.roots.push(signal);
+          noteFiboDev('pageRoot');
+          warnDev(
+            'page-root',
+            'A signal became a page root. The page function will run again on each change. ' +
+              'Put the read on Text/Button (`Text(`${n.value}`)`) or on a fluent method ' +
+              '(`Box().width(n.value)`), use computed() for formatting, or wrap the branch in .observer().',
+          );
+        }
       }
       frame.pending = [];
     }

@@ -28,6 +28,11 @@ export {
   runInScope,
   getCurrentScope,
 } from './core/state';
+export { fiboDevStats, resetFiboDevStats } from './core/devStats';
+export type { FiboDevStats } from './core/devStats';
+export { Format, Transform } from './core/format';
+export { Unit } from './core/unit';
+export { Plural } from './core/plural';
 export { listSignal, collection, ListSignal } from './core/listSignal';
 export type { ListItemId, ListMatcher, ListEntity } from './core/listSignal';
 export { ensureListId } from './core/listSignal';

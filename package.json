@@ -1,6 +1,6 @@
 {
   "name": "fiboui",
-  "version": "2.8.4",
+  "version": "2.8.5",
   "description": "Flutter/SwiftUI-inspired React UI — fluent builders, signals, and themes. https://fiboui.vercel.app",
   "type": "module",
   "main": "./dist/index.js",
@@ -60,7 +60,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build && vite build --config vite.server.config.ts && npm run build:dts && tsc --project tsconfig.cli.json",
-    "build:dts": "dts-bundle-generator --no-check --export-referenced-types false --external-imports=@metagptx/css-to-tailwind --external-imports=react --external-imports=react-dom --external-imports=leaflet -o dist/index.d.ts src/index.ts",
+    "build:dts": "node scripts/build-dts.mjs",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:ssr-e2e": "npm run build && npm --prefix examples/ssr-fixtures install && npm --prefix examples/ssr-fixtures run test:e2e",
@@ -73,7 +73,8 @@
     "prepublishOnly": "bash scripts/secret-scan.sh --pack",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "pack:local": "pnpm exec vite build && npm run build:dts && mkdir -p .pack && npm pack --pack-destination .pack && node -e \"const v=require('./package.json').version; console.log('packed .pack/fiboui-'+v+'.tgz')\""
   },
   "keywords": [
     "react",
@@ -112,6 +113,7 @@
     "@vitejs/plugin-react": "^4.2.0",
     "@vitest/coverage-v8": "^3.2.7",
     "autoprefixer": "^10.4.16",
+    "csstype": "3.2.3",
     "dts-bundle-generator": "^9.5.1",
     "eslint": "^9.39.5",
     "jsdom": "^26.1.0",
