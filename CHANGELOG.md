@@ -26,7 +26,7 @@ All notable changes to this project are documented in this file.
 
 - **README** — signal ownership decision tree, good/bad examples, helpers table, and local pack path under `.pack/`.
 - **Subpath `.d.ts` are real bundles** — `build:dts` runs `dts-bundle-generator` per entry (`core`, `layout`, …), not re-exports of `index.d.ts`.
-- **`StyleBuilder` d.ts size** — CSS fluent methods return `any` in types so `index.d.ts` stays ~180KB instead of tens of MB. Runtime chaining is unchanged.
+- **`StyleBuilder` stays a named type in `.d.ts`** — so `index.d.ts` stays ~180KB and fluent chains (`.hover(h => …)`) keep their types.
 
 ## [2.8.4] - 2026-10-19
 

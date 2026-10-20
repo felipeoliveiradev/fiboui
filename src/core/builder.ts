@@ -2130,13 +2130,13 @@ type KnownKeys<T> = {
 } extends { [_ in keyof T]: infer U } ? U : never;
 
 /**
- * Fluent CSS methods on every builder. Returns `any` (not `StyleBuilder<T>`) so
- * declaration emit stays small — recursive `StyleBuilder` blew `index.d.ts` past 20MB.
- * Runtime still returns the same proxy; call chains type-check via `any`.
+ * Fluent CSS methods on every builder. Kept as a named exported type so
+ * `index.d.ts` references `StyleBuilder<T>` instead of expanding the CSS map
+ * into every widget (that blew the file past 20MB and also typed chains as `any`).
  */
 export type StyleBuilder<T> = T &
   LogicalAxes & {
-    [K in KnownKeys<CSSProperties>]-?: (value: CSSProperties[K]) => any;
+    [K in KnownKeys<CSSProperties>]-?: (value: CSSProperties[K]) => StyleBuilder<T>;
   } & ReactElement;
 
 export function createBuilder<T extends FiboBuilder, Args extends any[]>(
