@@ -15,4 +15,5 @@ paths = [
   '''(^|/)playwright-report/''',
   '''(^|/)test-results/''',
   '''(^|/)blob-report/''',
+  '''(^|/)\.next(/|$)''',
 ]
