@@ -31,6 +31,41 @@ describe('AppBar', () => {
     expect(screen.queryByRole('button', { name: 'Ink' })).toBeNull()
   })
 
+  it('always keeps three equal zones so a lone principal stays centered', () => {
+    const { container } = render(
+      AppBar()
+        .items([ToolbarItem().principal().children(Text('logo'))])
+        .build() as ReactElement,
+    )
+    const leading = container.querySelector('.fibo-app-bar-leading') as HTMLElement
+    const principal = container.querySelector('.fibo-app-bar-principal') as HTMLElement
+    const trailing = container.querySelector('.fibo-app-bar-trailing') as HTMLElement
+    expect(leading).toBeTruthy()
+    expect(trailing).toBeTruthy()
+    expect(leading.dataset.empty).toBe('true')
+    expect(trailing.dataset.empty).toBe('true')
+    expect(principal.dataset.empty).toBeUndefined()
+    expect(principal.textContent).toContain('logo')
+    expect(leading.style.flex).toMatch(/^1 1 0/)
+    expect(principal.style.flex).toMatch(/^1 1 0/)
+    expect(trailing.style.flex).toMatch(/^1 1 0/)
+    expect(principal.style.justifyContent).toBe('center')
+    expect(leading.style.justifyContent).toBe('flex-start')
+    expect(trailing.style.justifyContent).toBe('flex-end')
+  })
+
+  it('keeps empty zones when only trailing is set', () => {
+    const { container } = render(
+      AppBar()
+        .items([ToolbarItem().trailing().children(Text('GO'))])
+        .build() as ReactElement,
+    )
+    expect(container.querySelectorAll('[data-toolbar-slot]')).toHaveLength(3)
+    expect(container.querySelector('.fibo-app-bar-trailing')?.textContent).toContain('GO')
+    expect((container.querySelector('.fibo-app-bar-leading') as HTMLElement).dataset.empty).toBe('true')
+    expect((container.querySelector('.fibo-app-bar-principal') as HTMLElement).dataset.empty).toBe('true')
+  })
+
   it('opens the drawer from the toolbar without remounting the body', () => {
     let mounts = 0
     function Body() {

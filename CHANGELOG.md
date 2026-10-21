@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.9.1] - 2026-10-21
+
+### Fixed
+- **AppBar toolbar** — always keeps three equal zones (`leading` / `principal` / `trailing`). Empty slots still occupy their third, so a lone `.principal()` stays centered instead of sticking to the side.
+
 ## [2.9.0] - 2026-10-20
 
 ### Added

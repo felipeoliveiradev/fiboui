@@ -175,26 +175,38 @@ class AppBarBuilder extends FiboBuilder {
     const className = ['fibo-app-bar', this.getClassName(), extraClass].filter(Boolean).join(' ');
     const style = {
       display: 'flex',
-      alignItems: 'flex-end',
+      alignItems: 'center',
       width: '100%',
-      gap: 16,
       ...this.getStyle(),
       ...(propsStyle && typeof propsStyle === 'object' ? propsStyle : {}),
     };
 
-    const slots = PLACES
-      .filter((place) => groups[place].length > 0)
-      .map((place) => React.createElement(
-        'div',
-        {
-          key: place,
-          className: `fibo-app-bar-${place}`,
-          style: place === 'principal'
-            ? { flex: '1 1 auto', minWidth: 0 }
-            : { display: 'flex', alignItems: 'flex-end', gap: 12, flexShrink: 0 },
+    // Always three equal zones (Flutter NavigationToolbar / SwiftUI top bar).
+    // Empty slots still occupy their third so `.principal()` stays centered alone.
+    const justify: Record<ToolbarPlace, 'flex-start' | 'center' | 'flex-end'> = {
+      leading: 'flex-start',
+      principal: 'center',
+      trailing: 'flex-end',
+    };
+
+    const slots = PLACES.map((place) => React.createElement(
+      'div',
+      {
+        key: place,
+        className: `fibo-app-bar-${place}`,
+        'data-toolbar-slot': place,
+        'data-empty': groups[place].length === 0 ? 'true' : undefined,
+        style: {
+          flex: '1 1 0',
+          minWidth: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: justify[place],
+          gap: 12,
         },
-        ...groups[place],
-      ));
+      },
+      ...groups[place],
+    ));
 
     return React.createElement('header', { ...rest, className, style }, ...slots);
   }
