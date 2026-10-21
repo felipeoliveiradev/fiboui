@@ -16,6 +16,7 @@ export * from './ScrollView';
 export { ScrollController } from './ScrollView';
 export * from './VirtualColumn';
 export * from './VirtualRow';
+export * from './LazyStack';
 export * from './SafeArea';
 export * from './ViewThatFits';
 export * from './AspectRatio';

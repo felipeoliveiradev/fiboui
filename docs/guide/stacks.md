@@ -1,6 +1,6 @@
 # Stacks — Row / Column / virtual
 
-Uma API por conceito. Sem aliases SwiftUI duplicados (`HStack`/`VStack` removidos).
+Uma API por conceito. `HStack`/`VStack` não existem. `LazyVStack`/`LazyHStack` são aliases de `VirtualColumn`/`VirtualRow`.
 
 ## Row
 
@@ -52,6 +52,8 @@ VirtualRow()
 | Queres… | Usa |
 |---|---|
 | Poucos filhos | `Row` / `Column` |
-| Muitos itens a scrollar | `VirtualColumn` / `VirtualRow` ou `List` |
+| Muitos itens a scrollar | `VirtualColumn` / `VirtualRow` (ou `LazyVStack` / `LazyHStack`) ou `List` |
+| Iterar dados inline | `ForEach` / `.forEach(data, fn)` — não um stack extra |
+| Agrupar sem DOM | `Group` |
 
-Correspondência mental SwiftUI (só documentação, não exports): Row ≈ HStack, Column ≈ VStack, Virtual* ≈ Lazy*.
+Correspondência mental SwiftUI: Row ≈ HStack, Column ≈ VStack, `LazyVStack`/`LazyHStack` = `VirtualColumn`/`VirtualRow`.

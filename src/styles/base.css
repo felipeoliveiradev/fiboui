@@ -181,11 +181,15 @@ body {
   gap: 0;
   width: 100%;
   flex-shrink: 0;
+}
+
+/* Chrome paint only when not `.resetStyle()` — otherwise glass/custom wins. */
+.fibo-tabview-list:not(.fibo-reset) {
   border-top: 1px solid var(--fibo-outline, rgba(0, 0, 0, 0.08));
   background: var(--fibo-surface, #fff);
 }
 
-.fibo-tabview[data-bar-position='top'] .fibo-tabview-list {
+.fibo-tabview[data-bar-position='top'] .fibo-tabview-list:not(.fibo-reset) {
   border-top: 0;
   border-bottom: 1px solid var(--fibo-outline, rgba(0, 0, 0, 0.08));
 }
@@ -222,7 +226,22 @@ body {
   max-width: 100%;
 }
 
-.fibo-bottom-app-bar {
+.fibo-bottom-app-bar:not(.fibo-reset) {
   background: var(--fibo-surface, #fff);
   border-top: 1px solid var(--fibo-outline, rgba(0, 0, 0, 0.08));
+}
+
+.fibo-bottom-app-bar[data-floating='true'] {
+  width: auto;
+  max-width: calc(100% - 32px);
+  margin: 0 16px 20px;
+  align-self: center;
+  border-radius: 999px;
+  border-top: none;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+}
+
+.fibo-bottom-app-bar[data-floating='true']:not(.fibo-reset) {
+  background: var(--fibo-surface, rgba(255, 255, 255, 0.72));
+  border-top: none;
 }

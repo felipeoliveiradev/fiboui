@@ -14,6 +14,7 @@ import {
   hasInterpMarks,
   resolveInterpString,
 } from '../../core/interpolate';
+import { ForEach } from '../../structure/ForEach';
 
 function bindInterp(host: FiboBuilder, text: string | undefined): void {
   if (typeof text !== 'string' || !hasInterpMarks(text)) return;
@@ -103,6 +104,17 @@ class ColumnBuilder extends FiboBuilder {
   size(size: 'small' | 'medium' | 'large'): this {
     this._size = size;
     return this;
+  }
+
+  /**
+   * Sugar for `.children(ForEach(data).renderItem(fn))`.
+   * Prefer `ForEach` when you need `.keyBy()`.
+   */
+  forEach<T>(
+    items: T[] | readonly T[],
+    renderItem: (item: T, index: number) => unknown,
+  ): this {
+    return this.children(ForEach(items as T[]).renderItem(renderItem));
   }
 
   build(): ReactElement {

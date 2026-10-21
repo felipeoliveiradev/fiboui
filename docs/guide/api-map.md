@@ -38,7 +38,10 @@ Avoid twin APIs. Prefer the **canonical** column; the others are aliases, reader
 | Want | Use |
 |---|---|
 | Horizontal / vertical | `Row` / `Column` (**no** HStack/VStack) |
-| Virtualized | `VirtualRow` / `VirtualColumn` / `List` |
+| Virtualized | `VirtualRow` / `VirtualColumn` / `List` (`LazyHStack` / `LazyVStack` aliases) |
+| Inline map | `ForEach` / `Row.forEach` / `Column.forEach` |
+| Identity group | `Group` (Fragment) |
+| Glass | `.resetStyle().material(Material.ultraThin)` / `.backdropBlur(n)` |
 | Fill parent | `Size.infinity` + `.frame({ maxWidth/Height })` |
 | Deprecated synonym | `infinity` → use `Size.infinity` |
 

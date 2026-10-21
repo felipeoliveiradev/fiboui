@@ -4,6 +4,19 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.9.5] - 2026-10-21
+
+### Added
+- **`ForEach`** — SwiftUI-style map of data → children for any host (`Row` / `Column` / `ToolbarItem().children(…)`). `.items(data)` + `.renderItem(fn)` + optional `.keyBy(fn)` (not `.id()` — that is HTML id); constructor `ForEach(data, renderItem)`. Fragment host (no extra DOM). Use `List` for list chrome; `ForEach` for inline iteration (glass pills, toolbars, etc.).
+- **`Row.forEach` / `Column.forEach`** — sugar for `.children(ForEach(data).renderItem(fn))`. Prefer standalone `ForEach` when you need `.keyBy()`.
+- **`Group`** — SwiftUI identity host (`Fragment`). No layout node; group children for modifiers / conditionals.
+- **`LazyVStack` / `LazyHStack`** — aliases of `VirtualColumn` / `VirtualRow`.
+- **`Material`** + **`.material()`** / **`.backdropBlur()`** — glass fill helpers (blur + translucent bg). Prefer over raw `.css({ backdropFilter })`.
+- **`BottomAppBar.floating()`** — iOS-style floating capsule (`data-floating`); pair with `.resetStyle().material(Material.ultraThin)`.
+
+### Fixed
+- **Chrome CSS vs `resetStyle`** — `.fibo-bottom-app-bar` / `.fibo-tabview-list` theme paint only applies when **not** `.fibo-reset`, so glass / custom surfaces win after `.resetStyle()`.
+
 ## [2.9.4] - 2026-10-21
 
 ### Fixed

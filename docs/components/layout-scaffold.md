@@ -42,7 +42,7 @@ Scaffold() → ScaffoldBuilder
 | `.provider(key, value)` | `string, any` | Add single provider |
 | `.providers(providers)` | `Record<string, any>` | Add multiple providers |
 | `.headerBar(node)` / `.appBar(node)` | builder / `{ children, fixed? }` | Top bar (often `AppBar`) |
-| `.bottomAppBar(node)` / `.bottomNavigationBar(node)` | builder / `{ children, fixed? }` | Flutter bottom chrome (often `BottomAppBar` + `ToolbarItem` zones, or `TabView` bar) |
+| `.bottomAppBar(node)` / `.bottomNavigationBar(node)` | builder / `{ children, fixed? }` | Flutter bottom chrome (often `BottomAppBar` + `ToolbarItem` zones, or `TabView` bar). Glass: `BottomAppBar().resetStyle().floating().material(Material.ultraThin)` |
 | `.sideBarLeft(node)` / `.sideBarRight(node)` | builder / `{ children, fixed? }` | Side bars |
 | `.structure(config)` | `ScaffoldStructure` | Positions, widths, visibility |
 | `.children(children)` | `ReactNode \| ReactNode[]` | Main content |

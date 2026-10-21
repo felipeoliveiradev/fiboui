@@ -187,9 +187,12 @@ export {
   GestureMaskEnum,
   ScrollAnchor,
   ContainerRelativeAxis,
+  Material,
   applyEdgeSet,
   resolveEdgeInsets,
   type EdgeInsetsValue,
+  type MaterialKind,
+  type MaterialSpec,
 } from './core/swiftuiEnums';
 export { When, type WhenStyle } from './core/when';
 export * from './core/tokens';
@@ -236,6 +239,7 @@ export { ScrollView, ScrollController, ScrollViewReader } from './layout/ScrollV
 export type { ScrollViewProxy } from './layout/ScrollView';
 export { VirtualColumn } from './layout/VirtualColumn';
 export { VirtualRow } from './layout/VirtualRow';
+export { LazyVStack, LazyHStack } from './layout/LazyStack';
 export { SafeArea } from './layout/SafeArea';
 export { ViewThatFits } from './layout/ViewThatFits';
 export { AspectRatio } from './layout/AspectRatio';
@@ -341,6 +345,9 @@ export { Shake } from './interactive/Shake';
 export { Box } from './structure/Box';
 export { Card } from './structure/Card';
 export { List } from './structure/List';
+export { ForEach } from './structure/ForEach';
+export type { ForEachSource } from './structure/ForEach';
+export { Group } from './structure/Group';
 export { Section } from './structure/Section';
 export { SwipeRow } from './structure/SwipeRow';
 export { RefreshIndicator } from './structure/RefreshIndicator';

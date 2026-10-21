@@ -131,3 +131,33 @@ export function applyEdgeSet(
       return { top: value, right: value, bottom: value, left: value };
   }
 }
+
+/**
+ * SwiftUI `Material` — glass fills for `.material(Material.ultraThin)`.
+ * Light translucent defaults; pair with `.theme('noir')` / dark bg as needed.
+ */
+export const Material = {
+  ultraThin: {
+    blur: 20,
+    background: 'rgba(255, 255, 255, 0.35)',
+  },
+  thin: {
+    blur: 28,
+    background: 'rgba(255, 255, 255, 0.48)',
+  },
+  regular: {
+    blur: 36,
+    background: 'rgba(255, 255, 255, 0.62)',
+  },
+  thick: {
+    blur: 48,
+    background: 'rgba(255, 255, 255, 0.78)',
+  },
+  ultraThick: {
+    blur: 60,
+    background: 'rgba(255, 255, 255, 0.88)',
+  },
+} as const;
+
+export type MaterialKind = keyof typeof Material;
+export type MaterialSpec = (typeof Material)[MaterialKind];

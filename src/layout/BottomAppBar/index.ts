@@ -12,19 +12,32 @@ import { buildToolbarSlots } from '../AppBar/toolbarSlots';
  *
  * ```ts
  * BottomAppBar()
+ *   .resetStyle()
+ *   .floating()
+ *   .material(Material.ultraThin)
  *   .items([
- *     ToolbarItem().leading().children(Icon(Menu)),
- *     ToolbarItem().principal().children(TabStrip()),
- *     ToolbarItem().trailing().children(Icon(Search)),
+ *     ToolbarItem().principal().children(
+ *       Row().children(ForEach(tabs).renderItem((t) => chip(t)))
+ *     ),
  *   ])
  * ```
  */
 class BottomAppBarBuilder extends FiboBuilder {
   private _items: FiboChildren = [];
+  private _floating = false;
 
   /** Same contract as `AppBar().items` — zone via `ToolbarItem` place. */
   items(children: FiboChildren): this {
     this._items = children;
+    return this;
+  }
+
+  /**
+   * iOS-style floating capsule — inset from edges, rounded, shadow.
+   * Pair with `.resetStyle().material(Material.ultraThin)` for glass.
+   */
+  floating(value = true): this {
+    this._floating = value;
     return this;
   }
 
@@ -37,7 +50,7 @@ class BottomAppBarBuilder extends FiboBuilder {
     const style = {
       display: 'flex',
       alignItems: 'center',
-      width: '100%',
+      width: this._floating ? undefined : '100%',
       ...this.getStyle(),
       ...(propsStyle && typeof propsStyle === 'object' ? propsStyle : {}),
     };
@@ -50,6 +63,7 @@ class BottomAppBarBuilder extends FiboBuilder {
         style,
         role: 'contentinfo',
         'data-bottom-app-bar': 'true',
+        'data-floating': this._floating ? 'true' : undefined,
       },
       ...buildToolbarSlots(nodes, 'fibo-bottom-app-bar'),
     );

@@ -59,9 +59,12 @@ import {
 } from './safeAreaInset';
 import {
   applyEdgeSet,
+  Material,
   resolveEdgeInsets,
   type EdgeInsetsValue,
   type EdgeSet as EdgeSetType,
+  type MaterialKind,
+  type MaterialSpec,
 } from './swiftuiEnums';
 import { resolveCssEase, springEase, type SpringOptions } from './easing';
 import {
@@ -990,6 +993,34 @@ export abstract class FiboBuilder {
     }
 
     return colorName;
+  }
+
+  /**
+   * Backdrop blur (glass). Prefer over raw `.backdropFilter('blur(…)')`.
+   * `20` → `blur(20px)`; also accepts `'20px'` or a full `blur(…)` string.
+   */
+  backdropBlur(radius: number | string = 20): this {
+    const blur =
+      typeof radius === 'number'
+        ? `blur(${radius}px)`
+        : radius.trim().startsWith('blur(')
+          ? radius
+          : `blur(${radius})`;
+    this.paint('backdrop-filter', blur);
+    this.layoutStyle({ WebkitBackdropFilter: blur } as CSSProperties);
+    return this;
+  }
+
+  /**
+   * SwiftUI `Material` glass fill — blur + translucent background.
+   * `Box().material(Material.ultraThin)` or `.material('regular')`.
+   */
+  material(kind: MaterialKind | MaterialSpec): this {
+    const spec = typeof kind === 'string' ? Material[kind] : kind;
+    if (!spec) return this;
+    this.backdropBlur(spec.blur);
+    this.bg(spec.background);
+    return this;
   }
 
   shadow(config?: import('./shadowTypes').ShadowConfig): this {
