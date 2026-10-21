@@ -1,22 +1,10 @@
-import React, { ReactElement, ReactNode } from 'react';
+import React, { ReactElement } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
 import { normalizeFiboChildren } from '../../core/children';
 import type { FiboChildren } from '../../core/types';
+import { buildToolbarSlots, type ToolbarPlace } from './toolbarSlots';
 
-/** Where a toolbar item sits. Same three slots as Flutter's NavigationToolbar and SwiftUI's top bar. */
-export type ToolbarPlace = 'leading' | 'principal' | 'trailing';
-
-const PLACES: readonly ToolbarPlace[] = ['leading', 'principal', 'trailing'];
-
-function isPlace(value: unknown): value is ToolbarPlace {
-  return value === 'leading' || value === 'principal' || value === 'trailing';
-}
-
-function placeOf(node: ReactNode): ToolbarPlace {
-  if (!React.isValidElement(node)) return 'trailing';
-  const props = node.props as { 'data-toolbar-place'?: unknown };
-  return isPlace(props['data-toolbar-place']) ? props['data-toolbar-place'] : 'trailing';
-}
+export type { ToolbarPlace } from './toolbarSlots';
 
 class ToolbarItemBuilder extends FiboBuilder {
   private _place: ToolbarPlace = 'trailing';
@@ -25,19 +13,19 @@ class ToolbarItemBuilder extends FiboBuilder {
   private _drawer?: 'start' | 'end';
   private _disabled = false;
 
-  /** SwiftUI `.topBarLeading`. Flutter `AppBar.leading`. */
+  /** SwiftUI `.topBarLeading` / `.bottomBar` leading. Flutter `AppBar.leading`. */
   leading(): this {
     this._place = 'leading';
     return this;
   }
 
-  /** SwiftUI `.principal`. Flutter `AppBar.title`. */
+  /** SwiftUI `.principal`. Flutter `AppBar.title` / center slot. */
   principal(): this {
     this._place = 'principal';
     return this;
   }
 
-  /** SwiftUI `.topBarTrailing`. Flutter `AppBar.actions`. */
+  /** SwiftUI `.topBarTrailing` / bottom trailing. Flutter `AppBar.actions`. */
   trailing(): this {
     this._place = 'trailing';
     return this;
@@ -162,15 +150,6 @@ class AppBarBuilder extends FiboBuilder {
 
   build(): ReactElement {
     const nodes = normalizeFiboChildren(this._items);
-    const groups: Record<ToolbarPlace, ReactNode[]> = {
-      leading: [],
-      principal: [],
-      trailing: [],
-    };
-    for (const node of nodes) {
-      groups[placeOf(node)].push(node);
-    }
-
     const { className: extraClass, style: propsStyle, children: _ignored, ...rest } = this._props;
     const className = ['fibo-app-bar', this.getClassName(), extraClass].filter(Boolean).join(' ');
     const style = {
@@ -181,34 +160,11 @@ class AppBarBuilder extends FiboBuilder {
       ...(propsStyle && typeof propsStyle === 'object' ? propsStyle : {}),
     };
 
-    // Always three equal zones (Flutter NavigationToolbar / SwiftUI top bar).
-    // Empty slots still occupy their third so `.principal()` stays centered alone.
-    const justify: Record<ToolbarPlace, 'flex-start' | 'center' | 'flex-end'> = {
-      leading: 'flex-start',
-      principal: 'center',
-      trailing: 'flex-end',
-    };
-
-    const slots = PLACES.map((place) => React.createElement(
-      'div',
-      {
-        key: place,
-        className: `fibo-app-bar-${place}`,
-        'data-toolbar-slot': place,
-        'data-empty': groups[place].length === 0 ? 'true' : undefined,
-        style: {
-          flex: '1 1 0',
-          minWidth: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: justify[place],
-          gap: 12,
-        },
-      },
-      ...groups[place],
-    ));
-
-    return React.createElement('header', { ...rest, className, style }, ...slots);
+    return React.createElement(
+      'header',
+      { ...rest, className, style },
+      ...buildToolbarSlots(nodes, 'fibo-app-bar'),
+    );
   }
 }
 

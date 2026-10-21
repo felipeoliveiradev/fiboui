@@ -16,12 +16,12 @@ function host(): HTMLElement {
 }
 
 describe('W22-08 Scaffold leftover — appBar/body/fab slots vs children', () => {
-  it('keeps headerBar, footerBar, and plugin overlay when body is .props({ children })', () => {
+  it('keeps headerBar, bottomAppBar, and plugin overlay when body is .props({ children })', () => {
     PluginManager.getInstance().registerOverlay(() => Text('fab-slot'))
     render(
       Scaffold()
         .headerBar(Text('app-bar'))
-        .footerBar(Text('bot-bar'))
+        .bottomAppBar(Text('bot-bar'))
         .sideBarLeft(Text('drawer-nav'))
         .props({ children: Text('body-from-props') })
         .build() as ReactElement,

@@ -58,6 +58,13 @@ export interface ScaffoldStructure {
     height?: string | number;
     visible?: boolean;
   };
+  /** Flutter `Scaffold.bottomNavigationBar` chrome metrics. */
+  bottomAppBar?: {
+    position?: 'static' | 'sticky' | 'fixed';
+    height?: string | number;
+    visible?: boolean;
+  };
+  /** @deprecated Use `bottomAppBar`. */
   footer?: {
     position?: 'static' | 'sticky' | 'fixed';
     height?: string | number;
@@ -85,7 +92,7 @@ class ScaffoldBuilder extends FiboBuilder {
   private _structure: ScaffoldStructure = {};
 
   private _headerBar?: FiboChild | LayoutBarConfig;
-  private _footerBar?: FiboChild | LayoutBarConfig;
+  private _bottomAppBar?: FiboChild | LayoutBarConfig;
   private _sideBarLeft?: FiboChild | LayoutBarConfig;
   private _sideBarRight?: FiboChild | LayoutBarConfig;
   private _drawer?: FiboChild;
@@ -153,10 +160,19 @@ class ScaffoldBuilder extends FiboBuilder {
     return this.headerBar(Header().title(title).sticky());
   }
 
-  footerBar(config: FiboChild | LayoutBarConfig): this {
+  /**
+   * Flutter `Scaffold.bottomNavigationBar` — typically a {@link BottomAppBar}
+   * (same three zones as `AppBar`) or a `TabView` / `BottomBar` strip.
+   */
+  bottomAppBar(config: FiboChild | LayoutBarConfig): this {
     this._bindBar(config);
-    this._footerBar = config;
+    this._bottomAppBar = config;
     return this;
+  }
+
+  /** Flutter alias of `.bottomAppBar()`. */
+  bottomNavigationBar(config: FiboChild | LayoutBarConfig): this {
+    return this.bottomAppBar(config);
   }
 
   sideBarLeft(config: FiboChild | LayoutBarConfig): this {
@@ -294,14 +310,15 @@ class ScaffoldBuilder extends FiboBuilder {
     const mainContent = rawBody.map(resolveInterpChild);
 
     const headerBar = this._headerBar ? this._normalizeBar(this._headerBar) : undefined;
-    const footerBar = this._footerBar ? this._normalizeBar(this._footerBar) : undefined;
+    const bottomAppBar = this._bottomAppBar ? this._normalizeBar(this._bottomAppBar) : undefined;
     const leftBar = this._sideBarLeft ? this._normalizeBar(this._sideBarLeft) : undefined;
     const rightBar = this._sideBarRight ? this._normalizeBar(this._sideBarRight) : undefined;
 
     const s = this._structure;
+    const bottomChrome = s.bottomAppBar ?? s.footer;
 
     const showHeader = headerBar && (s.header?.visible !== false);
-    const showFooter = footerBar && (s.footer?.visible !== false);
+    const showBottomAppBar = bottomAppBar && (bottomChrome?.visible !== false);
     const showLeft = leftBar && (s.sidebarLeft?.visible !== false);
     const showRight = rightBar && (s.sidebarRight?.visible !== false);
 
@@ -391,16 +408,16 @@ class ScaffoldBuilder extends FiboBuilder {
       }
     }, headerBar!.content);
 
-    const footerNode = showFooter && React.createElement('div', {
-      key: 'footer-bar',
-      className: 'z-30 fibo-scaffold-footer',
+    const bottomAppBarNode = showBottomAppBar && React.createElement('div', {
+      key: 'bottom-app-bar',
+      className: 'z-30 fibo-scaffold-bottom-app-bar',
       style: {
-        height: s.footer?.height,
-        position: s.footer?.position || (footerBar!.fixed ? 'sticky' : 'static'),
+        height: bottomChrome?.height,
+        position: bottomChrome?.position || (bottomAppBar!.fixed ? 'sticky' : 'static'),
         zIndex: 30,
         ...chromeNoShrink,
       }
-    }, footerBar!.content);
+    }, bottomAppBar!.content);
 
     const isDock = this._fabAt === 'startDock' || this._fabAt === 'centerDock' || this._fabAt === 'endDock';
     const fabNode = this._fab
@@ -455,11 +472,11 @@ class ScaffoldBuilder extends FiboBuilder {
         : null;
 
     const bottomNode =
-      sheetNode || buttonNode || footerNode || (isDock && fabNode)
+      sheetNode || buttonNode || bottomAppBarNode || (isDock && fabNode)
         ? React.createElement(
             'div',
             { key: 'scaffold-bottom', className: 'fibo-scaffold-bottom' },
-            [sheetNode, buttonNode, footerNode, isDock ? fabNode : null].filter(Boolean),
+            [sheetNode, buttonNode, bottomAppBarNode, isDock ? fabNode : null].filter(Boolean),
           )
         : null;
 

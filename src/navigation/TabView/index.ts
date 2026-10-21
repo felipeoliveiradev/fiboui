@@ -1,22 +1,20 @@
-import React, { ReactElement, ReactNode } from 'react';
+import React, { ReactElement } from 'react';
 import { FiboBuilder, createBuilder } from '../../core/builder';
-import { buildChild } from '../../core/children';
+import {
+  TabViewHost,
+  type TabBarPosition,
+  type TabViewTab,
+} from './TabViewHost';
 
-export interface TabViewTab {
-  value: string;
-  label: ReactNode;
-  child?: ReactNode;
-}
-
-function slot(node: unknown): ReactNode {
-  if (node == null || node === false) return null;
-  return buildChild(node);
-}
+export type { TabViewTab, TabBarPosition } from './TabViewHost';
 
 class TabViewBuilder extends FiboBuilder {
   private _tabs: TabViewTab[] = [];
   private _value?: string;
   private _onChange?: (value: string) => void;
+  private _barPosition: TabBarPosition = 'bottom';
+  private _swipe = true;
+  private _keepAlive = true;
 
   tabs(items: TabViewTab[]): this {
     this._tabs = items;
@@ -33,38 +31,47 @@ class TabViewBuilder extends FiboBuilder {
     return this;
   }
 
+  /**
+   * Tablist placement. Default `bottom` (Material / pairs with `BottomAppBar`).
+   * `none` — panels only; put your own bar in `BottomAppBar().items(…)`.
+   */
+  barPosition(position: TabBarPosition): this {
+    this._barPosition = position;
+    return this;
+  }
+
+  /** Horizontal drag between pages. Default true. CSS transform + snap. */
+  swipe(enabled = true): this {
+    this._swipe = enabled;
+    return this;
+  }
+
+  /**
+   * Keep neighboring / all panels mounted (React.memo + Activity).
+   * Default true. `false` mounts only the active tab ±1.
+   */
+  keepAlive(enabled = true): this {
+    this._keepAlive = enabled;
+    return this;
+  }
+
   build(): ReactElement {
-    const { className: extraClass, style: extraStyle, key: _key, children: _children, ...rest } = this._props;
-    const className = ['fibo-tabview', this.getClassName(), extraClass].filter(Boolean).join(' ');
+    const { className: extraClass, style: extraStyle, key: _key, children: _children, ...rest } =
+      this._props;
+    const className = [this.getClassName(), extraClass].filter(Boolean).join(' ') || undefined;
     const style = extraStyle ? { ...this.getStyle(), ...extraStyle } : this.getStyle();
-    const selected = this._value ?? this._tabs[0]?.value;
-    const current = this._tabs.find((tab) => tab.value === selected) ?? this._tabs[0];
 
-    const tablist = React.createElement(
-      'div',
-      { role: 'tablist', className: 'fibo-tabview-list' },
-      ...this._tabs.map((tab) =>
-        React.createElement(
-          'button',
-          {
-            key: tab.value,
-            type: 'button',
-            role: 'tab',
-            'aria-selected': tab.value === selected ? 'true' : 'false',
-            onClick: () => this._onChange?.(tab.value),
-          },
-          slot(tab.label)
-        )
-      )
-    );
-
-    const panel = React.createElement(
-      'div',
-      { role: 'tabpanel', className: 'fibo-tabview-panel' },
-      slot(current?.child)
-    );
-
-    return React.createElement('div', { ...rest, className, style }, tablist, panel);
+    return React.createElement(TabViewHost, {
+      ...rest,
+      tabs: this._tabs,
+      value: this._value,
+      onChange: this._onChange,
+      barPosition: this._barPosition,
+      swipe: this._swipe,
+      keepAlive: this._keepAlive,
+      className,
+      style: Object.keys(style).length > 0 ? style : undefined,
+    });
   }
 }
 

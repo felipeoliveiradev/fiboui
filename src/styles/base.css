@@ -119,3 +119,110 @@ body {
 .fibo-theme-noir .fibo-reset button {
   display: block;
 }
+
+/* —— TabView (swipe film + CSS transform) —— */
+.fibo-tabview {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+}
+
+.fibo-tabview-viewport {
+  position: relative;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+  /* Allow nested horizontal ScrollView + vertical scroll; swipe arms only
+     after horizontal intent (see TabViewHost) — then data-dragging locks.
+     No default grab cursor — that made every mouse click feel like swipe. */
+  touch-action: pan-x pan-y;
+  cursor: default;
+}
+
+.fibo-tabview-viewport[data-dragging='true'] {
+  cursor: grabbing;
+  touch-action: none;
+  user-select: none;
+}
+
+.fibo-tabview-track {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+}
+
+.fibo-tabview-panel {
+  flex: 0 0 100%;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  box-sizing: border-box;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 240px;
+}
+
+.fibo-tabview-panel-body {
+  width: 100%;
+  min-height: 100%;
+}
+
+.fibo-tabview-list {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: space-around;
+  gap: 0;
+  width: 100%;
+  flex-shrink: 0;
+  border-top: 1px solid var(--fibo-outline, rgba(0, 0, 0, 0.08));
+  background: var(--fibo-surface, #fff);
+}
+
+.fibo-tabview[data-bar-position='top'] .fibo-tabview-list {
+  border-top: 0;
+  border-bottom: 1px solid var(--fibo-outline, rgba(0, 0, 0, 0.08));
+}
+
+.fibo-tabview-tab {
+  flex: 1 1 0;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px 8px;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  color: var(--fibo-on-surface-variant, #6b7280);
+  font: inherit;
+  cursor: pointer;
+  transition: color 180ms ease, background-color 180ms ease;
+}
+
+.fibo-tabview-tab[data-selected='true'],
+.fibo-tabview-tab[aria-selected='true'] {
+  color: var(--fibo-primary, #2563eb);
+}
+
+.fibo-tabview-tab-label {
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.fibo-bottom-app-bar {
+  background: var(--fibo-surface, #fff);
+  border-top: 1px solid var(--fibo-outline, rgba(0, 0, 0, 0.08));
+}

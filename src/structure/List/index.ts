@@ -16,6 +16,7 @@ import { BaseProps, FiboChild, FiboChildren } from '../../core/types';
 import type { BindableSignal } from '../../core/state';
 import { ListSignal } from '../../core/listSignal';
 import { Box } from '../Box';
+import { Divider } from '../../layout/Divider';
 import {
   createListItemPseudoStateBuilder,
 } from './ListItemPseudoStateBuilder';
@@ -33,6 +34,48 @@ import {
 } from '../../core/interpolate';
 
 type ListVariant = 'default' | 'card' | 'floating';
+
+/**
+ * Flutter `ListView.separated` slot for `.separator(…)`.
+ * - `true` / omitted → default {@link Divider}
+ * - node / builder → fixed separator between every pair
+ * - `(index) => …` → build each gap (index is 0 … itemCount-2)
+ */
+export type ListSeparator =
+  | boolean
+  | FiboChild
+  | ((index: number) => FiboChild);
+
+const DEFAULT_SEPARATOR_HEIGHT = 1;
+
+function defaultListSeparator(): ReactNode {
+  return Divider().thickness(1).color('#F3F4F6').build();
+}
+
+/** Resolve one Flutter-style separator for the gap after `index`. */
+function resolveListSeparator(
+  separator: ListSeparator | undefined,
+  index: number,
+): ReactNode | null {
+  if (separator == null || separator === false) return null;
+  if (separator === true) return defaultListSeparator();
+  if (typeof separator === 'function') {
+    return buildChild(separator(index));
+  }
+  return buildChild(separator);
+}
+
+function separatorHost(node: ReactNode, index: number): ReactElement {
+  return React.createElement(
+    'div',
+    {
+      key: `fibo-list-sep-${index}`,
+      className: 'fibo-list-separator',
+      'data-list-separator': index,
+    },
+    node,
+  );
+}
 
 /** Render list row: custom renderItem, else builders/elements/primitives as-is. */
 function isListSource<T>(value: unknown): value is BindableSignal<T[]> {
@@ -328,10 +371,14 @@ const ListInner = React.memo((props: any) => {
     return heightCache.current.get(key) ?? DEFAULT_ITEM_HEIGHT;
   };
 
+  const separatorExtent =
+    separator != null && separator !== false ? DEFAULT_SEPARATOR_HEIGHT : 0;
+
   const getItemOffset = (index: number): number => {
     let offset = 0;
     for (let i = 0; i < index; i++) {
       offset += getItemHeight(i);
+      if (separatorExtent > 0 && i < itemCount - 1) offset += separatorExtent;
     }
     return offset;
   };
@@ -340,6 +387,9 @@ const ListInner = React.memo((props: any) => {
     let total = 0;
     for (let i = 0; i < itemCount; i++) {
       total += getItemHeight(i);
+    }
+    if (separatorExtent > 0 && itemCount > 1) {
+      total += separatorExtent * (itemCount - 1);
     }
     return total;
   };
@@ -500,12 +550,13 @@ const ListInner = React.memo((props: any) => {
 
   const itemStyleOverlay: CSSProperties = itemStyleProp || {};
 
+  // Separators are real children between rows (Flutter ListView.separated),
+  // not a borderBottom on every item — so the last row stays clean.
   const baseItemContainerStyles: Record<ListVariant, CSSProperties> = resetItemStyles
     ? { default: {}, card: {}, floating: {} }
     : {
         default: {
           padding: '12px 16px',
-          borderBottom: separator ? '1px solid #F3F4F6' : 'none',
           // Transparent via class, not inline — so Tailwind / itemHover bg can win.
           transition: 'background-color 0.2s ease-out',
         },
@@ -524,6 +575,14 @@ const ListInner = React.memo((props: any) => {
           transition: 'background-color 0.2s ease-out, box-shadow 0.2s ease-out',
         },
       };
+
+  const hasSeparators = separator != null && separator !== false;
+
+  const appendSeparatorAfter = (nodes: ReactNode[], itemIndex: number) => {
+    if (!hasSeparators || itemIndex >= itemCount - 1) return;
+    const sep = resolveListSeparator(separator, itemIndex);
+    if (sep != null) nodes.push(separatorHost(sep, itemIndex));
+  };
 
   // Variant defaults + universal itemStyle (SwiftUI listRow* / Flutter ListTileTheme).
   const itemContainerStyles: Record<ListVariant, CSSProperties> = {
@@ -615,19 +674,22 @@ const ListInner = React.memo((props: any) => {
             flexDirection: isHorizontal ? 'row' : undefined
           }
         },
-        visibleItems.map((item: any, i: number) => {
+        visibleItems.flatMap((item: any, i: number) => {
           const actualIndex = startIndex + i;
           const rowKey = listItemKey(item, actualIndex);
-
-          return rowAt(item, actualIndex, {
-            ref: (el: HTMLDivElement | null) => {
-              if (el) {
-                itemRefs.current.set(rowKey, el);
-              } else {
-                itemRefs.current.delete(rowKey);
-              }
-            },
-          });
+          const nodes: ReactNode[] = [
+            rowAt(item, actualIndex, {
+              ref: (el: HTMLDivElement | null) => {
+                if (el) {
+                  itemRefs.current.set(rowKey, el);
+                } else {
+                  itemRefs.current.delete(rowKey);
+                }
+              },
+            }),
+          ];
+          appendSeparatorAfter(nodes, actualIndex);
+          return nodes;
         })
       ),
       onEndReached && React.createElement('div', {
@@ -655,20 +717,27 @@ const ListInner = React.memo((props: any) => {
       ...style
     })
     .children(
-      React.createElement(React.Fragment, {}, [
-        ...items.map((item: any, index: number) => rowAt(item, index)),
-
-        onEndReached && (
-          React.createElement('div', {
-            ref: observerRef,
-            className: 'py-4 flex justify-center w-full'
-          }, loading ? (
-            React.createElement('div', { className: 'animate-spin rounded-full h-5 w-5 border-2 border-gray-300 border-b-blue-600' })
-          ) : (
-            React.createElement('div', { style: { height: '20px' } })
-          ))
-        )
-      ])
+      React.createElement(React.Fragment, {}, (() => {
+        const nodes: ReactNode[] = [];
+        for (let index = 0; index < items.length; index++) {
+          nodes.push(rowAt(items[index], index));
+          appendSeparatorAfter(nodes, index);
+        }
+        if (onEndReached) {
+          nodes.push(
+            React.createElement('div', {
+              key: 'fibo-list-end',
+              ref: observerRef,
+              className: 'py-4 flex justify-center w-full'
+            }, loading ? (
+              React.createElement('div', { className: 'animate-spin rounded-full h-5 w-5 border-2 border-gray-300 border-b-blue-600' })
+            ) : (
+              React.createElement('div', { style: { height: '20px' } })
+            ))
+          );
+        }
+        return nodes;
+      })())
     )
     .build();
 });
@@ -682,7 +751,8 @@ class ListBuilder<T = any> extends FiboBuilder {
   private _renderItem?: (item: T, index: number) => ReactNode;
   private _onItemPress?: (item: T, index: number) => void;
   private _variant: ListVariant = 'default';
-  private _separator: boolean = false;
+  /** Flutter `ListView.separated` — see {@link ListBuilder.separator}. */
+  private _separator: ListSeparator = false;
   private _onEndReached?: () => void;
   private _loading: boolean = false;
   private _threshold: number = 0.5;
@@ -793,8 +863,30 @@ class ListBuilder<T = any> extends FiboBuilder {
     return this;
   }
 
-  separator(show: boolean = true): this {
-    this._separator = show;
+  /**
+   * Flutter `ListView.separated` — paint a widget **between** rows only
+   * (never before the first or after the last). The value itself is the build:
+   *
+   * ```ts
+   * // default Material hairline (Divider)
+   * List().items(rows).separator().renderItem(…)
+   *
+   * // fixed custom separator (any builder / node)
+   * List().items(rows).separator(Divider().indent(16).color('#ccc'))
+   * List().items(rows).separator(Text('·').alignX('center'))
+   * List().items(rows).separator(Row().gap(8).children([Line(), Text('OR'), Line()]))
+   *
+   * // build each gap — index is 0 … itemCount-2
+   * List().items(rows).separator((i) =>
+   *   i === 2 ? Text('Section') : Divider().indent(16)
+   * )
+   * ```
+   */
+  separator(value: ListSeparator = true): this {
+    this._separator = value;
+    if (value != null && value !== false && value !== true && typeof value !== 'function') {
+      bindInterpTree(this, value);
+    }
     return this;
   }
 
@@ -943,7 +1035,8 @@ export interface ListProps<T = any> extends BaseProps {
   items: T[];
   renderItem?: (item: T, index: number) => ReactNode;
   variant?: ListVariant;
-  separator?: boolean;
+  /** Flutter `ListView.separated` — boolean, node, or `(index) => node`. */
+  separator?: ListSeparator;
   containerHeight?: number;
   itemStyle?: CSSProperties;
   empty?: FiboChild | (() => FiboChild);

@@ -4,6 +4,31 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.9.4] - 2026-10-21
+
+### Fixed
+- **`TabView` swipe** — mouse (and empty `pointerType`) never starts a swipe; only `touch` / `pen`. Desktop changes tabs via BottomBar / tablist.
+
+## [2.9.3] - 2026-10-21
+
+### Fixed
+- **`TabView` mouse** — click jitter no longer arms swipe (mouse arm slop 40px vs touch 12px); default viewport cursor is no longer `grab`.
+
+## [2.9.2] - 2026-10-21
+
+### Fixed
+- **`TabView` swipe** — no longer `setPointerCapture` / `dragging` on every `pointerdown` (that stole `pointerup` from nested `onTapGesture` → intermittent missed taps). Swipe arms only after horizontal intent past slop; skips nested horizontal `ScrollView`; drag `setState` batched with `rAF`. Viewport `touch-action` is `pan-x pan-y` until armed.
+
+### Added
+- **`BottomAppBar`** — Flutter-style bottom chrome with the same three `ToolbarItem` zones as `AppBar` (`leading` / `principal` / `trailing`).
+- **`Scaffold.bottomAppBar` / `.bottomNavigationBar`** — Flutter `Scaffold.bottomNavigationBar` slot (replaces `footerBar`).
+- **`TabView`** — swipe film strip (CSS `translate3d` + snap), `React.memo` panels, `React.Activity` when available, `.barPosition('top'|'bottom'|'none')`, `.swipe()`, `.keepAlive()`.
+- **`List.separator`** — Flutter `ListView.separated` style (`true` / node / `(index) => node`).
+- **`Divider`** — layout divider helper used by list separators.
+
+### Removed
+- **`Scaffold.footerBar`** — use `.bottomAppBar(BottomAppBar()…)` instead. `structure.footer` still accepted as a deprecated alias of `structure.bottomAppBar`.
+
 ## [2.9.1] - 2026-10-21
 
 ### Fixed

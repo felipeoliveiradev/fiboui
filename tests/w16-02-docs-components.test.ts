@@ -127,11 +127,12 @@ describe('W16-02 component docs vs code', () => {
     expect(inputs).not.toMatch(/\.maxW\(/)
   })
 
-  it('layout-scaffold.md uses footerBar/useProvider, not Footer/consume chain', () => {
+  it('layout-scaffold.md uses bottomAppBar/useProvider, not Footer/consume chain', () => {
     const md = readDoc('layout-scaffold.md')
     expect(md).not.toMatch(/\bFooter\s*\(/)
     expect(md).not.toMatch(/\.consume\('theme'\)\s*\n\s*\.backgroundColor/)
-    expect(md).toMatch(/footerBar/)
+    expect(md).toMatch(/bottomAppBar/)
+    expect(md).not.toMatch(/footerBar/)
     expect(md).toMatch(/useProvider/)
   })
 

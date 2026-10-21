@@ -13,7 +13,7 @@ Scaffold()
   .theme(myTheme)
   .locale('pt-BR')
   .headerBar(Header())
-  .footerBar(Box().children('Footer'))
+  .bottomAppBar(BottomAppBar().items([ToolbarItem().principal().children(Text('Tabs'))]))
   .children([
     MainContent(),
   ])
@@ -41,8 +41,8 @@ Scaffold() → ScaffoldBuilder
 | `.locale(locale)` | `string` | Set application locale |
 | `.provider(key, value)` | `string, any` | Add single provider |
 | `.providers(providers)` | `Record<string, any>` | Add multiple providers |
-| `.headerBar(node)` | builder / `{ children, fixed? }` | Top bar |
-| `.footerBar(node)` | builder / `{ children, fixed? }` | Bottom bar |
+| `.headerBar(node)` / `.appBar(node)` | builder / `{ children, fixed? }` | Top bar (often `AppBar`) |
+| `.bottomAppBar(node)` / `.bottomNavigationBar(node)` | builder / `{ children, fixed? }` | Flutter bottom chrome (often `BottomAppBar` + `ToolbarItem` zones, or `TabView` bar) |
 | `.sideBarLeft(node)` / `.sideBarRight(node)` | builder / `{ children, fixed? }` | Side bars |
 | `.structure(config)` | `ScaffoldStructure` | Positions, widths, visibility |
 | `.children(children)` | `ReactNode \| ReactNode[]` | Main content |
@@ -70,7 +70,7 @@ function App() {
         )
     ])
     .headerBar(Header())
-    .footerBar(Box().children('Footer'))
+    .bottomAppBar(BottomAppBar().items([ToolbarItem().principal().children(Text('Home'))]))
 
 }
 ```
@@ -120,7 +120,11 @@ function EcommerceApp() {
             ])
         )
     )
-    .footerBar(Box().children('Footer'))
+    .bottomAppBar(
+      BottomAppBar().items([
+        ToolbarItem().principal().children(Text('Shop')),
+      ]),
+    )
     .children([
       Box()
         .flex('1')

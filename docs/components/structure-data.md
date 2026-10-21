@@ -75,7 +75,7 @@ List() → ListBuilder
 | `.variant(variant)` | `'default' \| 'card' \| 'floating'` | Visual style |
 | `.itemStyle(fn \| css)` | callback or style object | Row chrome. The callback is a CSS fluent proxy (`paddingHorizontal`, `boxShadow(0)` → `none`). |
 | `.itemHover(fn)` / `.itemActive(fn)` / `.itemFocus(fn)` | callback | Pseudo styles, injected with `!important`. One stylesheet per list. `itemFocus` uses `:focus-within`. |
-| `.separator(show)` | `boolean` | Separators on the default variant only, and only when item styles were not reset |
+| `.separator(value)` | `true` \| node \| `(index) => node` | Flutter `ListView.separated` — widget **between** rows only. `true` → default `Divider`. Pass any builder (`Divider()`, `Text('·')`, `Row()…`) or a build fn (index `0 … itemCount-2`). |
 | `.onEndReached(handler)` | `() => void` | Infinite scroll callback |
 | `.loading(isLoading)` | `boolean` | Spinner inside the infinite-scroll sentinel. It does not paint a loader by itself. |
 

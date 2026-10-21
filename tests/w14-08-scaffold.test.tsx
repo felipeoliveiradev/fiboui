@@ -80,16 +80,16 @@ describe('W14-08 Scaffold providers + overlays + chrome', () => {
     expect(host.children).toHaveLength(2)
   })
 
-  it('does not let header, footer, or side chrome shrink in the flex shell', () => {
+  it('does not let header, bottomAppBar, or side chrome shrink in the flex shell', () => {
     render(
       Scaffold()
         .headerBar(Text('top'))
-        .footerBar(Text('bot'))
+        .bottomAppBar(Text('bot'))
         .sideBarLeft(Text('nav-l'))
         .sideBarRight(Text('nav-r'))
         .structure({
           header: { height: 56 },
-          footer: { height: 40 },
+          bottomAppBar: { height: 40 },
           sidebarLeft: { width: 200 },
           sidebarRight: { width: 160 },
         })
