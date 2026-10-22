@@ -1,0 +1,57 @@
+{
+  "name": "fiboui-noir",
+  "displayName": "FiboUI Noir",
+  "description": "A dark, minimal color theme for VS Code and Cursor. Zinc chrome, teal accents, and syntax tuned for FiboUI fluent builders.",
+  "version": "0.1.0",
+  "publisher": "felipeoliveiradev",
+  "license": "MIT",
+  "icon": "images/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/felipeoliveiradev/fiboui.git"
+  },
+  "homepage": "https://fiboui.vercel.app",
+  "bugs": {
+    "url": "https://github.com/felipeoliveiradev/fiboui/issues"
+  },
+  "qna": "marketplace",
+  "markdown": "github",
+  "galleryBanner": {
+    "color": "#09090B",
+    "theme": "dark"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Themes"
+  ],
+  "keywords": [
+    "theme",
+    "color-theme",
+    "dark theme",
+    "dark",
+    "noir",
+    "minimal",
+    "zinc",
+    "teal",
+    "fiboui",
+    "vscode theme",
+    "cursor theme"
+  ],
+  "contributes": {
+    "themes": [
+      {
+        "label": "FiboUI Noir",
+        "uiTheme": "vs-dark",
+        "path": "./themes/fiboui-noir-color-theme.json"
+      }
+    ]
+  },
+  "scripts": {
+    "sync-theme": "node scripts/sync-theme.js",
+    "prepackage": "npm run sync-theme",
+    "test": "node scripts/validate-theme.js && node scripts/theme-identity.test.js",
+    "package": "npx --yes @vscode/vsce package"
+  }
+}

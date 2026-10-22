@@ -46,9 +46,13 @@ jobs:
         with:
           node-version: '20'
       - run: npm --prefix extensions/vscode-fiboui test
+      - run: npm --prefix extensions/fiboui-noir-theme test
       - name: Package VSIX
         working-directory: extensions/vscode-fiboui
         run: npx --yes @vscode/vsce package --out /tmp/fiboui-ci.vsix
+      - name: Package theme VSIX
+        working-directory: extensions/fiboui-noir-theme
+        run: npx --yes @vscode/vsce package --out /tmp/fiboui-noir-ci.vsix
 
   gitleaks:
     runs-on: ubuntu-latest
