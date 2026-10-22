@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.9.6] - 2026-10-22
+
+### Added
+- **`.frame({ fill: true })`** — stretch the direct child to the frame slot (`width/height: 100%`). Default remains SwiftUI hug + `alignment`. Use when `.bg` / border live on the child and should cover the frame (e.g. `Box().bg('red').frame({ maxWidth: Size.infinity, fill: true })`).
+
 ## [2.9.5] - 2026-10-21
 
 ### Added

@@ -277,9 +277,12 @@ export abstract class FiboBuilder {
    *   maxHeight: Size.infinity,
    *   alignment: StackAlign.topTrailing,
    * })
+   * // Child fills the slot (bg/border on the child cover the frame):
+   * Box().bg('red').frame({ maxWidth: Size.infinity, fill: true })
    * ```
    *
    * Chainable: each `.frame()` wraps the previous (same as SwiftUI).
+   * Default: child hugs + `alignment`. Pass `fill: true` to stretch the child.
    */
   frame(spec: FrameSpec): this {
     this._frames.push({ ...spec });

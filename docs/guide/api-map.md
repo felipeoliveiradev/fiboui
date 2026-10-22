@@ -42,6 +42,8 @@ Avoid twin APIs. Prefer the **canonical** column; the others are aliases, reader
 | Inline map | `ForEach` / `Row.forEach` / `Column.forEach` |
 | Identity group | `Group` (Fragment) |
 | Glass | `.resetStyle().material(Material.ultraThin)` / `.backdropBlur(n)` |
+| Frame slot + paint on child | `.frame({ maxWidth: Size.infinity, fill: true })` — without `fill`, child hugs |
+| Own size (no wrapper) | `.width(Size.full)` / `.height(…)` on the view itself |
 | Fill parent | `Size.infinity` + `.frame({ maxWidth/Height })` |
 | Deprecated synonym | `infinity` → use `Size.infinity` |
 

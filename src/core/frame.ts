@@ -17,6 +17,7 @@ export type FrameSize = number | string | SizeToken;
  * ```ts
  * .frame({ width: 300, height: 400 })
  * .frame({ maxWidth: Size.infinity, maxHeight: Size.infinity, alignment: StackAlign.topTrailing })
+ * .frame({ maxWidth: Size.infinity, fill: true }) // child stretches — bg/border fill the slot
  * ```
  */
 export interface FrameSpec {
@@ -29,6 +30,12 @@ export interface FrameSpec {
   idealHeight?: FrameSize;
   maxHeight?: FrameSize;
   alignment?: StackAlign | keyof typeof StackAlign;
+  /**
+   * Stretch the direct child to the frame slot (`width/height: 100%`).
+   * Default `false` — SwiftUI-like hug + `alignment`.
+   * Use when paint (`.bg`, border) lives on the child and should fill the frame.
+   */
+  fill?: boolean;
 }
 
 function isInfinity(value: FrameSize | undefined): boolean {
@@ -61,6 +68,7 @@ export function resolveFrameSize(
 export function isFixedNumericFrame(
   spec: FrameSpec
 ): spec is FrameSpec & { width: number; height: number } {
+  if (spec.fill) return false;
   if (typeof spec.width !== 'number' || typeof spec.height !== 'number') {
     return false;
   }
@@ -93,8 +101,13 @@ function frameHostStyle(spec: FrameSpec): CSSProperties {
     display: 'flex',
     minWidth: 0,
     minHeight: 0,
-    alignItems: flex.alignItems as CSSProperties['alignItems'],
-    justifyContent: flex.justifyContent as CSSProperties['justifyContent'],
+    // `fill` stretches the child — host uses stretch instead of corner align.
+    alignItems: (spec.fill
+      ? 'stretch'
+      : flex.alignItems) as CSSProperties['alignItems'],
+    justifyContent: (spec.fill
+      ? 'flex-start'
+      : flex.justifyContent) as CSSProperties['justifyContent'],
   };
 
   const maxW = resolveFrameSize(spec.maxWidth, 'max', 'width');
@@ -133,15 +146,39 @@ function frameHostStyle(spec: FrameSpec): CSSProperties {
   return style;
 }
 
+const FILL_CHILD_STYLE: CSSProperties = {
+  width: '100%',
+  height: '100%',
+  minWidth: 0,
+  minHeight: 0,
+  boxSizing: 'border-box',
+  flex: '1 1 auto',
+  alignSelf: 'stretch',
+};
+
+/** Stretch the framed child so paint (bg/border) fills the slot. */
+function applyFillToChild(child: ReactElement): ReactElement {
+  if (!React.isValidElement(child)) return child;
+  const props = child.props as { style?: CSSProperties };
+  return React.cloneElement(child as ReactElement<{ style?: CSSProperties }>, {
+    style: {
+      ...props.style,
+      ...FILL_CHILD_STYLE,
+    },
+  });
+}
+
 /** Invisible SwiftUI-style frame wrapper around a built host element. */
 export function wrapFrame(child: ReactElement, spec: FrameSpec): ReactElement {
+  const content = spec.fill ? applyFillToChild(child) : child;
   return React.createElement(
     'div',
     {
       className: 'fibo-frame',
       'data-fibo-frame': resolveAlign(spec.alignment),
+      'data-fibo-fill': spec.fill ? 'true' : undefined,
       style: frameHostStyle(spec),
     },
-    child
+    content
   );
 }

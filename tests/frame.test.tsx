@@ -93,4 +93,48 @@ describe('frame — SwiftUI View.frame', () => {
     expect((frames[0] as HTMLElement).style.width).toBe('100%')
     expect((frames[1] as HTMLElement).style.width).toBe('10px')
   })
+
+  it('fill: true stretches the child to the frame slot', () => {
+    const { container } = render(
+      Box()
+        .bg('red')
+        .frame({
+          width: 200,
+          height: 100,
+          fill: true,
+        })
+        .build(),
+    )
+    const frame = container.querySelector('.fibo-frame') as HTMLElement
+    expect(frame.dataset.fiboFill).toBe('true')
+    expect(frame.style.width).toBe('200px')
+    expect(frame.style.height).toBe('100px')
+    expect(frame.style.alignItems).toBe('stretch')
+    const child = frame.firstElementChild as HTMLElement
+    expect(child.style.width).toBe('100%')
+    expect(child.style.height).toBe('100%')
+  })
+
+  it('fill: true forces a wrapper even for numeric width+height', () => {
+    expect(isFixedNumericFrame({ width: 300, height: 400, fill: true })).toBe(false)
+    const { container } = render(
+      Image('https://example.com/p.jpg')
+        .frame({ width: 120, height: 80, fill: true })
+        .build(),
+    )
+    expect(container.querySelector('.fibo-frame')).toBeTruthy()
+  })
+
+  it('without fill the child stays hug (default)', () => {
+    const { container } = render(
+      Box()
+        .bg('red')
+        .frame({ width: 200, height: 100 })
+        .build(),
+    )
+    const frame = container.querySelector('.fibo-frame') as HTMLElement
+    expect(frame.dataset.fiboFill).toBeUndefined()
+    const child = frame.firstElementChild as HTMLElement
+    expect(child.style.width).not.toBe('100%')
+  })
 })
