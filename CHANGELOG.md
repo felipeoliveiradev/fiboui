@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.9.15] - 2026-10-29
+
+### Fixed
+- **RSC `dist/server.js`** — `viewChrome`, `preferenceKey`, and gesture modules are shimmed in the react-server bundle so Next no longer sees `useRef` / `useState` / `useLayoutEffect` / `createContext` while compiling the server entry.
+
 ## [2.9.14] - 2026-10-29
 
 ### Fixed

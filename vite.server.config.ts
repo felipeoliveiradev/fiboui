@@ -12,6 +12,11 @@ const SHIMS: Record<string, string> = {
   Presence: path.resolve(__dirname, 'src/server-shims/passthrough.tsx'),
   ScaffoldInner: path.resolve(__dirname, 'src/server-shims/ScaffoldInner.tsx'),
   ButtonInner: path.resolve(__dirname, 'src/server-shims/ButtonInner.tsx'),
+  viewChrome: path.resolve(__dirname, 'src/server-shims/viewChrome.tsx'),
+  preferenceKey: path.resolve(__dirname, 'src/server-shims/preferenceKey.tsx'),
+  GestureBuilders: path.resolve(__dirname, 'src/server-shims/GestureBuilders.tsx'),
+  Gesture: path.resolve(__dirname, 'src/server-shims/Gesture.tsx'),
+  exclusiveArena: path.resolve(__dirname, 'src/server-shims/exclusiveArena.ts'),
 };
 
 function rscShims(): Plugin {
@@ -32,9 +37,7 @@ function rscShims(): Plugin {
         source.includes('\\layout\\Scaffold\\') ||
         source.includes('/interactive/Button/') ||
         source.includes('\\interactive\\Button\\') ||
-        /^\.\.?[/\\](StateWrapper|FineGrain|AnimatedWrapper|Reveal|ScrollProgress|ValueBinder|Presence|ScaffoldInner|ButtonInner)/.test(
-          source
-        )
+        /^\.\.?[/\\]/.test(source)
       ) {
         return shim;
       }
