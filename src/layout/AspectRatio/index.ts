@@ -72,6 +72,10 @@ class AspectRatioBuilder extends FiboBuilder {
   build(): ReactElement {
     const style = this.getStyle();
     style.aspectRatio = String(this._ratio);
+    style.position = style.position ?? 'relative';
+    style.overflow = style.overflow ?? 'hidden';
+    // Intrinsic children (tall `<img>`) must not inflate past the ratio box.
+    if (style.minHeight == null) style.minHeight = 0;
     if (!this._widthSet && style.width == null) {
       style.width = '100%';
     }
@@ -85,6 +89,24 @@ class AspectRatioBuilder extends FiboBuilder {
       .filter(Boolean)
       .join(' ');
 
+    // Absolute fill slot — keeps cover images / ZStacks inside the ratio.
+    const slot = React.createElement(
+      'div',
+      {
+        className: 'fibo-aspect-ratio-slot',
+        style: {
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          minWidth: 0,
+          minHeight: 0,
+          overflow: 'hidden',
+        },
+      },
+      ...nodes
+    );
+
     return React.createElement(
       'div',
       {
@@ -92,7 +114,7 @@ class AspectRatioBuilder extends FiboBuilder {
         ...rest,
         className,
       },
-      ...nodes
+      slot
     );
   }
 }

@@ -204,6 +204,47 @@ export function stackAlignFlex(
   }
 }
 
+/**
+ * CSS `object-position` for `Image.scaledToFill()` / `object-fit: cover` crops.
+ * Prefer faces/horizon with `StackAlign.top` / `topLeft` on portrait→wide heroes.
+ */
+export function stackAlignObjectPosition(
+  align: StackAlign | keyof typeof StackAlign | string = 'center'
+): string {
+  const resolved =
+    typeof align === 'string' && align in StackAlign
+      ? StackAlign[align as keyof typeof StackAlign]
+      : align;
+  switch (resolved) {
+    case 'top':
+      return '50% 0%';
+    case 'bottom':
+      return '50% 100%';
+    case 'left':
+    case 'leading':
+      return '0% 50%';
+    case 'right':
+    case 'trailing':
+      return '100% 50%';
+    case 'topLeft':
+    case 'topLeading':
+      return '0% 0%';
+    case 'topRight':
+    case 'topTrailing':
+      return '100% 0%';
+    case 'bottomLeft':
+    case 'bottomLeading':
+      return '0% 100%';
+    case 'bottomRight':
+    case 'bottomTrailing':
+      return '100% 100%';
+    case 'center':
+      return '50% 50%';
+    default:
+      return typeof align === 'string' ? align : '50% 50%';
+  }
+}
+
 export const Theme = { material: 'material', cupertino: 'cupertino', web: 'web', noir: 'noir' } as const;
 export type Theme = (typeof Theme)[keyof typeof Theme];
 

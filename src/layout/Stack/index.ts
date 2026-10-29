@@ -100,6 +100,8 @@ function hostNodes(
  *
  * You do **not** have to repeat `.frame` on the ZStack when the base is already
  * framed; an extra `.frame` on the stack still wins (wraps / clamps).
+ * Host `.width(Size.full)` / `.height(n)` win over the promoted base frame on
+ * that axis (full-bleed hero: wide image frame + `w-full` stack).
  *
  * **Hit-testing (SwiftUI):** taps on containers only hit drawn content unless
  * `.contentShape(Rectangle())` is set (or a gesture auto-defaults it).
@@ -254,9 +256,22 @@ class ZStackBuilder extends FiboBuilder {
     if (style.overflow == null) style.overflow = 'hidden';
     // Promote base Image/builder `.frame({ width, height })` onto this host so
     // outer modifiers always wrap a definite box (SwiftUI child-driven size).
+    // Skip an axis when the host already declared it — `.width(Size.full)` is
+    // class-only (`w-full`), so `style.width == null` used to let a 1600px base
+    // frame clobber full-bleed and push scaffold-body horizontal scroll.
     if (this._baseFixedFrame) {
-      if (style.width == null) style.width = `${this._baseFixedFrame.width}px`;
-      if (style.height == null) style.height = `${this._baseFixedFrame.height}px`;
+      const hostWidth =
+        style.width != null ||
+        this._classNames.some(
+          (c) => c === 'w-full' || c.startsWith('w-') || c.startsWith('fibo-width-'),
+        );
+      const hostHeight =
+        style.height != null ||
+        this._classNames.some(
+          (c) => c === 'h-full' || c.startsWith('h-') || c.startsWith('fibo-height-'),
+        );
+      if (!hostWidth) style.width = `${this._baseFixedFrame.width}px`;
+      if (!hostHeight) style.height = `${this._baseFixedFrame.height}px`;
     } else if (hug && style.height == null && style.minHeight == null) {
       // Content fit: height follows base too (not only width via w-auto).
       style.height = 'fit-content';

@@ -98,8 +98,8 @@ export { FiboApp, FiboAppBuilder } from './core/FiboApp';
 export { mount, Fibo, toElement } from './core/mount';
 export { PluginManager } from './core/plugin/PluginManager';
 export type { FiboPlugin, FiboContext, RouteDefinition, SidebarConfig } from './core/plugin/types';
-export { ValueBuilder } from './core/builder';
-export type { PseudoStateFn } from './core/builder';
+export { ValueBuilder, createComponent, preset, createBuilder } from './core/builder';
+export type { PseudoStateFn, StyleBuilder } from './core/builder';
 export {
   wrapFrame,
   resolveFrameSize,

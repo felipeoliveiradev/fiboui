@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Image, StackAlign, Text, ZStack } from '../src'
+import { Image, Size, StackAlign, Text, ZStack } from '../src'
 
 afterEach(cleanup)
 
@@ -17,6 +17,37 @@ describe('ZStack — SwiftUI child-driven frame + hit testing', () => {
     const stack = container.querySelector('.fibo-zstack') as HTMLElement
     expect(stack.style.width).toBe('300px')
     expect(stack.style.height).toBe('400px')
+  })
+
+  it('does not promote base frame width when host already has .width(Size.full)', () => {
+    const { container } = render(
+      ZStack()
+        .width(Size.full)
+        .children([
+          Image('https://example.com/p.jpg').frame({ width: 1600, height: 320 }),
+          Text('caption'),
+        ])
+        .build()
+    )
+    const stack = container.querySelector('.fibo-zstack') as HTMLElement
+    expect(stack.style.width).not.toBe('1600px')
+    expect(stack.className).toMatch(/\bw-full\b/)
+    expect(stack.style.height).toBe('320px')
+  })
+
+  it('does not promote base frame height when host already has .height()', () => {
+    const { container } = render(
+      ZStack()
+        .width(Size.full)
+        .height(320)
+        .children([
+          Image('https://example.com/p.jpg').frame({ width: 1600, height: 500 }),
+        ])
+        .build()
+    )
+    const stack = container.querySelector('.fibo-zstack') as HTMLElement
+    expect(stack.style.width).not.toBe('1600px')
+    expect(stack.style.height).toBe('320px')
   })
 
   it('gesture without explicit contentShape still gets a rectangle hit host', () => {

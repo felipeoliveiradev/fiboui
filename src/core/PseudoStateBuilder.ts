@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { _styleManager } from './styleManager';
 import type { FiboBuilder } from './builder';
 import { resolveCssEase } from './easing';
@@ -164,9 +165,25 @@ export class PseudoStateBuilder {
     return this.set('box-shadow', normalizeCssValue('boxShadow', value));
   }
 
-  css(property: string, value: string | number): this {
+  /** Same surface as `Box().css({})` — object bag or `(property, value)`. */
+  css(styles: CSSProperties): this;
+  css(property: string, value: string | number): this;
+  css(propertyOrStyles: string | CSSProperties, value?: string | number): this {
+    if (typeof propertyOrStyles === 'object' && propertyOrStyles !== null) {
+      for (const [key, raw] of Object.entries(propertyOrStyles)) {
+        if (raw === undefined || raw === null) continue;
+        const camel = key.startsWith('--')
+          ? key
+          : key.includes('-')
+            ? kebabToCamel(key)
+            : key;
+        this.set(camelToKebab(camel), normalizeCssValue(camel, raw));
+      }
+      return this;
+    }
+    const property = propertyOrStyles;
     const camel = property.includes('-') ? kebabToCamel(property) : property;
-    return this.set(camelToKebab(camel), normalizeCssValue(camel, value));
+    return this.set(camelToKebab(camel), normalizeCssValue(camel, value as string | number));
   }
 
   padding(value: string | number): this {

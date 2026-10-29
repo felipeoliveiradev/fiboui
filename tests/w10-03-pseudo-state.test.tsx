@@ -43,6 +43,22 @@ describe('PseudoStateBuilder backgroundColor', () => {
     expect(css).toMatch(/\.fibo-ps-[a-z0-9]+:hover \* \{[^}]*color:\s*#000 !important/i)
   })
 
+  it('press.css({ boxShadow }) accepts an object like Box().css({})', () => {
+    StyleManager.resetForTests()
+    renderToString(
+      withFiboStyles(
+        Box()
+          .press((s: PseudoStateBuilder) =>
+            s.scale(0.97).css({ boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }),
+          )
+          .children([]),
+      ) as never,
+    )
+    const css = StyleManager.getInstance().getCss()
+    expect(css).toMatch(/box-shadow:\s*0 4px 10px rgba\(0,0,0,0\.2\)/)
+    expect(css).toMatch(/transform:[^;]*scale\(0\.97\)/)
+  })
+
   it('hover.bg and hover.backgroundColor are the same longhand', () => {
     StyleManager.resetForTests()
     renderToString(

@@ -1,6 +1,8 @@
+import type { CSSProperties } from 'react';
 import {
   CssStyleStore,
   createCssFluentProxy,
+  kebabToCamel,
   normalizeCssValue,
   type CssFluentProxy,
 } from '../../core/cssFluent';
@@ -61,11 +63,24 @@ export class ListItemPseudoStateBuilder extends CssStyleStore {
     return this.shadow(value);
   }
 
-  css(property: string, value: string): this {
-    const camel = property.includes('-')
-      ? property.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())
-      : property;
-    this.setProp(camel, normalizeCssValue(camel, value));
+  css(styles: CSSProperties): this;
+  css(property: string, value: string | number): this;
+  css(propertyOrStyles: string | CSSProperties, value?: string | number): this {
+    if (typeof propertyOrStyles === 'object' && propertyOrStyles !== null) {
+      for (const [key, raw] of Object.entries(propertyOrStyles)) {
+        if (raw === undefined || raw === null) continue;
+        const camel = key.startsWith('--')
+          ? key
+          : key.includes('-')
+            ? kebabToCamel(key)
+            : key;
+        this.setProp(camel, normalizeCssValue(camel, raw));
+      }
+      return this;
+    }
+    const property = propertyOrStyles;
+    const camel = property.includes('-') ? kebabToCamel(property) : property;
+    this.setProp(camel, normalizeCssValue(camel, value as string | number));
     return this;
   }
 }

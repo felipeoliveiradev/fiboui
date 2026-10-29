@@ -119,8 +119,30 @@
 
 .fibo-theme-web .fibo-textfield-container {
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
   margin-bottom: 1rem;
+}
+
+.fibo-theme-web .fibo-textfield-label {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--fibo-on-surface-variant);
+  pointer-events: none;
+  transition: top 150ms ease, transform 150ms ease, font-size 150ms ease, color 150ms ease;
+  background-color: transparent;
+  padding: 0 4px;
+  z-index: 2;
+  white-space: nowrap;
+}
+
+.fibo-theme-web .fibo-textfield-container:focus-within .fibo-textfield-label,
+.fibo-theme-web .fibo-textfield-input:not(:placeholder-shown) ~ .fibo-textfield-label {
+  top: 0;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  color: var(--fibo-primary);
+  background-color: var(--fibo-surface);
 }
 
 .fibo-theme-web .fibo-textfield-input {

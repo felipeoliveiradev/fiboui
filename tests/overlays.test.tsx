@@ -34,7 +34,7 @@ describe('overlays', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Saved')
   })
 
-  it('BottomSheet open has role=dialog', () => {
+  it('BottomSheet open has role=dialog and a scrollable body', () => {
     render(
       BottomSheet()
         .open(true)
@@ -46,5 +46,7 @@ describe('overlays', () => {
     const dialog = screen.getByRole('dialog')
     expect(dialog).toHaveTextContent('Share')
     expect(dialog).toHaveStyle({ maxHeight: '50vh' })
+    expect(dialog.querySelector('.fibo-bottom-sheet-body')).toBeTruthy()
+    expect(dialog.querySelector('.fibo-bottom-sheet-handle')).toBeTruthy()
   })
 })

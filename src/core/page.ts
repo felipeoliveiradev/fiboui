@@ -58,7 +58,6 @@ export function page(
   const formulas = compileFormulas(build.toString());
   let version = 0;
   let cached: ReactElement | null = null;
-  let cachedVersion = -1;
   let patching = false;
   let wiredRoots: Subscribable<unknown>[] = [];
   let rootUnsubs: Array<() => void> = [];
@@ -158,15 +157,15 @@ export function page(
   function refresh() {
     version += 1;
     cached = null;
-    cachedVersion = -1;
     for (const listener of listeners) listener();
   }
 
   function view(): ReactElement {
-    if (cached && cachedVersion === version) return cached;
+    // Always `produce()` / `build()` on every React render. Caching the tree
+    // and skipping `build` broke Rules of Hooks whenever `build` (or helpers
+    // it calls, e.g. `useRouter` in tab shells) used hooks.
     const next = produce();
     cached = decorate(next.tree);
-    cachedVersion = version;
     syncSubs(next.slotCount);
     syncRoots(next.roots);
     return cached;
@@ -187,7 +186,6 @@ export function page(
         rootUnsubs = [];
         wiredRoots = [];
         cached = null;
-        cachedVersion = -1;
       }
     };
   }

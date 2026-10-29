@@ -4,6 +4,50 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.9.14] - 2026-10-29
+
+### Fixed
+- **`page()`** — always re-runs `build()` on React re-render so hooks inside the page (`useRouter`, etc.) keep a stable order (was caching the tree and skipping hooks).
+
+## [2.9.13] - 2026-10-29
+
+### Fixed
+- **`TextField` label** — always `position: absolute` (no longer a flex sibling beside the input). **`web` theme** ships floating-label CSS (was missing; only material had it).
+
+## [2.9.12] - 2026-10-29
+
+### Fixed
+- **`BottomSheet`** — body scrolls (`overflow-y: auto`); drag handle expands/collapses detents and dismisses on swipe-down. Stops clipped sheets that could neither scroll nor grow.
+
+## [2.9.11] - 2026-10-29
+
+### Changed
+- **`createComponent`** — primary form is a normal function that returns a builder (`createComponent(() => TextField()…)`). Optional second arg is a body with `{ f }` (not a bare `f`). Alias: `preset`.
+
+## [2.9.10] - 2026-10-29
+
+### Added
+- **`createComponent(Factory, setup?)`** — memo-style wrap for fluent builders: skin a factory and harvest its methods (`GlassField().label().name()…`). Also accepts a zero-arg init. Prefer over `fn('label', 'name', { opts })`. Alias: `preset`.
+
+## [2.9.9] - 2026-10-29
+
+### Added
+- **`PseudoStateBuilder.css({…})`** — object bag matches `Box().css({})` (still supports `.css(prop, value)`). Same for List item pseudo + cssFluent proxy. Stops `property.includes` crashes when press/hover get a style object.
+
+## [2.9.8] - 2026-10-28
+
+### Added
+- **`Image.objectPosition(align | css)`** + **`scaledToFill(StackAlign.top)`** — bias `object-fit: cover` crops (faces stay in wide heroes). `StackAlign` maps via `stackAlignObjectPosition`.
+- **`.bg(linear-gradient(…))`** — gradients / `url()` paint as `background` (not `background-color`).
+
+### Fixed
+- **`AspectRatio`** — absolute fill slot + `overflow: hidden` so tall cover images / ZStacks cannot inflate past the ratio (hero banners).
+
+## [2.9.7] - 2026-10-28
+
+### Fixed
+- **`ZStack` + `.width(Size.full)`** — host size words (`w-full` / `h-*`) are class-only; promoting the base child’s fixed `.frame({ width, height })` no longer writes inline `width: Npx` over full-bleed and no longer expands `scaffold-body` horizontal scroll (e.g. hero Image framed 1600×320 inside a full-width stack).
+
 ## [2.9.6] - 2026-10-22
 
 ### Added

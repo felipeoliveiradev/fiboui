@@ -369,7 +369,21 @@ export function createCssFluentProxy(host: CssFluentHost): CssFluentProxy {
       if (prop === 'toCSSString') return () => host.toCSSString();
 
       if (prop === 'css') {
-        return wrap((property: string, value: string | number) => {
+        // Match FiboBuilder / PseudoStateBuilder: `.css({…})` or `.css(prop, value)`.
+        return wrap((propertyOrStyles: string | CSSProperties, value?: string | number) => {
+          if (typeof propertyOrStyles === 'object' && propertyOrStyles !== null) {
+            for (const [key, raw] of Object.entries(propertyOrStyles)) {
+              if (raw === undefined || raw === null) continue;
+              const camel = key.startsWith('--')
+                ? key
+                : key.includes('-')
+                  ? kebabToCamel(key)
+                  : key;
+              host.setProp(camel, normalizeCssValue(camel, raw));
+            }
+            return;
+          }
+          const property = propertyOrStyles;
           const camel = property.includes('-') ? kebabToCamel(property) : property;
           host.setProp(camel, normalizeCssValue(camel, value));
         });

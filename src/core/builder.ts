@@ -950,9 +950,18 @@ export abstract class FiboBuilder {
       ? this.resolveSemanticColor(color)
       : color;
 
-    const cls = _styleManager.register('background-color', colorValue as string);
+    // Gradients / images must use `background`, not `background-color`.
+    const paint = String(colorValue);
+    if (/gradient\(|url\(/i.test(paint)) {
+      const cls = _styleManager.register('background', paint);
+      this._classNames.push(cls);
+      this.layoutStyle({ background: paint, backgroundColor: 'transparent' });
+      return this;
+    }
+
+    const cls = _styleManager.register('background-color', paint);
     this._classNames.push(cls);
-    this.layoutStyle({ backgroundColor: colorValue as string });
+    this.layoutStyle({ backgroundColor: paint });
     return this;
   }
 
@@ -2869,6 +2878,39 @@ export function createBuilder<T extends FiboBuilder, Args extends any[]>(
     }) as StyleBuilder<T>;
   };
 }
+
+/**
+ * Like `React.memo`, but for fluent builders: write a normal function that
+ * returns a builder — `createComponent` keeps every method of that return
+ * (`GlassField().label().name()…`). No `fn('label', { opts })` bags.
+ *
+ * ```ts
+ * // Preferred — your component is a normal function:
+ * const glassField = () => {
+ *   return TextField().variant('outlined').rounded(16).className('cubee-field')
+ * }
+ * export const GlassField = createComponent(glassField)
+ * GlassField().label('E-mail').name('email').type('email')
+ *
+ * // Optional — base factory + body gets `{ f }` (same idea as props):
+ * export const GlassField = createComponent(TextField, ({ f }) => {
+ *   return f.variant('outlined').rounded(16).className('cubee-field')
+ * })
+ * ```
+ */
+export function createComponent<Args extends any[], B>(
+  factory: (...args: Args) => B,
+  setup?: (ctx: { f: B }) => B | void,
+): (...args: Args) => B {
+  return (...args: Args) => {
+    const builder = factory(...args);
+    if (!setup) return builder;
+    return (setup({ f: builder }) as B) ?? builder;
+  };
+}
+
+/** @deprecated Prefer `createComponent` — same behavior. */
+export const preset = createComponent;
 
 interface SignalLike<T> {
   value: T;

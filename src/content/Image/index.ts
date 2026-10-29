@@ -8,9 +8,11 @@ import {
 import { isDangerousUrl } from '../../core/safeUrl';
 import { BaseProps } from '../../core/types';
 import { isFixedNumericFrame, type FrameSpec } from '../../core/frame';
+import { StackAlign, stackAlignObjectPosition } from '../../core/tokens';
 
 type ImageFit = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
 type ClipShape = 'circle' | 'rounded' | 'square';
+type ImagePosition = StackAlign | keyof typeof StackAlign | string;
 
 function bindInterp(host: FiboBuilder, text: string | undefined): void {
   if (typeof text !== 'string' || !hasInterpMarks(text)) return;
@@ -35,6 +37,7 @@ const ImageInner = React.memo((props: any) => {
         src,
         alt,
         fit,
+        objectPosition,
         resizable,
         clipShape,
         frameWidth,
@@ -50,6 +53,9 @@ const ImageInner = React.memo((props: any) => {
     finalStyle.display = finalStyle.display ?? 'block';
     if (fit) {
       finalStyle.objectFit = fit;
+    }
+    if (objectPosition) {
+      finalStyle.objectPosition = objectPosition;
     }
 
     if (frameWidth) {
@@ -90,6 +96,7 @@ class ImageBuilder extends FiboBuilder {
   private _src: string = '';
   private _alt: string = '';
   private _fit: ImageFit = 'cover';
+  private _objectPosition?: string;
   private _resizable: boolean = false;
   /** Image-native clip (Tailwind / borderRadius on `<img>`). Distinct from
    * {@link FiboBuilder.clipShape} chrome wrapper. */
@@ -125,8 +132,22 @@ class ImageBuilder extends FiboBuilder {
     return this;
   }
 
-  scaledToFill(): this {
+  /**
+   * Cover the frame (`object-fit: cover`). Optional alignment biases the crop
+   * — e.g. `scaledToFill(StackAlign.top)` keeps faces in a wide short hero.
+   */
+  scaledToFill(alignment?: ImagePosition): this {
     this._fit = 'cover';
+    if (alignment != null) this.objectPosition(alignment);
+    return this;
+  }
+
+  /**
+   * CSS `object-position` for cover/contain crops.
+   * Accepts {@link StackAlign} (`top`, `topLeft`, …) or a raw CSS value (`'50% 20%'`).
+   */
+  objectPosition(value: ImagePosition): this {
+    this._objectPosition = stackAlignObjectPosition(value);
     return this;
   }
 
@@ -178,6 +199,7 @@ class ImageBuilder extends FiboBuilder {
         src: resolveInterp(this._src),
         alt: resolveInterp(this._alt),
         fit: this._fit,
+        objectPosition: this._objectPosition,
         resizable: this._resizable,
         clipShape: this._imageClipShape,
         frameWidth: this._frameWidth,
@@ -196,4 +218,5 @@ export interface ImageProps extends BaseProps {
   src: string;
   alt?: string;
   fit?: ImageFit;
+  objectPosition?: string;
 }

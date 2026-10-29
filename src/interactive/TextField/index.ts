@@ -360,7 +360,17 @@ const TextFieldInner = React.memo((props: any) => {
             key: 'label',
             htmlFor: inputId,
             className: 'fibo-textfield-label',
-            style: { left: bare ? 0 : leadingIcon ? '2.75rem' : '1rem' },
+            // Absolute so the label never becomes a flex sibling (web theme
+            // historically omitted this and labels spilled beside the input).
+            style: {
+              position: 'absolute',
+              left: bare ? 0 : leadingIcon ? '2.75rem' : '1rem',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              pointerEvents: 'none',
+              zIndex: 2,
+              margin: 0,
+            },
           },
           label
         ),
