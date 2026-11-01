@@ -803,6 +803,18 @@ export abstract class FiboBuilder {
     return this.layoutStyle({ display: 'flex', alignItems: align });
   }
 
+  /**
+   * Don't let a flex parent squash this view (the Scaffold-body case).
+   * Locks `flex-shrink: 0` and `min-height: min-content` so a fixed
+   * frame/image keeps its height and the parent scrolls instead.
+   */
+  noSquash(): this {
+    return this.layoutStyle({
+      flexShrink: 0,
+      minHeight: 'min-content',
+    });
+  }
+
   flex(value?: number | string): this {
     const tokens: Record<string, string> = {
       '1': '1 1 0%',
@@ -2748,7 +2760,7 @@ type KnownKeys<T> = {
 
 /**
  * Fluent CSS methods on every builder. Kept as a named exported type so
- * `index.d.ts` references `StyleBuilder<T>` instead of expanding the CSS map
+ * the root declarations reference `StyleBuilder<T>` instead of expanding the CSS map
  * into every widget (that blew the file past 20MB and also typed chains as `any`).
  */
 export type StyleBuilder<T> = T &

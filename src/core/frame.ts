@@ -100,7 +100,8 @@ function frameHostStyle(spec: FrameSpec): CSSProperties {
     boxSizing: 'border-box',
     display: 'flex',
     minWidth: 0,
-    minHeight: 0,
+    // Do NOT default minHeight:0 — with flex-shrink that vertically
+    // squashes fixed `.frame({ height })` slides inside Scaffold body.
     // `fill` stretches the child — host uses stretch instead of corner align.
     alignItems: (spec.fill
       ? 'stretch'
@@ -125,8 +126,14 @@ function frameHostStyle(spec: FrameSpec): CSSProperties {
   if (idealW != null) style.width = idealW;
   else if (isInfinity(spec.maxWidth)) style.width = '100%';
 
-  if (idealH != null) style.height = idealH;
-  else if (isInfinity(spec.maxHeight)) style.height = '100%';
+  if (idealH != null) {
+    style.height = idealH;
+    // Lock the frame against Scaffold column flex-shrink (vertical squash).
+    if (minH == null) style.minHeight = idealH;
+    if (style.flexShrink == null) style.flexShrink = 0;
+  } else if (isInfinity(spec.maxHeight)) {
+    style.height = '100%';
+  }
 
   if (
     isInfinity(spec.maxWidth) &&

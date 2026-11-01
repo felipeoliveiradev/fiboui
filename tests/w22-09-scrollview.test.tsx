@@ -153,6 +153,24 @@ describe('W22-09 ScrollView leftover — direction horizontal', () => {
     expect(innerOf(el).style.width).toBe('max-content')
   })
 
+  it('horizontal-only hugs height and clamps width (Scaffold carousel)', () => {
+    render(
+      ScrollView()
+        .horizontal()
+        .props({ 'data-testid': 'sv-carousel' })
+        .children([Box().width(200).height(300).children('card')])
+        .build() as ReactElement,
+    )
+    const el = screen.getByTestId('sv-carousel')
+    // Do not squash in a column flex parent
+    expect(el.style.minHeight).not.toBe('0px')
+    expect(el.style.flexShrink).toBe('0')
+    // Do not expand scaffold-body sideways when slides are wider
+    expect(el.style.width).toBe('100%')
+    expect(el.style.maxWidth).toBe('100%')
+    expect(el.style.overflowX).toBe('auto')
+  })
+
   it('direction both is not a leftover horizontal-only row', () => {
     render(
       ScrollView()

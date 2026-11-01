@@ -221,6 +221,9 @@ class ScrollViewBuilder extends FiboBuilder {
 
     const overflowX: React.CSSProperties['overflowX'] = horizontal ? 'auto' : 'hidden';
     const overflowY: React.CSSProperties['overflowY'] = vertical ? 'auto' : 'hidden';
+    // Horizontal-only strip in a Scaffold column: hug child height (don't squash)
+    // and clamp width to the parent (don't expand scaffold-body sideways).
+    const horizontalOnly = horizontal && !vertical;
 
     const innerStyle: React.CSSProperties = {
       display: 'flex',
@@ -233,7 +236,10 @@ class ScrollViewBuilder extends FiboBuilder {
     if (columnGap != null) innerStyle.columnGap = columnGap;
     if (direction === 'horizontal') {
       innerStyle.width = 'max-content';
-      innerStyle.minHeight = '0px';
+      // Hug slide height — minHeight:0 was flattening Image/ZStack carousels
+      // inside Scaffold body.
+      if (!horizontalOnly) innerStyle.minHeight = '0px';
+      else innerStyle.alignItems = 'stretch';
     } else if (direction === 'both') {
       innerStyle.width = 'max-content';
       innerStyle.height = 'max-content';
@@ -259,13 +265,30 @@ class ScrollViewBuilder extends FiboBuilder {
     const scrollStyles: React.CSSProperties = {
       WebkitOverflowScrolling: 'touch',
       minWidth: '0px',
-      minHeight: '0px',
+      // Vertical (and both) need minHeight:0 to scroll inside flex.
+      // Horizontal-only must NOT — Scaffold column was squashing carousels.
+      ...(horizontalOnly
+        ? {
+            width: '100%',
+            maxWidth: '100%',
+            flexShrink: 0,
+            alignSelf: 'stretch',
+          }
+        : { minHeight: '0px' }),
       display: 'flex',
       flexDirection: direction === 'horizontal' ? 'row' : 'column',
       ...painted,
       // Direction overflow must survive `.props({ style })` replacing the object.
       overflowX,
       overflowY,
+      // Re-assert clamp after painted so user width:max-content cannot blow the body.
+      ...(horizontalOnly
+        ? {
+            width: painted.width ?? '100%',
+            maxWidth: painted.maxWidth ?? '100%',
+            flexShrink: painted.flexShrink ?? 0,
+          }
+        : null),
     };
 
     if (scrollbar === 'hidden') {

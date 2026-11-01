@@ -110,6 +110,31 @@ describe('W22-08 Scaffold leftover — live interp in body and chrome slots', ()
   })
 })
 
+describe('Scaffold noSquash', () => {
+  it('marks the body by default so children are not squashed', () => {
+    const { container } = render(
+      Scaffold().children(Text('body')).build() as ReactElement,
+    )
+    const main = container.querySelector('main') as HTMLElement
+    expect(main.hasAttribute('data-no-squash')).toBe(true)
+  })
+
+  it('noSquash(false) drops the attribute', () => {
+    const { container } = render(
+      Scaffold().noSquash(false).children(Text('body')).build() as ReactElement,
+    )
+    const main = container.querySelector('main') as HTMLElement
+    expect(main.hasAttribute('data-no-squash')).toBe(false)
+  })
+
+  it('noSquash() on an element locks flex-shrink', () => {
+    const { container } = render(Box().noSquash().build() as ReactElement)
+    const el = container.firstElementChild as HTMLElement
+    expect(el.style.flexShrink).toBe('0')
+    expect(el.style.minHeight).toBe('min-content')
+  })
+})
+
 describe('W22-08 Scaffold leftover — overflow, safe area, drawer stacking', () => {
   it('does not copy leftover overflow:hidden onto main', () => {
     const { container } = render(

@@ -105,6 +105,8 @@ class ScaffoldBuilder extends FiboBuilder {
   private _extendBody = false;
   private _extendBehindHeader = false;
   private _avoidKeyboard = true;
+  /** Body children keep their height; the body scrolls. On by default. */
+  private _noSquash = true;
   private _onDrawer?: (side: 'start' | 'end', open: boolean) => void;
 
   children(children: FiboChildren): this {
@@ -251,6 +253,16 @@ class ScaffoldBuilder extends FiboBuilder {
     return this;
   }
 
+  /**
+   * Don't squash body children into the viewport ("não achatar").
+   * On by default. Pass `false` to let the column shrink them again.
+   * For a single child, call `.noSquash()` on that element instead.
+   */
+  noSquash(on = true): this {
+    this._noSquash = on;
+    return this;
+  }
+
   onDrawer(handler: (side: 'start' | 'end', open: boolean) => void): this {
     this._onDrawer = handler;
     return this;
@@ -361,6 +373,7 @@ class ScaffoldBuilder extends FiboBuilder {
         React.createElement('main', {
           key: 'scaffold-body',
           className: 'fibo-scaffold-body',
+          'data-no-squash': this._noSquash ? '' : undefined,
           style: {
             flex: 1,
             display: 'flex',

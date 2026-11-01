@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.9.16] - 2026-11-01
+
+### Added
+- **`Scaffold().noSquash()`** — body children keep their height and the body scrolls (on by default). `.noSquash(false)` restores shrink-to-fit. **`.noSquash()` on any view** locks that element (`flex-shrink: 0`, `min-height: min-content`) when only one child should refuse to squash.
+
+### Fixed
+- **Scaffold body** — a column of heroes and horizontal carousels was vertically squashed (`flex-shrink: 1` + `min-height: 0`) instead of scrolling. Fixed-height frames, `ZStack`, and horizontal-only `ScrollView` now keep the height you set.
+
 ## [2.9.15] - 2026-10-29
 
 ### Fixed

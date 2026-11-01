@@ -94,6 +94,16 @@ describe('frame — SwiftUI View.frame', () => {
     expect((frames[1] as HTMLElement).style.width).toBe('10px')
   })
 
+  it('fixed height frame locks minHeight + flexShrink (no Scaffold vertical squash)', () => {
+    const { container } = render(
+      Box().bg('red').frame({ width: 200, height: 300 }).build(),
+    )
+    const frame = container.querySelector('.fibo-frame') as HTMLElement
+    expect(frame.style.height).toBe('300px')
+    expect(frame.style.minHeight).toBe('300px')
+    expect(frame.style.flexShrink).toBe('0')
+  })
+
   it('fill: true stretches the child to the frame slot', () => {
     const { container } = render(
       Box()

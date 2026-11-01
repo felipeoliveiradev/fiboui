@@ -15,7 +15,9 @@ import { isFixedNumericFrame, type FrameSpec } from '../../core/frame';
  * promote that box onto the ZStack host so outer `.clipShape` / `.contentShape`
  * / gestures always see a stable layout frame — even before an `<img>` paints.
  */
-function readBaseFixedFrame(node: unknown): { width: number; height: number } | undefined {
+function readBaseFixedFrame(
+  node: unknown,
+): { width?: number; height?: number } | undefined {
   if (node == null || typeof node !== 'object') return undefined;
   const o = node as Record<string, unknown>;
   if (typeof o._frameWidth === 'number' && typeof o._frameHeight === 'number') {
@@ -27,7 +29,12 @@ function readBaseFixedFrame(node: unknown): { width: number; height: number } | 
   if (isFixedNumericFrame(spec)) {
     return { width: spec.width, height: spec.height };
   }
-  return undefined;
+  // Hero pattern: `.frame({ width: Size.infinity, height: 400 })` — still
+  // promote the fixed height so Scaffold cannot squash the stack vertically.
+  const height = typeof spec.height === 'number' ? spec.height : undefined;
+  const width = typeof spec.width === 'number' ? spec.width : undefined;
+  if (height == null && width == null) return undefined;
+  return { width, height };
 }
 
 function firstChildOf(children: FiboChildren | undefined): unknown {
@@ -148,7 +155,7 @@ function wrapZStackLayer(
           // Shrink-wrap the base child (Image/Box). No overflow clip on the
           // base so shadows/glows on the poster are not cut — overlays clip.
           minWidth: 0,
-          minHeight: 0,
+          // No minHeight:0 — that let Scaffold flex squash Image/ZStack vertically.
           maxWidth: '100%',
           lineHeight: 0, // kill inline-img baseline gap if child is reset to inline
         } satisfies CSSProperties,
@@ -207,8 +214,8 @@ function wrapZStackLayer(
 class ZStackBuilder extends FiboBuilder {
   private _alignment: ZStackAlignment = 'center';
   private _fit: ZStackFit = 'content';
-  /** Copied from base child’s fixed frame, if any. */
-  private _baseFixedFrame?: { width: number; height: number };
+  /** Copied from base child’s fixed frame, if any (axis may be partial). */
+  private _baseFixedFrame?: { width?: number; height?: number };
 
   children(children: FiboChildren): this {
     bindInterpTree(this, children);
@@ -270,8 +277,14 @@ class ZStackBuilder extends FiboBuilder {
         this._classNames.some(
           (c) => c === 'h-full' || c.startsWith('h-') || c.startsWith('fibo-height-'),
         );
-      if (!hostWidth) style.width = `${this._baseFixedFrame.width}px`;
-      if (!hostHeight) style.height = `${this._baseFixedFrame.height}px`;
+      if (!hostWidth && this._baseFixedFrame.width != null) {
+        style.width = `${this._baseFixedFrame.width}px`;
+      }
+      if (!hostHeight && this._baseFixedFrame.height != null) {
+        style.height = `${this._baseFixedFrame.height}px`;
+        style.minHeight = `${this._baseFixedFrame.height}px`;
+        style.flexShrink = 0;
+      }
     } else if (hug && style.height == null && style.minHeight == null) {
       // Content fit: height follows base too (not only width via w-auto).
       style.height = 'fit-content';

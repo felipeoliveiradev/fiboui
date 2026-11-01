@@ -142,6 +142,16 @@ body {
 
 /* Scaffold slots. Drawer, snack, and sheet toggle data attributes.
    The body does not re-render. */
+
+/*
+  Scaffold().noSquash() (on by default) — body children keep their height
+  and the body scrolls. `.noSquash(false)` drops the attribute.
+  `.flex(1)` sets an inline flex value and still shares the viewport.
+*/
+.fibo-scaffold-body[data-no-squash] > * {
+  flex-shrink: 0;
+}
+
 .fibo-scaffold-bottom {
   position: relative;
   flex-shrink: 0;
