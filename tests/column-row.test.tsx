@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { Box, Column, Row, Text } from '../src';
+import { type ReactElement } from 'react';
 
 describe('Column / Row cross-axis defaults', () => {
   it('defaults Column cross-axis to center (Flutter / SwiftUI)', () => {
@@ -15,6 +16,26 @@ describe('Column / Row cross-axis defaults', () => {
     expect(column?.className).not.toMatch(/items-stretch/);
     expect(column?.className).not.toMatch(/items-start/);
   });
+
+  it('keeps the axis inside a resetStyle parent', () => {
+    const { container } = render(
+      Box()
+        .resetStyle()
+        .children([
+          Row().gap(12).children([Text('a'), Text('b')]),
+          Column().gap(4).children([Text('c')]),
+        ])
+        .build() as ReactElement,
+    )
+    const row = container.querySelector('.fibo-row') as HTMLElement
+    const column = container.querySelector('.fibo-column') as HTMLElement
+    expect(row.style.display).toBe('flex')
+    expect(row.style.flexDirection).toBe('row')
+    expect(row.style.gap).toBe('12px')
+    expect(column.style.display).toBe('flex')
+    expect(column.style.flexDirection).toBe('column')
+    expect(column.style.alignItems).toBe('center')
+  })
 
   it('lets Row.hug() opt out of the full-width stretch', () => {
     const { container } = render(

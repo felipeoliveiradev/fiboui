@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.9.18] - 2026-11-02
+
+### Fixed
+- **`Row` / `Column` inside `.resetStyle()`** — the axis is inline (`display` + `flex-direction` + alignment). A parent `all: unset` no longer flattens a row into a stack, so a floating tab bar stays a row with `.gap()` only.
+
 ## [2.9.17] - 2026-11-02
 
 ### Fixed

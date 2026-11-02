@@ -15,6 +15,7 @@ import {
   resolveInterpString,
 } from '../../core/interpolate';
 import { ForEach } from '../../structure/ForEach';
+import { stampFlexAxis } from '../flexAxis';
 
 function bindInterp(host: FiboBuilder, text: string | undefined): void {
   if (typeof text !== 'string' || !hasInterpMarks(text)) return;
@@ -172,6 +173,8 @@ class ColumnBuilder extends FiboBuilder {
         merged.gap = this._spacing;
       }
     }
+
+    stampFlexAxis(merged, 'column', this._mainAxisAlignment, this._crossAxisAlignment);
 
     return React.createElement(
       'div',

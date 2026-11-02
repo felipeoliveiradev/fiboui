@@ -15,6 +15,7 @@ import {
   resolveInterpString,
 } from '../../core/interpolate';
 import { ForEach } from '../../structure/ForEach';
+import { stampFlexAxis } from '../flexAxis';
 
 function bindInterp(host: FiboBuilder, text: string | undefined): void {
   if (typeof text !== 'string' || !hasInterpMarks(text)) return;
@@ -163,6 +164,7 @@ class RowBuilder extends FiboBuilder {
     void _html;
 
     const style = mergeHostStyle(this.getStyle(), extraStyle);
+    stampFlexAxis(style, 'row', this._mainAxisAlignment, this._crossAxisAlignment);
 
     const classes = [
       'fibo-row',
