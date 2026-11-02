@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.9.17] - 2026-11-02
+
+### Fixed
+- **`BottomAppBar().floating()`** — the capsule overlays the scroll and sits on the bottom edge. No reserved strip and no margin under the bar. A bar without `.floating()` stays in the column at full width.
+
 ## [2.9.16] - 2026-11-01
 
 ### Added

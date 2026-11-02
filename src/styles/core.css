@@ -165,6 +165,35 @@ body {
   bottom: 0;
 }
 
+/*
+  BottomAppBar().floating() overlays the scroll and sits on the bottom edge.
+  No reserved strip, no margin under the capsule. A non-floating bar stays
+  in the column (the rule above).
+*/
+.fibo-scaffold-bottom:has(.fibo-bottom-app-bar[data-floating='true']) {
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* Sit on the screen edge. The scaffold's safe-area padding stays for a docked bar. */
+  bottom: calc(-1 * var(--fibo-safe-bottom, 0px));
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+  background: transparent;
+}
+
+.fibo-scaffold-bottom:has(.fibo-bottom-app-bar[data-floating='true']) .fibo-bottom-app-bar {
+  pointer-events: auto;
+}
+
+.fibo-scaffold-bottom-app-bar:has(.fibo-bottom-app-bar[data-floating='true']) {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+
 .fibo-scaffold-footer-buttons {
   display: flex;
   justify-content: flex-end;

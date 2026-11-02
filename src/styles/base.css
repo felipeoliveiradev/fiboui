@@ -243,9 +243,9 @@ body {
 }
 
 .fibo-bottom-app-bar[data-floating='true'] {
-  width: auto;
+  width: fit-content;
   max-width: calc(100% - 32px);
-  margin: 0 16px 20px;
+  margin: 0 auto;
   align-self: center;
   border-radius: 999px;
   border-top: none;

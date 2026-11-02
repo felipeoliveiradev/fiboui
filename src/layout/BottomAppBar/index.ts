@@ -33,7 +33,8 @@ class BottomAppBarBuilder extends FiboBuilder {
   }
 
   /**
-   * iOS-style floating capsule — inset from edges, rounded, shadow.
+   * iOS-style floating capsule — inset from the bottom, rounded, shadow.
+   * The scaffold slot leaves the column so the body scrolls behind it.
    * Pair with `.resetStyle().material(Material.ultraThin)` for glass.
    */
   floating(value = true): this {
