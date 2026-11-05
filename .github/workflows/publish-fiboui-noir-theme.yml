@@ -1,0 +1,102 @@
+name: Publish FiboUI Noir theme
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'extensions/fiboui-noir-theme/**'
+      - 'extensions/vscode-fiboui/themes/fiboui-noir-color-theme.json'
+      - '.github/workflows/publish-fiboui-noir-theme.yml'
+      - 'scripts/marketplace-version-check.sh'
+
+concurrency:
+  group: fiboui-noir-theme-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      vsce_exists: ${{ steps.version.outputs.vsce_exists }}
+      ovsx_exists: ${{ steps.version.outputs.ovsx_exists }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Theme tests
+        run: npm --prefix extensions/fiboui-noir-theme test
+
+      - name: Skip if version already on a store
+        id: version
+        run: bash scripts/marketplace-version-check.sh felipeoliveiradev fiboui-noir "$(node --input-type=commonjs -p 'require("./extensions/fiboui-noir-theme/package.json").version')"
+
+      - name: Sync canonical theme JSON
+        run: npm --prefix extensions/fiboui-noir-theme run sync-theme
+
+      - name: Package VSIX
+        working-directory: extensions/fiboui-noir-theme
+        run: npx --yes @vscode/vsce package --out "${{ runner.temp }}/fiboui-noir-${{ steps.version.outputs.version }}.vsix"
+
+      - name: Upload VSIX
+        uses: actions/upload-artifact@v4
+        with:
+          name: vscode-theme
+          path: ${{ runner.temp }}/fiboui-noir-${{ steps.version.outputs.version }}.vsix
+          if-no-files-found: error
+          retention-days: 7
+
+  publish-vsce:
+    needs: package
+    if: needs.package.outputs.vsce_exists == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download VSIX
+        uses: actions/download-artifact@v4
+        with:
+          name: vscode-theme
+          path: dist
+
+      - name: Publish to Visual Studio Marketplace
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          set -euo pipefail
+          if [ -z "${VSCE_PAT}" ]; then
+            echo "VSCE_PAT missing — skip Visual Studio Marketplace."
+            exit 0
+          fi
+          VSIX="$(ls dist/*.vsix)"
+          npx --yes @vscode/vsce publish --skip-duplicate --packagePath "$VSIX"
+
+  publish-ovsx:
+    needs: package
+    if: needs.package.outputs.ovsx_exists == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download VSIX
+        uses: actions/download-artifact@v4
+        with:
+          name: vscode-theme
+          path: dist
+
+      - name: Publish to Open VSX (Cursor)
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: |
+          set -euo pipefail
+          if [ -z "${OVSX_PAT}" ]; then
+            echo "OVSX_PAT missing — skip Open VSX / Cursor."
+            exit 0
+          fi
+          VSIX="$(ls dist/*.vsix)"
+          npx --yes ovsx publish --skip-duplicate "$VSIX"

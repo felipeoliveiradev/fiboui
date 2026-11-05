@@ -49,7 +49,7 @@
   ],
   "main": "./src/extension.js",
   "scripts": {
-    "test": "node src/autoIndent.test.js && node src/closingLabels.test.js && node src/snippets.test.js"
+    "test": "node src/autoIndent.test.js && node src/closingLabels.test.js && node src/snippets.test.js && node ../fiboui-noir-theme/scripts/theme-identity.test.js"
   },
   "contributes": {
     "themes": [
